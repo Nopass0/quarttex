@@ -111,22 +111,32 @@ jobs:
             # Check if Docker is installed
             if ! command -v docker &> /dev/null; then
               echo "Docker is not installed. Installing Docker..."
-              # Install Docker directly
-              curl -fsSL https://get.docker.com | sh
+              # Update package list and install prerequisites
+              sudo apt-get update -y
+              sudo apt-get install -y curl wget ca-certificates gnupg lsb-release
+              # Install Docker
+              curl -fsSL https://get.docker.com | sudo sh
               sudo usermod -aG docker $USER
               # Start Docker service
               sudo systemctl start docker
               sudo systemctl enable docker
-              # Apply group changes
-              newgrp docker
+              # Test Docker without group change
+              sudo docker --version
+            fi
+            
+            # Check if we need sudo for docker commands
+            if docker ps >/dev/null 2>&1; then
+              DOCKER_CMD="docker"
+            else
+              DOCKER_CMD="sudo docker"
             fi
             
             # Verify Docker is working
-            docker --version
-            docker compose version || docker-compose version
+            $DOCKER_CMD --version
+            $DOCKER_CMD compose version || docker-compose version
             
             # Stop existing containers first
-            docker compose -f docker-compose.prod.yml down || true
+            $DOCKER_CMD compose -f docker-compose.prod.yml down || true
             
             # Create .env file for production
             cat > .env << 'EOF'
@@ -161,36 +171,36 @@ jobs:
             fi
             
             # Remove old containers and images
-            docker compose -f docker-compose.prod.yml rm -f
+            $DOCKER_CMD compose -f docker-compose.prod.yml rm -f
             # Clean up disk space and memory before building
-            docker system prune -af --volumes || true
+            $DOCKER_CMD system prune -af --volumes || true
             # Free up memory by clearing build cache
-            docker builder prune -af || true
+            $DOCKER_CMD builder prune -af || true
             
             # Build with memory-efficient options
             echo "Building containers with memory optimization..."
-            DOCKER_BUILDKIT=1 docker compose -f docker-compose.prod.yml build --no-cache --memory 1g || {
+            DOCKER_BUILDKIT=1 $DOCKER_CMD compose -f docker-compose.prod.yml build --no-cache --memory 1g || {
               echo "Build failed, trying without memory limit..."
-              docker compose -f docker-compose.prod.yml build --no-cache
+              $DOCKER_CMD compose -f docker-compose.prod.yml build --no-cache
             }
             
             echo "Starting containers..."
-            if ! docker compose -f docker-compose.prod.yml up -d; then
+            if ! $DOCKER_CMD compose -f docker-compose.prod.yml up -d; then
               echo "Failed to start containers"
-              docker compose -f docker-compose.prod.yml logs
+              $DOCKER_CMD compose -f docker-compose.prod.yml logs
               exit 1
             fi
             
             # Show initial container status
             echo "Container status after startup:"
-            docker compose -f docker-compose.prod.yml ps
+            $DOCKER_CMD compose -f docker-compose.prod.yml ps
 
             # Backend will handle migrations automatically on startup via entrypoint script
             echo "Waiting for backend to initialize and apply migrations..."
             
             # Monitor backend logs for migration status
             echo "Monitoring backend startup and migration process..."
-            docker compose -f docker-compose.prod.yml logs -f backend &
+            $DOCKER_CMD compose -f docker-compose.prod.yml logs -f backend &
             LOGS_PID=$!
             
             # Give migrations time to run
@@ -200,9 +210,9 @@ jobs:
             kill $LOGS_PID 2>/dev/null || true
 
             # Check if backend container is running
-            if ! docker ps | grep -q "quattrex_backend"; then
+            if ! $DOCKER_CMD ps | grep -q "quattrex_backend"; then
               echo "Backend container is not running after startup"
-              docker compose -f docker-compose.prod.yml logs backend
+              $DOCKER_CMD compose -f docker-compose.prod.yml logs backend
               exit 1
             fi
             
@@ -211,14 +221,14 @@ jobs:
             timeout=180  # 3 minutes
             while [ $timeout -gt 0 ]; do
               # Check if backend container is running first
-              if ! docker ps | grep -q "quattrex_backend"; then
+              if ! $DOCKER_CMD ps | grep -q "quattrex_backend"; then
                 echo "Backend container stopped running, checking logs..."
-                docker compose -f docker-compose.prod.yml logs backend
+                $DOCKER_CMD compose -f docker-compose.prod.yml logs backend
                 exit 1
               fi
               
               # Try to connect to health endpoint
-              if docker compose -f docker-compose.prod.yml exec -T backend curl -f http://localhost:3001/health >/dev/null 2>&1; then
+              if $DOCKER_CMD compose -f docker-compose.prod.yml exec -T backend curl -f http://localhost:3001/health >/dev/null 2>&1; then
                 echo "Backend container is ready and healthy"
                 break
               fi
@@ -230,42 +240,42 @@ jobs:
             if [ $timeout -le 0 ]; then
               echo "Backend container failed to start properly"
               echo "Container status:"
-              docker compose -f docker-compose.prod.yml ps
+              $DOCKER_CMD compose -f docker-compose.prod.yml ps
               echo "Backend logs:"
-              docker compose -f docker-compose.prod.yml logs backend
+              $DOCKER_CMD compose -f docker-compose.prod.yml logs backend
               exit 1
             fi
             
             
             # Initialize service records
             echo "Initializing service records..."
-            docker compose -f docker-compose.prod.yml exec -T backend bun run scripts/init-all-services.ts || {
+            $DOCKER_CMD compose -f docker-compose.prod.yml exec -T backend bun run scripts/init-all-services.ts || {
               echo "Service initialization failed, continuing anyway..."
             }
             
             # Disable emulator services
             echo "Disabling emulator services..."
-            docker compose -f docker-compose.prod.yml exec -T backend bun run scripts/disable-emulator-services.ts || {
+            $DOCKER_CMD compose -f docker-compose.prod.yml exec -T backend bun run scripts/disable-emulator-services.ts || {
               echo "Failed to disable emulator services, continuing anyway..."
             }
             
             # Verify all services are running
             echo "Verifying services..."
-            if ! docker ps | grep -q "quattrex_backend"; then
+            if ! $DOCKER_CMD ps | grep -q "quattrex_backend"; then
               echo "ERROR: Backend container is not running!"
-              docker compose logs backend
+              $DOCKER_CMD compose -f docker-compose.prod.yml logs backend
               exit 1
             fi
             
-            if ! docker ps | grep -q "quattrex_frontend"; then
+            if ! $DOCKER_CMD ps | grep -q "quattrex_frontend"; then
               echo "ERROR: Frontend container is not running!"
-              docker compose logs frontend
+              $DOCKER_CMD compose -f docker-compose.prod.yml logs frontend
               exit 1
             fi
             
-            if ! docker ps | grep -q "quattrex_nginx"; then
+            if ! $DOCKER_CMD ps | grep -q "quattrex_nginx"; then
               echo "ERROR: Nginx container is not running!"
-              docker compose -f docker-compose.prod.yml logs nginx
+              $DOCKER_CMD compose -f docker-compose.prod.yml logs nginx
               exit 1
             fi
             
@@ -274,24 +284,24 @@ jobs:
             echo ">>> Verifying all required columns exist..."
             
             echo -e "\nTransaction table columns:"
-            docker compose -f docker-compose.prod.yml exec -T backend bunx prisma db execute --stdin <<< "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'Transaction' AND column_name IN ('merchantRate', 'traderProfit', 'matchedNotificationId') ORDER BY column_name;" || echo "Failed to verify Transaction columns"
+            $DOCKER_CMD compose -f docker-compose.prod.yml exec -T backend bunx prisma db execute --stdin <<< "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'Transaction' AND column_name IN ('merchantRate', 'traderProfit', 'matchedNotificationId') ORDER BY column_name;" || echo "Failed to verify Transaction columns"
             
             echo -e "\nPayout table columns:"
-            docker compose -f docker-compose.prod.yml exec -T backend bunx prisma db execute --stdin <<< "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'Payout' AND column_name IN ('methodId', 'profitAmount') ORDER BY column_name;" || echo "Failed to verify Payout columns"
+            $DOCKER_CMD compose -f docker-compose.prod.yml exec -T backend bunx prisma db execute --stdin <<< "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'Payout' AND column_name IN ('methodId', 'profitAmount') ORDER BY column_name;" || echo "Failed to verify Payout columns"
             
             echo -e "\nNotification table columns:"
-            docker compose -f docker-compose.prod.yml exec -T backend bunx prisma db execute --stdin <<< "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'Notification' AND column_name = 'packageName' ORDER BY column_name;" || echo "Failed to verify Notification columns"
+            $DOCKER_CMD compose -f docker-compose.prod.yml exec -T backend bunx prisma db execute --stdin <<< "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'Notification' AND column_name = 'packageName' ORDER BY column_name;" || echo "Failed to verify Notification columns"
             
             echo -e "\nNew tables verification:"
-            docker compose -f docker-compose.prod.yml exec -T backend bunx prisma db execute --stdin <<< "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('SettleRequest', 'TransactionAttempt', 'merchant_emulator_logs') ORDER BY table_name;" || echo "Failed to verify new tables"
+            $DOCKER_CMD compose -f docker-compose.prod.yml exec -T backend bunx prisma db execute --stdin <<< "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('SettleRequest', 'TransactionAttempt', 'merchant_emulator_logs') ORDER BY table_name;" || echo "Failed to verify new tables"
             
             echo "=================================================================="
             
             # Show final status
-            docker compose -f docker-compose.prod.yml ps
+            $DOCKER_CMD compose -f docker-compose.prod.yml ps
             
             # Clean up disk space
-            docker system prune -af
+            $DOCKER_CMD system prune -af
             
             echo "✅ Deployment completed successfully!"
             
