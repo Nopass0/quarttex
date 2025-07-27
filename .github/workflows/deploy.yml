@@ -108,6 +108,23 @@ jobs:
             # Navigate to project directory
             cd ${{ secrets.PROJECT_PATH }}
             
+            # Check if Docker is installed
+            if ! command -v docker &> /dev/null; then
+              echo "Docker is not installed. Installing Docker..."
+              if [ -f scripts/install-docker.sh ]; then
+                bash scripts/install-docker.sh
+                # Source bashrc to update PATH
+                source ~/.bashrc
+              else
+                echo "ERROR: Docker is not installed and install script not found"
+                exit 1
+              fi
+            fi
+            
+            # Verify Docker is working
+            docker --version
+            docker compose version
+            
             # Stop existing containers first
             docker compose -f docker-compose.prod.yml down || true
             
