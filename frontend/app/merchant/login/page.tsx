@@ -69,7 +69,7 @@ export default function MerchantLoginPage() {
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0f0f0f] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 bg-white dark:bg-[#29382f] shadow-lg border-gray-200 dark:border-[#29382f]">
+      <Card className="w-full max-w-md p-8 bg-white dark:bg-[#292133] shadow-lg border-gray-200 dark:border-[#292133]">
         <div className="flex flex-col items-center mb-8">
           <Logo size="lg" />
           <h1 className="mt-6 text-2xl font-semibold text-gray-900 dark:text-[#eeeeee]">
@@ -86,7 +86,7 @@ export default function MerchantLoginPage() {
               API Токен
             </Label>
             <div className="mt-1 relative">
-              <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#006039] dark:text-[#2d6a42] h-4 w-4" />
+              <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#530FAD] dark:text-[#530FAD] h-4 w-4" />
               <Input
                 id="apiToken"
                 type="password"
@@ -101,7 +101,7 @@ export default function MerchantLoginPage() {
           
           <Button
             type="submit"
-            className="w-full bg-[#006039] hover:bg-[#004d2e] dark:bg-[#2d6a42] dark:hover:bg-[#236035]"
+            className="w-full bg-[#530FAD] hover:bg-[#530FAD/90] dark:bg-[#530FAD] dark:hover:bg-[#530FAD/80]"
             disabled={loading}
           >
             {loading ? (
@@ -118,7 +118,7 @@ export default function MerchantLoginPage() {
         <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
           <p>
             Нет доступа?{" "}
-            <a href="#" className="text-[#006039] dark:text-[#2d6a42] hover:text-[#004d2e] dark:hover:text-[#236035] font-medium">
+            <a href="#" className="text-[#530FAD] dark:text-[#530FAD] hover:text-[#530FAD/90] dark:hover:text-[#530FAD/80] font-medium">
               Свяжитесь с администратором
             </a>
           </p>

@@ -270,12 +270,12 @@ export default function NotificationsPage() {
                     <div className="flex-shrink-0">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                         notification.isProcessed 
-                          ? "bg-green-100 dark:bg-green-900/30" 
+                          ? "bg-purple-100 dark:bg-purple-900/30" 
                           : "bg-gray-100 dark:bg-gray-700"
                       }`}>
                         <MessageSquare className={`h-5 w-5 ${
                           notification.isProcessed 
-                            ? "text-green-600 dark:text-green-400" 
+                            ? "text-purple-600 dark:text-purple-400" 
                             : "text-gray-500 dark:text-gray-400"
                         }`} />
                       </div>
@@ -293,7 +293,7 @@ export default function NotificationsPage() {
                             </Badge>
                           )}
                           {notification.isProcessed && (
-                            <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs">
+                            <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 text-xs">
                               Обработано
                             </Badge>
                           )}
@@ -314,7 +314,7 @@ export default function NotificationsPage() {
                         </div>
                         {notification.matchedTransaction && (
                           <div className="flex items-center gap-1">
-                            <CheckCircle className="h-3 w-3 text-green-600 dark:text-green-400" />
+                            <CheckCircle className="h-3 w-3 text-purple-600 dark:text-purple-400" />
                             <span>Сделка #{notification.matchedTransaction.numericId}</span>
                           </div>
                         )}
@@ -357,7 +357,7 @@ export default function NotificationsPage() {
                       {selectedNotification.application || "Банковское приложение"}
                     </h3>
                     <Badge className={selectedNotification.isProcessed 
-                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" 
+                      ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" 
                       : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
                     }>
                       {selectedNotification.isProcessed ? "Обработано" : "Не обработано"}
@@ -411,7 +411,7 @@ export default function NotificationsPage() {
                               </p>
                             </div>
                             <Badge className={tx.status === "READY" || tx.status === "COMPLETED"
-                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                              ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
                               : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                             }>
                               {tx.status === "READY" ? "Готово" : 

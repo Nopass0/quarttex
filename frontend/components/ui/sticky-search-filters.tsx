@@ -100,7 +100,7 @@ export function StickySearchFilters({
     <div 
       ref={stickyRef}
       className={cn(
-        "sticky bg-white dark:bg-[#0f0f0f] pb-3 md:pb-4 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 shadow-sm dark:shadow-[#29382f] z-10",
+        "sticky bg-white dark:bg-[#0f0f0f] pb-3 md:pb-4 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 shadow-sm dark:shadow-[#292133] z-10",
         className
       )}
       style={{ 
@@ -113,12 +113,12 @@ export function StickySearchFilters({
       <div className="flex flex-col sm:flex-row gap-2">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#006039] dark:text-[#2d6a42] h-4 w-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#530FAD] dark:text-[#530FAD] h-4 w-4" />
           <Input
             placeholder={searchPlaceholder}
             value={internalSearchValue}
             onChange={(e) => setInternalSearchValue(e.target.value)}
-            className="pl-10 border h-10 md:h-12 text-sm md:text-base border-gray-300 dark:border-[#29382f] rounded-lg"
+            className="pl-10 border h-10 md:h-12 text-sm md:text-base border-gray-300 dark:border-[#292133] rounded-lg"
           />
         </div>
 
@@ -132,17 +132,17 @@ export function StickySearchFilters({
                 size="default"
                 className="gap-1 md:gap-2 h-10 md:h-12 px-3 md:px-6 text-sm md:text-base flex-1 sm:flex-initial"
               >
-                <SlidersHorizontal className="h-4 w-4 text-[#006039]" />
+                <SlidersHorizontal className="h-4 w-4 text-[#530FAD]" />
                 <span className="hidden sm:inline">{filterTriggerLabel}</span>
                 {activeFiltersCount > 0 && (
-                  <Badge className="ml-1 bg-[#006039] text-white">
+                  <Badge className="ml-1 bg-[#530FAD] text-white">
                     {activeFiltersCount}
                   </Badge>
                 )}
                 <ChevronDown
                   className={cn(
                     "h-4 w-4 transition-colors",
-                    isOpen ? "text-[#006039]" : "text-gray-400"
+                    isOpen ? "text-[#530FAD]" : "text-gray-400"
                   )}
                 />
               </Button>
@@ -184,7 +184,7 @@ export function StickySearchFilters({
                   </Button>
                   <Button
                     size="sm"
-                    className="flex-1 h-12 bg-[#006039] hover:bg-[#006039]/90"
+                    className="flex-1 h-12 bg-[#530FAD] hover:bg-[#530FAD]/90"
                     onClick={handleApplyFilters}
                   >
                     Применить фильтры

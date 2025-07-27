@@ -203,7 +203,7 @@ export function RateSettingsList() {
           </Button>
         </div>
         <Button
-          className="bg-[#006039] hover:bg-[#005030]"
+          className="bg-[#530FAD] hover:bg-[#005030]"
           onClick={openCreateDialog}
           disabled={methodsWithoutSettings.length === 0}
         >
@@ -364,7 +364,7 @@ export function RateSettingsList() {
             </Button>
             <Button
               onClick={handleSave}
-              className="bg-[#006039] hover:bg-[#005030]"
+              className="bg-[#530FAD] hover:bg-[#005030]"
               disabled={isLoading || (!selectedSetting && !selectedMethodId)}
             >
               {selectedSetting ? 'Сохранить' : 'Создать'}

@@ -227,7 +227,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
       CREATED: { color: 'bg-blue-100 text-blue-700', icon: Clock, text: 'Создана' },
       IN_PROGRESS: { color: 'bg-yellow-100 text-yellow-700', icon: Clock, text: 'В работе' },
       DISPUTE: { color: 'bg-orange-100 text-orange-700', icon: AlertCircle, text: 'Спор' },
-      READY: { color: 'bg-green-100 text-green-700', icon: CheckCircle, text: 'Готова' },
+      READY: { color: 'bg-purple-100 text-purple-700', icon: CheckCircle, text: 'Готова' },
       EXPIRED: { color: 'bg-gray-100 text-gray-700', icon: XCircle, text: 'Истекла' },
       CANCELED: { color: 'bg-red-100 text-red-700', icon: XCircle, text: 'Отменена' },
       MILK: { color: 'bg-purple-100 text-purple-700', icon: AlertCircle, text: 'Слив' },
@@ -286,7 +286,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
             size="sm"
             onClick={handleToggleTrust}
           >
-            <Shield className={cn("w-4 h-4 mr-2", device.isTrusted && "text-green-600")} />
+            <Shield className={cn("w-4 h-4 mr-2", device.isTrusted && "text-purple-600")} />
             {device.isTrusted ? 'Отозвать доверие' : 'Доверять'}
           </Button>
         </div>
@@ -318,7 +318,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
                     <p className="text-sm text-gray-500">Android {device.androidVersion}</p>
                     
                     <div className="mt-8 space-y-2">
-                      <Badge className={device.isConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}>
+                      <Badge className={device.isConnected ? 'bg-purple-100 text-purple-700' : 'bg-red-100 text-red-700'}>
                         {device.isConnected ? 'Подключено' : 'Отключено'}
                       </Badge>
                       {device.isTrusted && (
@@ -507,7 +507,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
                               </>
                             ) : (
                               <>
-                                <Hash className="w-4 h-4 text-green-500" />
+                                <Hash className="w-4 h-4 text-purple-500" />
                                 <span className="font-medium text-sm">{message.phoneNumber}</span>
                               </>
                             )}

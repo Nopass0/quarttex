@@ -45,7 +45,7 @@ function ModalTestContent() {
         Modal Navigation Test
       </h1>
       
-      <Card className="p-6 mb-6 dark:bg-[#29382f] dark:border-gray-700">
+      <Card className="p-6 mb-6 dark:bg-[#292133] dark:border-gray-700">
         <h2 className="text-xl font-semibold mb-4 dark:text-[#eeeeee]">
           Test Modal URL Navigation
         </h2>
@@ -56,7 +56,7 @@ function ModalTestContent() {
         <div className="flex flex-wrap gap-4">
           <Button 
             onClick={() => settingsModal.open()}
-            className="bg-[#006039] hover:bg-[#006039]/90 dark:bg-[#2d6a42] dark:hover:bg-[#2d6a42]/90"
+            className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#530FAD] dark:hover:bg-[#530FAD]/90"
           >
             <Settings className="h-4 w-4 mr-2" />
             Open Settings Modal
@@ -65,7 +65,7 @@ function ModalTestContent() {
           <Button 
             onClick={() => profileModal.open()}
             variant="outline"
-            className="dark:border-gray-600 dark:text-gray-300 dark:hover:bg-[#29382f]/50"
+            className="dark:border-gray-600 dark:text-gray-300 dark:hover:bg-[#292133]/50"
           >
             <UserPlus className="h-4 w-4 mr-2" />
             Open Profile Modal
@@ -83,7 +83,7 @@ function ModalTestContent() {
 
       {/* Settings Modal */}
       <NavigableDialog open={settingsModal.isOpen} onOpenChange={settingsModal.setOpen}>
-        <NavigableDialogContent className="dark:bg-[#29382f] dark:border-gray-700">
+        <NavigableDialogContent className="dark:bg-[#292133] dark:border-gray-700">
           <NavigableDialogHeader>
             <NavigableDialogTitle className="dark:text-[#eeeeee]">
               Settings
@@ -112,7 +112,7 @@ function ModalTestContent() {
             <Button 
               variant="outline" 
               onClick={() => settingsModal.close()}
-              className="dark:border-gray-600 dark:text-gray-300 dark:hover:bg-[#29382f]/50"
+              className="dark:border-gray-600 dark:text-gray-300 dark:hover:bg-[#292133]/50"
             >
               Cancel
             </Button>
@@ -121,7 +121,7 @@ function ModalTestContent() {
                 console.log("Settings saved")
                 settingsModal.close()
               }}
-              className="bg-[#006039] hover:bg-[#006039]/90 dark:bg-[#2d6a42] dark:hover:bg-[#2d6a42]/90"
+              className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#530FAD] dark:hover:bg-[#530FAD]/90"
             >
               Save Settings
             </Button>
@@ -131,7 +131,7 @@ function ModalTestContent() {
 
       {/* Profile Modal */}
       <NavigableDialog open={profileModal.isOpen} onOpenChange={profileModal.setOpen}>
-        <NavigableDialogContent className="dark:bg-[#29382f] dark:border-gray-700">
+        <NavigableDialogContent className="dark:bg-[#292133] dark:border-gray-700">
           <NavigableDialogHeader>
             <NavigableDialogTitle className="dark:text-[#eeeeee]">
               Create Profile
@@ -169,7 +169,7 @@ function ModalTestContent() {
             <Button 
               variant="outline" 
               onClick={() => profileModal.close()}
-              className="dark:border-gray-600 dark:text-gray-300 dark:hover:bg-[#29382f]/50"
+              className="dark:border-gray-600 dark:text-gray-300 dark:hover:bg-[#292133]/50"
             >
               Cancel
             </Button>
@@ -178,7 +178,7 @@ function ModalTestContent() {
                 console.log("Profile created:", formData)
                 profileModal.close()
               }}
-              className="bg-[#006039] hover:bg-[#006039]/90 dark:bg-[#2d6a42] dark:hover:bg-[#2d6a42]/90"
+              className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#530FAD] dark:hover:bg-[#530FAD]/90"
             >
               Create Profile
             </Button>
@@ -188,7 +188,7 @@ function ModalTestContent() {
 
       {/* Document Modal with nested navigation */}
       <NavigableDialog open={documentModal.isOpen} onOpenChange={documentModal.setOpen}>
-        <NavigableDialogContent className="dark:bg-[#29382f] dark:border-gray-700">
+        <NavigableDialogContent className="dark:bg-[#292133] dark:border-gray-700">
           <NavigableDialogHeader>
             <NavigableDialogTitle className="dark:text-[#eeeeee]">
               Document Viewer
@@ -210,7 +210,7 @@ function ModalTestContent() {
             <div className="space-y-2">
               <Button 
                 variant="outline" 
-                className="w-full justify-start dark:border-gray-600 dark:text-gray-300 dark:hover:bg-[#29382f]/50"
+                className="w-full justify-start dark:border-gray-600 dark:text-gray-300 dark:hover:bg-[#292133]/50"
                 onClick={() => console.log("Opening document 1")}
               >
                 <FileText className="h-4 w-4 mr-2" />
@@ -218,7 +218,7 @@ function ModalTestContent() {
               </Button>
               <Button 
                 variant="outline" 
-                className="w-full justify-start dark:border-gray-600 dark:text-gray-300 dark:hover:bg-[#29382f]/50"
+                className="w-full justify-start dark:border-gray-600 dark:text-gray-300 dark:hover:bg-[#292133]/50"
                 onClick={() => console.log("Opening document 2")}
               >
                 <FileText className="h-4 w-4 mr-2" />
@@ -230,7 +230,7 @@ function ModalTestContent() {
           <NavigableDialogFooter>
             <Button 
               onClick={() => documentModal.close()}
-              className="w-full bg-[#006039] hover:bg-[#006039]/90 dark:bg-[#2d6a42] dark:hover:bg-[#2d6a42]/90"
+              className="w-full bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#530FAD] dark:hover:bg-[#530FAD]/90"
             >
               Close
             </Button>
@@ -239,29 +239,29 @@ function ModalTestContent() {
       </NavigableDialog>
 
       {/* Instructions */}
-      <Card className="p-6 dark:bg-[#29382f] dark:border-gray-700">
+      <Card className="p-6 dark:bg-[#292133] dark:border-gray-700">
         <h3 className="text-lg font-semibold mb-3 dark:text-[#eeeeee]">
           How it works:
         </h3>
         <ul className="space-y-2 text-gray-600 dark:text-gray-400">
           <li className="flex items-start gap-2">
-            <ArrowRight className="h-4 w-4 mt-0.5 text-[#006039] dark:text-[#2d6a42]" />
+            <ArrowRight className="h-4 w-4 mt-0.5 text-[#530FAD] dark:text-[#530FAD]" />
             <span>Opening a modal adds <code className="text-sm bg-gray-100 dark:bg-[#0f0f0f] px-1 rounded">?modal=modalName</code> to the URL</span>
           </li>
           <li className="flex items-start gap-2">
-            <ArrowRight className="h-4 w-4 mt-0.5 text-[#006039] dark:text-[#2d6a42]" />
+            <ArrowRight className="h-4 w-4 mt-0.5 text-[#530FAD] dark:text-[#530FAD]" />
             <span>You can use the browser back button to close the modal</span>
           </li>
           <li className="flex items-start gap-2">
-            <ArrowRight className="h-4 w-4 mt-0.5 text-[#006039] dark:text-[#2d6a42]" />
+            <ArrowRight className="h-4 w-4 mt-0.5 text-[#530FAD] dark:text-[#530FAD]" />
             <span>The modal's back button (← Назад) also navigates back</span>
           </li>
           <li className="flex items-start gap-2">
-            <ArrowRight className="h-4 w-4 mt-0.5 text-[#006039] dark:text-[#2d6a42]" />
+            <ArrowRight className="h-4 w-4 mt-0.5 text-[#530FAD] dark:text-[#530FAD]" />
             <span>Sharing a URL with modal parameter opens that modal directly</span>
           </li>
           <li className="flex items-start gap-2">
-            <ArrowRight className="h-4 w-4 mt-0.5 text-[#006039] dark:text-[#2d6a42]" />
+            <ArrowRight className="h-4 w-4 mt-0.5 text-[#530FAD] dark:text-[#530FAD]" />
             <span>Each modal maintains its own state in the URL history</span>
           </li>
         </ul>

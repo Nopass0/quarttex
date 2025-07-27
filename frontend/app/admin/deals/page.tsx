@@ -74,7 +74,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: any }> 
   IN_PROGRESS: { label: 'В работе', color: 'bg-yellow-100 text-yellow-800', icon: RefreshCw },
   DISPUTE: { label: 'Спор', color: 'bg-orange-100 text-orange-800', icon: AlertCircle },
   EXPIRED: { label: 'Истекла', color: 'bg-gray-100 text-gray-800', icon: XCircle },
-  READY: { label: 'Готова', color: 'bg-green-100 text-green-800', icon: CheckCircle },
+  READY: { label: 'Готова', color: 'bg-purple-100 text-purple-800', icon: CheckCircle },
   MILK: { label: 'Слив', color: 'bg-purple-100 text-purple-800', icon: AlertCircle },
   CANCELED: { label: 'Отменена', color: 'bg-red-100 text-red-800', icon: XCircle },
 }
@@ -300,7 +300,7 @@ export default function AdminDealsPage() {
                 <>
                   <Button
                     variant="outline"
-                    className="text-green-600 hover:text-green-700"
+                    className="text-purple-600 hover:text-purple-700"
                     onClick={() => handleUpdateStatus(selectedTransaction.id, 'READY')}
                   >
                     Завершить сделку

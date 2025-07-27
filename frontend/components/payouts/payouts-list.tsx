@@ -98,7 +98,7 @@ const statusConfig = {
   },
   COMPLETED: {
     label: "Выполнено",
-    color: "bg-green-50 text-green-600 border-green-200",
+    color: "bg-purple-50 text-purple-600 border-purple-200",
   },
   FAILED: {
     label: "Ошибка",
@@ -370,7 +370,7 @@ export function PayoutsList() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
       </div>
     );
   }
@@ -388,7 +388,7 @@ export function PayoutsList() {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Wallet className="h-5 w-5 text-[#006039]" />
+              <Wallet className="h-5 w-5 text-[#530FAD]" />
               <span className="text-sm text-gray-500 uppercase">Выплаты</span>
             </div>
             <DropdownMenu>
@@ -435,7 +435,7 @@ export function PayoutsList() {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-[#006039]" />
+              <TrendingUp className="h-5 w-5 text-[#530FAD]" />
               <span className="text-sm text-gray-500 uppercase">Прибыль</span>
             </div>
             <DropdownMenu>
@@ -706,7 +706,7 @@ export function PayoutsList() {
                       className={cn(
                         "w-12 h-12 rounded-lg flex items-center justify-center",
                         payout.status === "COMPLETED"
-                          ? "bg-green-100"
+                          ? "bg-purple-100"
                           : payout.status === "PROCESSING"
                             ? "bg-blue-100"
                             : payout.status === "PENDING"
@@ -719,7 +719,7 @@ export function PayoutsList() {
                           className={cn(
                             "h-6 w-6",
                             payout.status === "COMPLETED"
-                              ? "text-green-600"
+                              ? "text-purple-600"
                               : payout.status === "PROCESSING"
                                 ? "text-blue-600"
                                 : payout.status === "PENDING"
@@ -732,7 +732,7 @@ export function PayoutsList() {
                           className={cn(
                             "h-6 w-6",
                             payout.status === "COMPLETED"
-                              ? "text-green-600"
+                              ? "text-purple-600"
                               : payout.status === "PROCESSING"
                                 ? "text-blue-600"
                                 : payout.status === "PENDING"
@@ -784,7 +784,7 @@ export function PayoutsList() {
                         {payout.completedAt && (
                           <>
                             <span>•</span>
-                            <span className="text-green-600">
+                            <span className="text-purple-600">
                               Завершено{" "}
                               {format(
                                 new Date(payout.completedAt),
@@ -820,7 +820,7 @@ export function PayoutsList() {
             {/* Loading more indicator */}
             {loadingMore && (
               <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin text-[#006039]" />
+                <Loader2 className="h-6 w-6 animate-spin text-[#530FAD]" />
                 <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                   Загрузка...
                 </span>
@@ -1055,7 +1055,7 @@ export function PayoutsList() {
                               rel="noopener noreferrer"
                               className="flex items-center gap-2 p-3 border rounded-lg hover:bg-gray-50 transition-colors"
                             >
-                              <FileText className="h-5 w-5 text-green-600" />
+                              <FileText className="h-5 w-5 text-purple-600" />
                               <span className="text-sm truncate">
                                 Документ {index + 1}
                               </span>
@@ -1098,7 +1098,7 @@ export function PayoutsList() {
                   )}
                   {selectedPayout.completedAt && (
                     <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mt-1.5" />
+                      <div className="w-2 h-2 bg-purple-500 rounded-full mt-1.5" />
                       <div>
                         <p className="text-sm font-medium">Завершена</p>
                         <p className="text-sm text-gray-600">

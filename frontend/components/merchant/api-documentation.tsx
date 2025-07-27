@@ -39,7 +39,7 @@ interface ApiDocumentationProps {
 
 const methodColors = {
   GET: 'bg-blue-500',
-  POST: 'bg-green-500',
+  POST: 'bg-purple-500',
   PUT: 'bg-orange-500',
   DELETE: 'bg-red-500',
   PATCH: 'bg-purple-500',
@@ -138,9 +138,9 @@ export function ApiDocumentation({
                 className="h-8 w-8"
               >
                 {copiedEndpoint ? (
-                  <Check className="h-4 w-4 text-[#006039]" />
+                  <Check className="h-4 w-4 text-[#530FAD]" />
                 ) : (
-                  <Copy className="h-4 w-4 text-[#006039]" />
+                  <Copy className="h-4 w-4 text-[#530FAD]" />
                 )}
               </Button>
             </div>

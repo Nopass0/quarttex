@@ -48,7 +48,7 @@ export function TransactionFilters({ filters, onFiltersChange }: TransactionFilt
           <div className="space-y-2">
             <Label htmlFor="search">Поиск</Label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#006039]" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#530FAD]" />
               <Input
                 id="search"
                 placeholder="ID, внешний ID..."
@@ -104,7 +104,7 @@ export function TransactionFilters({ filters, onFiltersChange }: TransactionFilt
                 onClick={handleReset}
                 className="w-full"
               >
-                <X className="h-4 w-4 mr-2 text-[#006039]" />
+                <X className="h-4 w-4 mr-2 text-[#530FAD]" />
                 Сбросить
               </Button>
             )}

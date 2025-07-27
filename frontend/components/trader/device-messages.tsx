@@ -70,9 +70,9 @@ const notificationTypeIcons: Record<string, React.ElementType> = {
 const notificationTypeColors: Record<string, string> = {
   SMS: 'bg-blue-100 text-blue-800 border-blue-200',
   PUSH: 'bg-purple-100 text-purple-800 border-purple-200',
-  PAYMENT: 'bg-green-100 text-green-800 border-green-200',
-  TRANSFER: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-  SUCCESS: 'bg-green-100 text-green-800 border-green-200',
+  PAYMENT: 'bg-purple-100 text-purple-800 border-purple-200',
+  TRANSFER: 'bg-purple-100 text-purple-800 border-purple-200',
+  SUCCESS: 'bg-purple-100 text-purple-800 border-purple-200',
   ERROR: 'bg-red-100 text-red-800 border-red-200',
   INFO: 'bg-gray-100 text-gray-800 border-gray-200',
   PENDING: 'bg-yellow-100 text-yellow-800 border-yellow-200'
@@ -285,7 +285,7 @@ export function DeviceMessages() {
                         )}
                         <div className={cn(
                           "w-2 h-2 rounded-full",
-                          device.isOnline ? "bg-green-500" : "bg-gray-300"
+                          device.isOnline ? "bg-purple-500" : "bg-gray-300"
                         )} />
                       </div>
                     </div>

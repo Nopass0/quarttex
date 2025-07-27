@@ -22,7 +22,7 @@ export default function Error({
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0f0f0f] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 bg-white dark:bg-[#29382f] shadow-lg border-gray-200 dark:border-[#29382f]">
+      <Card className="w-full max-w-md p-8 bg-white dark:bg-[#292133] shadow-lg border-gray-200 dark:border-[#292133]">
         <div className="flex flex-col items-center">
           <Logo size="lg" />
           
@@ -52,11 +52,11 @@ export default function Error({
               className="flex-1"
               onClick={() => router.push("/")}
             >
-              <Home className="mr-2 h-4 w-4 text-[#006039] dark:text-[#2d6a42]" />
+              <Home className="mr-2 h-4 w-4 text-[#530FAD] dark:text-[#530FAD]" />
               На главную
             </Button>
             <Button
-              className="flex-1 bg-[#006039] hover:bg-[#004d2e] dark:bg-[#2d6a42] dark:hover:bg-[#236035]"
+              className="flex-1 bg-[#530FAD] hover:bg-[#3d0b80] dark:bg-[#530FAD] dark:hover:bg-[#6b1fd9]"
               onClick={() => reset()}
             >
               <RefreshCw className="mr-2 h-4 w-4 text-white" />

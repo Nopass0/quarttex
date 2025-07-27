@@ -192,7 +192,7 @@ export default function WithdrawalsPage() {
     const variants: Record<string, { color: string; label: string }> = {
       PENDING: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', label: 'Ожидает' },
       PROCESSING: { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Обработка' },
-      COMPLETED: { color: 'bg-green-100 text-green-800 border-green-200', label: 'Выполнен' },
+      COMPLETED: { color: 'bg-purple-100 text-purple-800 border-purple-200', label: 'Выполнен' },
       FAILED: { color: 'bg-red-100 text-red-800 border-red-200', label: 'Ошибка' },
       CANCELLED: { color: 'bg-gray-100 text-gray-800 border-gray-200', label: 'Отменен' },
     }
@@ -232,7 +232,7 @@ export default function WithdrawalsPage() {
         <Card className="p-6">
           <div className="space-y-2">
             <p className="text-sm text-gray-600">Выполнено</p>
-            <p className="text-2xl font-bold text-green-600">{stats.completedWithdrawals}</p>
+            <p className="text-2xl font-bold text-purple-600">{stats.completedWithdrawals}</p>
           </div>
         </Card>
         <Card className="p-6">
@@ -316,7 +316,7 @@ export default function WithdrawalsPage() {
                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                       withdrawal.status === 'PENDING' ? 'bg-yellow-100' :
                       withdrawal.status === 'PROCESSING' ? 'bg-blue-100' :
-                      withdrawal.status === 'COMPLETED' ? 'bg-green-100' :
+                      withdrawal.status === 'COMPLETED' ? 'bg-purple-100' :
                       withdrawal.status === 'FAILED' ? 'bg-red-100' :
                       'bg-gray-100'
                     }`}>
@@ -356,7 +356,7 @@ export default function WithdrawalsPage() {
                           onClick={() => copyToClipboard(withdrawal.walletAddress, 'address')}
                         >
                           {copiedAddress === withdrawal.walletAddress ? (
-                            <Check className="h-3 w-3 text-green-600" />
+                            <Check className="h-3 w-3 text-purple-600" />
                           ) : (
                             <Copy className="h-3 w-3 text-gray-400 hover:text-gray-600" />
                           )}
@@ -379,7 +379,7 @@ export default function WithdrawalsPage() {
                           onClick={() => copyToClipboard(withdrawal.txHash!, 'txHash')}
                         >
                           {copiedTxHash === withdrawal.txHash ? (
-                            <Check className="h-3 w-3 text-green-600" />
+                            <Check className="h-3 w-3 text-purple-600" />
                           ) : (
                             <Copy className="h-3 w-3 text-gray-400 hover:text-gray-600" />
                           )}
@@ -402,7 +402,7 @@ export default function WithdrawalsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-green-600 hover:text-green-700"
+                          className="text-purple-600 hover:text-purple-700"
                           onClick={() => setConfirmDialog({ open: true, withdrawal })}
                         >
                           Обработать

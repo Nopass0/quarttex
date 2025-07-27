@@ -287,11 +287,11 @@ export function RequisitesAndDevices() {
               >
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
-                    <User className="h-4 w-4 text-[#006039]" />
+                    <User className="h-4 w-4 text-[#530FAD]" />
                   </div>
                   <span className="text-gray-700">{userEmail}</span>
                 </div>
-                <ChevronDown className="h-4 w-4 text-[#006039]" />
+                <ChevronDown className="h-4 w-4 text-[#530FAD]" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -299,7 +299,7 @@ export function RequisitesAndDevices() {
                 onClick={handleLogout}
                 className="text-red-600 focus:text-red-600 hover:bg-gray-50 cursor-pointer"
               >
-                <LogOut className="mr-2 h-4 w-4 text-[#006039]" />
+                <LogOut className="mr-2 h-4 w-4 text-[#530FAD]" />
                 Выйти
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -340,7 +340,7 @@ export function RequisitesAndDevices() {
               </p>
               <Button 
                 onClick={() => setRequisiteDialogOpen(true)}
-                className="bg-[#006039] hover:bg-[#006039]/90"
+                className="bg-[#530FAD] hover:bg-[#530FAD]/90"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Добавить реквизит
@@ -417,23 +417,23 @@ export function RequisitesAndDevices() {
                               size="sm"
                               className="h-8 w-8 p-0"
                             >
-                              <MoreVertical className="h-4 w-4 text-[#006039]" />
+                              <MoreVertical className="h-4 w-4 text-[#530FAD]" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48">
                             <DropdownMenuItem>
-                              <Edit className="mr-2 h-4 w-4 text-[#006039]" />
+                              <Edit className="mr-2 h-4 w-4 text-[#530FAD]" />
                               Редактировать
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                              <Copy className="mr-2 h-4 w-4 text-[#006039]" />
+                              <Copy className="mr-2 h-4 w-4 text-[#530FAD]" />
                               Копировать
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => deleteRequisite(requisite.id)}
                               className="text-red-600"
                             >
-                              <Trash2 className="mr-2 h-4 w-4 text-[#006039]" />
+                              <Trash2 className="mr-2 h-4 w-4 text-[#530FAD]" />
                               Удалить
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -446,7 +446,7 @@ export function RequisitesAndDevices() {
               
               {requisites.length === 0 && (
                 <div className="p-12 text-center">
-                  <CreditCard className="h-12 w-12 mx-auto text-[#006039] mb-4" />
+                  <CreditCard className="h-12 w-12 mx-auto text-[#530FAD] mb-4" />
                   <p className="text-gray-500">Реквизиты не добавлены</p>
                 </div>
               )}
@@ -463,7 +463,7 @@ export function RequisitesAndDevices() {
               </p>
               <Button 
                 onClick={() => setDeviceDialogOpen(true)}
-                style={{ backgroundColor: '#006039', color: 'white' }}
+                style={{ backgroundColor: '#530FAD', color: 'white' }}
                 className="hover:opacity-90 transition-opacity"
               >
                 <Plus className="mr-2 h-4 w-4" />
@@ -488,7 +488,7 @@ export function RequisitesAndDevices() {
                   {loading ? (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-8">
-                        <Loader2 className="h-8 w-8 animate-spin mx-auto text-[#006039]" />
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto text-[#530FAD]" />
                         <p className="mt-2 text-gray-500">Загрузка устройств...</p>
                       </TableCell>
                     </TableRow>
@@ -497,13 +497,13 @@ export function RequisitesAndDevices() {
                     <TableRow key={device.id} className="hover:bg-gray-50/50">
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
-                          <Smartphone className="h-4 w-4 text-[#006039]" />
+                          <Smartphone className="h-4 w-4 text-[#530FAD]" />
                           {device.name}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Globe className="h-4 w-4 text-[#006039]" />
+                          <Globe className="h-4 w-4 text-[#530FAD]" />
                           {device.browser}
                         </div>
                       </TableCell>
@@ -515,7 +515,7 @@ export function RequisitesAndDevices() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {device.isActive ? (
-                            <Badge className="bg-green-50 text-green-600 border-0">
+                            <Badge className="bg-purple-50 text-purple-600 border-0">
                               <CheckCircle className="mr-1 h-3 w-3" />
                               Активно
                             </Badge>
@@ -526,7 +526,7 @@ export function RequisitesAndDevices() {
                             </Badge>
                           )}
                           {device.isTrusted && (
-                            <Shield className="h-4 w-4 text-[#006039]" />
+                            <Shield className="h-4 w-4 text-[#530FAD]" />
                           )}
                         </div>
                       </TableCell>
@@ -538,7 +538,7 @@ export function RequisitesAndDevices() {
                               size="sm"
                               className="h-8 w-8 p-0"
                             >
-                              <MoreVertical className="h-4 w-4 text-[#006039]" />
+                              <MoreVertical className="h-4 w-4 text-[#530FAD]" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48">
@@ -558,7 +558,7 @@ export function RequisitesAndDevices() {
                               onClick={() => deleteDevice(device.id)}
                               className="text-red-600"
                             >
-                              <Trash2 className="mr-2 h-4 w-4 text-[#006039]" />
+                              <Trash2 className="mr-2 h-4 w-4 text-[#530FAD]" />
                               Удалить
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -624,7 +624,7 @@ export function RequisitesAndDevices() {
             <Button variant="outline" onClick={() => setRequisiteDialogOpen(false)}>
               Отмена
             </Button>
-            <Button onClick={handleAddRequisite} className="bg-[#006039] hover:bg-[#006039]/90">
+            <Button onClick={handleAddRequisite} className="bg-[#530FAD] hover:bg-[#530FAD]/90">
               Добавить
             </Button>
           </DialogFooter>
@@ -655,7 +655,7 @@ export function RequisitesAndDevices() {
             <Button variant="outline" onClick={() => setDeviceDialogOpen(false)}>
               Отмена
             </Button>
-            <Button onClick={handleAddDevice} style={{ backgroundColor: '#006039', color: 'white' }} className="hover:opacity-90 transition-opacity">
+            <Button onClick={handleAddDevice} style={{ backgroundColor: '#530FAD', color: 'white' }} className="hover:opacity-90 transition-opacity">
               Добавить
             </Button>
           </DialogFooter>

@@ -93,7 +93,7 @@ export function IdeaModal({ open, onOpenChange }: IdeaModalProps) {
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting || !idea.trim()}
-              className="flex-1 bg-[#006039] hover:bg-[#005030]"
+              className="flex-1 bg-[#530FAD] hover:bg-[#005030]"
             >
               {isSubmitting ? "Отправка..." : "Отправить"}
             </Button>

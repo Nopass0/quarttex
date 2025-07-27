@@ -9,12 +9,12 @@ import Link from "next/link"
 export default function NotFound() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0f0f0f] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 bg-white dark:bg-[#29382f] shadow-lg border-gray-200 dark:border-[#29382f]">
+      <Card className="w-full max-w-md p-8 bg-white dark:bg-[#292133] shadow-lg border-gray-200 dark:border-[#292133]">
         <div className="flex flex-col items-center">
           <Logo size="lg" />
           
           <div className="mt-8 p-4 bg-gray-100 dark:bg-[#0f0f0f] rounded-full">
-            <FileQuestion className="h-8 w-8 text-[#006039] dark:text-[#2d6a42]" />
+            <FileQuestion className="h-8 w-8 text-[#530FAD] dark:text-[#530FAD]" />
           </div>
           
           <h1 className="mt-6 text-2xl font-semibold text-gray-900 dark:text-[#eeeeee]">
@@ -35,11 +35,11 @@ export default function NotFound() {
               className="flex-1"
               onClick={() => window.history.back()}
             >
-              <ArrowLeft className="mr-2 h-4 w-4 text-[#006039] dark:text-[#2d6a42]" />
+              <ArrowLeft className="mr-2 h-4 w-4 text-[#530FAD] dark:text-[#530FAD]" />
               Назад
             </Button>
             <Link href="/" className="flex-1">
-              <Button className="w-full bg-[#006039] hover:bg-[#004d2e] dark:bg-[#2d6a42] dark:hover:bg-[#236035]">
+              <Button className="w-full bg-[#530FAD] hover:bg-[#3d0b80] dark:bg-[#530FAD] dark:hover:bg-[#6b1fd9]">
                 <Home className="mr-2 h-4 w-4 text-white" />
                 На главную
               </Button>

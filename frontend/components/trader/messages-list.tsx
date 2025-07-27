@@ -59,9 +59,9 @@ const statusConfig = {
   processed: {
     label: "Обработано",
     icon: "✓",
-    iconColor: "text-[#006039]",
-    borderColor: "border-[#006039]/20",
-    bgColor: "bg-[#006039]/5",
+    iconColor: "text-[#530FAD]",
+    borderColor: "border-[#530FAD]/20",
+    bgColor: "bg-[#530FAD]/5",
   },
   warning: {
     label: "Без сделки",
@@ -278,7 +278,7 @@ export function MessagesList() {
                   Параметры поиска
                 </div>
                 <Button variant="outline" className="h-9">
-                  <SlidersHorizontal className="h-4 w-4 mr-2 text-[#006039]" />
+                  <SlidersHorizontal className="h-4 w-4 mr-2 text-[#530FAD]" />
                   <span className="text-gray-500">Не выбраны</span>
                   <ChevronDown className="h-4 w-4 ml-2 text-gray-400" />
                 </Button>
@@ -292,7 +292,7 @@ export function MessagesList() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="h-9">
-                      <ArrowUpDown className="h-4 w-4 mr-2 text-[#006039]" />
+                      <ArrowUpDown className="h-4 w-4 mr-2 text-[#530FAD]" />
                       <span>
                         {sortOrder === "newest" ? "Сначала новые" : "Сначала старые"}
                       </span>
@@ -323,7 +323,7 @@ export function MessagesList() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="w-full h-9">
-                  <ArrowUpDown className="h-4 w-4 mr-2 text-[#006039]" />
+                  <ArrowUpDown className="h-4 w-4 mr-2 text-[#530FAD]" />
                   <span>
                     {sortOrder === "newest" ? "Сначала новые" : "Сначала старые"}
                   </span>
@@ -369,7 +369,7 @@ export function MessagesList() {
         <div className="space-y-3">
           {loading && (
             <div className="flex justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-[#006039]" />
+              <Loader2 className="h-6 w-6 animate-spin text-[#530FAD]" />
             </div>
           )}
 
@@ -403,7 +403,7 @@ export function MessagesList() {
                     {/* Header */}
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-[#006039] truncate">
+                        <span className="text-sm font-medium text-[#530FAD] truncate">
                           {message.sender}
                         </span>
                         <span className="hidden md:block text-xs text-gray-500">
@@ -449,7 +449,7 @@ export function MessagesList() {
                             "text-sm font-medium",
                             message.status === "danger" ? "text-red-600" : 
                             message.status === "warning" ? "text-orange-600" : 
-                            "text-[#006039]"
+                            "text-[#530FAD]"
                           )}>
                             {message.amount} {message.currency}
                           </span>
@@ -475,7 +475,7 @@ export function MessagesList() {
           {/* Load more indicator */}
           {!loading && filteredMessages.length > 0 && (
             <div className="flex justify-center py-4">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#006039]"></div>
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#530FAD]"></div>
             </div>
           )}
         </div>

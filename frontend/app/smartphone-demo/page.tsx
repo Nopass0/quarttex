@@ -45,7 +45,7 @@ export default function SmartphoneDemoPage() {
             <CardContent className="p-6">
               <p className="text-sm text-gray-500 mb-1">Общий баланс</p>
               <p className="text-3xl font-bold">₽245,680.50</p>
-              <p className="text-sm text-green-600 mt-2">+12.5% за месяц</p>
+              <p className="text-sm text-purple-600 mt-2">+12.5% за месяц</p>
             </CardContent>
           </Card>
 
@@ -97,7 +97,7 @@ export default function SmartphoneDemoPage() {
                 <p className="font-medium">Перевод от Ивана</p>
                 <p className="text-sm text-gray-500">Вчера, 18:45</p>
               </div>
-              <span className="font-medium text-green-600">+₽15,000</span>
+              <span className="font-medium text-purple-600">+₽15,000</span>
             </div>
           </div>
         </div>
@@ -173,7 +173,7 @@ export default function SmartphoneDemoPage() {
             </div>
             <div className="p-4 border rounded-lg">
               <p className="text-sm text-gray-500">Статус</p>
-              <p className="font-medium text-green-600">Верифицирован</p>
+              <p className="font-medium text-purple-600">Верифицирован</p>
             </div>
           </div>
         </div>
@@ -317,7 +317,7 @@ export default function SmartphoneDemoPage() {
                     setCurrentScreen("cards")
                   }}
                 >
-                  <Check className="h-4 w-4 mr-2 text-green-500" />
+                  <Check className="h-4 w-4 mr-2 text-purple-500" />
                   Идеальное состояние
                 </Button>
               </div>

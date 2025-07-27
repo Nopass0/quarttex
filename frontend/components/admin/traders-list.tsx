@@ -332,7 +332,7 @@ export function TradersList() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <div className="relative w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#006039]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#530FAD]" />
             <Input
               placeholder="Поиск по email или ID..."
               value={searchQuery}
@@ -346,12 +346,12 @@ export function TradersList() {
             onClick={fetchTraders}
             disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 text-[#006039] ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 text-[#530FAD] ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#006039] hover:bg-[#005030]">
+            <Button className="bg-[#530FAD] hover:bg-[#005030]">
               <UserPlus className="mr-2 h-4 w-4 text-white" />
               Добавить трейдера
             </Button>
@@ -421,7 +421,7 @@ export function TradersList() {
             <DialogFooter>
               <Button
                 onClick={handleCreateTrader}
-                className="bg-[#006039] hover:bg-[#005030]"
+                className="bg-[#530FAD] hover:bg-[#005030]"
                 disabled={isLoading || !formData.email}
               >
                 Создать
@@ -483,7 +483,7 @@ export function TradersList() {
                     <div className="text-sm font-medium">${formatAmount(trader.trustBalance)}</div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm font-medium text-green-600">${formatAmount(trader.deposit || 0)}</div>
+                    <div className="text-sm font-medium text-purple-600">${formatAmount(trader.deposit || 0)}</div>
                   </TableCell>
                   <TableCell>₽{formatAmount(trader.turnover)}</TableCell>
                   <TableCell>
@@ -534,7 +534,7 @@ export function TradersList() {
                           className="h-8 w-8 p-0"
                           disabled={isLoading}
                         >
-                          <MoreHorizontal className="h-4 w-4 text-[#006039]" />
+                          <MoreHorizontal className="h-4 w-4 text-[#530FAD]" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-48" align="end">
@@ -548,12 +548,12 @@ export function TradersList() {
                           >
                             {trader.banned ? (
                               <>
-                                <CheckCircle className="h-4 w-4 mr-2 text-[#006039]" />
+                                <CheckCircle className="h-4 w-4 mr-2 text-[#530FAD]" />
                                 Разблокировать
                               </>
                             ) : (
                               <>
-                                <Ban className="h-4 w-4 mr-2 text-[#006039]" />
+                                <Ban className="h-4 w-4 mr-2 text-[#530FAD]" />
                                 Заблокировать
                               </>
                             )}
@@ -565,7 +565,7 @@ export function TradersList() {
                             onClick={() => handleRegeneratePassword(trader.id)}
                             disabled={isLoading}
                           >
-                            <RefreshCw className="h-4 w-4 mr-2 text-[#006039]" />
+                            <RefreshCw className="h-4 w-4 mr-2 text-[#530FAD]" />
                             Новый пароль
                           </Button>
                           <Button
@@ -575,7 +575,7 @@ export function TradersList() {
                             onClick={() => handleDeleteTrader(trader.id)}
                             disabled={isLoading}
                           >
-                            <Trash2 className="h-4 w-4 mr-2 text-[#006039]" />
+                            <Trash2 className="h-4 w-4 mr-2 text-[#530FAD]" />
                             Удалить
                           </Button>
                         </div>
@@ -716,7 +716,7 @@ export function TradersList() {
           <DialogFooter>
             <Button
               onClick={handleUpdateTrader}
-              className="bg-[#006039] hover:bg-[#005030]"
+              className="bg-[#530FAD] hover:bg-[#005030]"
               disabled={isLoading}
             >
               Сохранить
@@ -742,7 +742,7 @@ export function TradersList() {
                 className="absolute right-2 top-1/2 -translate-y-1/2"
                 onClick={() => copyToClipboard(generatedPassword)}
               >
-                <Copy className="h-4 w-4 text-[#006039]" />
+                <Copy className="h-4 w-4 text-[#530FAD]" />
               </Button>
             </div>
           </div>
@@ -752,7 +752,7 @@ export function TradersList() {
                 setShowPasswordDialog(false)
                 setGeneratedPassword('')
               }}
-              className="bg-[#006039] hover:bg-[#005030]"
+              className="bg-[#530FAD] hover:bg-[#005030]"
             >
               Закрыть
             </Button>

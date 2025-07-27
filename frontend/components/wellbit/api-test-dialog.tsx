@@ -301,19 +301,19 @@ export function WellbitApiTestDialog({ open, onOpenChange }: WellbitApiTestDialo
               <SelectContent>
                 <SelectItem value="payment/create">
                   <div className="flex items-center gap-2">
-                    <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs">POST</Badge>
+                    <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 text-xs">POST</Badge>
                     /payment/create
                   </div>
                 </SelectItem>
                 <SelectItem value="payment/get">
                   <div className="flex items-center gap-2">
-                    <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs">POST</Badge>
+                    <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 text-xs">POST</Badge>
                     /payment/get
                   </div>
                 </SelectItem>
                 <SelectItem value="payment/status">
                   <div className="flex items-center gap-2">
-                    <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs">POST</Badge>
+                    <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 text-xs">POST</Badge>
                     /payment/status
                   </div>
                 </SelectItem>

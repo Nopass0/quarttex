@@ -192,7 +192,7 @@ export default function MerchantDashboardPage() {
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-muted-foreground">Эквивалент в USDT:</span>
-                          <span className="text-xl font-bold text-green-600">
+                          <span className="text-xl font-bold text-purple-600">
                             {truncateDecimals(statistics.balance.total / currentRate, 2)} USDT
                           </span>
                         </div>
@@ -213,7 +213,7 @@ export default function MerchantDashboardPage() {
                         {statistics.balance.totalUsdt !== undefined && (
                           <div className="flex justify-between items-center mt-3">
                             <span className="text-sm text-muted-foreground">Баланс в USDT:</span>
-                            <span className="text-xl font-bold text-green-600">
+                            <span className="text-xl font-bold text-purple-600">
                               {truncateDecimals(statistics.balance.totalUsdt, 2)} USDT
                             </span>
                           </div>
@@ -271,7 +271,7 @@ export default function MerchantDashboardPage() {
             <div className="text-right">
               {merchantProfile && !merchantProfile.countInRubEquivalent && statistics.balance.totalUsdt !== undefined ? (
                 <>
-                  <div className="text-3xl font-bold text-green-600">
+                  <div className="text-3xl font-bold text-purple-600">
                     {truncateDecimals(statistics.balance.totalUsdt, 2)} USDT
                   </div>
                   <div className="text-lg text-gray-600 mt-1">
@@ -279,7 +279,7 @@ export default function MerchantDashboardPage() {
                   </div>
                 </>
               ) : (
-                <div className="text-3xl font-bold text-green-600">
+                <div className="text-3xl font-bold text-purple-600">
                   {formatAmount(statistics.balance.total)} ₽
                 </div>
               )}
@@ -292,7 +292,7 @@ export default function MerchantDashboardPage() {
             <div className="bg-muted/50 p-4 rounded-lg space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Сумма успешных сделок:</span>
-                <span className="font-medium text-green-600">+{formatAmount(statistics.balance.formula.dealsTotal)} ₽</span>
+                <span className="font-medium text-purple-600">+{formatAmount(statistics.balance.formula.dealsTotal)} ₽</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Комиссия платформы со сделок:</span>
@@ -315,12 +315,12 @@ export default function MerchantDashboardPage() {
               <Separator className="my-2" />
               <div className="flex justify-between text-sm font-medium">
                 <span>Итоговый баланс:</span>
-                <span className="text-green-600">{formatAmount(statistics.balance.total)} ₽</span>
+                <span className="text-purple-600">{formatAmount(statistics.balance.total)} ₽</span>
               </div>
               {statistics.balance.totalUsdt !== undefined && merchantProfile && !merchantProfile.countInRubEquivalent && (
                 <div className="flex justify-between text-sm font-medium">
                   <span>Баланс в USDT:</span>
-                  <span className="text-green-600">{truncateDecimals(statistics.balance.totalUsdt, 2)} USDT</span>
+                  <span className="text-purple-600">{truncateDecimals(statistics.balance.totalUsdt, 2)} USDT</span>
                 </div>
               )}
             </div>
@@ -349,7 +349,7 @@ export default function MerchantDashboardPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CardTitle>Сделки</CardTitle>
-                <ArrowUpRight className="h-4 w-4 text-green-600" />
+                <ArrowUpRight className="h-4 w-4 text-purple-600" />
               </div>
               <Badge variant="outline">{statistics.deals.total}</Badge>
             </div>
@@ -365,8 +365,8 @@ export default function MerchantDashboardPage() {
                 <div>
                   <p className="text-sm text-muted-foreground">Конверсия выдачи</p>
                   <div className="flex items-center gap-2">
-                    <Percent className="h-4 w-4 text-green-600" />
-                    <p className="text-2xl font-bold text-green-600">{statistics.deals.requisiteConversion?.rate || "0.00"}%</p>
+                    <Percent className="h-4 w-4 text-purple-600" />
+                    <p className="text-2xl font-bold text-purple-600">{statistics.deals.requisiteConversion?.rate || "0.00"}%</p>
                   </div>
                 </div>
               </div>
@@ -376,7 +376,7 @@ export default function MerchantDashboardPage() {
                 <div className="mt-3 p-3 bg-muted/50 rounded-lg space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Успешных попыток:</span>
-                    <span className="font-medium text-green-600">{statistics.deals.requisiteConversion.successfulAttempts}</span>
+                    <span className="font-medium text-purple-600">{statistics.deals.requisiteConversion.successfulAttempts}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Неудачных попыток:</span>
@@ -497,7 +497,7 @@ export default function MerchantDashboardPage() {
                   </TableCell>
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-1 text-sm">
-                      <span className="text-green-600">{method.commissionPayin}%</span>
+                      <span className="text-purple-600">{method.commissionPayin}%</span>
                       <span className="text-muted-foreground">/</span>
                       <span className="text-red-600">{method.commissionPayout}%</span>
                     </div>
@@ -510,7 +510,7 @@ export default function MerchantDashboardPage() {
                   </TableCell>
                   <TableCell className="text-center">
                     <div>
-                      <p className="font-medium text-green-600">{method.deals.successful}</p>
+                      <p className="font-medium text-purple-600">{method.deals.successful}</p>
                       <p className="text-xs text-muted-foreground">{formatAmount(method.deals.successVolume)} ₽</p>
                     </div>
                   </TableCell>
@@ -522,7 +522,7 @@ export default function MerchantDashboardPage() {
                   </TableCell>
                   <TableCell className="text-center">
                     <div>
-                      <p className="font-medium text-green-600">{method.payouts.successful}</p>
+                      <p className="font-medium text-purple-600">{method.payouts.successful}</p>
                       <p className="text-xs text-muted-foreground">{formatAmount(method.payouts.successVolume)} ₽</p>
                     </div>
                   </TableCell>
@@ -530,7 +530,7 @@ export default function MerchantDashboardPage() {
                     <div className="flex items-center justify-center gap-1">
                       <span className="font-medium">{method.total.transactions}</span>
                       <span className="text-muted-foreground">/</span>
-                      <span className="font-medium text-green-600">{method.total.successfulTransactions}</span>
+                      <span className="font-medium text-purple-600">{method.total.successfulTransactions}</span>
                     </div>
                   </TableCell>
                 </TableRow>

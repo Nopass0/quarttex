@@ -112,7 +112,7 @@ const disputeStatusConfig = {
   },
   RESOLVED_SUCCESS: {
     label: "В вашу пользу",
-    color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
     icon: CheckCircle
   },
   RESOLVED_FAIL: {
@@ -260,7 +260,7 @@ export function PayoutDisputesListEnhanced() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
       </div>
     );
   }
@@ -322,7 +322,7 @@ export function PayoutDisputesListEnhanced() {
                 className="h-12 justify-between min-w-[200px] max-xl:w-full"
               >
                 <span className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-[#006039]" />
+                  <Filter className="h-4 w-4 text-[#530FAD]" />
                   {filterStatus === "all" ? "Все статусы" : disputeStatusConfig[filterStatus as keyof typeof disputeStatusConfig]?.label || filterStatus}
                 </span>
                 <ChevronDown className="h-4 w-4 opacity-50" />
@@ -342,7 +342,7 @@ export function PayoutDisputesListEnhanced() {
                 На рассмотрении
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setFilterStatus("RESOLVED_SUCCESS")}>
-                <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
+                <CheckCircle className="h-4 w-4 mr-2 text-purple-600" />
                 В вашу пользу
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setFilterStatus("RESOLVED_FAIL")}>
@@ -408,7 +408,7 @@ export function PayoutDisputesListEnhanced() {
                   key={dispute.id}
                   className={cn(
                     "p-4 cursor-pointer hover:shadow-md transition-all duration-200",
-                    "dark:bg-[#29382f] dark:hover:bg-[#29382f]/80"
+                    "dark:bg-[#292133] dark:hover:bg-[#292133]/80"
                   )}
                   onClick={() => handleViewDetails(dispute)}
                 >
@@ -419,7 +419,7 @@ export function PayoutDisputesListEnhanced() {
                         "w-12 h-12 rounded-full flex items-center justify-center",
                         dispute.status === "OPEN" && "bg-yellow-100 dark:bg-yellow-900/30",
                         dispute.status === "IN_PROGRESS" && "bg-blue-100 dark:bg-blue-900/30",
-                        dispute.status === "RESOLVED_SUCCESS" && "bg-green-100 dark:bg-green-900/30",
+                        dispute.status === "RESOLVED_SUCCESS" && "bg-purple-100 dark:bg-purple-900/30",
                         dispute.status === "RESOLVED_FAIL" && "bg-red-100 dark:bg-red-900/30",
                         dispute.status === "CANCELLED" && "bg-gray-100 dark:bg-gray-700"
                       )}>
@@ -427,7 +427,7 @@ export function PayoutDisputesListEnhanced() {
                           "h-6 w-6",
                           dispute.status === "OPEN" && "text-yellow-600 dark:text-yellow-400",
                           dispute.status === "IN_PROGRESS" && "text-blue-600 dark:text-blue-400",
-                          dispute.status === "RESOLVED_SUCCESS" && "text-green-600 dark:text-green-400",
+                          dispute.status === "RESOLVED_SUCCESS" && "text-purple-600 dark:text-purple-400",
                           dispute.status === "RESOLVED_FAIL" && "text-red-600 dark:text-red-400",
                           dispute.status === "CANCELLED" && "text-gray-600 dark:text-gray-400"
                         )} />

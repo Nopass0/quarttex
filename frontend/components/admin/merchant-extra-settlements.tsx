@@ -120,15 +120,15 @@ export function MerchantExtraSettlements({ merchantId }: MerchantExtraSettlement
                 </div>
               </div>
             </div>
-            <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
+            <div className="bg-purple-50 dark:bg-purple-900/30 p-4 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Общая сумма</p>
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                     ${formatAmount(totalAmount)}
                   </p>
                 </div>
-                <DollarSign className="h-8 w-8 text-green-400" />
+                <DollarSign className="h-8 w-8 text-purple-400" />
               </div>
             </div>
             <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
@@ -195,7 +195,7 @@ export function MerchantExtraSettlements({ merchantId }: MerchantExtraSettlement
                           {settlement.id.slice(0, 8)}...
                         </TableCell>
                         <TableCell>
-                          <div className="font-medium text-green-600 dark:text-green-400">
+                          <div className="font-medium text-purple-600 dark:text-purple-400">
                             ${formatAmount(settlement.amount)}
                           </div>
                         </TableCell>

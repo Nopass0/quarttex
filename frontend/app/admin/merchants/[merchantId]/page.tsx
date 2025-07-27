@@ -181,7 +181,7 @@ export default function MerchantDetailPage() {
               <div className="flex items-center gap-3">
                 <Badge 
                   variant={merchant.disabled ? 'secondary' : 'default'}
-                  className={merchant.disabled ? 'bg-gray-100 dark:bg-gray-700' : 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700'}
+                  className={merchant.disabled ? 'bg-gray-100 dark:bg-gray-700' : 'bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700'}
                 >
                   {merchant.disabled ? 'Отключен' : 'Активен'}
                 </Badge>
@@ -281,12 +281,12 @@ export default function MerchantDetailPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Баланс (рубли)</p>
-                  <p className="text-2xl font-bold text-[#006039] dark:text-green-400 mt-1">
+                  <p className="text-2xl font-bold text-[#530FAD] dark:text-purple-400 mt-1">
                     {formatAmount(merchant.balanceRub || 0)} ₽
                   </p>
                 </div>
-                <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
-                  <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
+                <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                  <DollarSign className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                 </div>
               </div>
             </div>
@@ -394,8 +394,8 @@ export default function MerchantDetailPage() {
                       {merchant.merchantMethods.map((mm) => (
                         <div key={mm.id} className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                           <div className="flex items-center gap-4">
-                            <div className={`p-2 rounded-lg ${mm.isEnabled ? 'bg-green-50 dark:bg-green-900/30' : 'bg-gray-100 dark:bg-gray-700'}`}>
-                              <Activity className={`h-5 w-5 ${mm.isEnabled ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`} />
+                            <div className={`p-2 rounded-lg ${mm.isEnabled ? 'bg-purple-50 dark:bg-purple-900/30' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                              <Activity className={`h-5 w-5 ${mm.isEnabled ? 'text-purple-600 dark:text-purple-400' : 'text-gray-400 dark:text-gray-500'}`} />
                             </div>
                             <div>
                               <div className="font-medium">{mm.method.name}</div>
@@ -410,7 +410,7 @@ export default function MerchantDetailPage() {
                           </div>
                           <Badge 
                             variant={mm.isEnabled ? 'default' : 'secondary'}
-                            className={mm.isEnabled ? 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700' : 'dark:bg-gray-700 dark:text-gray-400'}
+                            className={mm.isEnabled ? 'bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700' : 'dark:bg-gray-700 dark:text-gray-400'}
                           >
                             {mm.isEnabled ? 'Активен' : 'Отключен'}
                           </Badge>

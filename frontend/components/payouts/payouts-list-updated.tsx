@@ -247,7 +247,7 @@ export function PayoutsList() {
 
     // Check status first, ignore confirmed_at for color determination
     if (payout.status === "completed") {
-      return "bg-green-100 text-green-700";
+      return "bg-purple-100 text-purple-700";
     } else if (payout.status === "cancelled") {
       return "bg-red-100 text-red-700";
     } else if (payout.status === "checking") {
@@ -818,7 +818,7 @@ export function PayoutsList() {
                 })}
               </div>
               {payout.accepted_at && (
-                <div className="text-xs text-green-600">
+                <div className="text-xs text-purple-600">
                   Принято: {format(new Date(payout.accepted_at), "dd.MM.yyyy HH:mm", {
                     locale: ru,
                   })}
@@ -991,7 +991,7 @@ export function PayoutsList() {
             {payout.status === "created" ? (
               <Button
                 size="sm"
-                className="h-9 px-4 bg-[#006039] hover:bg-[#004d2e] text-white"
+                className="h-9 px-4 bg-[#530FAD] hover:bg-[#530FAD/90] text-white"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleAcceptPayout(payout.id);
@@ -1004,14 +1004,14 @@ export function PayoutsList() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-8 w-8 p-0 hover:bg-green-50"
+                  className="h-8 w-8 p-0 hover:bg-purple-50"
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedPayoutForAction(payout.id);
                     setConfirmDialogOpen(true);
                   }}
                 >
-                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <CheckCircle className="h-5 w-5 text-purple-600" />
                 </Button>
                 <Button
                   size="sm"
@@ -1137,13 +1137,13 @@ export function PayoutsList() {
               >
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
-                    <User className="h-4 w-4 text-[#006039]" />
+                    <User className="h-4 w-4 text-[#530FAD]" />
                   </div>
                   <span className="text-gray-700 font-medium">
                     ${traderProfile?.numericId || "0000"}
                   </span>
                 </div>
-                <ChevronDown className="h-4 w-4 text-[#006039]" />
+                <ChevronDown className="h-4 w-4 text-[#530FAD]" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -1151,7 +1151,7 @@ export function PayoutsList() {
                 onClick={handleLogout}
                 className="text-red-600 focus:text-red-600 hover:bg-gray-50 cursor-pointer"
               >
-                <LogOut className="mr-2 h-4 w-4 text-[#006039]" />
+                <LogOut className="mr-2 h-4 w-4 text-[#530FAD]" />
                 Выйти
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -1185,12 +1185,12 @@ export function PayoutsList() {
                     ) : (
                       <div className="flex gap-1">
                         {selectedTrafficType.includes("sbp") && (
-                          <Badge className="h-5 px-2 bg-green-100 text-green-700 border-green-200">
+                          <Badge className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200">
                             СБП
                           </Badge>
                         )}
                         {selectedTrafficType.includes("card") && (
-                          <Badge className="h-5 px-2 bg-green-100 text-green-700 border-green-200">
+                          <Badge className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200">
                             Карты
                           </Badge>
                         )}
@@ -1262,13 +1262,13 @@ export function PayoutsList() {
                         {selectedBanks.slice(0, 2).map((bank) => (
                           <Badge
                             key={bank}
-                            className="h-5 px-2 bg-green-100 text-green-700 border-green-200"
+                            className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200"
                           >
                             {bank}
                           </Badge>
                         ))}
                         {selectedBanks.length > 2 && (
-                          <Badge className="h-5 px-2 bg-green-100 text-green-700 border-green-200">
+                          <Badge className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200">
                             +{selectedBanks.length - 2}
                           </Badge>
                         )}
@@ -1328,13 +1328,13 @@ export function PayoutsList() {
                         {selectedCardBanks.slice(0, 2).map((bank) => (
                           <Badge
                             key={bank}
-                            className="h-5 px-2 bg-green-100 text-green-700 border-green-200"
+                            className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200"
                           >
                             {bank}
                           </Badge>
                         ))}
                         {selectedCardBanks.length > 2 && (
-                          <Badge className="h-5 px-2 bg-green-100 text-green-700 border-green-200">
+                          <Badge className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200">
                             +{selectedCardBanks.length - 2}
                           </Badge>
                         )}
@@ -1384,7 +1384,7 @@ export function PayoutsList() {
                 value={balanceInput}
                 onChange={(e) => setBalanceInput(e.target.value)}
                 onBlur={saveFilters}
-                className="h-12 w-32 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="h-12 w-32 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               />
               <Button 
                 variant="outline" 
@@ -1541,7 +1541,7 @@ export function PayoutsList() {
               </AnimatePresence>
               {loadingMore && (
                 <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin text-[#006039]" />
+                  <Loader2 className="h-6 w-6 animate-spin text-[#530FAD]" />
                   <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                     Загрузка...
                   </span>
@@ -1695,7 +1695,7 @@ export function PayoutsList() {
                   <div className="space-y-2">
                     {selectedPayout.proofFiles.map((file, index) => (
                       <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <CheckCircle className="h-4 w-4 text-purple-600" />
                         <span className="text-sm">{file.includes('-') ? file.split('-').slice(1).join('-') : file}</span>
                         <Button
                           size="sm"
@@ -1811,7 +1811,7 @@ export function PayoutsList() {
                     value="Недостаточно средств"
                     checked={cancelReason === "Недостаточно средств"}
                     onChange={(e) => setCancelReason(e.target.value)}
-                    className="w-4 h-4 text-green-600"
+                    className="w-4 h-4 text-purple-600"
                   />
                   <span className="text-sm">Недостаточно средств</span>
                 </label>
@@ -1822,7 +1822,7 @@ export function PayoutsList() {
                     value="Карта заблокирована"
                     checked={cancelReason === "Карта заблокирована"}
                     onChange={(e) => setCancelReason(e.target.value)}
-                    className="w-4 h-4 text-green-600"
+                    className="w-4 h-4 text-purple-600"
                   />
                   <span className="text-sm">Карта заблокирована</span>
                 </label>
@@ -1833,7 +1833,7 @@ export function PayoutsList() {
                     value="Технические проблемы"
                     checked={cancelReason === "Технические проблемы"}
                     onChange={(e) => setCancelReason(e.target.value)}
-                    className="w-4 h-4 text-green-600"
+                    className="w-4 h-4 text-purple-600"
                   />
                   <span className="text-sm">Технические проблемы</span>
                 </label>
@@ -1844,7 +1844,7 @@ export function PayoutsList() {
                     value="Подозрительная операция"
                     checked={cancelReason === "Подозрительная операция"}
                     onChange={(e) => setCancelReason(e.target.value)}
-                    className="w-4 h-4 text-green-600"
+                    className="w-4 h-4 text-purple-600"
                   />
                   <span className="text-sm">Подозрительная операция</span>
                 </label>
@@ -1874,7 +1874,7 @@ export function PayoutsList() {
                 >
                   {cancelFiles.length > 0 ? (
                     <>
-                      <CheckCircle className="h-6 w-6 text-green-600 mb-1" />
+                      <CheckCircle className="h-6 w-6 text-purple-600 mb-1" />
                       <p className="text-sm font-medium">
                         {cancelFiles.length} файл(ов) выбрано
                       </p>
@@ -1979,7 +1979,7 @@ export function PayoutsList() {
                 >
                   {proofFiles.length > 0 ? (
                     <>
-                      <CheckCircle className="h-8 w-8 text-green-600 mb-2" />
+                      <CheckCircle className="h-8 w-8 text-purple-600 mb-2" />
                       <p className="text-sm font-medium">
                         {proofFiles.length} файл(ов) выбрано
                       </p>
@@ -2015,7 +2015,7 @@ export function PayoutsList() {
               <Button
                 onClick={() => handleConfirmPayout(selectedPayoutForAction!)}
                 disabled={proofFiles.length === 0}
-                className="bg-green-600 hover:bg-green-700"
+                className="bg-purple-600 hover:bg-purple-700"
               >
                 Подтвердить выплату
               </Button>

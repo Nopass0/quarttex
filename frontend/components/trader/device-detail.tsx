@@ -199,7 +199,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
     const statusConfig = {
       CREATED: { color: 'bg-blue-100 text-blue-700', icon: Clock, text: 'Создана' },
       IN_PROGRESS: { color: 'bg-yellow-100 text-yellow-700', icon: Clock, text: 'В работе' },
-      READY: { color: 'bg-green-100 text-green-700', icon: CheckCircle, text: 'Выполнена' },
+      READY: { color: 'bg-purple-100 text-purple-700', icon: CheckCircle, text: 'Выполнена' },
       EXPIRED: { color: 'bg-gray-100 text-gray-700', icon: XCircle, text: 'Истекла' },
       CANCELED: { color: 'bg-red-100 text-red-700', icon: XCircle, text: 'Отменена' },
     }
@@ -241,7 +241,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
           <div>
             <h1 className="text-2xl font-bold">Устройство {device.name}</h1>
             <div className="flex items-center gap-4 mt-1">
-              <Badge className={device.isOnline ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}>
+              <Badge className={device.isOnline ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}>
                 {device.isOnline ? 'Онлайн' : 'Оффлайн'}
               </Badge>
               <Badge className={device.isWorking ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}>
@@ -274,9 +274,9 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Выполнено</p>
-                <p className="text-2xl font-bold text-green-600">{completedTransactions}</p>
+                <p className="text-2xl font-bold text-purple-600">{completedTransactions}</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-400" />
+              <CheckCircle className="h-8 w-8 text-purple-400" />
             </div>
           </CardContent>
         </Card>
@@ -298,9 +298,9 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Комиссия</p>
-                <p className="text-2xl font-bold text-green-600">{totalCommission.toLocaleString('ru-RU')} ₽</p>
+                <p className="text-2xl font-bold text-purple-600">{totalCommission.toLocaleString('ru-RU')} ₽</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-green-400" />
+              <TrendingUp className="h-8 w-8 text-purple-400" />
             </div>
           </CardContent>
         </Card>

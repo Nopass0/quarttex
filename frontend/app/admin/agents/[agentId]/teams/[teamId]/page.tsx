@@ -101,7 +101,7 @@ function TeamDetailsContent() {
           size="icon"
           onClick={() => router.push(`/admin/agents/${agentId}`)}
         >
-          <ArrowLeft className="h-4 w-4 text-[#006039]" />
+          <ArrowLeft className="h-4 w-4 text-[#530FAD]" />
         </Button>
         <div className="flex-1">
           <h1 className="text-3xl font-bold">Команда: {team.name}</h1>
@@ -118,7 +118,7 @@ function TeamDetailsContent() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-[#006039]" />
+              <Users className="h-5 w-5 text-[#530FAD]" />
               <span className="text-2xl font-bold">{team.traders.length}</span>
             </div>
           </CardContent>
@@ -130,7 +130,7 @@ function TeamDetailsContent() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-[#006039]" />
+              <TrendingUp className="h-5 w-5 text-[#530FAD]" />
               <span className="text-2xl font-bold">₽{formatAmount(team.statistics.totalTurnover)}</span>
             </div>
           </CardContent>

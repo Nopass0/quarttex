@@ -202,7 +202,7 @@ export function FinancesList() {
     const statusConfig: any = {
       CREATED: { label: "Создана", color: "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800" },
       IN_PROGRESS: { label: "В процессе", color: "bg-yellow-50 text-yellow-600 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800" },
-      READY: { label: "Готово", color: "bg-[#006039]/10 text-[#006039] border-[#006039]/20 dark:bg-[#2d6a42]/20 dark:text-[#2d6a42] dark:border-[#2d6a42]/30" },
+      READY: { label: "Готово", color: "bg-[#530FAD]/10 text-[#530FAD] border-[#530FAD]/20 dark:bg-[#530FAD]/20 dark:text-[#530FAD] dark:border-[#530FAD]/30" },
       EXPIRED: { label: "Истекло", color: "bg-red-50 text-red-600 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800" },
       DISPUTE: { label: "Спор", color: "bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800" },
       CANCELED: { label: "Отменено", color: "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700" },
@@ -212,7 +212,7 @@ export function FinancesList() {
   }
   
   const getTypeBadge = (type: string) => {
-    return type === "IN" ? "bg-[#006039]/10 text-[#006039] dark:bg-[#2d6a42]/20 dark:text-[#2d6a42]" : "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+    return type === "IN" ? "bg-[#530FAD]/10 text-[#530FAD] dark:bg-[#530FAD]/20 dark:text-[#530FAD]" : "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400"
   }
   
   const filteredTransactions = transactions.filter(tx => {
@@ -228,7 +228,7 @@ export function FinancesList() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
       </div>
     )
   }
@@ -244,12 +244,12 @@ export function FinancesList() {
       
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-6 dark:bg-[#29382f] dark:border-gray-700">
+        <Card className="p-6 dark:bg-[#292133] dark:border-gray-700">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-600 dark:text-gray-400">БАЛАНС КОШЕЛЬКА</span>
             <Button 
               variant="link" 
-              className="text-[#006039] dark:text-[#2d6a42] p-0 h-auto text-sm"
+              className="text-[#530FAD] dark:text-[#530FAD] p-0 h-auto text-sm"
               onClick={() => withdrawModal.open()}
             >
               Вывести средства
@@ -258,7 +258,7 @@ export function FinancesList() {
           <div className="text-2xl font-bold dark:text-[#eeeeee]">{financeStats.availableBalance.toLocaleString('ru-RU')} {financeStats.currency}</div>
         </Card>
         
-        <Card className="p-6 dark:bg-[#29382f] dark:border-gray-700">
+        <Card className="p-6 dark:bg-[#292133] dark:border-gray-700">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-600 dark:text-gray-400">ЗАРАБОТАНО СЕГОДНЯ</span>
             <span className="text-xs text-gray-500 dark:text-gray-500">за {format(new Date(), "d MMMM", { locale: ru })}</span>
@@ -266,21 +266,21 @@ export function FinancesList() {
           <div className="text-2xl font-bold dark:text-[#eeeeee]">{financeStats.todayEarnings.toLocaleString('ru-RU')} {financeStats.currency}</div>
         </Card>
         
-        <Card className="p-6 dark:bg-[#29382f] dark:border-gray-700">
+        <Card className="p-6 dark:bg-[#292133] dark:border-gray-700">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-600 dark:text-gray-400">ПРИБЫЛЬ</span>
             <span className="text-xs text-gray-500 dark:text-gray-500">за все время</span>
           </div>
-          <div className="text-2xl font-bold text-[#006039] dark:text-[#2d6a42]">+{financeStats.totalProfit.toLocaleString('ru-RU')} {financeStats.currency}</div>
+          <div className="text-2xl font-bold text-[#530FAD] dark:text-[#530FAD]">+{financeStats.totalProfit.toLocaleString('ru-RU')} {financeStats.currency}</div>
         </Card>
       </div>
       
       {/* Filters */}
-      <Card className="p-4 dark:bg-[#29382f] dark:border-gray-700">
+      <Card className="p-4 dark:bg-[#292133] dark:border-gray-700">
         <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-4">
           <div className="flex-1 min-w-[200px]">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#006039] dark:text-[#2d6a42] h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#530FAD] dark:text-[#530FAD] h-4 w-4" />
               <Input
                 placeholder="Поиск по ID транзакции"
                 value={searchTerm}
@@ -295,7 +295,7 @@ export function FinancesList() {
               <SelectTrigger className="w-full sm:w-[180px] dark:bg-[#0f0f0f] dark:border-gray-600 dark:text-[#eeeeee]">
                 <SelectValue placeholder="Статус" />
               </SelectTrigger>
-              <SelectContent className="dark:bg-[#29382f] dark:border-gray-700">
+              <SelectContent className="dark:bg-[#292133] dark:border-gray-700">
                 <SelectItem value="all">Все статусы</SelectItem>
                 <SelectItem value="CREATED">Создано</SelectItem>
                 <SelectItem value="IN_PROGRESS">В процессе</SelectItem>
@@ -308,10 +308,10 @@ export function FinancesList() {
             
             <Select value={dateFilter} onValueChange={setDateFilter}>
               <SelectTrigger className="w-full sm:w-[180px] dark:bg-[#0f0f0f] dark:border-gray-600 dark:text-[#eeeeee]">
-                <Calendar className="mr-2 h-4 w-4 text-[#006039] dark:text-[#2d6a42]" />
+                <Calendar className="mr-2 h-4 w-4 text-[#530FAD] dark:text-[#530FAD]" />
                 <SelectValue placeholder="Период" />
               </SelectTrigger>
-              <SelectContent className="dark:bg-[#29382f] dark:border-gray-700">
+              <SelectContent className="dark:bg-[#292133] dark:border-gray-700">
                 <SelectItem value="all">Все время</SelectItem>
                 <SelectItem value="today">Сегодня</SelectItem>
                 <SelectItem value="week">Эта неделя</SelectItem>
@@ -321,13 +321,13 @@ export function FinancesList() {
           </div>
           
           <div className="flex gap-2 w-full sm:w-auto">
-            <Button variant="outline" className="flex-1 sm:flex-initial dark:border-gray-600 dark:text-gray-300 dark:hover:bg-[#29382f]/50">
-              <Filter className="mr-2 h-4 w-4 text-[#006039] dark:text-[#2d6a42]" />
+            <Button variant="outline" className="flex-1 sm:flex-initial dark:border-gray-600 dark:text-gray-300 dark:hover:bg-[#292133]/50">
+              <Filter className="mr-2 h-4 w-4 text-[#530FAD] dark:text-[#530FAD]" />
               <span className="hidden sm:inline">Фильтры</span>
             </Button>
             
-            <Button variant="outline" className="flex-1 sm:flex-initial dark:border-gray-600 dark:text-gray-300 dark:hover:bg-[#29382f]/50">
-              <Download className="mr-2 h-4 w-4 text-[#006039] dark:text-[#2d6a42]" />
+            <Button variant="outline" className="flex-1 sm:flex-initial dark:border-gray-600 dark:text-gray-300 dark:hover:bg-[#292133]/50">
+              <Download className="mr-2 h-4 w-4 text-[#530FAD] dark:text-[#530FAD]" />
               <span className="hidden sm:inline">Экспорт</span>
             </Button>
           </div>
@@ -335,7 +335,7 @@ export function FinancesList() {
       </Card>
       
       {/* Transactions Table */}
-      <Card className="overflow-hidden dark:bg-[#29382f] dark:border-gray-700">
+      <Card className="overflow-hidden dark:bg-[#292133] dark:border-gray-700">
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50/50 hover:bg-gray-50/50 dark:bg-[#0f0f0f] dark:hover:bg-[#0f0f0f]">
@@ -360,7 +360,7 @@ export function FinancesList() {
               filteredTransactions.map((transaction) => {
                 const statusInfo = getStatusBadge(transaction.status)
                 return (
-                  <TableRow key={transaction.id} className="hover:bg-gray-50/50 dark:hover:bg-[#29382f]/30">
+                  <TableRow key={transaction.id} className="hover:bg-gray-50/50 dark:hover:bg-[#292133]/30">
                     <TableCell className="font-mono text-sm dark:text-[#eeeeee]">
                       ${transaction.numericId}
                     </TableCell>
@@ -410,14 +410,14 @@ export function FinancesList() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 dark:hover:bg-[#29382f]/50"
+                            className="h-8 w-8 p-0 dark:hover:bg-[#292133]/50"
                           >
-                            <MoreVertical className="h-4 w-4 text-[#006039] dark:text-[#2d6a42]" />
+                            <MoreVertical className="h-4 w-4 text-[#530FAD] dark:text-[#530FAD]" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48 dark:bg-[#29382f] dark:border-gray-700">
-                          <DropdownMenuItem className="dark:hover:bg-[#29382f]/50">
-                            <Eye className="mr-2 h-4 w-4 text-[#006039] dark:text-[#2d6a42]" />
+                        <DropdownMenuContent align="end" className="w-48 dark:bg-[#292133] dark:border-gray-700">
+                          <DropdownMenuItem className="dark:hover:bg-[#292133]/50">
+                            <Eye className="mr-2 h-4 w-4 text-[#530FAD] dark:text-[#530FAD]" />
                             Подробнее
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -470,10 +470,10 @@ export function FinancesList() {
                   </Select>
                   <Button
                     variant="link"
-                    className="text-[#006039] p-0 h-auto text-sm mt-2"
+                    className="text-[#530FAD] p-0 h-auto text-sm mt-2"
                     onClick={() => setIsAddingNewWallet(true)}
                   >
-                    <Plus className="h-3 w-3 mr-1 text-[#006039]" />
+                    <Plus className="h-3 w-3 mr-1 text-[#530FAD]" />
                     Добавить новый кошелек
                   </Button>
                 </div>
@@ -535,7 +535,7 @@ export function FinancesList() {
                 </Button>
                 <Button 
                   onClick={handleWithdraw}
-                  className="bg-[#006039] hover:bg-[#006039]/90 dark:bg-[#2d6a42] dark:hover:bg-[#2d6a42]/90"
+                  className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#530FAD] dark:hover:bg-[#530FAD]/90"
                   disabled={!selectedWallet || !withdrawAmount}
                 >
                   <WalletIcon className="mr-2 h-4 w-4" />
@@ -556,7 +556,7 @@ export function FinancesList() {
                 </Button>
                 <Button 
                   onClick={handleAddWallet}
-                  className="bg-[#006039] hover:bg-[#006039]/90 dark:bg-[#2d6a42] dark:hover:bg-[#2d6a42]/90"
+                  className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#530FAD] dark:hover:bg-[#530FAD]/90"
                   disabled={!newWalletName || !newWalletAddress}
                 >
                   Добавить кошелек

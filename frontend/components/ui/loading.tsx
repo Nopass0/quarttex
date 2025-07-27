@@ -13,7 +13,7 @@ export function Loading({ fullScreen = false }: LoadingProps) {
         <Logo size="lg" />
         
         <div className="mt-8 p-4 bg-gray-50 rounded-full">
-          <Loader2 className="h-8 w-8 text-[#006039] animate-spin" />
+          <Loader2 className="h-8 w-8 text-[#530FAD] animate-spin" />
         </div>
         
         <h1 className="mt-6 text-2xl font-semibold text-gray-900">

@@ -212,7 +212,7 @@ export function MessagesList() {
       case "warning":
         return <AlertCircle className="h-5 w-5 text-orange-500" />;
       case "success":
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return <CheckCircle className="h-5 w-5 text-purple-500" />;
       case "system":
         return <Info className="h-5 w-5 text-gray-500" />;
       default:
@@ -365,7 +365,7 @@ export function MessagesList() {
             className="text-sm font-normal text-gray-600 hover:text-gray-900 hover:bg-black/5 transition-colors"
           >
             Команда {teamEnabled ? "включена" : "выключена"}
-            <ChevronDown className="ml-1 h-4 w-4 text-[#006039]" />
+            <ChevronDown className="ml-1 h-4 w-4 text-[#530FAD]" />
           </Button>
 
           {/* User menu */}
@@ -377,11 +377,11 @@ export function MessagesList() {
               >
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
-                    <User className="h-4 w-4 text-[#006039]" />
+                    <User className="h-4 w-4 text-[#530FAD]" />
                   </div>
                   <span className="text-gray-700">{userEmail}</span>
                 </div>
-                <ChevronDown className="h-4 w-4 text-[#006039]" />
+                <ChevronDown className="h-4 w-4 text-[#530FAD]" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -389,7 +389,7 @@ export function MessagesList() {
                 onClick={handleLogout}
                 className="text-red-600 focus:text-red-600 hover:bg-gray-50 cursor-pointer"
               >
-                <LogOut className="mr-2 h-4 w-4 text-[#006039]" />
+                <LogOut className="mr-2 h-4 w-4 text-[#530FAD]" />
                 Выйти
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -401,7 +401,7 @@ export function MessagesList() {
       <div className="flex gap-2">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#006039] h-4 w-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#530FAD] h-4 w-4" />
           <Input
             placeholder="Поиск по тексту сообщения..."
             value={searchQuery}
@@ -414,7 +414,7 @@ export function MessagesList() {
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" size="default" className="gap-2">
-              <ArrowUpDown className="h-4 w-4 text-[#006039]" />
+              <ArrowUpDown className="h-4 w-4 text-[#530FAD]" />
               Сортировка
             </Button>
           </PopoverTrigger>
@@ -447,10 +447,10 @@ export function MessagesList() {
         <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" size="default" className="gap-2">
-              <SlidersHorizontal className="h-4 w-4 text-[#006039]" />
+              <SlidersHorizontal className="h-4 w-4 text-[#530FAD]" />
               Фильтры
               {(filterMessageType !== "all" || filterCategory !== "all" || filterDateFrom || filterDateTo || filterAmount.exact || filterAmount.min || filterAmount.max || filterDevice !== "all" || filterRequisite !== "all") && (
-                <Badge className="ml-1 bg-[#006039] text-white">
+                <Badge className="ml-1 bg-[#530FAD] text-white">
                   {
                     [
                       filterMessageType !== "all",
@@ -498,7 +498,7 @@ export function MessagesList() {
                                       : filterMessageType === "number_unlinked"
                                         ? "Номер отвязан"
                                         : "Компрометация"}
-                      <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
+                      <ChevronDown className="h-4 w-4 opacity-50 text-[#530FAD]" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-64 p-0" align="start">
@@ -627,7 +627,7 @@ export function MessagesList() {
                       id="amount-exact"
                       checked={filterAmountType === "exact"}
                       onChange={() => setFilterAmountType("exact")}
-                      className="h-4 w-4 text-[#006039]"
+                      className="h-4 w-4 text-[#530FAD]"
                     />
                     <Label htmlFor="amount-exact" className="text-sm font-normal">Точное значение</Label>
                   </div>
@@ -646,7 +646,7 @@ export function MessagesList() {
                       id="amount-range"
                       checked={filterAmountType === "range"}
                       onChange={() => setFilterAmountType("range")}
-                      className="h-4 w-4 text-[#006039]"
+                      className="h-4 w-4 text-[#530FAD]"
                     />
                     <Label htmlFor="amount-range" className="text-sm font-normal">Диапазон</Label>
                   </div>
@@ -679,7 +679,7 @@ export function MessagesList() {
                     <Button variant="outline" size="sm" className="w-full justify-between">
                       {filterDevice === "all" ? "Все устройства" : 
                        filterDevice === "1" ? "Chrome на Windows" : "Safari на iPhone"}
-                      <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
+                      <ChevronDown className="h-4 w-4 opacity-50 text-[#530FAD]" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-56 p-0" align="start">
@@ -698,7 +698,7 @@ export function MessagesList() {
                         className="w-full justify-start"
                         onClick={() => setFilterDevice("1")}
                       >
-                        <Smartphone className="mr-2 h-4 w-4 text-[#006039]" />
+                        <Smartphone className="mr-2 h-4 w-4 text-[#530FAD]" />
                         Chrome на Windows
                       </Button>
                       <Button
@@ -707,7 +707,7 @@ export function MessagesList() {
                         className="w-full justify-start"
                         onClick={() => setFilterDevice("2")}
                       >
-                        <Smartphone className="mr-2 h-4 w-4 text-[#006039]" />
+                        <Smartphone className="mr-2 h-4 w-4 text-[#530FAD]" />
                         Safari на iPhone
                       </Button>
                     </div>
@@ -723,7 +723,7 @@ export function MessagesList() {
                     <Button variant="outline" size="sm" className="w-full justify-between">
                       {filterRequisite === "all" ? "Все реквизиты" : 
                        filterRequisite === "1" ? "Основная карта" : "Резервная карта"}
-                      <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
+                      <ChevronDown className="h-4 w-4 opacity-50 text-[#530FAD]" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-56 p-0" align="start">
@@ -742,7 +742,7 @@ export function MessagesList() {
                         className="w-full justify-start"
                         onClick={() => setFilterRequisite("1")}
                       >
-                        <CreditCard className="mr-2 h-4 w-4 text-[#006039]" />
+                        <CreditCard className="mr-2 h-4 w-4 text-[#530FAD]" />
                         Основная карта (Сбербанк)
                       </Button>
                       <Button
@@ -751,7 +751,7 @@ export function MessagesList() {
                         className="w-full justify-start"
                         onClick={() => setFilterRequisite("2")}
                       >
-                        <CreditCard className="mr-2 h-4 w-4 text-[#006039]" />
+                        <CreditCard className="mr-2 h-4 w-4 text-[#530FAD]" />
                         Резервная карта (Тинькофф)
                       </Button>
                     </div>
@@ -804,7 +804,7 @@ export function MessagesList() {
                 </Button>
                 <Button
                   size="sm"
-                  className="flex-1 bg-[#006039] hover:bg-[#006039]/90"
+                  className="flex-1 bg-[#530FAD] hover:bg-[#530FAD]/90"
                   onClick={() => setFiltersOpen(false)}
                 >
                   Применить фильтры
@@ -821,7 +821,7 @@ export function MessagesList() {
           <div className="divide-y divide-gray-100">
             {filteredMessages.length === 0 ? (
               <div className="p-12 text-center">
-                <Mail className="h-12 w-12 mx-auto text-[#006039] mb-4" />
+                <Mail className="h-12 w-12 mx-auto text-[#530FAD] mb-4" />
                 <p className="text-gray-500">Нет сообщений</p>
               </div>
             ) : (
@@ -837,7 +837,7 @@ export function MessagesList() {
                   <div className="flex items-start gap-3">
                     <div className="mt-1">
                       {message.isRead ? (
-                        <MailOpen className="h-5 w-5 text-[#006039]" />
+                        <MailOpen className="h-5 w-5 text-[#530FAD]" />
                       ) : (
                         <Mail className="h-5 w-5 text-blue-600" />
                       )}
@@ -867,7 +867,7 @@ export function MessagesList() {
                             <span>{message.category}</span>
                             <span>•</span>
                             <span className="flex items-center gap-1">
-                              <Clock className="h-3 w-3 text-[#006039]" />
+                              <Clock className="h-3 w-3 text-[#530FAD]" />
                               {format(
                                 new Date(message.createdAt),
                                 "dd.MM.yyyy HH:mm",
@@ -905,7 +905,7 @@ export function MessagesList() {
                   <span>{selectedMessage?.category}</span>
                   <span>•</span>
                   <span className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3 text-[#006039]" />
+                    <Calendar className="h-3 w-3 text-[#530FAD]" />
                     {selectedMessage &&
                       format(
                         new Date(selectedMessage.createdAt),
@@ -921,7 +921,7 @@ export function MessagesList() {
                 onClick={() => setSelectedMessage(null)}
                 className="h-8 w-8 p-0"
               >
-                <X className="h-4 w-4 text-[#006039]" />
+                <X className="h-4 w-4 text-[#530FAD]" />
               </Button>
             </div>
           </DialogHeader>

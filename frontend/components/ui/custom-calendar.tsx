@@ -164,7 +164,7 @@ export function CustomCalendar({ value, onChange, onApply, onCancel, className }
                     selectedDate.getDate() === day &&
                     selectedDate.getMonth() === currentMonth &&
                     selectedDate.getFullYear() === currentYear &&
-                    "bg-[#006039] text-white hover:bg-[#006039]/90",
+                    "bg-[#530FAD] text-white hover:bg-[#530FAD]/90",
                   day &&
                     new Date().getDate() === day &&
                     new Date().getMonth() === currentMonth &&
@@ -249,7 +249,7 @@ export function CustomCalendar({ value, onChange, onApply, onCancel, className }
           <Button
             size="sm"
             onClick={handleApply}
-            className="bg-[#006039] hover:bg-[#006039]/90"
+            className="bg-[#530FAD] hover:bg-[#530FAD]/90"
           >
             Применить
           </Button>

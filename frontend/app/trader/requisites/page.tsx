@@ -320,7 +320,7 @@ export default function TraderRequisitesPage() {
     if (percentage >= 90) return "text-red-500";
     if (percentage >= 70) return "text-orange-500";
     if (percentage >= 50) return "text-yellow-500";
-    return "text-green-500";
+    return "text-purple-500";
   };
 
   const getBankLogo = (bankType: string): string => {
@@ -373,7 +373,7 @@ export default function TraderRequisitesPage() {
       <ProtectedRoute variant="trader">
         <AuthLayout variant="trader">
           <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
           </div>
         </AuthLayout>
       </ProtectedRoute>
@@ -413,7 +413,7 @@ export default function TraderRequisitesPage() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="gap-1 md:gap-2 h-10 md:h-12 px-3 md:px-6 text-sm md:text-base">
-                    <ArrowUpDown className="h-4 w-4 text-[#006039]" />
+                    <ArrowUpDown className="h-4 w-4 text-[#530FAD]" />
                     <span className="hidden sm:inline">{sortOrder === "newest" ? "Сначала новые" : "Сначала старые"}</span>
                     <span className="sm:hidden">{sortOrder === "newest" ? "Новые" : "Старые"}</span>
                     <ChevronDown className="h-4 w-4 text-gray-500" />
@@ -434,7 +434,7 @@ export default function TraderRequisitesPage() {
                     {/* Status Filter */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-[#006039]" />
+                        <CheckCircle className="h-4 w-4 text-[#530FAD]" />
                         <Label className="text-sm">Статус реквизитов</Label>
                       </div>
                       <Popover>
@@ -444,7 +444,7 @@ export default function TraderRequisitesPage() {
                             size="default"
                             className="w-full justify-between h-12"
                           >
-                            <span className="text-[#006039]">
+                            <span className="text-[#530FAD]">
                               {filterStatus === "all"
                                 ? "Все реквизиты"
                                 : filterStatus === "active"
@@ -453,7 +453,7 @@ export default function TraderRequisitesPage() {
                                     ? "Выключенные"
                                     : "Архивированные"}
                             </span>
-                            <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
+                            <ChevronDown className="h-4 w-4 opacity-50 text-[#530FAD]" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-[465px] p-0" align="start" sideOffset={5}>
@@ -462,9 +462,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
                                 filterStatus === "all" &&
-                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                                  "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
                               onClick={() => setFilterStatus("all")}
                             >
@@ -474,9 +474,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
                                 filterStatus === "active" &&
-                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                                  "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
                               onClick={() => setFilterStatus("active")}
                             >
@@ -486,9 +486,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
                                 filterStatus === "stopped" &&
-                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                                  "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
                               onClick={() => setFilterStatus("stopped")}
                             >
@@ -498,9 +498,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
                                 filterStatus === "blocked" &&
-                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                                  "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
                               onClick={() => setFilterStatus("blocked")}
                             >
@@ -514,7 +514,7 @@ export default function TraderRequisitesPage() {
                     {/* Device Filter */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Smartphone className="h-4 w-4 text-[#006039]" />
+                        <Smartphone className="h-4 w-4 text-[#530FAD]" />
                         <Label className="text-sm">Устройство</Label>
                       </div>
                       <Popover>
@@ -524,14 +524,14 @@ export default function TraderRequisitesPage() {
                             size="default"
                             className="w-full justify-between h-12"
                           >
-                            <span className="text-[#006039]">
+                            <span className="text-[#530FAD]">
                               {filterDevice === "all"
                                 ? "Все устройства"
                                 : filterDevice === "none"
                                   ? "Без устройства"
                                   : devices.find(d => d.id === filterDevice)?.name || "Выберите устройство"}
                             </span>
-                            <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
+                            <ChevronDown className="h-4 w-4 opacity-50 text-[#530FAD]" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-[465px] p-0" align="start" sideOffset={5}>
@@ -556,9 +556,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
                                 filterDevice === "all" &&
-                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                                  "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
                               onClick={() => setFilterDevice("all")}
                             >
@@ -568,9 +568,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
                                 filterDevice === "none" &&
-                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                                  "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
                               onClick={() => setFilterDevice("none")}
                             >
@@ -586,9 +586,9 @@ export default function TraderRequisitesPage() {
                                   variant="ghost"
                                   size="default"
                                   className={cn(
-                                    "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                                    "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
                                     filterDevice === device.id &&
-                                      "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                                      "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                                   )}
                                   onClick={() => setFilterDevice(device.id)}
                                 >
@@ -596,7 +596,7 @@ export default function TraderRequisitesPage() {
                                     <Smartphone className="h-4 w-4" />
                                     <span>{device.name}</span>
                                     {device.isOnline && (
-                                      <div className="w-2 h-2 bg-green-500 rounded-full" />
+                                      <div className="w-2 h-2 bg-purple-500 rounded-full" />
                                     )}
                                   </div>
                                 </Button>
@@ -620,13 +620,13 @@ export default function TraderRequisitesPage() {
                     <SelectContent>
                       <SelectItem value="stop">
                         <div className="flex items-center">
-                          <PauseCircle className="mr-2 h-4 w-4 text-[#006039]" />
+                          <PauseCircle className="mr-2 h-4 w-4 text-[#530FAD]" />
                           Остановить
                         </div>
                       </SelectItem>
                       <SelectItem value="start">
                         <div className="flex items-center">
-                          <PlayCircle className="mr-2 h-4 w-4 text-[#006039]" />
+                          <PlayCircle className="mr-2 h-4 w-4 text-[#530FAD]" />
                           Запустить
                         </div>
                       </SelectItem>
@@ -636,7 +636,7 @@ export default function TraderRequisitesPage() {
                   <Button
                     onClick={handleBulkAction}
                     disabled={!bulkAction}
-                    className="bg-[#006039] hover:bg-[#006039]/90"
+                    className="bg-[#530FAD] hover:bg-[#530FAD]/90"
                   >
                     Применить
                   </Button>
@@ -692,8 +692,8 @@ export default function TraderRequisitesPage() {
                               </div>
                               {requisite.device && (
                                 <div className="flex items-center gap-1 mt-1">
-                                  <Smartphone className="h-3 w-3 text-green-600" />
-                                  <span className="text-xs text-green-600 truncate">
+                                  <Smartphone className="h-3 w-3 text-purple-600" />
+                                  <span className="text-xs text-purple-600 truncate">
                                     {requisite.device.name}
                                   </span>
                                 </div>
@@ -708,7 +708,7 @@ export default function TraderRequisitesPage() {
                                 Остановлен
                               </Badge>
                             ) : (
-                              <Badge className="bg-green-50 text-green-700 border-green-200 text-xs px-2 py-1">
+                              <Badge className="bg-purple-50 text-purple-700 border-purple-200 text-xs px-2 py-1">
                                 В работе
                               </Badge>
                             )}
@@ -762,8 +762,8 @@ export default function TraderRequisitesPage() {
                           </div>
                           {requisite.device && (
                             <div className="flex items-center gap-1.5">
-                              <Smartphone className="h-3.5 w-3.5 text-green-600" />
-                              <span className="text-sm text-green-600">
+                              <Smartphone className="h-3.5 w-3.5 text-purple-600" />
+                              <span className="text-sm text-purple-600">
                                 {requisite.device.name}
                               </span>
                             </div>
@@ -803,7 +803,7 @@ export default function TraderRequisitesPage() {
                             Остановлен
                           </div>
                         ) : (
-                          <div className="px-4 py-2 bg-green-50 text-green-700 rounded-lg font-medium">
+                          <div className="px-4 py-2 bg-purple-50 text-purple-700 rounded-lg font-medium">
                             В работе
                           </div>
                         )}
@@ -817,7 +817,7 @@ export default function TraderRequisitesPage() {
 
           {filteredRequisites.length === 0 && (
             <div className="text-center py-12">
-              <CreditCard className="h-12 w-12 mx-auto text-[#006039] mb-4" />
+              <CreditCard className="h-12 w-12 mx-auto text-[#530FAD] mb-4" />
               <p className="text-gray-500">Реквизиты не найдены</p>
             </div>
           )}
@@ -1037,7 +1037,7 @@ export default function TraderRequisitesPage() {
                 Отмена
               </Button>
               <Button
-                className="bg-[#006039] hover:bg-[#006039]/90 w-full sm:w-auto"
+                className="bg-[#530FAD] hover:bg-[#530FAD]/90 w-full sm:w-auto"
                 onClick={handleCreateRequisite}
                 disabled={addingRequisite}
               >

@@ -206,7 +206,7 @@ export function AdminsList() {
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#006039] hover:bg-[#005030]">
+            <Button className="bg-[#530FAD] hover:bg-[#005030]">
               <UserPlus className="mr-2 h-4 w-4" />
               Добавить админа
             </Button>
@@ -240,7 +240,7 @@ export function AdminsList() {
             <DialogFooter>
               <Button
                 onClick={handleCreateAdmin}
-                className="bg-[#006039] hover:bg-[#005030]"
+                className="bg-[#530FAD] hover:bg-[#005030]"
                 disabled={isLoading}
               >
                 Создать
@@ -364,7 +364,7 @@ export function AdminsList() {
           <DialogFooter>
             <Button
               onClick={handleEditSubmit}
-              className="bg-[#006039] hover:bg-[#005030]"
+              className="bg-[#530FAD] hover:bg-[#005030]"
               disabled={isLoading}
             >
               Сохранить
@@ -401,7 +401,7 @@ export function AdminsList() {
                 setShowTokenDialog(false)
                 setNewAdminToken('')
               }}
-              className="bg-[#006039] hover:bg-[#005030]"
+              className="bg-[#530FAD] hover:bg-[#005030]"
             >
               Закрыть
             </Button>

@@ -69,7 +69,7 @@ export default function TraderLoginPage() {
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0f0f0f] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-6 md:p-8 bg-white dark:bg-[#29382f] shadow-lg border-gray-200 dark:border-[#29382f]">
+      <Card className="w-full max-w-md p-6 md:p-8 bg-white dark:bg-[#292133] shadow-lg border-gray-200 dark:border-[#292133]">
         <div className="flex flex-col items-center mb-6 md:mb-8">
           <Logo size="lg" className="scale-75 md:scale-100" />
           <h1 className="mt-4 md:mt-6 text-xl md:text-2xl font-semibold text-gray-900 dark:text-[#eeeeee]">
@@ -86,7 +86,7 @@ export default function TraderLoginPage() {
               Email
             </Label>
             <div className="mt-1 relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#006039] dark:text-[#2d6a42] h-4 w-4" />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#530FAD] dark:text-[#530FAD] h-4 w-4" />
               <Input
                 id="email"
                 type="email"
@@ -104,7 +104,7 @@ export default function TraderLoginPage() {
               Пароль
             </Label>
             <div className="mt-1 relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#006039] dark:text-[#2d6a42] h-4 w-4" />
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#530FAD] dark:text-[#530FAD] h-4 w-4" />
               <Input
                 id="password"
                 type="password"
@@ -119,7 +119,7 @@ export default function TraderLoginPage() {
           
           <Button
             type="submit"
-            className="w-full bg-[#006039] hover:bg-[#004d2e] dark:bg-[#2d6a42] dark:hover:bg-[#236035] h-10 md:h-11 text-sm md:text-base"
+            className="w-full bg-[#530FAD] hover:bg-[#530FAD/90] dark:bg-[#530FAD] dark:hover:bg-[#530FAD/80] h-10 md:h-11 text-sm md:text-base"
             disabled={loading}
           >
             {loading ? (
@@ -136,7 +136,7 @@ export default function TraderLoginPage() {
         <div className="mt-4 md:mt-6 text-center text-xs md:text-sm text-gray-600 dark:text-gray-400">
           <p>
             Нет аккаунта?{" "}
-            <a href="#" className="text-[#006039] dark:text-[#2d6a42] hover:text-[#004d2e] dark:hover:text-[#236035] font-medium">
+            <a href="#" className="text-[#530FAD] dark:text-[#530FAD] hover:text-[#530FAD/90] dark:hover:text-[#530FAD/80] font-medium">
               Свяжитесь с администратором
             </a>
           </p>

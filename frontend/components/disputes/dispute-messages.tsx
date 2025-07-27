@@ -140,7 +140,7 @@ export function DisputeMessages({
         return {
           name: "Мерчант",
           icon: Building2,
-          color: "bg-green-500",
+          color: "bg-purple-500",
           align: userType === "merchant" && isOwnMessage ? "right" : "left"
         };
       case "ADMIN":

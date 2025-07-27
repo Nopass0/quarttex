@@ -314,7 +314,7 @@ function AgentProfileContent() {
           size="icon"
           onClick={() => router.push('/admin/agents')}
         >
-          <ArrowLeft className="h-4 w-4 text-[#006039]" />
+          <ArrowLeft className="h-4 w-4 text-[#530FAD]" />
         </Button>
         <h1 className="text-3xl font-bold">Профиль агента</h1>
       </div>
@@ -474,7 +474,7 @@ function AgentProfileContent() {
             <Dialog open={isAddTraderDialogOpen} onOpenChange={setIsAddTraderDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
-                  <UserPlus className="mr-2 h-4 w-4 text-[#006039]" />
+                  <UserPlus className="mr-2 h-4 w-4 text-[#530FAD]" />
                   Добавить трейдера
                 </Button>
               </DialogTrigger>
@@ -560,7 +560,7 @@ function AgentProfileContent() {
                         onClick={() => handleRemoveTrader(at.traderId)}
                         className="text-red-600 hover:text-red-700"
                       >
-                        <Trash2 className="h-4 w-4 text-[#006039]" />
+                        <Trash2 className="h-4 w-4 text-[#530FAD]" />
                       </Button>
                     </TableCell>
                   </TableRow>

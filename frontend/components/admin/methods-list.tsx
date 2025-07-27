@@ -285,7 +285,7 @@ export function MethodsList() {
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#006039] hover:bg-[#005030]">
+            <Button className="bg-[#530FAD] hover:bg-[#005030]">
               <Plus className="mr-2 h-4 w-4" />
               Добавить метод
             </Button>
@@ -428,7 +428,7 @@ export function MethodsList() {
             <DialogFooter>
               <Button
                 onClick={handleCreateMethod}
-                className="bg-[#006039] hover:bg-[#005030]"
+                className="bg-[#530FAD] hover:bg-[#005030]"
                 disabled={isLoading || !formData.code || !formData.name}
               >
                 Создать
@@ -655,7 +655,7 @@ export function MethodsList() {
           <DialogFooter>
             <Button
               onClick={handleUpdateMethod}
-              className="bg-[#006039] hover:bg-[#005030]"
+              className="bg-[#530FAD] hover:bg-[#005030]"
               disabled={isLoading}
             >
               Сохранить

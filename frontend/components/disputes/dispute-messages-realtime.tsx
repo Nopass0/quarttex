@@ -224,7 +224,7 @@ export function DisputeMessagesRealtime({
         return {
           name: "Мерчант",
           icon: Building2,
-          color: "bg-green-500",
+          color: "bg-purple-500",
           align: userType === "merchant" && isOwnMessage ? "right" : "left"
         };
       case "ADMIN":
@@ -264,8 +264,8 @@ export function DisputeMessagesRealtime({
         <div className="flex items-center gap-2 text-sm">
           {isConnected ? (
             <>
-              <Wifi className="h-4 w-4 text-green-500" />
-              <span className="text-green-600 dark:text-green-400">В сети</span>
+              <Wifi className="h-4 w-4 text-purple-500" />
+              <span className="text-purple-600 dark:text-purple-400">В сети</span>
             </>
           ) : (
             <>

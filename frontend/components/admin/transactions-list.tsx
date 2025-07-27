@@ -148,7 +148,7 @@ const statusIcons: Record<Status, any> = {
 const statusColors: Record<Status, string> = {
   CREATED: 'bg-gray-100 text-gray-700',
   IN_PROGRESS: 'bg-blue-100 text-blue-700',
-  READY: 'bg-green-100 text-green-700',
+  READY: 'bg-purple-100 text-purple-700',
   CANCELED: 'bg-red-100 text-red-700',
   EXPIRED: 'bg-orange-100 text-orange-700',
   DISPUTE: 'bg-purple-100 text-purple-700',
@@ -498,10 +498,10 @@ export function TransactionsList() {
     if (requisites.phoneNumber) {
       return (
         <div className="flex items-center gap-2">
-          <Phone className="h-3 w-3 text-[#006039]" />
+          <Phone className="h-3 w-3 text-[#530FAD]" />
           <button
             onClick={() => copyToClipboard(requisites.phoneNumber!, 'Номер телефона скопирован')}
-            className="text-sm hover:text-[#006039] transition-colors"
+            className="text-sm hover:text-[#530FAD] transition-colors"
           >
             {formatPhoneNumber(requisites.phoneNumber)}
           </button>
@@ -515,11 +515,11 @@ export function TransactionsList() {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <div className="bg-gray-100 rounded px-2 py-1 flex items-center gap-2">
-              <CreditCard className="h-3 w-3 text-[#006039]" />
+              <CreditCard className="h-3 w-3 text-[#530FAD]" />
               <div>
                 <button
                   onClick={() => copyToClipboard(requisites.cardNumber, 'Номер карты скопирован')}
-                  className="text-xs font-mono hover:text-[#006039] transition-colors"
+                  className="text-xs font-mono hover:text-[#530FAD] transition-colors"
                 >
                   {formatCardNumber(requisites.cardNumber)}
                 </button>
@@ -642,7 +642,7 @@ export function TransactionsList() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <div className="relative w-[500px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#006039]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#530FAD]" />
             <Input
               placeholder="Поиск по ID, OrderID, клиенту..."
               value={searchQuery}
@@ -653,10 +653,10 @@ export function TransactionsList() {
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline">
-                <Filter className="h-4 w-4 mr-2 text-[#006039]" />
+                <Filter className="h-4 w-4 mr-2 text-[#530FAD]" />
                 Фильтры
                 {Object.values(filters).some(v => v && v !== 'all') && (
-                  <span className="ml-2 bg-[#006039] text-white rounded-full px-2 py-0.5 text-xs">
+                  <span className="ml-2 bg-[#530FAD] text-white rounded-full px-2 py-0.5 text-xs">
                     {Object.values(filters).filter(v => v && v !== 'all').length}
                   </span>
                 )}
@@ -777,7 +777,7 @@ export function TransactionsList() {
                       dateTo: null,
                     })}
                   >
-                    <X className="h-4 w-4 mr-2 text-[#006039]" />
+                    <X className="h-4 w-4 mr-2 text-[#530FAD]" />
                     Сбросить фильтры
                   </Button>
                 </div>
@@ -790,7 +790,7 @@ export function TransactionsList() {
             onClick={fetchTransactions}
             disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 text-[#006039] ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 text-[#530FAD] ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </div>
@@ -806,7 +806,7 @@ export function TransactionsList() {
         <TabsContent value={activeTab} className="mt-4">
           {isLoading && transactions.length === 0 ? (
             <div className="flex justify-center items-center py-8">
-              <RefreshCw className="h-8 w-8 animate-spin text-[#006039]" />
+              <RefreshCw className="h-8 w-8 animate-spin text-[#530FAD]" />
             </div>
           ) : (
             <>
@@ -832,7 +832,7 @@ export function TransactionsList() {
                       onClick={() => setMeta({ ...meta, page: meta.page - 1 })}
                       disabled={meta.page === 1 || isLoading}
                     >
-                      <ChevronLeft className="h-4 w-4 text-[#006039]" />
+                      <ChevronLeft className="h-4 w-4 text-[#530FAD]" />
                     </Button>
                     <Button
                       variant="outline"
@@ -840,7 +840,7 @@ export function TransactionsList() {
                       onClick={() => setMeta({ ...meta, page: meta.page + 1 })}
                       disabled={meta.page === meta.totalPages || isLoading}
                     >
-                      <ChevronRight className="h-4 w-4 text-[#006039]" />
+                      <ChevronRight className="h-4 w-4 text-[#530FAD]" />
                     </Button>
                   </div>
                 </div>
@@ -867,7 +867,7 @@ export function TransactionsList() {
                       size="sm"
                       onClick={() => copyToClipboard(selectedTransaction.id, 'ID скопирован')}
                     >
-                      <Copy className="h-3 w-3 text-[#006039]" />
+                      <Copy className="h-3 w-3 text-[#530FAD]" />
                     </Button>
                   </div>
                 </div>
@@ -880,7 +880,7 @@ export function TransactionsList() {
                       size="sm"
                       onClick={() => copyToClipboard(selectedTransaction.orderId, 'Order ID скопирован')}
                     >
-                      <Copy className="h-3 w-3 text-[#006039]" />
+                      <Copy className="h-3 w-3 text-[#530FAD]" />
                     </Button>
                   </div>
                 </div>
@@ -915,7 +915,7 @@ export function TransactionsList() {
                   <div className="mt-1">
                     <button
                       onClick={() => copyToClipboard(selectedTransaction.userIp || '', 'IP адрес скопирован')}
-                      className="hover:text-[#006039] transition-colors"
+                      className="hover:text-[#530FAD] transition-colors"
                     >
                       {selectedTransaction.userIp || 'Не указан'}
                     </button>
@@ -999,7 +999,7 @@ export function TransactionsList() {
                           size="sm"
                           onClick={() => sendCallback(selectedTransaction.callbackUri, selectedTransaction)}
                         >
-                          <Send className="h-3 w-3 mr-1 text-[#006039]" />
+                          <Send className="h-3 w-3 mr-1 text-[#530FAD]" />
                           Отправить
                         </Button>
                       )}
@@ -1017,7 +1017,7 @@ export function TransactionsList() {
                           size="sm"
                           onClick={() => sendCallback(selectedTransaction.successUri, selectedTransaction)}
                         >
-                          <Send className="h-3 w-3 mr-1 text-[#006039]" />
+                          <Send className="h-3 w-3 mr-1 text-[#530FAD]" />
                           Отправить
                         </Button>
                       )}
@@ -1035,7 +1035,7 @@ export function TransactionsList() {
                           size="sm"
                           onClick={() => sendCallback(selectedTransaction.failUri, selectedTransaction)}
                         >
-                          <Send className="h-3 w-3 mr-1 text-[#006039]" />
+                          <Send className="h-3 w-3 mr-1 text-[#530FAD]" />
                           Отправить
                         </Button>
                       )}
@@ -1053,7 +1053,7 @@ export function TransactionsList() {
                 openEditDialog(selectedTransaction!)
               }}
             >
-              <Edit className="h-4 w-4 mr-2 text-[#006039]" />
+              <Edit className="h-4 w-4 mr-2 text-[#530FAD]" />
               Редактировать
             </Button>
           </DialogFooter>
@@ -1080,7 +1080,7 @@ export function TransactionsList() {
                       size="sm"
                       onClick={() => copyToClipboard(selectedTransaction.id, 'ID скопирован')}
                     >
-                      <Copy className="h-3 w-3 text-[#006039]" />
+                      <Copy className="h-3 w-3 text-[#530FAD]" />
                     </Button>
                   </div>
                 </div>
@@ -1093,7 +1093,7 @@ export function TransactionsList() {
                       size="sm"
                       onClick={() => copyToClipboard(selectedTransaction.orderId, 'Order ID скопирован')}
                     >
-                      <Copy className="h-3 w-3 text-[#006039]" />
+                      <Copy className="h-3 w-3 text-[#530FAD]" />
                     </Button>
                   </div>
                 </div>
@@ -1178,7 +1178,7 @@ export function TransactionsList() {
           <DialogFooter>
             <Button
               onClick={handleUpdateTransaction}
-              className="bg-[#006039] hover:bg-[#005030]"
+              className="bg-[#530FAD] hover:bg-[#3f0a82]"
               disabled={isLoading}
             >
               Сохранить

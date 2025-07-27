@@ -276,7 +276,7 @@ export function FoldersEnhanced() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
       </div>
     )
   }
@@ -288,7 +288,7 @@ export function FoldersEnhanced() {
         <h1 className="text-2xl font-semibold dark:text-[#eeeeee]">Папки реквизитов</h1>
         <Button
           onClick={() => createFolderModal.open()}
-          className="bg-[#006039] hover:bg-[#006039]/90 dark:bg-[#2d6a42] dark:hover:bg-[#2d6a42]/90"
+          className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#530FAD] dark:hover:bg-[#530FAD]/90"
         >
           <Plus className="h-4 w-4 mr-2" />
           Создать папку
@@ -298,7 +298,7 @@ export function FoldersEnhanced() {
       {/* Folders List */}
       <div className="space-y-4">
         {folders.length === 0 ? (
-          <Card className="p-8 text-center text-gray-500 dark:text-gray-400 dark:bg-[#29382f] dark:border-gray-700">
+          <Card className="p-8 text-center text-gray-500 dark:text-gray-400 dark:bg-[#292133] dark:border-gray-700">
             <Folder className="h-12 w-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
             <p className="dark:text-gray-400">Нет созданных папок</p>
             <p className="text-sm mt-2 dark:text-gray-500">Создайте папку для группировки реквизитов</p>
@@ -310,19 +310,19 @@ export function FoldersEnhanced() {
             const totalCount = folder.requisites.length
 
             return (
-              <Card key={folder.id} className="overflow-hidden dark:bg-[#29382f] dark:border-gray-700">
+              <Card key={folder.id} className="overflow-hidden dark:bg-[#292133] dark:border-gray-700">
                 <Collapsible open={isExpanded} onOpenChange={() => toggleFolder(folder.id)}>
-                  <div className="p-4 hover:bg-gray-50 dark:hover:bg-[#29382f]/30 transition-colors">
+                  <div className="p-4 hover:bg-gray-50 dark:hover:bg-[#292133]/30 transition-colors">
                     <div className="flex items-center justify-between">
                       <CollapsibleTrigger className="flex items-center gap-3 flex-1 text-left">
                         {isExpanded ? (
                           <>
-                            <FolderOpen className="h-6 w-6 text-[#006039] dark:text-[#2d6a42]" />
+                            <FolderOpen className="h-6 w-6 text-[#530FAD] dark:text-[#530FAD]" />
                             <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                           </>
                         ) : (
                           <>
-                            <Folder className="h-6 w-6 text-[#006039] dark:text-[#2d6a42]" />
+                            <Folder className="h-6 w-6 text-[#530FAD] dark:text-[#530FAD]" />
                             <ChevronRight className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                           </>
                         )}
@@ -340,9 +340,9 @@ export function FoldersEnhanced() {
                           size="sm"
                           onClick={() => handleToggleAllRequisites(folder.id, true)}
                           disabled={activeCount === totalCount}
-                          className="dark:border-gray-600 dark:hover:bg-[#29382f]/50"
+                          className="dark:border-gray-600 dark:hover:bg-[#292133]/50"
                         >
-                          <PlayCircle className="h-4 w-4 mr-1 text-green-600 dark:text-green-500" />
+                          <PlayCircle className="h-4 w-4 mr-1 text-purple-600 dark:text-purple-500" />
                           Запустить все
                         </Button>
                         <Button
@@ -350,7 +350,7 @@ export function FoldersEnhanced() {
                           size="sm"
                           onClick={() => handleToggleAllRequisites(folder.id, false)}
                           disabled={activeCount === 0}
-                          className="dark:border-gray-600 dark:hover:bg-[#29382f]/50"
+                          className="dark:border-gray-600 dark:hover:bg-[#292133]/50"
                         >
                           <PauseCircle className="h-4 w-4 mr-1 text-red-600 dark:text-red-500" />
                           Остановить все
@@ -368,7 +368,7 @@ export function FoldersEnhanced() {
                             )
                             editFolderModal.open()
                           }}
-                          className="dark:hover:bg-[#29382f]/50"
+                          className="dark:hover:bg-[#292133]/50"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -376,7 +376,7 @@ export function FoldersEnhanced() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDeleteFolder(folder.id)}
-                          className="dark:hover:bg-[#29382f]/50"
+                          className="dark:hover:bg-[#292133]/50"
                         >
                           <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
                         </Button>
@@ -393,7 +393,7 @@ export function FoldersEnhanced() {
                       ) : (
                         <div className="divide-y dark:divide-gray-700">
                           {folder.requisites.map((requisite) => (
-                            <div key={requisite.id} className="p-4 hover:bg-gray-50 dark:hover:bg-[#29382f]/30">
+                            <div key={requisite.id} className="p-4 hover:bg-gray-50 dark:hover:bg-[#292133]/30">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                   <CreditCard className="h-5 w-5 text-gray-400 dark:text-gray-500" />
@@ -422,7 +422,7 @@ export function FoldersEnhanced() {
                                     className={cn(
                                       "min-w-[80px] justify-center",
                                       !requisite.isArchived 
-                                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800" 
+                                        ? "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800" 
                                         : "dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
                                     )}
                                   >
@@ -450,14 +450,14 @@ export function FoldersEnhanced() {
 
       {/* Unassigned Requisites */}
       {getUnassignedRequisites().length > 0 && (
-        <Card className="p-4 dark:bg-[#29382f] dark:border-gray-700">
+        <Card className="p-4 dark:bg-[#292133] dark:border-gray-700">
           <div className="flex items-center gap-2 mb-3">
             <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-500" />
             <h3 className="font-semibold dark:text-[#eeeeee]">Реквизиты без папки</h3>
           </div>
           <div className="space-y-2">
             {getUnassignedRequisites().map((requisite) => (
-              <div key={requisite.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-[#29382f]/50 rounded-lg">
+              <div key={requisite.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-[#292133]/50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <CreditCard className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                   <span className="text-sm dark:text-[#eeeeee]">{requisite.cardNumber}</span>
@@ -474,7 +474,7 @@ export function FoldersEnhanced() {
 
       {/* Create Folder Dialog */}
       <Dialog open={createFolderModal.isOpen} onOpenChange={createFolderModal.setOpen}>
-        <DialogContent className="dark:bg-[#29382f] dark:border-gray-700">
+        <DialogContent className="dark:bg-[#292133] dark:border-gray-700">
           <DialogHeader>
             <DialogTitle className="dark:text-[#eeeeee]">Создать папку</DialogTitle>
             <DialogDescription className="dark:text-gray-400">
@@ -505,7 +505,7 @@ export function FoldersEnhanced() {
                   requisites.map((requisite) => (
                     <label
                       key={requisite.id}
-                      className="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-[#29382f]/30 rounded cursor-pointer"
+                      className="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-[#292133]/30 rounded cursor-pointer"
                     >
                       <Checkbox
                         checked={selectedRequisites.includes(requisite.id)}
@@ -516,7 +516,7 @@ export function FoldersEnhanced() {
                             setSelectedRequisites(selectedRequisites.filter(id => id !== requisite.id))
                           }
                         }}
-                        className="dark:border-gray-600 dark:data-[state=checked]:bg-[#2d6a42] dark:data-[state=checked]:border-[#2d6a42]"
+                        className="dark:border-gray-600 dark:data-[state=checked]:bg-[#530FAD] dark:data-[state=checked]:border-[#530FAD]"
                       />
                       <CreditCard className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                       <div className="flex-1">
@@ -536,13 +536,13 @@ export function FoldersEnhanced() {
             <Button 
               variant="outline" 
               onClick={() => createFolderModal.close()}
-              className="dark:border-gray-600 dark:text-gray-300 dark:hover:bg-[#29382f]/50"
+              className="dark:border-gray-600 dark:text-gray-300 dark:hover:bg-[#292133]/50"
             >
               Отмена
             </Button>
             <Button
               onClick={handleCreateFolder}
-              className="bg-[#006039] hover:bg-[#006039]/90 dark:bg-[#2d6a42] dark:hover:bg-[#2d6a42]/90"
+              className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#530FAD] dark:hover:bg-[#530FAD]/90"
               disabled={!newFolderName.trim() || selectedRequisites.length === 0}
             >
               Создать
@@ -553,7 +553,7 @@ export function FoldersEnhanced() {
 
       {/* Edit Folder Dialog */}
       <Dialog open={editFolderModal.isOpen} onOpenChange={editFolderModal.setOpen}>
-        <DialogContent className="dark:bg-[#29382f] dark:border-gray-700">
+        <DialogContent className="dark:bg-[#292133] dark:border-gray-700">
           <DialogHeader>
             <DialogTitle className="dark:text-[#eeeeee]">Редактировать папку</DialogTitle>
             <DialogDescription className="dark:text-gray-400">
@@ -584,7 +584,7 @@ export function FoldersEnhanced() {
                   requisites.map((requisite) => (
                     <label
                       key={requisite.id}
-                      className="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-[#29382f]/30 rounded cursor-pointer"
+                      className="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-[#292133]/30 rounded cursor-pointer"
                     >
                       <Checkbox
                         checked={editSelectedRequisites.includes(requisite.id)}
@@ -595,7 +595,7 @@ export function FoldersEnhanced() {
                             setEditSelectedRequisites(editSelectedRequisites.filter(id => id !== requisite.id))
                           }
                         }}
-                        className="dark:border-gray-600 dark:data-[state=checked]:bg-[#2d6a42] dark:data-[state=checked]:border-[#2d6a42]"
+                        className="dark:border-gray-600 dark:data-[state=checked]:bg-[#530FAD] dark:data-[state=checked]:border-[#530FAD]"
                       />
                       <CreditCard className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                       <div className="flex-1">
@@ -615,13 +615,13 @@ export function FoldersEnhanced() {
             <Button 
               variant="outline" 
               onClick={() => editFolderModal.close()}
-              className="dark:border-gray-600 dark:text-gray-300 dark:hover:bg-[#29382f]/50"
+              className="dark:border-gray-600 dark:text-gray-300 dark:hover:bg-[#292133]/50"
             >
               Отмена
             </Button>
             <Button
               onClick={handleUpdateFolder}
-              className="bg-[#006039] hover:bg-[#006039]/90 dark:bg-[#2d6a42] dark:hover:bg-[#2d6a42]/90"
+              className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#530FAD] dark:hover:bg-[#530FAD]/90"
               disabled={!editFolderName.trim() || editSelectedRequisites.length === 0}
             >
               Сохранить

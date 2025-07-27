@@ -19,7 +19,7 @@ export function AnimatedGradientText({
       )}
     >
       <div
-        className={`absolute inset-0 block h-full w-full animate-gradient bg-gradient-to-r from-[#006039]/50 via-[#00ff88]/50 to-[#006039]/50 bg-[length:var(--bg-size)_100%] p-[1px] ![mask-composite:subtract] [border-radius:inherit] [mask:linear-gradient(#fff_0_0)_content-box,linear-gradient(#fff_0_0)]`}
+        className={`absolute inset-0 block h-full w-full animate-gradient bg-gradient-to-r from-[#530FAD]/50 via-[#00ff88]/50 to-[#530FAD]/50 bg-[length:var(--bg-size)_100%] p-[1px] ![mask-composite:subtract] [border-radius:inherit] [mask:linear-gradient(#fff_0_0)_content-box,linear-gradient(#fff_0_0)]`}
       />
 
       <style jsx>{`

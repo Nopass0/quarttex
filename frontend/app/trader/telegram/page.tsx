@@ -139,8 +139,8 @@ export default function TelegramPage() {
             </>
           ) : (
             <div className="text-center space-y-4">
-              <div className="bg-green-50 p-6 rounded-lg">
-                <Check className="h-12 w-12 text-green-600 mx-auto mb-4" />
+              <div className="bg-purple-50 p-6 rounded-lg">
+                <Check className="h-12 w-12 text-purple-600 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">
                   Telegram подключен
                 </h3>

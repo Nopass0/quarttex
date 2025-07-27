@@ -161,7 +161,7 @@ export default function AgentTeamPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
-        <RefreshCw className="h-8 w-8 animate-spin text-[#006039]" />
+        <RefreshCw className="h-8 w-8 animate-spin text-[#530FAD]" />
       </div>
     )
   }
@@ -182,7 +182,7 @@ export default function AgentTeamPage() {
             onClick={fetchData}
             disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 text-[#006039] ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 text-[#530FAD] ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
           <Button onClick={() => setShowCreateTeam(true)}>
             <Plus className="h-4 w-4 mr-2 text-white" />
@@ -198,7 +198,7 @@ export default function AgentTeamPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-[#006039]" />
+              <Users className="h-5 w-5 text-[#530FAD]" />
               <span className="text-2xl font-bold">{teams.length}</span>
             </div>
           </CardContent>
@@ -210,7 +210,7 @@ export default function AgentTeamPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-[#006039]" />
+              <Users className="h-5 w-5 text-[#530FAD]" />
               <span className="text-2xl font-bold">{totalTraders}</span>
             </div>
           </CardContent>
@@ -222,8 +222,8 @@ export default function AgentTeamPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <Wallet className="h-5 w-5 text-[#006039]" />
-              <span className="text-2xl font-bold text-[#006039]">
+              <Wallet className="h-5 w-5 text-[#530FAD]" />
+              <span className="text-2xl font-bold text-[#530FAD]">
                 ${formatAmount(totalBalance)}
               </span>
             </div>
@@ -254,14 +254,14 @@ export default function AgentTeamPage() {
                       setShowEditTeam(true)
                     }}
                   >
-                    <Edit2 className="h-4 w-4 text-[#006039]" />
+                    <Edit2 className="h-4 w-4 text-[#530FAD]" />
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => deleteTeam(team.id)}
                   >
-                    <Trash2 className="h-4 w-4 text-[#006039]" />
+                    <Trash2 className="h-4 w-4 text-[#530FAD]" />
                   </Button>
                 </div>
               </div>

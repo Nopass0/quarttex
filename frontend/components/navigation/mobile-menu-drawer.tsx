@@ -514,16 +514,16 @@ export function MobileMenuDrawer({ variant, isOpen, onClose }: MobileMenuDrawerP
               )}
 
               {variant === "trader" && rapiraRate && (
-                <div className="mt-2 p-2 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/10 dark:to-teal-900/10 rounded-lg border border-emerald-500 dark:border-emerald-600">
+                <div className="mt-2 p-2 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/10 dark:to-purple-800/10 rounded-lg border border-purple-500 dark:border-purple-600">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                      <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                       <span className="text-sm font-semibold text-gray-900 dark:text-gray-200">
                         TRC-20
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                      <span className="text-sm font-bold text-purple-600 dark:text-purple-400">
                         {rapiraRate.rate.toFixed(2)}
                       </span>
                       <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
@@ -568,7 +568,7 @@ export function MobileMenuDrawer({ variant, isOpen, onClose }: MobileMenuDrawerP
                       window.open('/apk/chase.apk', '_blank');
                     }}
                   >
-                    <Download className="h-4 w-4 text-green-600" />
+                    <Download className="h-4 w-4 text-purple-600" />
                     <span>Скачать APK</span>
                   </Button>
                 </div>
@@ -618,7 +618,7 @@ export function MobileMenuDrawer({ variant, isOpen, onClose }: MobileMenuDrawerP
                                   className={cn(
                                     "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors",
                                     isChildActive
-                                      ? "bg-[#006039]/10 text-[#006039] dark:text-[#2d6a42]"
+                                      ? "bg-[#530FAD]/10 text-[#530FAD] dark:text-[#530FAD]"
                                       : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                                   )}
                                 >
@@ -641,7 +641,7 @@ export function MobileMenuDrawer({ variant, isOpen, onClose }: MobileMenuDrawerP
                       className={cn(
                         "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors",
                         isActive
-                          ? "bg-[#006039]/10 text-[#006039] dark:text-[#2d6a42]"
+                          ? "bg-[#530FAD]/10 text-[#530FAD] dark:text-[#530FAD]"
                           : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                       )}
                     >

@@ -83,7 +83,7 @@ const BreadcrumbSeparator = ({
     className={cn("[&>svg]:w-3.5 [&>svg]:h-3.5", className)}
     {...props}
   >
-    {children ?? <ChevronRight className="text-[#006039]" />}
+    {children ?? <ChevronRight className="text-[#530FAD]" />}
   </li>
 )
 BreadcrumbSeparator.displayName = "BreadcrumbSeparator"
@@ -98,7 +98,7 @@ const BreadcrumbEllipsis = ({
     className={cn("flex h-9 w-9 items-center justify-center", className)}
     {...props}
   >
-    <MoreHorizontal className="h-4 w-4 text-[#006039]" />
+    <MoreHorizontal className="h-4 w-4 text-[#530FAD]" />
     <span className="sr-only">More</span>
   </span>
 )

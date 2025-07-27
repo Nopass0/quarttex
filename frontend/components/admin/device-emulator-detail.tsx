@@ -442,10 +442,10 @@ export function DeviceEmulatorDetail() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold text-green-600">
+              <span className="text-2xl font-bold text-purple-600">
                 {metrics.activeDevices}
               </span>
-              <Activity className="w-8 h-8 text-green-400" />
+              <Activity className="w-8 h-8 text-purple-400" />
             </div>
           </CardContent>
         </Card>
@@ -595,7 +595,7 @@ export function DeviceEmulatorDetail() {
                             <TableCell>
                               {activeDevice ? (
                                 activeDevice.isConnected ? (
-                                  <Badge variant="default" className="bg-green-600">
+                                  <Badge variant="default" className="bg-purple-600">
                                     <Power className="w-3 h-3 mr-1" />
                                     Подключен
                                   </Badge>
@@ -640,7 +640,7 @@ export function DeviceEmulatorDetail() {
                                     <div
                                       className={`h-2 rounded-full ${
                                         activeDevice.batteryLevel > 50
-                                          ? "bg-green-500"
+                                          ? "bg-purple-500"
                                           : activeDevice.batteryLevel > 20
                                           ? "bg-yellow-500"
                                           : "bg-red-500"

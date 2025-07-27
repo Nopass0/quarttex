@@ -73,7 +73,7 @@ const statusConfig = {
   },
   COMPLETED: {
     label: "Завершена",
-    color: "bg-green-100 text-green-800 border-green-200",
+    color: "bg-purple-100 text-purple-800 border-purple-200",
     icon: CheckCircle,
     actions: []
   },
@@ -225,7 +225,7 @@ export function PayoutListEnhanced({ payouts, onRefresh }: PayoutListEnhancedPro
                       size="sm"
                       variant="outline"
                       onClick={() => handleConfirm(payout)}
-                      className="text-green-600 border-green-200 hover:bg-green-50"
+                      className="text-purple-600 border-purple-200 hover:bg-purple-50"
                     >
                       <Send className="h-4 w-4 mr-1" />
                       Подтвердить

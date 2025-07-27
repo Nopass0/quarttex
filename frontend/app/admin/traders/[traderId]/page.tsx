@@ -318,7 +318,7 @@ function TraderProfileContent() {
           size="icon"
           onClick={() => router.push('/admin/traders')}
         >
-          <ArrowLeft className="h-4 w-4 text-[#006039]" />
+          <ArrowLeft className="h-4 w-4 text-[#530FAD]" />
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-semibold text-gray-900">Профиль трейдера</h1>
@@ -520,7 +520,7 @@ function TraderProfileContent() {
             </div>
             <div className="space-y-1">
               <p className="text-sm text-gray-500">Депозит</p>
-              <p className="font-semibold text-lg text-green-600">${formatAmount(trader.deposit)}</p>
+              <p className="font-semibold text-lg text-purple-600">${formatAmount(trader.deposit)}</p>
             </div>
             <Separator />
             <div className="space-y-1">
@@ -534,7 +534,7 @@ function TraderProfileContent() {
             <Dialog open={isBalanceDialogOpen} onOpenChange={setIsBalanceDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="w-full mt-3" variant="outline" size="sm">
-                  <DollarSign className="mr-2 h-4 w-4 text-[#006039]" />
+                  <DollarSign className="mr-2 h-4 w-4 text-[#530FAD]" />
                   Изменить баланс
                 </Button>
               </DialogTrigger>
@@ -621,7 +621,7 @@ function TraderProfileContent() {
               <Popover open={isFilterPopoverOpen} onOpenChange={setIsFilterPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start">
-                    <Filter className="mr-2 h-4 w-4 text-[#006039]" />
+                    <Filter className="mr-2 h-4 w-4 text-[#530FAD]" />
                     Фильтры
                     {(dateFilter.startDate || dateFilter.endDate) && (
                       <span className="ml-auto text-xs text-gray-500">
@@ -647,7 +647,7 @@ function TraderProfileContent() {
                                 !dateFilter.startDate && "text-muted-foreground"
                               )}
                             >
-                              <CalendarIcon className="mr-2 h-4 w-4 text-[#006039]" />
+                              <CalendarIcon className="mr-2 h-4 w-4 text-[#530FAD]" />
                               {dateFilter.startDate ? format(dateFilter.startDate, 'dd MMMM yyyy', { locale: ru }) : "Выберите дату"}
                             </Button>
                           </PopoverTrigger>
@@ -679,7 +679,7 @@ function TraderProfileContent() {
                                 !dateFilter.endDate && "text-muted-foreground"
                               )}
                             >
-                              <CalendarIcon className="mr-2 h-4 w-4 text-[#006039]" />
+                              <CalendarIcon className="mr-2 h-4 w-4 text-[#530FAD]" />
                               {dateFilter.endDate ? format(dateFilter.endDate, 'dd MMMM yyyy', { locale: ru }) : "Выберите дату"}
                             </Button>
                           </PopoverTrigger>
@@ -756,7 +756,7 @@ function TraderProfileContent() {
                   setIsWithdrawalDialogOpen(true)
                 }}
               >
-                <History className="mr-2 h-4 w-4 text-[#006039]" />
+                <History className="mr-2 h-4 w-4 text-[#530FAD]" />
                 История выводов
               </Button>
             </div>
@@ -779,7 +779,7 @@ function TraderProfileContent() {
               <Separator />
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Общая прибыль</p>
-                <p className="font-semibold text-lg text-green-600">
+                <p className="font-semibold text-lg text-purple-600">
                   ${formatAmount(
                     dateFilter.startDate || dateFilter.endDate 
                       ? filteredProfit.profitFromDeals + filteredProfit.profitFromPayouts 
@@ -1011,7 +1011,7 @@ function TraderProfileContent() {
                 <Button 
                   onClick={handleSaveSettings} 
                   disabled={isSavingSettings}
-                  className="bg-[#006039] hover:bg-[#006039]/90"
+                  className="bg-[#530FAD] hover:bg-[#530FAD]/90"
                 >
                   {isSavingSettings ? (
                     <>

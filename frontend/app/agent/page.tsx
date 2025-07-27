@@ -56,7 +56,7 @@ export default function AgentDashboard() {
   if (isLoading || !profileData) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
-        <RefreshCw className="h-8 w-8 animate-spin text-[#006039]" />
+        <RefreshCw className="h-8 w-8 animate-spin text-[#530FAD]" />
       </div>
     )
   }
@@ -76,7 +76,7 @@ export default function AgentDashboard() {
           onClick={fetchProfile}
           disabled={isLoading}
         >
-          <RefreshCw className={`h-4 w-4 text-[#006039] ${isLoading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 text-[#530FAD] ${isLoading ? 'animate-spin' : ''}`} />
         </Button>
       </div>
 
@@ -86,7 +86,7 @@ export default function AgentDashboard() {
             <CardDescription>Процент комиссии</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-[#006039]">{profileData.agent.commissionRate}%</div>
+            <div className="text-2xl font-bold text-[#530FAD]">{profileData.agent.commissionRate}%</div>
           </CardContent>
         </Card>
 
@@ -96,7 +96,7 @@ export default function AgentDashboard() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-[#006039]" />
+              <Users className="h-5 w-5 text-[#530FAD]" />
               <span className="text-2xl font-bold">{profileData.teamSize}</span>
             </div>
           </CardContent>
@@ -108,7 +108,7 @@ export default function AgentDashboard() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-[#006039]" />
+              <TrendingUp className="h-5 w-5 text-[#530FAD]" />
               <span className="text-2xl font-bold">₽{formatAmount(profileData.teamVolume || 0)}</span>
             </div>
           </CardContent>
@@ -120,8 +120,8 @@ export default function AgentDashboard() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <Wallet className="h-5 w-5 text-[#006039]" />
-              <span className="text-2xl font-bold text-[#006039]">${formatAmount(profileData.totalEarnings || 0)}</span>
+              <Wallet className="h-5 w-5 text-[#530FAD]" />
+              <span className="text-2xl font-bold text-[#530FAD]">${formatAmount(profileData.totalEarnings || 0)}</span>
             </div>
           </CardContent>
         </Card>

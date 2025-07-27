@@ -52,7 +52,7 @@ interface Idea {
 const statusConfig = {
   PENDING: { label: "Ожидает", color: "bg-yellow-500", icon: Clock },
   REVIEWING: { label: "На рассмотрении", color: "bg-blue-500", icon: Eye },
-  APPROVED: { label: "Одобрено", color: "bg-green-500", icon: CheckCircle },
+  APPROVED: { label: "Одобрено", color: "bg-purple-500", icon: CheckCircle },
   REJECTED: { label: "Отклонено", color: "bg-red-500", icon: XCircle },
 };
 
@@ -307,7 +307,7 @@ export default function AdminIdeasPage() {
                   <Button
                     onClick={() => updateIdeaStatus(selectedIdea.id, "APPROVED", adminNotes)}
                     disabled={updatingStatus}
-                    className="bg-green-600 hover:bg-green-700"
+                    className="bg-purple-600 hover:bg-purple-700"
                   >
                     <CheckCircle className="h-4 w-4 mr-1" />
                     Одобрить

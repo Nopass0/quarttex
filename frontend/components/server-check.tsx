@@ -40,7 +40,7 @@ export function ServerCheck({ children }: ServerCheckProps) {
         <div className="text-center space-y-4">
           <Logo size="xl" />
           <div className="flex items-center gap-2">
-            <RefreshCw className="h-5 w-5 animate-spin text-[#006039]" />
+            <RefreshCw className="h-5 w-5 animate-spin text-[#530FAD]" />
             <span className="text-lg">Подключение к серверу...</span>
           </div>
         </div>

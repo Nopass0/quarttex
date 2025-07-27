@@ -144,9 +144,9 @@ export function KkkSettings() {
               className="w-[120px]"
             />
             {rapiraKkk && currentRapiraRate && (
-              <div className="flex-1 min-w-[200px] p-3 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/10 dark:to-teal-900/10 rounded-lg border-2 border-emerald-500 dark:border-emerald-600">
+              <div className="flex-1 min-w-[200px] p-3 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/10 dark:to-purple-800/10 rounded-lg border-2 border-purple-500 dark:border-purple-600">
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-200">
-                  Новый курс: <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                  Новый курс: <span className="text-lg font-bold text-purple-600 dark:text-purple-400">
                     {(currentRapiraRate * (1 + (parseFloat(rapiraKkk) / 100) * (rapiraOperation === 'decrease' ? -1 : 1))).toFixed(2)} ₽
                   </span>
                 </p>
@@ -157,9 +157,9 @@ export function KkkSettings() {
             Коэффициент корректировки курса Rapira для отображения на платформе
           </p>
           {currentRapiraRate && (
-            <div className="mt-3 p-3 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/10 dark:to-teal-900/10 rounded-lg border-2 border-emerald-500 dark:border-emerald-600">
+            <div className="mt-3 p-3 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/10 dark:to-purple-800/10 rounded-lg border-2 border-purple-500 dark:border-purple-600">
               <p className="text-sm font-medium text-gray-900 dark:text-gray-200">
-                Текущий курс Rapira: <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{currentRapiraRate.toFixed(2)} ₽/USDT</span>
+                Текущий курс Rapira: <span className="text-lg font-bold text-purple-600 dark:text-purple-400">{currentRapiraRate.toFixed(2)} ₽/USDT</span>
               </p>
             </div>
           )}
@@ -168,7 +168,7 @@ export function KkkSettings() {
 
       <Button
         onClick={handleSave}
-        className="w-full bg-[#006039] hover:bg-[#005030]"
+        className="w-full bg-[#530FAD] hover:bg-[#005030]"
         disabled={isLoading}
       >
         Сохранить настройки

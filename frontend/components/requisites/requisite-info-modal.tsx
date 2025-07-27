@@ -176,12 +176,12 @@ export function RequisiteInfoModal({
         <div className="flex items-center justify-between p-4 border-b md:hidden flex-shrink-0">
           <button
             onClick={() => onOpenChange(false)}
-            className="flex items-center gap-1 text-[#006039] font-medium"
+            className="flex items-center gap-1 text-[#530FAD] font-medium"
           >
             <ChevronLeft className="h-4 w-4" />
             Назад
           </button>
-          <button className="flex items-center gap-1 text-[#006039] font-medium">
+          <button className="flex items-center gap-1 text-[#530FAD] font-medium">
             Поделиться
             <Share2 className="h-4 w-4" />
           </button>
@@ -196,7 +196,7 @@ export function RequisiteInfoModal({
           {/* Card Info */}
           <div className="relative rounded-xl overflow-hidden">
             {/* Gradient Background */}
-            <div className="absolute inset-0 bg-gradient-to-b from-green-500/20 via-green-300/10 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-b from-purple-500/20 via-purple-300/10 to-transparent" />
 
             {/* Card Content */}
             <div className="relative p-4 space-y-3 bg-white/10 backdrop-blur-sm">
@@ -205,7 +205,7 @@ export function RequisiteInfoModal({
                 <Badge
                   className={cn(
                     "font-medium",
-                    "bg-opacity-60 text-green-600 text-[13px]",
+                    "bg-opacity-60 text-purple-600 text-[13px]",
                   )}
                 >
                   {requisite.isArchived ? "Архивирован" : requisite.status === "active" ? "Активен" : "Выключен"}
@@ -238,7 +238,7 @@ export function RequisiteInfoModal({
                   <span
                     className={
                       requisite.verifications?.cardNumber
-                        ? "text-green-600"
+                        ? "text-purple-600"
                         : "text-gray-500"
                     }
                   >
@@ -252,7 +252,7 @@ export function RequisiteInfoModal({
                   <span
                     className={
                       requisite.verifications?.accountNumber
-                        ? "text-green-600"
+                        ? "text-purple-600"
                         : "text-gray-500"
                     }
                   >
@@ -266,7 +266,7 @@ export function RequisiteInfoModal({
                   <span
                     className={
                       requisite.verifications?.phoneNumber
-                        ? "text-green-600"
+                        ? "text-purple-600"
                         : "text-gray-500"
                     }
                   >
@@ -332,8 +332,8 @@ export function RequisiteInfoModal({
               >
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#006039]/10 rounded-lg flex items-center justify-center">
-                      <Smartphone className="h-5 w-5 text-[#006039]" />
+                    <div className="w-10 h-10 bg-[#530FAD]/10 rounded-lg flex items-center justify-center">
+                      <Smartphone className="h-5 w-5 text-[#530FAD]" />
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">
@@ -358,9 +358,9 @@ export function RequisiteInfoModal({
               {requisite.isArchived && (
                 <Button
                   variant="outline"
-                  className="w-full justify-start h-12 text-[#006039] hover:text-[#006039] hover:bg-green-50"
+                  className="w-full justify-start h-12 text-[#530FAD] hover:text-[#530FAD] hover:bg-purple-50"
                 >
-                  <Edit className="h-4 w-4 mr-2 text-[#006039]" />
+                  <Edit className="h-4 w-4 mr-2 text-[#530FAD]" />
                   Редактировать
                 </Button>
               )}
@@ -380,19 +380,19 @@ export function RequisiteInfoModal({
                   (window.location.href = `/deals?material_id=${requisite.id}`)
                 }
               >
-                <Clock className="h-4 w-4 mr-2 text-green-700" />
+                <Clock className="h-4 w-4 mr-2 text-purple-700" />
                 Просмотр сделок по реквизиту
               </Button>
 
               <div className="my-3 border-t" />
 
               <Button variant="outline" className="w-full justify-start h-12">
-                <CreditCard className="h-4 w-4 mr-2 text-green-700" />
+                <CreditCard className="h-4 w-4 mr-2 text-purple-700" />
                 Подтвердить номер карты
               </Button>
 
               <Button variant="outline" className="w-full justify-start h-12">
-                <Building className="h-4 w-4 mr-2 text-green-700" />
+                <Building className="h-4 w-4 mr-2 text-purple-700" />
                 Подтвердить номер счета
               </Button>
             </div>

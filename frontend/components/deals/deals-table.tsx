@@ -55,7 +55,7 @@ const formatRemainingTime = (expiredAt: string) => {
 const statusConfig = {
   CREATED: { label: "В обработке", color: "bg-blue-50 text-blue-600 border-blue-200" },
   IN_PROGRESS: { label: "В обработке", color: "bg-blue-50 text-blue-600 border-blue-200" },
-  READY: { label: "Завершено", color: "bg-green-50 text-green-600 border-green-200" },
+  READY: { label: "Завершено", color: "bg-purple-50 text-purple-600 border-purple-200" },
   EXPIRED: { label: "Истекло", color: "bg-red-50 text-red-600 border-red-200" },
   DISPUTE: { label: "Спор", color: "bg-purple-50 text-purple-600 border-purple-200" },
   CANCELED: { label: "Отменено", color: "bg-gray-50 text-gray-600 border-gray-200" },
@@ -110,7 +110,7 @@ export function DealsTable() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
       </div>
     )
   }
@@ -129,7 +129,7 @@ export function DealsTable() {
           >
             Активные
             {transactions.filter(t => ["CREATED", "IN_PROGRESS"].includes(t.status)).length > 0 && (
-              <span className="ml-2 px-1.5 py-0.5 text-xs bg-[#006039] text-white rounded-full">
+              <span className="ml-2 px-1.5 py-0.5 text-xs bg-[#530FAD] text-white rounded-full">
                 {transactions.filter(t => ["CREATED", "IN_PROGRESS"].includes(t.status)).length}
               </span>
             )}

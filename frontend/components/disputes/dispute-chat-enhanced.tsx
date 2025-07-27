@@ -229,7 +229,7 @@ export function DisputeChatEnhanced({
       case "ADMIN":
         return "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-200";
       default:
-        return "bg-green-100 text-green-900 dark:bg-green-900/20 dark:text-green-300";
+        return "bg-purple-100 text-purple-900 dark:bg-purple-900/20 dark:text-purple-300";
     }
   };
 
@@ -252,7 +252,7 @@ export function DisputeChatEnhanced({
               <div className={cn(
                 "px-3 py-1 rounded-full text-sm font-medium",
                 isActive 
-                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                  ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
                   : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
               )}>
                 {isActive ? "Активный" : "Закрыт"}
@@ -290,7 +290,7 @@ export function DisputeChatEnhanced({
                         "text-xs",
                         message.senderType === "MERCHANT" && "bg-purple-100 dark:bg-purple-900/30",
                         message.senderType === "ADMIN" && "bg-gray-100 dark:bg-gray-800",
-                        message.senderType === "TRADER" && "bg-green-100 dark:bg-green-900/30"
+                        message.senderType === "TRADER" && "bg-purple-100 dark:bg-purple-900/30"
                       )}>
                         {getSenderIcon(message.senderType)}
                       </AvatarFallback>

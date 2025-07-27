@@ -85,7 +85,7 @@ export default function AgentSettingsPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
-        <RefreshCw className="h-8 w-8 animate-spin text-[#006039]" />
+        <RefreshCw className="h-8 w-8 animate-spin text-[#530FAD]" />
       </div>
     )
   }
@@ -107,7 +107,7 @@ export default function AgentSettingsPage() {
           onClick={fetchSettings}
           disabled={isLoading}
         >
-          <RefreshCw className={`h-4 w-4 text-[#006039] ${isLoading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 text-[#530FAD] ${isLoading ? 'animate-spin' : ''}`} />
         </Button>
       </div>
 
@@ -115,7 +115,7 @@ export default function AgentSettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5 text-[#006039]" />
+              <User className="h-5 w-5 text-[#530FAD]" />
               Профиль агента
             </CardTitle>
             <CardDescription>
@@ -162,7 +162,7 @@ export default function AgentSettingsPage() {
             <Button
               onClick={saveSettings}
               disabled={isSaving}
-              className="w-full bg-[#006039] hover:bg-[#006039]/90"
+              className="w-full bg-[#530FAD] hover:bg-[#530FAD]/90"
             >
               {isSaving ? (
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin text-white" />
@@ -177,7 +177,7 @@ export default function AgentSettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Wallet className="h-5 w-5 text-[#006039]" />
+              <Wallet className="h-5 w-5 text-[#530FAD]" />
               Настройки выплат
             </CardTitle>
             <CardDescription>
@@ -199,8 +199,8 @@ export default function AgentSettingsPage() {
             </div>
 
             {settings.trcWallet && (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-800">
+              <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                <p className="text-sm text-purple-800">
                   ✓ Кошелек для выплат настроен
                 </p>
               </div>
@@ -227,7 +227,7 @@ export default function AgentSettingsPage() {
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-[#006039]">
+              <div className="text-2xl font-bold text-[#530FAD]">
                 ${(settings.totalEarnings || 0).toFixed(2)}
               </div>
               <div className="text-sm text-gray-600">Общий заработок</div>

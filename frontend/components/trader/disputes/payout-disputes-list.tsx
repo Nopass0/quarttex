@@ -99,7 +99,7 @@ const disputeStatusConfig = {
   },
   RESOLVED_FAIL: {
     label: "Решен в вашу пользу",
-    color: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
+    color: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
     icon: CheckCircle
   },
   CANCELLED: {
@@ -281,7 +281,7 @@ export function PayoutDisputesList() {
                 {disputes.filter(d => d.status === "RESOLVED_FAIL").length}
               </p>
             </div>
-            <CheckCircle className="h-8 w-8 text-green-400" />
+            <CheckCircle className="h-8 w-8 text-purple-400" />
           </div>
         </Card>
         <Card className="p-4">
@@ -526,7 +526,7 @@ export function PayoutDisputesList() {
                   </SelectItem>
                   <SelectItem value="RESOLVED_FAIL">
                     <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <CheckCircle className="h-4 w-4 text-purple-600" />
                       Отменить выплату (в вашу пользу)
                     </div>
                   </SelectItem>

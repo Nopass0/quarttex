@@ -14,7 +14,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: testpass
-          POSTGRES_DB: chase_test
+          POSTGRES_DB: quattrex_test
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -42,7 +42,7 @@ jobs:
         working-directory: ./backend
         run: bunx prisma migrate deploy
         env:
-          DATABASE_URL: postgresql://postgres:testpass@localhost:5432/chase_test
+          DATABASE_URL: postgresql://postgres:testpass@localhost:5432/quattrex_test
       
       - name: Run backend tests
         working-directory: ./backend
@@ -51,7 +51,7 @@ jobs:
           echo "Skipping backend tests temporarily"
           exit 0
         env:
-          DATABASE_URL: postgresql://postgres:testpass@localhost:5432/chase_test
+          DATABASE_URL: postgresql://postgres:testpass@localhost:5432/quattrex_test
           JWT_SECRET: test-secret
           NODE_ENV: test
 
@@ -72,7 +72,7 @@ jobs:
         working-directory: ./frontend
         run: npm run build
         env:
-          NEXT_PUBLIC_API_URL: https://chasepay.pro
+          NEXT_PUBLIC_API_URL: https://cbrp.pro
 
   deploy:
     needs: [test-backend, test-frontend]
@@ -130,7 +130,7 @@ jobs:
             mkdir -p ssl
             
             # Check if SSL certificates exist and use appropriate nginx config
-            if [ -f "/chasepay/ssl/certificate.crt" ]; then
+            if [ -f "/quattrex/ssl/certificate.crt" ]; then
               echo "SSL certificates found, using HTTPS configuration"
               # Remove HTTP-only config if it exists
               rm -f nginx/conf.d/default-http-only.conf
@@ -183,7 +183,7 @@ jobs:
             kill $LOGS_PID 2>/dev/null || true
 
             # Check if backend container is running
-            if ! docker ps | grep -q "chase_backend"; then
+            if ! docker ps | grep -q "quattrex_backend"; then
               echo "Backend container is not running after startup"
               docker compose -f docker-compose.prod.yml logs backend
               exit 1
@@ -194,7 +194,7 @@ jobs:
             timeout=180  # 3 minutes
             while [ $timeout -gt 0 ]; do
               # Check if backend container is running first
-              if ! docker ps | grep -q "chase_backend"; then
+              if ! docker ps | grep -q "quattrex_backend"; then
                 echo "Backend container stopped running, checking logs..."
                 docker compose -f docker-compose.prod.yml logs backend
                 exit 1
@@ -234,19 +234,19 @@ jobs:
             
             # Verify all services are running
             echo "Verifying services..."
-            if ! docker ps | grep -q "chase_backend"; then
+            if ! docker ps | grep -q "quattrex_backend"; then
               echo "ERROR: Backend container is not running!"
               docker compose logs backend
               exit 1
             fi
             
-            if ! docker ps | grep -q "chase_frontend"; then
+            if ! docker ps | grep -q "quattrex_frontend"; then
               echo "ERROR: Frontend container is not running!"
               docker compose logs frontend
               exit 1
             fi
             
-            if ! docker ps | grep -q "chase_nginx"; then
+            if ! docker ps | grep -q "quattrex_nginx"; then
               echo "ERROR: Nginx container is not running!"
               docker compose -f docker-compose.prod.yml logs nginx
               exit 1

@@ -162,7 +162,7 @@ export function AgentsList() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <div className="relative w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#006039]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#530FAD]" />
             <Input
               placeholder="Поиск по имени или email..."
               value={searchQuery}
@@ -176,12 +176,12 @@ export function AgentsList() {
             onClick={fetchAgents}
             disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 text-[#006039] ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 text-[#530FAD] ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#006039] hover:bg-[#005030]">
+            <Button className="bg-[#530FAD] hover:bg-[#005030]">
               <UserPlus className="mr-2 h-4 w-4 text-white" />
               Добавить агента
             </Button>
@@ -249,7 +249,7 @@ export function AgentsList() {
             <DialogFooter>
               <Button
                 onClick={handleCreateAgent}
-                className="bg-[#006039] hover:bg-[#005030]"
+                className="bg-[#530FAD] hover:bg-[#005030]"
                 disabled={isLoading || !formData.email || !formData.name}
               >
                 Создать
@@ -261,7 +261,7 @@ export function AgentsList() {
 
       {isLoading && agents.length === 0 ? (
         <div className="flex justify-center items-center py-8">
-          <RefreshCw className="h-8 w-8 animate-spin text-[#006039]" />
+          <RefreshCw className="h-8 w-8 animate-spin text-[#530FAD]" />
         </div>
       ) : (
         <div className="w-full overflow-hidden rounded-lg border">
@@ -330,7 +330,7 @@ export function AgentsList() {
                           className="h-8 w-8 p-0"
                           disabled={isLoading}
                         >
-                          <MoreHorizontal className="h-4 w-4 text-[#006039]" />
+                          <MoreHorizontal className="h-4 w-4 text-[#530FAD]" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-48" align="end">
@@ -342,7 +342,7 @@ export function AgentsList() {
                             onClick={() => handleDeleteAgent(agent.id)}
                             disabled={isLoading}
                           >
-                            <Trash2 className="h-4 w-4 mr-2 text-[#006039]" />
+                            <Trash2 className="h-4 w-4 mr-2 text-[#530FAD]" />
                             Удалить
                           </Button>
                         </div>
@@ -374,7 +374,7 @@ export function AgentsList() {
                 className="absolute right-2 top-1/2 -translate-y-1/2"
                 onClick={() => copyToClipboard(generatedPassword)}
               >
-                <Copy className="h-4 w-4 text-[#006039]" />
+                <Copy className="h-4 w-4 text-[#530FAD]" />
               </Button>
             </div>
           </div>
@@ -384,7 +384,7 @@ export function AgentsList() {
                 setShowPasswordDialog(false)
                 setGeneratedPassword('')
               }}
-              className="bg-[#006039] hover:bg-[#005030]"
+              className="bg-[#530FAD] hover:bg-[#005030]"
             >
               Закрыть
             </Button>

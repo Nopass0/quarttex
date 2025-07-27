@@ -83,7 +83,7 @@ const statusConfig = {
   CREATED: { label: "Создана", color: "bg-yellow-50 text-yellow-600 border-yellow-200" },
   PENDING: { label: "Ожидает", color: "bg-blue-50 text-blue-600 border-blue-200" },
   PROCESSING: { label: "В обработке", color: "bg-blue-50 text-blue-600 border-blue-200" },
-  COMPLETED: { label: "Выполнено", color: "bg-green-50 text-green-600 border-green-200" },
+  COMPLETED: { label: "Выполнено", color: "bg-purple-50 text-purple-600 border-purple-200" },
   FAILED: { label: "Ошибка", color: "bg-red-50 text-red-600 border-red-200" },
   CANCELLED: { label: "Отменено", color: "bg-gray-50 text-gray-600 border-gray-200" },
 }
@@ -266,7 +266,7 @@ export function PayoutsList() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
       </div>
     )
   }
@@ -287,7 +287,7 @@ export function PayoutsList() {
               <p className="text-sm text-gray-500">Всего выплат</p>
               <p className="text-2xl font-bold">{stats.totalPayouts}</p>
             </div>
-            <Send className="h-8 w-8 text-[#006039]" />
+            <Send className="h-8 w-8 text-[#530FAD]" />
           </div>
         </Card>
 
@@ -297,7 +297,7 @@ export function PayoutsList() {
               <p className="text-sm text-gray-500">Общая сумма</p>
               <p className="text-2xl font-bold">{stats.totalAmount.toFixed(2)} {stats.currency}</p>
             </div>
-            <DollarSign className="h-8 w-8 text-[#006039]" />
+            <DollarSign className="h-8 w-8 text-[#530FAD]" />
           </div>
         </Card>
 
@@ -305,9 +305,9 @@ export function PayoutsList() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Прибыль</p>
-              <p className="text-2xl font-bold text-green-600">+{stats.profit.toFixed(2)} {stats.currency}</p>
+              <p className="text-2xl font-bold text-purple-600">+{stats.profit.toFixed(2)} {stats.currency}</p>
             </div>
-            <TrendingUp className="h-8 w-8 text-green-500" />
+            <TrendingUp className="h-8 w-8 text-purple-500" />
           </div>
         </Card>
 
@@ -317,7 +317,7 @@ export function PayoutsList() {
               <p className="text-sm text-gray-500">Период</p>
               <p className="text-lg font-medium">{period === "24h" ? "24 часа" : "Неделя"}</p>
             </div>
-            <Calendar className="h-8 w-8 text-[#006039]" />
+            <Calendar className="h-8 w-8 text-[#530FAD]" />
           </div>
         </Card>
       </div>
@@ -537,7 +537,7 @@ export function PayoutsList() {
                     </Button>
                     <Button
                       size="sm"
-                      className="flex-1 bg-[#006039] hover:bg-[#006039]/90"
+                      className="flex-1 bg-[#530FAD] hover:bg-[#530FAD]/90"
                       onClick={() => setFiltersOpen(false)}
                     >
                       Применить фильтры
@@ -620,8 +620,8 @@ export function PayoutsList() {
                   )
                 case "COMPLETED":
                   return (
-                    <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
-                      <CheckCircle className="h-6 w-6 text-green-600" />
+                    <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
+                      <CheckCircle className="h-6 w-6 text-purple-600" />
                     </div>
                   )
                 case "FAILED":
@@ -641,7 +641,7 @@ export function PayoutsList() {
                 key={payout.id}
                 className={cn(
                   "p-6 hover:shadow-lg transition-all duration-300 cursor-pointer",
-                  payout.isNew && "border-[#006039] bg-[#006039]/5"
+                  payout.isNew && "border-[#530FAD] bg-[#530FAD]/5"
                 )}
                 onClick={() => setSelectedPayout(payout)}
               >
@@ -661,7 +661,7 @@ export function PayoutsList() {
                           {statusConfig[payout.status]?.label}
                         </Badge>
                         {payout.isNew && (
-                          <Badge className="bg-[#006039] text-white">
+                          <Badge className="bg-[#530FAD] text-white">
                             Новая
                           </Badge>
                         )}

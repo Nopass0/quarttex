@@ -83,7 +83,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: any }> 
   CREATED: { label: 'Создан', color: 'bg-blue-100 text-blue-800', icon: Clock },
   ACTIVE: { label: 'Активен', color: 'bg-yellow-100 text-yellow-800', icon: AlertCircle },
   CHECKING: { label: 'Проверка', color: 'bg-purple-100 text-purple-800', icon: Eye },
-  COMPLETED: { label: 'Завершен', color: 'bg-green-100 text-green-800', icon: CheckCircle },
+  COMPLETED: { label: 'Завершен', color: 'bg-purple-100 text-purple-800', icon: CheckCircle },
   CANCELLED: { label: 'Отменен', color: 'bg-red-100 text-red-800', icon: XCircle },
   EXPIRED: { label: 'Истек', color: 'bg-gray-100 text-gray-800', icon: Clock },
   DISPUTED: { label: 'Спор', color: 'bg-orange-100 text-orange-800', icon: AlertCircle },
@@ -428,7 +428,7 @@ export default function AdminPayoutsPage() {
                   Отклонить
                 </Button>
                 <Button
-                  className="bg-green-600 hover:bg-green-700"
+                  className="bg-purple-600 hover:bg-purple-700"
                   onClick={() => setReviewDialog({ 
                     open: true, 
                     payout: selectedPayout, 
@@ -466,7 +466,7 @@ export default function AdminPayoutsPage() {
             <div className="space-y-2">
               <Label>Причина отклонения</Label>
               <textarea
-                className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
                 placeholder="Укажите причину отклонения..."
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
@@ -480,7 +480,7 @@ export default function AdminPayoutsPage() {
             </Button>
             <Button
               onClick={() => handleReviewPayout(payout.id, action)}
-              className={action === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
+              className={action === 'approve' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-red-600 hover:bg-red-700'}
             >
               {action === 'approve' ? 'Одобрить' : 'Отклонить'}
             </Button>
@@ -563,7 +563,7 @@ export default function AdminPayoutsPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-green-600 hover:text-green-700"
+                      className="text-purple-600 hover:text-purple-700"
                       onClick={() => setReviewDialog({ 
                         open: true, 
                         payout, 

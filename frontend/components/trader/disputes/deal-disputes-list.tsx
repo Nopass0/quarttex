@@ -187,8 +187,8 @@ const disputeStatusConfig = {
   RESOLVED_FAIL: {
     label: "Спор принят в сторону трейдера",
     description: "Решен в вашу пользу",
-    color: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
-    badgeColor: "bg-green-50 text-green-700 border-green-200",
+    color: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
+    badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
     icon: CheckCircle
   },
   CANCELLED: {

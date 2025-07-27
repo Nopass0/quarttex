@@ -76,14 +76,14 @@ export function AgentSidebar() {
         className={cn(
           'flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200',
           'text-gray-600 hover:text-gray-900',
-          isActive ? 'bg-[#006039]/10 text-[#006039] font-medium border-l-4 border-[#006039] -ml-[1px]' : 'hover:bg-gray-50'
+          isActive ? 'bg-[#530FAD]/10 text-[#530FAD] font-medium border-l-4 border-[#530FAD] -ml-[1px]' : 'hover:bg-gray-50'
         )}
       >
         <div className={cn(
           'flex items-center justify-center w-5 h-5',
-          isActive && 'text-[#006039]'
+          isActive && 'text-[#530FAD]'
         )}>
-          <item.icon className="h-5 w-5 text-[#006039]" />
+          <item.icon className="h-5 w-5 text-[#530FAD]" />
         </div>
         <span className="text-sm">{item.title}</span>
       </Link>
@@ -106,7 +106,7 @@ export function AgentSidebar() {
             <div className="space-y-1">
               <div className="text-sm font-medium">{agent.name}</div>
               <div className="text-xs text-gray-500">{agent.email}</div>
-              <div className="text-xs text-[#006039] font-medium">
+              <div className="text-xs text-[#530FAD] font-medium">
                 Комиссия: {agent.commissionRate}%
               </div>
             </div>
@@ -124,7 +124,7 @@ export function AgentSidebar() {
             className="w-full justify-start text-gray-600 hover:text-gray-900 hover:bg-gray-50"
             onClick={handleLogout}
           >
-            <LogOut className="h-5 w-5 mr-3 text-[#006039]" />
+            <LogOut className="h-5 w-5 mr-3 text-[#530FAD]" />
             <span className="text-sm">Выход</span>
           </Button>
         </div>
@@ -139,7 +139,7 @@ export function AgentSidebar() {
             size="icon"
             onClick={() => setMobileMenuOpen(true)}
           >
-            <Menu className="h-5 w-5 text-[#006039]" />
+            <Menu className="h-5 w-5 text-[#530FAD]" />
           </Button>
         </div>
       </div>
@@ -155,7 +155,7 @@ export function AgentSidebar() {
                 size="icon"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <X className="h-5 w-5 text-[#006039]" />
+                <X className="h-5 w-5 text-[#530FAD]" />
               </Button>
             </div>
             
@@ -164,7 +164,7 @@ export function AgentSidebar() {
                 <div className="space-y-1">
                   <div className="text-sm font-medium">{agent.name}</div>
                   <div className="text-xs text-gray-500">{agent.email}</div>
-                  <div className="text-xs text-[#006039] font-medium">
+                  <div className="text-xs text-[#530FAD] font-medium">
                     Комиссия: {agent.commissionRate}%
                   </div>
                 </div>
@@ -182,7 +182,7 @@ export function AgentSidebar() {
                 className="w-full justify-start"
                 onClick={handleLogout}
               >
-                <LogOut className="h-5 w-5 mr-3 text-[#006039]" />
+                <LogOut className="h-5 w-5 mr-3 text-[#530FAD]" />
                 Выход
               </Button>
             </div>

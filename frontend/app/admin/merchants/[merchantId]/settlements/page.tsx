@@ -144,7 +144,7 @@ export default function MerchantSettlementsPage() {
           
           <Button
             onClick={() => setIsSettleDialogOpen(true)}
-            className="bg-[#006039] hover:bg-[#005030]"
+            className="bg-[#530FAD] hover:bg-[#005030]"
             disabled={isLoading || pendingAmount === 0}
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -282,7 +282,7 @@ export default function MerchantSettlementsPage() {
             </Button>
             <Button
               onClick={handleCreateSettlement}
-              className="bg-[#006039] hover:bg-[#005030]"
+              className="bg-[#530FAD] hover:bg-[#005030]"
               disabled={isLoading}
             >
               Подтвердить сеттл

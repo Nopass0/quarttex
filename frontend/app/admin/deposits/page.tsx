@@ -191,7 +191,7 @@ export default function DepositsPage() {
     const variants: Record<string, { color: string; label: string }> = {
       PENDING: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', label: 'Ожидает' },
       CHECKING: { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Проверка' },
-      CONFIRMED: { color: 'bg-green-100 text-green-800 border-green-200', label: 'Подтвержден' },
+      CONFIRMED: { color: 'bg-purple-100 text-purple-800 border-purple-200', label: 'Подтвержден' },
       FAILED: { color: 'bg-red-100 text-red-800 border-red-200', label: 'Отклонен' },
       EXPIRED: { color: 'bg-gray-100 text-gray-800 border-gray-200', label: 'Истек' },
     }
@@ -231,7 +231,7 @@ export default function DepositsPage() {
         <Card className="p-6">
           <div className="space-y-2">
             <p className="text-sm text-gray-600">Подтверждено</p>
-            <p className="text-2xl font-bold text-green-600">{stats.confirmedDeposits}</p>
+            <p className="text-2xl font-bold text-purple-600">{stats.confirmedDeposits}</p>
           </div>
         </Card>
         <Card className="p-6">
@@ -311,7 +311,7 @@ export default function DepositsPage() {
                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                       deposit.status === 'PENDING' ? 'bg-yellow-100' :
                       deposit.status === 'CHECKING' ? 'bg-blue-100' :
-                      deposit.status === 'CONFIRMED' ? 'bg-green-100' :
+                      deposit.status === 'CONFIRMED' ? 'bg-purple-100' :
                       deposit.status === 'FAILED' ? 'bg-red-100' :
                       'bg-gray-100'
                     }`}>
@@ -347,7 +347,7 @@ export default function DepositsPage() {
                           onClick={() => copyToClipboard(deposit.address, 'address')}
                         >
                           {copiedAddress === deposit.address ? (
-                            <Check className="h-3 w-3 text-green-600" />
+                            <Check className="h-3 w-3 text-purple-600" />
                           ) : (
                             <Copy className="h-3 w-3 text-gray-400 hover:text-gray-600" />
                           )}
@@ -368,7 +368,7 @@ export default function DepositsPage() {
                           onClick={() => copyToClipboard(deposit.txHash!, 'txHash')}
                         >
                           {copiedTxHash === deposit.txHash ? (
-                            <Check className="h-3 w-3 text-green-600" />
+                            <Check className="h-3 w-3 text-purple-600" />
                           ) : (
                             <Copy className="h-3 w-3 text-gray-400 hover:text-gray-600" />
                           )}
@@ -391,7 +391,7 @@ export default function DepositsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-green-600 hover:text-green-700"
+                          className="text-purple-600 hover:text-purple-700"
                           onClick={() => setConfirmDialog({ open: true, deposit })}
                         >
                           Подтвердить

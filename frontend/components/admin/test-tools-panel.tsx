@@ -244,7 +244,7 @@ export function TestToolsPanel() {
       case "running":
         return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
       case "success":
-        return <Check className="h-4 w-4 text-green-500" />;
+        return <Check className="h-4 w-4 text-purple-500" />;
       case "error":
         return <X className="h-4 w-4 text-red-500" />;
     }
@@ -255,7 +255,7 @@ export function TestToolsPanel() {
       case "running":
         return <Badge variant="secondary" className="bg-blue-100 text-blue-800">Выполняется</Badge>;
       case "success":
-        return <Badge variant="secondary" className="bg-green-100 text-green-800">Успешно</Badge>;
+        return <Badge variant="secondary" className="bg-purple-100 text-purple-800">Успешно</Badge>;
       case "error":
         return <Badge variant="secondary" className="bg-red-100 text-red-800">Ошибка</Badge>;
     }

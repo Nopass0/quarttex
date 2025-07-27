@@ -516,7 +516,7 @@ export function AddRequisiteDialog({
               <Button
                 type="submit"
                 disabled={loading}
-                className="bg-[#006039] hover:bg-[#006039]/90"
+                className="bg-[#530FAD] hover:bg-[#530FAD]/90"
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Добавить

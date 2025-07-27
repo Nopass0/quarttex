@@ -70,7 +70,7 @@ const disputeStatusConfig = {
   },
   RESOLVED_SUCCESS: {
     label: "Решен в вашу пользу",
-    color: "bg-green-100 text-green-800 border-green-200",
+    color: "bg-purple-100 text-purple-800 border-purple-200",
     icon: CheckCircle
   },
   RESOLVED_FAIL: {
@@ -163,7 +163,7 @@ export function DisputedDealsListStyled() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
       </div>
     )
   }
@@ -283,7 +283,7 @@ export function DisputedDealsListStyled() {
         </Card>
         <Card className="p-4">
           <div className="text-sm text-gray-600">Решенных</div>
-          <div className="text-2xl font-bold text-green-600">
+          <div className="text-2xl font-bold text-purple-600">
             {disputes.filter(d => d.disputeStatus.startsWith("RESOLVED")).length}
           </div>
         </Card>
@@ -358,7 +358,7 @@ export function DisputedDealsListStyled() {
 
                   <Button
                     onClick={() => handleViewDispute(dispute)}
-                    className="bg-[#006039] hover:bg-[#006039]/90"
+                    className="bg-[#530FAD] hover:bg-[#530FAD]/90"
                   >
                     <MessageSquare className="h-4 w-4 mr-2" />
                     Открыть

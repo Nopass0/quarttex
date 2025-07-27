@@ -694,7 +694,7 @@ export default function DeviceDetailsPage() {
       <ProtectedRoute variant="trader">
         <AuthLayout variant="trader">
           <div className="flex items-center justify-center h-96">
-            <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
           </div>
         </AuthLayout>
       </ProtectedRoute>
@@ -727,7 +727,7 @@ export default function DeviceDetailsPage() {
                   К списку устройств
                 </Button>
                 <Button
-                  className="bg-[#006039] hover:bg-[#004d2e] dark:bg-[#2d6a42] dark:hover:bg-[#236035]"
+                  className="bg-[#530FAD] hover:bg-[#530FAD/90] dark:bg-[#530FAD] dark:hover:bg-[#530FAD/80]"
                   onClick={() => {
                     setServerError(false);
                     fetchDevice();
@@ -738,7 +738,7 @@ export default function DeviceDetailsPage() {
                 </Button>
               </div>
               {serverError && (
-                <div className="mt-6 p-4 bg-gray-100 dark:bg-[#29382f]/30 rounded-lg max-w-2xl text-left">
+                <div className="mt-6 p-4 bg-gray-100 dark:bg-[#292133]/30 rounded-lg max-w-2xl text-left">
                   <p className="text-sm font-medium text-gray-900 dark:text-[#eeeeee] mb-2">
                     Возможные причины ошибки:
                   </p>
@@ -833,7 +833,7 @@ export default function DeviceDetailsPage() {
                     </Button>
                   ) : (
                     <Button
-                      className="bg-[#006039] hover:bg-[#006039]/90"
+                      className="bg-[#530FAD] hover:bg-[#530FAD]/90"
                       size="sm"
                       className="h-8 px-3"
                       onClick={async () => {
@@ -874,7 +874,7 @@ export default function DeviceDetailsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Phone Mockup */}
             <div className="lg:col-span-1 order-2 lg:order-1">
-              <Card className="p-1 border-none dark:bg-[#29382f]/30 hidden sm:block">
+              <Card className="p-1 border-none dark:bg-[#292133]/30 hidden sm:block">
                 <div className="relative mx-auto w-[240px] sm:w-[280px] h-[480px] sm:h-[560px]">
                   {/* Phone Frame */}
                   <div className="absolute inset-0 bg-gray-900 dark:bg-black rounded-[40px] border-[6px] border-gray-800 dark:border-gray-900">
@@ -915,8 +915,8 @@ export default function DeviceDetailsPage() {
                           <Logo size="lg" />
                           {device.isOnline ? (
                             <>
-                              <div className="mt-10 p-4 rounded-full bg-green-100 dark:bg-green-900/30">
-                                <Globe className="w-10 h-10 text-green-500 dark:text-[#2d6a42]" />
+                              <div className="mt-10 p-4 rounded-full bg-purple-100 dark:bg-purple-900/30">
+                                <Globe className="w-10 h-10 text-purple-500 dark:text-[#530FAD]" />
                               </div>
                             </>
                           ) : (
@@ -951,7 +951,7 @@ export default function DeviceDetailsPage() {
                                   <p className={cn(
                                     "rounded-md px-4 py-2 uppercase",
                                     device.isOnline 
-                                      ? "text-green-500 dark:text-green-300 bg-green-200 dark:bg-green-900/30"
+                                      ? "text-purple-500 dark:text-purple-300 bg-purple-200 dark:bg-purple-900/30"
                                       : "text-red-500 dark:text-red-300 bg-red-200 dark:bg-red-900/30"
                                   )}>
                                     {device.isOnline 
@@ -986,13 +986,13 @@ export default function DeviceDetailsPage() {
               {/* Info Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {/* Device Info Card */}
-                <Card className="p-4 sm:p-6 dark:bg-[#29382f]/30">
+                <Card className="p-4 sm:p-6 dark:bg-[#292133]/30">
                   <div className="flex items-center justify-between mb-4">
-                    <Smartphone className="h-5 w-5 text-[#006039] dark:text-[#2d6a42]" />
+                    <Smartphone className="h-5 w-5 text-[#530FAD] dark:text-[#530FAD]" />
                     <Badge
                       className={
                         device.isOnline
-                          ? "bg-green-100 text-green-700 border-0 dark:bg-green-900/30 dark:text-green-400"
+                          ? "bg-purple-100 text-purple-700 border-0 dark:bg-purple-900/30 dark:text-purple-400"
                           : "bg-gray-100 text-gray-700 border-0 dark:bg-gray-800 dark:text-gray-400"
                       }
                     >
@@ -1009,9 +1009,9 @@ export default function DeviceDetailsPage() {
                 </Card>
 
                 {/* Status Card */}
-                <Card className="p-4 sm:p-6 dark:bg-[#29382f]/30">
+                <Card className="p-4 sm:p-6 dark:bg-[#292133]/30">
                   <div className="flex items-center justify-between mb-4">
-                    <Activity className="h-5 w-5 text-[#006039] dark:text-[#2d6a42]" />
+                    <Activity className="h-5 w-5 text-[#530FAD] dark:text-[#530FAD]" />
                     <span className="text-sm text-gray-500 dark:text-gray-400">Статус</span>
                   </div>
                   {console.log('[DeviceDetailsPage] Status card check:', {
@@ -1038,7 +1038,7 @@ export default function DeviceDetailsPage() {
                         className={cn(
                           "w-full justify-center py-2",
                           device.isWorking 
-                            ? "bg-green-100 text-green-700 border-green-300 dark:bg-green-800/30 dark:text-green-300 dark:border-green-600" 
+                            ? "bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-800/30 dark:text-purple-300 dark:border-purple-600" 
                             : "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-900/50 dark:text-gray-400 dark:border-gray-700"
                         )}
                       >
@@ -1049,10 +1049,10 @@ export default function DeviceDetailsPage() {
                 </Card>
 
                 {/* WiFi Status Card */}
-                <Card className="p-4 sm:p-6 dark:bg-[#29382f]/30">
+                <Card className="p-4 sm:p-6 dark:bg-[#292133]/30">
                   <div className="flex items-center justify-between mb-4">
                     {device.isOnline ? (
-                      <Wifi className="h-5 w-5 text-[#006039] dark:text-[#2d6a42]" />
+                      <Wifi className="h-5 w-5 text-[#530FAD] dark:text-[#530FAD]" />
                     ) : (
                       <WifiOff className="h-5 w-5 text-gray-500 dark:text-gray-500" />
                     )}
@@ -1071,9 +1071,9 @@ export default function DeviceDetailsPage() {
                 </Card>
 
                 {/* SIM Card Info Card */}
-                <Card className="p-4 sm:p-6 dark:bg-[#29382f]/30">
+                <Card className="p-4 sm:p-6 dark:bg-[#292133]/30">
                   <div className="flex items-center justify-between mb-4">
-                    <Globe className="h-5 w-5 text-[#006039] dark:text-[#2d6a42]" />
+                    <Globe className="h-5 w-5 text-[#530FAD] dark:text-[#530FAD]" />
                     <span className="text-sm text-gray-500 dark:text-gray-400">Сеть</span>
                   </div>
                   <h3 className="font-semibold mb-1 dark:text-[#eeeeee]">
@@ -1094,7 +1094,7 @@ export default function DeviceDetailsPage() {
                   <h3 className="font-semibold">Привязанные реквизиты</h3>
                   <Button
                     size="sm"
-                    className="h-8 px-3 bg-[#006039] hover:bg-[#006039]/90 w-full sm:w-auto"
+                    className="h-8 px-3 bg-[#530FAD] hover:bg-[#530FAD]/90 w-full sm:w-auto"
                     onClick={() => setShowAddRequisiteDialog(true)}
                   >
                     <CreditCard className="h-4 w-4 mr-2" />
@@ -1109,7 +1109,7 @@ export default function DeviceDetailsPage() {
                       {device.linkedBankDetails.map((req: any) => (
                         <div
                           key={req.id}
-                          className="flex items-center justify-between p-3 bg-gray-50 dark:bg-[#29382f]/30 rounded-lg"
+                          className="flex items-center justify-between p-3 bg-gray-50 dark:bg-[#292133]/30 rounded-lg"
                         >
                           <div className="flex items-center gap-3">
                             <CreditCard className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -1146,7 +1146,7 @@ export default function DeviceDetailsPage() {
                 <TabsList className="h-12 p-0 bg-transparent rounded-none w-full sm:w-auto min-w-max justify-start">
                   <TabsTrigger
                     value="messages"
-                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#006039] rounded-none px-3 sm:px-6 text-xs sm:text-sm whitespace-nowrap"
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#530FAD] rounded-none px-3 sm:px-6 text-xs sm:text-sm whitespace-nowrap"
                   >
                     <MessageSquare className="h-4 w-4 mr-1 sm:mr-2" />
                     <span className="hidden sm:inline">Сообщения</span>
@@ -1154,21 +1154,21 @@ export default function DeviceDetailsPage() {
                   </TabsTrigger>
                   <TabsTrigger
                     value="deals"
-                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#006039] rounded-none px-3 sm:px-6 text-xs sm:text-sm whitespace-nowrap"
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#530FAD] rounded-none px-3 sm:px-6 text-xs sm:text-sm whitespace-nowrap"
                   >
                     <CreditCard className="h-4 w-4 mr-1 sm:mr-2" />
                     Сделки
                   </TabsTrigger>
                   <TabsTrigger
                     value="disputes"
-                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#006039] rounded-none px-3 sm:px-6 text-xs sm:text-sm whitespace-nowrap"
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#530FAD] rounded-none px-3 sm:px-6 text-xs sm:text-sm whitespace-nowrap"
                   >
                     <Scale className="h-4 w-4 mr-1 sm:mr-2" />
                     Споры
                   </TabsTrigger>
                   <TabsTrigger
                     value="events"
-                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#006039] rounded-none px-3 sm:px-6 text-xs sm:text-sm whitespace-nowrap"
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#530FAD] rounded-none px-3 sm:px-6 text-xs sm:text-sm whitespace-nowrap"
                   >
                     <Clock className="h-4 w-4 mr-1 sm:mr-2" />
                     События
@@ -1235,7 +1235,7 @@ export default function DeviceDetailsPage() {
                     return (
                       <div
                         key={message.id}
-                        className="block hover:bg-gray-50 dark:hover:bg-[#29382f]/30 transition-colors rounded-lg"
+                        className="block hover:bg-gray-50 dark:hover:bg-[#292133]/30 transition-colors rounded-lg"
                       >
                         <div className="p-4">
                           <div className="flex items-start gap-4">
@@ -1341,7 +1341,7 @@ export default function DeviceDetailsPage() {
               <TabsContent value="deals" className="p-6">
                 {loadingTransactions ? (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
+                    <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
                   </div>
                 ) : transactions.length === 0 ? (
                   <div className="text-center py-12 text-gray-500 dark:text-gray-400">
@@ -1361,7 +1361,7 @@ export default function DeviceDetailsPage() {
                           <div className="flex items-center gap-4">
                             <div className={cn(
                               "p-2 rounded-lg",
-                              transaction.status === "READY" ? "bg-green-100 dark:bg-green-900/30" :
+                              transaction.status === "READY" ? "bg-purple-100 dark:bg-purple-900/30" :
                               transaction.status === "IN_PROGRESS" ? "bg-yellow-100 dark:bg-yellow-900/30" :
                               transaction.status === "DISPUTE" ? "bg-orange-100 dark:bg-orange-900/30" :
                               transaction.status === "EXPIRED" ? "bg-gray-100 dark:bg-gray-700" :
@@ -1369,7 +1369,7 @@ export default function DeviceDetailsPage() {
                             )}>
                               <CreditCard className={cn(
                                 "h-5 w-5",
-                                transaction.status === "READY" ? "text-green-600 dark:text-green-400" :
+                                transaction.status === "READY" ? "text-purple-600 dark:text-purple-400" :
                                 transaction.status === "IN_PROGRESS" ? "text-yellow-600 dark:text-yellow-400" :
                                 transaction.status === "DISPUTE" ? "text-orange-600 dark:text-orange-400" :
                                 transaction.status === "EXPIRED" ? "text-gray-600 dark:text-gray-400" :
@@ -1390,7 +1390,7 @@ export default function DeviceDetailsPage() {
                             <p className="font-semibold">{formatAmount(transaction.amount)} ₽</p>
                             <Badge className={cn(
                               "mt-1",
-                              transaction.status === "READY" ? "bg-green-100 text-green-800" :
+                              transaction.status === "READY" ? "bg-purple-100 text-purple-800" :
                               transaction.status === "IN_PROGRESS" ? "bg-yellow-100 text-yellow-800" :
                               transaction.status === "DISPUTE" ? "bg-orange-100 text-orange-800" :
                               transaction.status === "EXPIRED" ? "bg-gray-100 text-gray-800" :
@@ -1419,7 +1419,7 @@ export default function DeviceDetailsPage() {
               <TabsContent value="disputes" className="p-6">
                 {loadingDisputes ? (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
+                    <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
                   </div>
                 ) : disputes.length === 0 ? (
                   <div className="text-center py-12 text-gray-500 dark:text-gray-400">
@@ -1441,7 +1441,7 @@ export default function DeviceDetailsPage() {
                               "p-2 rounded-lg",
                               dispute.status === "OPEN" ? "bg-yellow-100 dark:bg-yellow-900/30" :
                               dispute.status === "IN_PROGRESS" ? "bg-blue-100 dark:bg-blue-900/30" :
-                              dispute.status === "RESOLVED_SUCCESS" ? "bg-green-100 dark:bg-green-900/30" :
+                              dispute.status === "RESOLVED_SUCCESS" ? "bg-purple-100 dark:bg-purple-900/30" :
                               dispute.status === "RESOLVED_FAIL" ? "bg-red-100 dark:bg-red-900/30" :
                               "bg-gray-100 dark:bg-gray-700"
                             )}>
@@ -1449,7 +1449,7 @@ export default function DeviceDetailsPage() {
                                 "h-5 w-5",
                                 dispute.status === "OPEN" ? "text-yellow-600 dark:text-yellow-400" :
                                 dispute.status === "IN_PROGRESS" ? "text-blue-600 dark:text-blue-400" :
-                                dispute.status === "RESOLVED_SUCCESS" ? "text-green-600 dark:text-green-400" :
+                                dispute.status === "RESOLVED_SUCCESS" ? "text-purple-600 dark:text-purple-400" :
                                 dispute.status === "RESOLVED_FAIL" ? "text-red-600 dark:text-red-400" :
                                 "text-gray-600 dark:text-gray-400"
                               )} />
@@ -1478,7 +1478,7 @@ export default function DeviceDetailsPage() {
                               "mt-1",
                               dispute.status === "OPEN" ? "bg-yellow-100 text-yellow-800" :
                               dispute.status === "IN_PROGRESS" ? "bg-blue-100 text-blue-800" :
-                              dispute.status === "RESOLVED_SUCCESS" ? "bg-green-100 text-green-800" :
+                              dispute.status === "RESOLVED_SUCCESS" ? "bg-purple-100 text-purple-800" :
                               dispute.status === "RESOLVED_FAIL" ? "bg-red-100 text-red-800" :
                               "bg-gray-100 text-gray-800"
                             )}>
@@ -1501,20 +1501,20 @@ export default function DeviceDetailsPage() {
                 <div className="space-y-4">
                   {/* Device Status Events */}
                   {device.isOnline && (
-                    <div className="border rounded-lg p-4 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                    <div className="border rounded-lg p-4 bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-full">
-                          <CheckCircle className="h-5 w-5 text-green-600 dark:text-[#2d6a42]" />
+                        <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-full">
+                          <CheckCircle className="h-5 w-5 text-purple-600 dark:text-[#530FAD]" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-medium text-green-900 dark:text-green-100">
+                          <p className="font-medium text-purple-900 dark:text-purple-100">
                             Устройство в сети
                           </p>
-                          <p className="text-sm text-green-700 dark:text-green-300">
+                          <p className="text-sm text-purple-700 dark:text-purple-300">
                             Активно и готово к работе
                           </p>
                         </div>
-                        <span className="text-xs text-green-600 dark:text-green-400">
+                        <span className="text-xs text-purple-600 dark:text-purple-400">
                           {format(new Date(), "HH:mm")}
                         </span>
                       </div>
@@ -1560,7 +1560,7 @@ export default function DeviceDetailsPage() {
 
                   {/* Last Health Check */}
                   {device.lastHealthCheck && (
-                    <div className="border dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-[#29382f]/30 transition-colors">
+                    <div className="border dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-[#292133]/30 transition-colors">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full">
                           <Shield className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -1581,7 +1581,7 @@ export default function DeviceDetailsPage() {
                   )}
 
                   {/* Device Creation */}
-                  <div className="border dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-[#29382f]/30 transition-colors">
+                  <div className="border dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-[#292133]/30 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full">
                         <Smartphone className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -1647,8 +1647,8 @@ export default function DeviceDetailsPage() {
               <div className="flex items-center gap-2 text-sm">
                 {device.isOnline ? (
                   <>
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span className="text-green-600">Устройство подключено</span>
+                    <CheckCircle className="h-4 w-4 text-purple-500" />
+                    <span className="text-purple-600">Устройство подключено</span>
                   </>
                 ) : (
                   <>

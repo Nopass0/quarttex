@@ -67,7 +67,7 @@ export function TelegramConnectModal({ open, onOpenChange }: TelegramConnectModa
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Send className="h-5 w-5 text-[#006039]" />
+            <Send className="h-5 w-5 text-[#530FAD]" />
             Подключение уведомлений в Telegram
           </DialogTitle>
           <DialogDescription>
@@ -78,14 +78,14 @@ export function TelegramConnectModal({ open, onOpenChange }: TelegramConnectModa
         <div className="space-y-4 pt-4">
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#006039]"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#530FAD]"></div>
             </div>
           ) : (
             <>
               {/* Step 1 */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-[#006039] text-white flex items-center justify-center text-sm font-medium">
+                  <div className="w-8 h-8 rounded-full bg-[#530FAD] text-white flex items-center justify-center text-sm font-medium">
                     1
                   </div>
                   <h3 className="font-medium">Скопируйте код привязки</h3>
@@ -116,7 +116,7 @@ export function TelegramConnectModal({ open, onOpenChange }: TelegramConnectModa
               {/* Step 2 */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-[#006039] text-white flex items-center justify-center text-sm font-medium">
+                  <div className="w-8 h-8 rounded-full bg-[#530FAD] text-white flex items-center justify-center text-sm font-medium">
                     2
                   </div>
                   <h3 className="font-medium">Откройте бота в Telegram</h3>
@@ -136,7 +136,7 @@ export function TelegramConnectModal({ open, onOpenChange }: TelegramConnectModa
               {/* Step 3 */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-[#006039] text-white flex items-center justify-center text-sm font-medium">
+                  <div className="w-8 h-8 rounded-full bg-[#530FAD] text-white flex items-center justify-center text-sm font-medium">
                     3
                   </div>
                   <h3 className="font-medium">Отправьте код боту</h3>

@@ -86,12 +86,12 @@ const messageTypeIcons: Record<string, React.ElementType> = {
 
 const messageTypeColors: Record<string, string> = {
   SYSTEM: 'bg-blue-100 text-blue-800 border-blue-200',
-  TRANSACTION: 'bg-green-100 text-green-800 border-green-200',
+  TRANSACTION: 'bg-purple-100 text-purple-800 border-purple-200',
   PAYOUT: 'bg-purple-100 text-purple-800 border-purple-200',
   ACCOUNT: 'bg-gray-100 text-gray-800 border-gray-200',
   SECURITY: 'bg-red-100 text-red-800 border-red-200',
   DISPUTE: 'bg-orange-100 text-orange-800 border-orange-200',
-  DEPOSIT: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  DEPOSIT: 'bg-purple-100 text-purple-800 border-purple-200',
   WITHDRAWAL: 'bg-amber-100 text-amber-800 border-amber-200',
   DEVICE: 'bg-indigo-100 text-indigo-800 border-indigo-200',
   ANNOUNCEMENT: 'bg-pink-100 text-pink-800 border-pink-200'

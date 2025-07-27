@@ -130,7 +130,7 @@ export default function DisputePage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
       </div>
     )
   }
@@ -276,7 +276,7 @@ export default function DisputePage() {
           Отмена
         </Button>
         <Button
-          className="bg-[#006039] hover:bg-[#006039]/90"
+          className="bg-[#530FAD] hover:bg-[#530FAD]/90"
           onClick={handleSubmit}
           disabled={isSubmitting || !message.trim()}
         >
