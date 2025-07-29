@@ -1,6 +1,16 @@
 -- Update SettleRequestStatus enum values
-ALTER TYPE "SettleRequestStatus" RENAME VALUE 'APPROVED' TO 'COMPLETED';
-ALTER TYPE "SettleRequestStatus" RENAME VALUE 'REJECTED' TO 'CANCELLED';
+-- Check and rename only if needed
+DO $$ 
+BEGIN
+    -- Only rename REJECTED to CANCELLED if CANCELLED doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_enum 
+        WHERE enumtypid = 'SettleRequestStatus'::regtype 
+        AND enumlabel = 'CANCELLED'
+    ) THEN
+        ALTER TYPE "SettleRequestStatus" RENAME VALUE 'REJECTED' TO 'CANCELLED';
+    END IF;
+END $$;
 
 -- AlterTable SettleRequest - clean up and align with schema
 ALTER TABLE "SettleRequest" DROP COLUMN IF EXISTS "currency";
