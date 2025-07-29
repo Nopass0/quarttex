@@ -96,7 +96,13 @@ DB_NAME="chase_dev"
 DB_USER="chase_user"
 
 # Create user and database
-$SUDO -u postgres psql <<EOF
+if [[ -n "$SUDO" ]]; then
+    PSQL_CMD="$SUDO -u postgres psql"
+else
+    PSQL_CMD="sudo -u postgres psql"
+fi
+
+$PSQL_CMD <<EOF
 -- Create user
 CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';
 
