@@ -25,11 +25,16 @@ print_info() {
     echo -e "${YELLOW}→ $1${NC}"
 }
 
-# Check if running as root
+# Check if we need sudo
+SUDO=""
 if [[ $EUID -ne 0 ]]; then
-   print_error "This script must be run as root!"
-   print_info "Please run: sudo ./setup-dev-environment.sh"
-   exit 1
+   if command -v sudo &> /dev/null; then
+       SUDO="sudo"
+       print_info "Running with sudo privileges..."
+   else
+       print_error "This script requires root privileges but sudo is not available!"
+       exit 1
+   fi
 fi
 
 # Detect OS
@@ -49,23 +54,23 @@ print_info "Installing PostgreSQL..."
 if [[ "$OS" == "linux" ]]; then
     # Ubuntu/Debian
     if command -v apt-get &> /dev/null; then
-        apt-get update
-        apt-get install -y postgresql postgresql-contrib
+        $SUDO apt-get update
+        $SUDO apt-get install -y postgresql postgresql-contrib
         print_success "PostgreSQL installed via apt"
         
         # Start PostgreSQL service
-        systemctl start postgresql || service postgresql start
-        systemctl enable postgresql || true
+        $SUDO systemctl start postgresql || $SUDO service postgresql start
+        $SUDO systemctl enable postgresql || true
         
         # Wait for PostgreSQL to start
         sleep 2
         
     # CentOS/RHEL/Fedora
     elif command -v yum &> /dev/null; then
-        yum install -y postgresql postgresql-server postgresql-contrib
-        postgresql-setup initdb
-        systemctl enable postgresql
-        systemctl start postgresql
+        $SUDO yum install -y postgresql postgresql-server postgresql-contrib
+        $SUDO postgresql-setup initdb
+        $SUDO systemctl enable postgresql
+        $SUDO systemctl start postgresql
         print_success "PostgreSQL installed via yum"
     else
         print_error "Unsupported Linux distribution"
@@ -91,7 +96,7 @@ DB_NAME="chase_dev"
 DB_USER="chase_user"
 
 # Create user and database
-sudo -u postgres psql <<EOF
+$SUDO -u postgres psql <<EOF
 -- Create user
 CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';
 
@@ -110,9 +115,9 @@ print_success "Database '${DB_NAME}' created with user '${DB_USER}'"
 
 # Step 3: Create project directories if they don't exist
 print_info "Setting up project structure..."
-mkdir -p backend
-mkdir -p frontend
-mkdir -p .gpt
+[[ ! -d backend ]] && mkdir -p backend
+[[ ! -d frontend ]] && mkdir -p frontend
+[[ ! -d .gpt ]] && mkdir -p .gpt
 
 # Step 4: Create .env files
 print_info "Creating environment configuration files..."
@@ -304,7 +309,7 @@ fi
 
 # Step 8: Create helper scripts directory
 print_info "Creating AI agent helper scripts..."
-mkdir -p .gpt
+[[ ! -d .gpt ]] && mkdir -p .gpt
 
 # Create helper scripts (we'll add more later)
 cat > .gpt/check-status.sh <<'EOF'
