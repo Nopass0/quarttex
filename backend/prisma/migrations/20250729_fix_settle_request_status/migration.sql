@@ -1,14 +1,23 @@
 -- Update SettleRequestStatus enum values
--- Check and rename only if needed
+-- Check if enum exists first
 DO $$ 
 BEGIN
-    -- Only rename REJECTED to CANCELLED if CANCELLED doesn't exist
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_enum 
-        WHERE enumtypid = 'SettleRequestStatus'::regtype 
-        AND enumlabel = 'CANCELLED'
+    -- Check if the enum type exists
+    IF EXISTS (
+        SELECT 1 FROM pg_type WHERE typname = 'SettleRequestStatus'
     ) THEN
-        ALTER TYPE "SettleRequestStatus" RENAME VALUE 'REJECTED' TO 'CANCELLED';
+        -- Only rename REJECTED to CANCELLED if CANCELLED doesn't exist
+        IF NOT EXISTS (
+            SELECT 1 FROM pg_enum 
+            WHERE enumtypid = '"SettleRequestStatus"'::regtype 
+            AND enumlabel = 'CANCELLED'
+        ) AND EXISTS (
+            SELECT 1 FROM pg_enum 
+            WHERE enumtypid = '"SettleRequestStatus"'::regtype 
+            AND enumlabel = 'REJECTED'
+        ) THEN
+            ALTER TYPE "SettleRequestStatus" RENAME VALUE 'REJECTED' TO 'CANCELLED';
+        END IF;
     END IF;
 END $$;
 
