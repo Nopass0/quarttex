@@ -5,7 +5,7 @@
 GITHUB_REPO="$1"
 VERSION="$2"
 SERVER_HOST="$3"
-SERVER_PATH="/var/www/chase/backend/uploads/apk"
+SERVER_PATH="/var/www/quattrex/backend/uploads/apk"
 
 if [ -z "$GITHUB_REPO" ] || [ -z "$VERSION" ] || [ -z "$SERVER_HOST" ]; then
     echo "Usage: ./deploy-apk.sh <github-repo> <version> <server-host>"
@@ -13,10 +13,10 @@ if [ -z "$GITHUB_REPO" ] || [ -z "$VERSION" ] || [ -z "$SERVER_HOST" ]; then
 fi
 
 echo "Downloading APK from GitHub Release..."
-DOWNLOAD_URL="https://github.com/${GITHUB_REPO}/releases/download/v${VERSION}/chase-mobile-${VERSION}.apk"
+DOWNLOAD_URL="https://github.com/${GITHUB_REPO}/releases/download/v${VERSION}/quattrex-mobile-${VERSION}.apk"
 
 # Download APK
-wget -O chase-mobile.apk "$DOWNLOAD_URL" || {
+wget -O quattrex-mobile.apk "$DOWNLOAD_URL" || {
     echo "Failed to download APK from: $DOWNLOAD_URL"
     exit 1
 }
@@ -37,7 +37,7 @@ EOF
 
 echo "Deploying to server..."
 # This would be done via SSH in the actual deployment
-echo "Would copy chase-mobile.apk to ${SERVER_HOST}:${SERVER_PATH}/chase-mobile.apk"
+echo "Would copy quattrex-mobile.apk to ${SERVER_HOST}:${SERVER_PATH}/quattrex-mobile.apk"
 echo "Would copy version-info.json to ${SERVER_HOST}:${SERVER_PATH}/version-info.json"
 
 echo "✅ APK deployment complete!"

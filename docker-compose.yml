@@ -4,15 +4,15 @@ services:
   # Local PostgreSQL for development only
   postgres:
     image: postgres:16-alpine
-    container_name: chase_postgres
+    container_name: quattrex_postgres
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-chase_secure_password}
-      POSTGRES_DB: chase
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-quattrex_secure_password}
+      POSTGRES_DB: quattrex
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - chase_network
+      - quattrex_network
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -26,9 +26,9 @@ services:
     build: 
       context: ./backend
       dockerfile: Dockerfile
-    container_name: chase_backend
+    container_name: quattrex_backend
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:chase_secure_password@postgres:5432/chase?schema=public}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:quattrex_secure_password@postgres:5432/quattrex?schema=public}
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this}
       NODE_ENV: ${NODE_ENV:-development}
       PORT: 3001
@@ -38,7 +38,7 @@ services:
     expose:
       - "3001"
     networks:
-      - chase_network
+      - quattrex_network
     restart: unless-stopped
     volumes:
       - ./backend/uploads:/app/uploads
@@ -49,7 +49,7 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: https://quattrex.pro
-    container_name: chase_frontend
+    container_name: quattrex_frontend
     environment:
       NODE_ENV: production
     expose:
@@ -57,14 +57,14 @@ services:
     depends_on:
       - backend
     networks:
-      - chase_network
+      - quattrex_network
     restart: unless-stopped
 
   nginx:
     build:
       context: ./nginx
       dockerfile: Dockerfile
-    container_name: chase_nginx
+    container_name: quattrex_nginx
     ports:
       - "80:80"
       - "443:443"
@@ -76,12 +76,12 @@ services:
       - frontend
       - backend
     networks:
-      - chase_network
+      - quattrex_network
     restart: unless-stopped
 
 volumes:
   postgres_data:
 
 networks:
-  chase_network:
+  quattrex_network:
     driver: bridge

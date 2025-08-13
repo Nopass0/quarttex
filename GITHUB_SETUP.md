@@ -1,13 +1,13 @@
 # GitHub Repository Setup Guide
 
-This guide explains how to configure GitHub repository secrets for automated deployment of the Chase payment platform.
+This guide explains how to configure GitHub repository secrets for automated deployment of the Quattrex payment platform.
 
 ## Prerequisites
 
 1. A server with Docker and Docker Compose installed
 2. SSL certificates for quattrex.pro domain
 3. SSH access to your deployment server
-4. GitHub repository at https://github.com/Nopass0/chase
+4. GitHub repository at https://github.com/Nopass0/quattrex
 
 ## Required GitHub Secrets
 
@@ -50,13 +50,13 @@ Go to your repository Settings → Secrets and variables → Actions, and add th
 
 - **PROJECT_PATH**: Absolute path to project directory on server
   ```
-  Example: /home/deploy/chase or /opt/chase
+  Example: /home/deploy/quattrex or /opt/quattrex
   ```
 
 - **DATABASE_URL**: Full PostgreSQL connection string
   ```
   Format: postgresql://username:password@host:port/database?schema=public
-  Example: postgresql://user:pass@db.example.com:5432/chase?schema=public
+  Example: postgresql://user:pass@db.example.com:5432/quattrex?schema=public
   
   For external databases like Supabase, Neon, or DigitalOcean:
   - Supabase: postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT].supabase.co:5432/postgres
@@ -88,12 +88,12 @@ SSH into your server and create the project directory:
 
 ```bash
 # Create project directory
-sudo mkdir -p /opt/chase
-sudo chown $USER:$USER /opt/chase
-cd /opt/chase
+sudo mkdir -p /opt/quattrex
+sudo chown $USER:$USER /opt/quattrex
+cd /opt/quattrex
 
 # Clone repository
-git clone https://github.com/Nopass0/chase.git .
+git clone https://github.com/Nopass0/quattrex.git .
 
 # The deployment script will automatically install all dependencies:
 # - Docker & Docker Compose
@@ -127,7 +127,7 @@ You can use either SSH key or password authentication:
 
 ### 2. Configure GitHub Repository
 
-1. Go to https://github.com/Nopass0/chase/settings/secrets/actions
+1. Go to https://github.com/Nopass0/quattrex/settings/secrets/actions
 2. Click "New repository secret" for each secret listed above
 3. Enter the name and value for each secret
 
@@ -151,7 +151,7 @@ After successful deployment, verify:
 
 1. **Check services are running**:
    ```bash
-   ssh user@server "cd /opt/chase && docker-compose ps"
+   ssh user@server "cd /opt/quattrex && docker-compose ps"
    ```
 
 2. **Access the application**:
@@ -161,7 +161,7 @@ After successful deployment, verify:
 
 3. **Check logs if needed**:
    ```bash
-   ssh user@server "cd /opt/chase && docker-compose logs -f"
+   ssh user@server "cd /opt/quattrex && docker-compose logs -f"
    ```
 
 ## Troubleshooting
@@ -179,7 +179,7 @@ After successful deployment, verify:
    - User might need to be in docker group: `sudo usermod -aG docker $USER`
 
 3. **SSL certificate errors**:
-   - Verify certificates are in the correct location: `/opt/chase/ssl/`
+   - Verify certificates are in the correct location: `/opt/quattrex/ssl/`
    - Check certificate permissions (readable by Docker)
    - Ensure certificate matches quattrex.pro domain
 
@@ -197,14 +197,14 @@ If automatic deployment fails, you can deploy manually:
 ssh user@server
 
 # Navigate to project
-cd /opt/chase
+cd /opt/quattrex
 
 # Pull latest changes
 git pull origin main
 
 # Create .env file
 cat > .env << EOF
-DATABASE_URL=postgresql://user:pass@external-db.com:5432/chase?schema=public
+DATABASE_URL=postgresql://user:pass@external-db.com:5432/quattrex?schema=public
 JWT_SECRET=your-jwt-secret
 SUPER_ADMIN_KEY=your-admin-key
 ADMIN_IPS=allowed-ips

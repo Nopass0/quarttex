@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">CHA$E</string>
+    <string name="app_name">QUATTREX</string>
     <string name="scan_qr_code">Сканировать QR-код</string>
     <string name="enter_code_manually">Ввести код вручную</string>
     <string name="device_code">Код устройства</string>
@@ -21,7 +21,7 @@
     <string name="logs">Логи</string>
     <string name="test_notification">Тестовое уведомление</string>
     <string name="create_test_notification">Создать тестовое уведомление</string>
-    <string name="notification_listener_service">Мониторинг уведомлений CHA$E</string>
+    <string name="notification_listener_service">Мониторинг уведомлений QUATTREX</string>
     <string name="permission_required">Требуется разрешение</string>
     <string name="grant_permission">Предоставить разрешение</string>
     <string name="camera_permission_message">Для сканирования QR-кода требуется доступ к камере</string>

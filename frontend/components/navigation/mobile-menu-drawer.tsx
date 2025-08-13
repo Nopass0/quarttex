@@ -565,7 +565,7 @@ export function MobileMenuDrawer({ variant, isOpen, onClose }: MobileMenuDrawerP
                     variant="outline"
                     className="w-full justify-start gap-2 text-sm text-gray-700 hover:text-gray-950 dark:text-gray-300 dark:hover:text-gray-50"
                     onClick={() => {
-                      window.open('/apk/chase.apk', '_blank');
+                      window.open('/apk/quattrex.apk', '_blank');
                     }}
                   >
                     <Download className="h-4 w-4 text-purple-600" />

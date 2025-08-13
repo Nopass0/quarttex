@@ -358,7 +358,7 @@ export default function ElementsTestPage() {
                     <BankCard cardNumber="6221 2345 6789 0123" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Chase Sapphire (Visa)</Label>
+                    <Label className="text-sm text-muted-foreground">Quattrex Sapphire (Visa)</Label>
                     <BankCard cardNumber="4111 1111 1111 1111" />
                   </div>
                   <div className="space-y-2">
@@ -1911,7 +1911,7 @@ export default function ElementsTestPage() {
                     <div className="flex items-center justify-center h-full bg-gradient-to-br from-blue-50 to-purple-50">
                       <div className="text-center p-8">
                         <Logo className="h-24 w-auto mx-auto mb-4" />
-                        <h3 className="text-2xl font-bold text-gray-900">Chase App</h3>
+                        <h3 className="text-2xl font-bold text-gray-900">Quattrex App</h3>
                         <p className="text-gray-600 mt-2">Добро пожаловать!</p>
                       </div>
                     </div>

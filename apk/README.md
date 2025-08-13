@@ -1,6 +1,6 @@
-# Chase Mobile App (Android)
+# Quattrex Mobile App (Android)
 
-This is the Android mobile application for Chase - automated transaction monitoring through notification access.
+This is the Android mobile application for Quattrex - automated transaction monitoring through notification access.
 
 ## Production Build
 

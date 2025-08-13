@@ -56,7 +56,7 @@ export function TelegramConnectModal({ open, onOpenChange }: TelegramConnectModa
 
   const openTelegramBot = () => {
     if (linkCode) {
-      const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "chase_notifications_bot";
+      const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "quattrex_notifications_bot";
       const url = `https://t.me/${botUsername}?start=${linkCode}`;
       window.open(url, "_blank");
     }
