@@ -28,7 +28,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: https://cbrp.pro/api
+        NEXT_PUBLIC_API_URL: https://quattrex.pro/api
     container_name: quattrex_frontend
     environment:
       NODE_ENV: production

@@ -46,4 +46,4 @@ docker compose -f docker-compose.prod.yml logs backend --tail=50
 
 echo "=== Deployment completed ==="
 echo "Access the application at: http://your-server-ip"
-echo "Or if you have SSL configured: https://cbrp.pro"
+echo "Or if you have SSL configured: https://quattrex.pro"

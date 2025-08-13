@@ -5,7 +5,7 @@ This is the Android mobile application for Chase - automated transaction monitor
 ## Production Build
 
 APK автоматически собирается при каждом push в main ветку через GitHub Actions.
-Production URL: `https://chasepay.pro/api`
+Production URL: `https://quattrex.pro/api`
 
 ## Features
 

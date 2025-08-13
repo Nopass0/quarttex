@@ -9,7 +9,7 @@
     
     <!-- Production domain - HTTPS only -->
     <domain-config cleartextTrafficPermitted="false">
-        <domain includeSubdomains="true">chasepay.pro</domain>
+        <domain includeSubdomains="true">quattrex.pro</domain>
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>

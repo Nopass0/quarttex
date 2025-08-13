@@ -48,7 +48,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: https://chasepay.pro
+        NEXT_PUBLIC_API_URL: https://quattrex.pro
     container_name: chase_frontend
     environment:
       NODE_ENV: production

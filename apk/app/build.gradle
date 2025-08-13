@@ -27,14 +27,14 @@ android {
             signingConfig signingConfigs.debug
         }
         release {
-            buildConfigField "String", "BASE_URL", "\"${System.getenv('PROD_BASE_URL') ?: 'https://chasepay.pro/api'}\""
+            buildConfigField "String", "BASE_URL", "\"${System.getenv('PROD_BASE_URL') ?: 'https://quattrex.pro/api'}\""
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.debug  // Use debug signing for now
         }
         prodDebug {
             initWith debug
-            buildConfigField "String", "BASE_URL", "\"https://chasepay.pro/api\""
+            buildConfigField "String", "BASE_URL", "\"https://quattrex.pro/api\""
             debuggable true
             minifyEnabled false
             signingConfig signingConfigs.debug

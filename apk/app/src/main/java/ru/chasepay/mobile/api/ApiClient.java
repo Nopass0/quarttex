@@ -18,7 +18,7 @@ import java.security.cert.X509Certificate;
 public class ApiClient {
     private static final String TAG = "ApiClient";
     private static Retrofit retrofit = null;
-    private static final String DEFAULT_BASE_URL = "https://chasepay.pro/api/";
+    private static final String DEFAULT_BASE_URL = "https://quattrex.pro/api/";
     
     public static Retrofit getInstance() {
         if (retrofit == null) {

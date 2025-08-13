@@ -5,7 +5,7 @@ This guide explains how to configure GitHub repository secrets for automated dep
 ## Prerequisites
 
 1. A server with Docker and Docker Compose installed
-2. SSL certificates for chasepay.pro domain
+2. SSL certificates for quattrex.pro domain
 3. SSH access to your deployment server
 4. GitHub repository at https://github.com/Nopass0/chase
 
@@ -155,9 +155,9 @@ After successful deployment, verify:
    ```
 
 2. **Access the application**:
-   - Frontend: https://chasepay.pro
-   - API: https://chasepay.pro/api
-   - Swagger: https://chasepay.pro/swagger
+   - Frontend: https://quattrex.pro
+   - API: https://quattrex.pro/api
+   - Swagger: https://quattrex.pro/swagger
 
 3. **Check logs if needed**:
    ```bash
@@ -181,7 +181,7 @@ After successful deployment, verify:
 3. **SSL certificate errors**:
    - Verify certificates are in the correct location: `/opt/chase/ssl/`
    - Check certificate permissions (readable by Docker)
-   - Ensure certificate matches chasepay.pro domain
+   - Ensure certificate matches quattrex.pro domain
 
 4. **Database connection errors**:
    - Check POSTGRES_PASSWORD matches in all places

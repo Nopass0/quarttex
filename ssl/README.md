@@ -26,7 +26,7 @@ The correct order in fullchain.crt should be:
 
 Test your certificate chain:
 ```bash
-openssl s_client -connect chasepay.pro:443 -servername chasepay.pro -showcerts
+openssl s_client -connect quattrex.pro:443 -servername quattrex.pro -showcerts
 ```
 
 ## Common SSL providers and their intermediate certificates

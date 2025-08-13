@@ -37,12 +37,12 @@ docker-compose restart nginx
 
 Test with curl:
 ```bash
-curl -v https://chasepay.pro/api/health
+curl -v https://quattrex.pro/api/health
 ```
 
 Test certificate chain:
 ```bash
-openssl s_client -connect chasepay.pro:443 -servername chasepay.pro -showcerts
+openssl s_client -connect quattrex.pro:443 -servername quattrex.pro -showcerts
 ```
 
 ## Certificate providers instructions

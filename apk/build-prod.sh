@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Build production APK
-export PROD_BASE_URL="https://chasepay.pro/api"
+export PROD_BASE_URL="https://quattrex.pro/api"
 ./gradlew clean assembleRelease
 
 # Create prod directory and copy APK

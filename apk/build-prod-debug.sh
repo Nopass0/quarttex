@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Build production debug APK with prod URL
-export DEBUG_BASE_URL="https://chasepay.pro/api"
+export DEBUG_BASE_URL="https://quattrex.pro/api"
 ./gradlew clean assembleDebug
 
 # Create prod directory and copy APK

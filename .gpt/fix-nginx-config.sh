@@ -14,12 +14,12 @@ if docker exec chase_nginx nginx -t 2>&1 | grep -q "conflicting server name"; th
     # Look for duplicate configs
     echo ""
     echo "Checking for duplicate server blocks:"
-    docker exec chase_nginx grep -r "server_name.*chasepay.pro" /etc/nginx/conf.d/
+    docker exec chase_nginx grep -r "server_name.*quattrex.pro" /etc/nginx/conf.d/
     
     echo ""
     echo "To fix this issue:"
     echo "1. Check docker-compose.yml for duplicate nginx config volumes"
-    echo "2. Ensure only one config file defines chasepay.pro"
+    echo "2. Ensure only one config file defines quattrex.pro"
     echo "3. Restart nginx: docker-compose restart nginx"
 else
     echo "✅ No nginx configuration conflicts found"

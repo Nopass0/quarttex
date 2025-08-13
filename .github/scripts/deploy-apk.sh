@@ -29,7 +29,7 @@ cat > version-info.json << EOF
 {
   "version": "${VERSION}",
   "fileSize": ${FILE_SIZE},
-  "downloadUrl": "https://chasepay.pro/api/app/download",
+  "downloadUrl": "https://quattrex.pro/api/app/download",
   "githubUrl": "${DOWNLOAD_URL}",
   "buildDate": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 }
