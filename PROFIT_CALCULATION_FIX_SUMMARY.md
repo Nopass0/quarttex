@@ -8,7 +8,7 @@
 - Первый раз при получении курса от Rapira (`rapiraService.getRateWithKkk()`)
 - Второй раз в функции `calculateFreezingParams()`
 
-**Решение:** В файле `/home/user/projects/chase/backend/src/routes/merchant/index.ts`:
+**Решение:** В файле `/home/user/projects/quattrex/backend/src/routes/merchant/index.ts`:
 - Строки 824-835: Прямой расчет заморозки без использования `calculateFreezingParams`
 - Строки 1159-1169: Заменен вызов `calculateFreezingParams` на прямой расчет
 
@@ -21,7 +21,7 @@ const totalRequired = frozenUsdtAmount + calculatedCommission;
 
 ### 2. Добавлен расчет прибыли при ручном подтверждении транзакции
 
-**Файл:** `/home/user/projects/chase/backend/src/routes/trader/bt-entrance.ts`
+**Файл:** `/home/user/projects/quattrex/backend/src/routes/trader/bt-entrance.ts`
 **Строки:** 198-259
 
 При нажатии трейдером кнопки "Подтвердить платеж":
@@ -32,7 +32,7 @@ const totalRequired = frozenUsdtAmount + calculatedCommission;
 
 ### 3. Исправлен расчет прибыли в автоматической обработке уведомлений
 
-**Файл:** `/home/user/projects/chase/backend/src/services/NotificationAutoProcessorService.ts`
+**Файл:** `/home/user/projects/quattrex/backend/src/services/NotificationAutoProcessorService.ts`
 **Строки:** 330-374
 
 При автоматическом подтверждении транзакции через уведомления:
@@ -42,7 +42,7 @@ const totalRequired = frozenUsdtAmount + calculatedCommission;
 
 ### 4. Обновлен интерфейс трейдера для отображения сохраненной прибыли
 
-**Файл:** `/home/user/projects/chase/backend/src/routes/trader/transactions.ts`
+**Файл:** `/home/user/projects/quattrex/backend/src/routes/trader/transactions.ts`
 
 Вместо расчета прибыли "на лету" теперь используется сохраненное значение из базы данных:
 ```typescript
@@ -74,7 +74,7 @@ const profit = tx.traderProfit || 0;
 
 ## Тестирование
 
-Создан файл `/home/user/projects/chase/backend/src/tests/freezing-profit.test.ts` с тестами:
+Создан файл `/home/user/projects/quattrex/backend/src/tests/freezing-profit.test.ts` с тестами:
 - Проверка расчета заморозки с учетом KKK
 - Проверка расчета прибыли трейдера
 - Проверка создания транзакции и заморозки баланса

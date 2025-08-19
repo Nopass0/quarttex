@@ -1,6 +1,6 @@
 # AI Agent Helper Scripts
 
-This directory contains helper scripts for AI agents working on the Chase P2P platform.
+This directory contains helper scripts for AI agents working on the Quattrex P2P platform.
 
 ## Available Scripts
 

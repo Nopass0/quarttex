@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Chase Device API allows mobile applications to connect and interact with the Chase trading platform. Devices authenticate using unique tokens and can perform health checks, receive notifications, and manage bank details.
+The Quattrex Device API allows mobile applications to connect and interact with the Quattrex trading platform. Devices authenticate using unique tokens and can perform health checks, receive notifications, and manage bank details.
 
 ## Authentication
 

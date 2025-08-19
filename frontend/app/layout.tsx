@@ -5,8 +5,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Chase Platform",
-  description: "Trading and payment platform",
+  title: "Quattrex платформ",
+  description: "Торговая и платежная платформа",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1",
 };
 

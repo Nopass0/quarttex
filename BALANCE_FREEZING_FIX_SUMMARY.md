@@ -10,7 +10,7 @@
 ## Решение
 
 ### 1. Создан общий модуль для заморозки баланса
-**Файл:** `/home/user/projects/chase/backend/src/utils/transaction-freezing.ts`
+**Файл:** `/home/user/projects/quattrex/backend/src/utils/transaction-freezing.ts`
 
 Содержит функции:
 - `calculateTransactionFreezing()` - расчет параметров заморозки
@@ -20,7 +20,7 @@
 ### 2. Обновлен админский API
 
 #### POST /admin/transactions/create
-**Файл:** `/home/user/projects/chase/backend/src/routes/admin/transactions.ts`
+**Файл:** `/home/user/projects/quattrex/backend/src/routes/admin/transactions.ts`
 **Строки:** 165-211
 
 Теперь при создании транзакции:

@@ -8,7 +8,7 @@ export default new Elysia()
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Скачать CHA$E Mobile</title>
+    <title>Скачать Quattrex Mobile</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -91,10 +91,10 @@ export default new Elysia()
 <body>
     <div class="container">
         <div class="logo">
-            CHA<span class="dollar">$</span>E
+            Quattrex
         </div>
         <h1>Мобильное приложение</h1>
-        <p>Установите приложение CHA$E для управления транзакциями и мониторинга платежей</p>
+        <p>Установите приложение Quattrex для управления транзакциями и мониторинга платежей</p>
         
         <a href="/api/app/download" class="download-btn">
             Скачать APK

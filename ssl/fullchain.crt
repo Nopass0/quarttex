@@ -1,3 +1,7 @@
+# Заглушка для сертификата - замените на реальный сертификат от Sectigo
+-----BEGIN CERTIFICATE-----
+PLACEHOLDER_CERTIFICATE_FROM_SECTIGO
+-----END CERTIFICATE-----
 -----BEGIN CERTIFICATE-----
 MIIGEzCCA/ugAwIBAgIQfVtRJrR2uhHbdBYLvFMNpzANBgkqhkiG9w0BAQwFADCB
 iDELMAkGA1UEBhMCVVMxEzARBgNVBAgTCk5ldyBKZXJzZXkxFDASBgNVBAcTC0pl

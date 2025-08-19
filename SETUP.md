@@ -12,7 +12,7 @@
 1. **Clone the repository** (if not already done):
    ```bash
    git clone <repository-url>
-   cd chase
+   cd quattrex
    ```
 
 2. **Make the setup script executable**:
@@ -27,7 +27,7 @@
 
    This script will:
    - Install PostgreSQL (if not installed)
-   - Create development database `chase_dev`
+   - Create development database `quattrex_dev`
    - Create database user with secure password
    - Generate `.env` files for backend and frontend
    - Install project dependencies
@@ -65,9 +65,9 @@ sudo -u postgres psql
 ```
 
 ```sql
-CREATE USER chase_user WITH PASSWORD 'your_secure_password';
-CREATE DATABASE chase_dev OWNER chase_user;
-GRANT ALL PRIVILEGES ON DATABASE chase_dev TO chase_user;
+CREATE USER quattrex_user WITH PASSWORD 'your_secure_password';
+CREATE DATABASE quattrex_dev OWNER quattrex_user;
+GRANT ALL PRIVILEGES ON DATABASE quattrex_dev TO quattrex_user;
 \q
 ```
 
@@ -75,7 +75,7 @@ GRANT ALL PRIVILEGES ON DATABASE chase_dev TO chase_user;
 
 **backend/.env**:
 ```env
-DATABASE_URL="postgresql://chase_user:your_password@localhost:5432/chase_dev"
+DATABASE_URL="postgresql://quattrex_user:your_password@localhost:5432/quattrex_dev"
 PORT=3000
 JWT_SECRET=your_jwt_secret_here
 ADMIN_KEY=your_admin_key_here
@@ -127,7 +127,7 @@ You should see:
 
 ### PostgreSQL Connection Issues
 - Check if PostgreSQL is running: `sudo systemctl status postgresql`
-- Verify connection: `psql -U chase_user -d chase_dev -h localhost`
+- Verify connection: `psql -U quattrex_user -d quattrex_dev -h localhost`
 
 ### Port Already in Use
 - Kill processes on ports: 

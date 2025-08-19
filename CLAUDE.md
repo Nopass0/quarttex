@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Overview
-Chase is a P2P payment platform with multi-role support (traders, merchants, agents, admins), focusing on the Russian market with bank card processing and crypto (USDT/TRC-20) integration.
+Quattrex is a P2P payment platform with multi-role support (traders, merchants, agents, admins), focusing on the Russian market with bank card processing and crypto (USDT/TRC-20) integration.
 
 ## Development Commands
 

@@ -16,7 +16,7 @@ You need these files in the `/ssl` directory:
 ### 2. Create fullchain certificate
 
 ```bash
-cd /path/to/chase/ssl
+cd /path/to/quattrex/ssl
 ./create-fullchain.sh
 ```
 

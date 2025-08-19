@@ -157,7 +157,7 @@ export function MessagesList() {
         id: "7",
         title: "Приглашение на вебинар",
         content:
-          "Приглашаем вас на вебинар 'Оптимизация работы с мерчантами', который состоится 10 августа в 15:00 МСК. Ссылка на регистрацию: webinar.chase.io/optimization",
+          "Приглашаем вас на вебинар 'Оптимизация работы с мерчантами', который состоится 10 августа в 15:00 МСК. Ссылка на регистрацию: webinar.quattrex.pro/optimization",
         type: "info",
         isRead: false,
         createdAt: new Date(Date.now() - 518400000).toISOString(),

@@ -37,7 +37,7 @@ Production URL: `https://quattrex.pro/api`
 ./build-apk.sh --base-url https://your-backend.com
 ```
 
-The APK will be saved to `../build/apk/chase-app-{debug|release}.apk`
+The APK will be saved to `../build/apk/quattrex-app-{debug|release}.apk`
 
 ### Local Development
 
@@ -86,7 +86,7 @@ The app requires the following permissions:
 
 ## Backend Integration
 
-The app connects to the Chase backend API:
+The app connects to the Quattrex backend API:
 - Local development: `http://10.0.2.2:3000` (emulator) or device IP
 - Production: Configured during build
 
@@ -97,10 +97,10 @@ The app connects to the Chase backend API:
 adb logcat
 
 # View app logs only
-adb logcat | grep -i chase
+adb logcat | grep -i quattrex
 
 # Clear app data
-adb shell pm clear com.chase.mobile
+adb shell pm clear com.quattrex.mobile
 ```
 
 ## Build Configuration

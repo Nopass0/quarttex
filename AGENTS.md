@@ -1,11 +1,11 @@
 # AI Agents Development Guide
 
 ## Overview
-This guide provides instructions for AI agents working on the Chase P2P payment platform project. It ensures consistent development practices, proper testing, and system stability.
+This guide provides instructions for AI agents working on the Quattrex P2P payment platform project. It ensures consistent development practices, proper testing, and system stability.
 
 ## Project Structure
 ```
-/home/user/projects/chase/
+/home/user/projects/quattrex/
 ├── backend/          # Bun + Elysia backend
 ├── frontend/         # Next.js frontend  
 ├── .gpt/            # AI agent helper scripts
@@ -137,7 +137,7 @@ curl http://localhost:3001/
 ## Helper Scripts Location
 All AI agent helper scripts are located in:
 ```
-/home/user/projects/chase/.gpt/
+/home/user/projects/quattrex/.gpt/
 ```
 
 ## Setup Instructions

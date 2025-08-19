@@ -49,7 +49,7 @@ Create a `.env` file in the project root:
 
 ```bash
 # Database
-DATABASE_URL=postgresql://user:password@host:5432/chase?schema=public
+DATABASE_URL=postgresql://user:password@host:5432/quattrex?schema=public
 
 # Security
 JWT_SECRET=your-super-secret-jwt-key-change-this
@@ -64,8 +64,8 @@ NODE_ENV=production
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/Nopass0/chase.git
-   cd chase
+   git clone https://github.com/Nopass0/quattrex.git
+cd quattrex
    ```
 
 2. **Set up SSL certificates**

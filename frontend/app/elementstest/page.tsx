@@ -1911,7 +1911,7 @@ export default function ElementsTestPage() {
                     <div className="flex items-center justify-center h-full bg-gradient-to-br from-blue-50 to-purple-50">
                       <div className="text-center p-8">
                         <QuatrexLogo className="h-24 w-auto mx-auto mb-4" />
-                        <h3 className="text-2xl font-bold text-gray-900">Chase App</h3>
+                        <h3 className="text-2xl font-bold text-gray-900">Quattrex App</h3>
                         <p className="text-gray-600 mt-2">Добро пожаловать!</p>
                       </div>
                     </div>
