@@ -92,7 +92,7 @@ export function TraderHeader() {
           <Button
             variant="outline"
             size="icon"
-            className="h-9 w-9 border-green-600 text-green-600 hover:bg-green-50 dark:border-green-500 dark:text-green-500 dark:hover:bg-green-950/20"
+            className="h-9 w-9 border-purple-600 text-purple-600 hover:bg-purple-50 dark:border-purple-500 dark:text-purple-500 dark:hover:bg-purple-950/20"
             title="Пополнить баланс"
           >
             <Plus className="h-4 w-4" />

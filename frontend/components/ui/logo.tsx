@@ -30,16 +30,21 @@ export function Logo({ size = "md", variant = "full", className }: LogoProps) {
   if (variant === "mini") {
     return (
       <div className={cn("flex items-center justify-center", iconSize, className)} suppressHydrationWarning>
-        <span className={cn("font-bold text-[#006039] dark:text-[#2d6a42]", textSize)}>$</span>
+        <div className="relative w-full h-full">
+          {/* Mini logo with Q */}
+          <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 blur-sm opacity-60 dark:opacity-80"></div>
+          <div className="relative w-full h-full rounded-lg bg-gradient-to-br from-purple-600 to-purple-800 dark:from-purple-500 dark:to-purple-700 flex items-center justify-center">
+            <span className={cn("font-bold text-white", textSize)}>Q</span>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
     <div className={cn("flex items-center font-bold tracking-tight dark:text-[#eeeeee]", textSize, className)} suppressHydrationWarning>
-      <span>CHA</span>
-      <span className="text-[#006039] dark:text-[#2d6a42] mx-0.5" style={{ fontSize: '1.1em', letterSpacing: '0.05em' }}>$</span>
-      <span>E</span>
+      <span className="bg-gradient-to-r from-purple-600 to-purple-800 dark:from-purple-400 dark:to-purple-600 bg-clip-text text-transparent">QUATT</span>
+      <span className="text-purple-500 dark:text-purple-400" style={{ fontSize: '1.1em', letterSpacing: '0.05em' }}>REX</span>
     </div>
   )
 }
