@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -29,10 +29,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { PhoneInput, CardNumberInput } from "@/components/ui/formatted-input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { traderApi } from "@/services/api";
 import { Loader2 } from "lucide-react";
+import { BANKS } from "@/constants/banks";
 
 const formSchema = z.object({
   methodId: z.string().min(1, "Выберите метод"),
@@ -42,9 +44,8 @@ const formSchema = z.object({
   phoneNumber: z.string().optional(),
   minAmount: z.number().min(100),
   maxAmount: z.number().min(1000),
-  dailyLimit: z.number().min(0),
-  monthlyLimit: z.number().min(0),
-  maxCountTransactions: z.number().min(0),
+  sumLimit: z.number().min(0),
+  operationLimit: z.number().min(0),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -65,28 +66,7 @@ interface AddBTRequisiteDialogProps {
   onSuccess?: () => void;
 }
 
-const AVAILABLE_BANKS = [
-  { code: "SBER", name: "Сбербанк" },
-  { code: "TBANK", name: "Т-Банк" },
-  { code: "VTB", name: "ВТБ" },
-  { code: "ALFA", name: "Альфа-Банк" },
-  { code: "GAZPROM", name: "Газпромбанк" },
-  { code: "OZON", name: "Ozon банк" },
-  { code: "RAIFF", name: "Райффайзен" },
-  { code: "POCHTA", name: "Почта Банк" },
-  { code: "RSHB", name: "Россельхозбанк" },
-  { code: "MTS", name: "МТС Банк" },
-  { code: "PSB", name: "ПСБ" },
-  { code: "SOVCOM", name: "Совкомбанк" },
-  { code: "URALSIB", name: "Уралсиб" },
-  { code: "MKB", name: "МКБ" },
-  { code: "ROSBANK", name: "Росбанк" },
-  { code: "OTKRITIE", name: "Открытие" },
-  { code: "AVANGARD", name: "Авангард" },
-  { code: "ZENIT", name: "Зенит" },
-  { code: "AKBARS", name: "Ак Барс" },
-  { code: "SBP", name: "СБП" }
-];
+const AVAILABLE_BANKS = BANKS;
 
 export function AddBTRequisiteDialog({
   open,
@@ -94,9 +74,7 @@ export function AddBTRequisiteDialog({
   onSuccess,
 }: AddBTRequisiteDialogProps) {
   const [loading, setLoading] = useState(false);
-  const [methods, setMethods] = useState<Method[]>([]);
   const [selectedMethod, setSelectedMethod] = useState<Method | null>(null);
-  const [loadingMethods, setLoadingMethods] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -108,45 +86,20 @@ export function AddBTRequisiteDialog({
       phoneNumber: "",
       minAmount: 1000,
       maxAmount: 100000,
-      dailyLimit: 500000,
-      monthlyLimit: 10000000,
-      maxCountTransactions: 5,
+      sumLimit: 0,
+      operationLimit: 0,
     },
   });
 
-  useEffect(() => {
-    if (open) {
-      fetchMethods();
-    }
-  }, [open]);
-
-  const fetchMethods = async () => {
-    try {
-      setLoadingMethods(true);
-      const response = await traderApi.getMethods();
-      const methodsData = response.data || response.methods || response || [];
-      setMethods(Array.isArray(methodsData) ? methodsData : []);
-    } catch (error) {
-      console.error("Error fetching methods:", error);
-      toast.error("Не удалось загрузить методы");
-    } finally {
-      setLoadingMethods(false);
-    }
-  };
 
   const handleMethodChange = (methodType: string) => {
-    // Find first method with selected type
-    const method = methods.find(m => m.type === methodType);
-    setSelectedMethod(method || { id: methodType, name: methodType, type: methodType, minAmount: 1000, maxAmount: 100000, minPayin: 1000, maxPayin: 100000 });
+    // Create a method object for the selected type
+    const method = { id: methodType, name: methodType, type: methodType, minAmount: 1000, maxAmount: 100000, minPayin: 1000, maxPayin: 100000 };
+    setSelectedMethod(method);
     
-    if (method) {
-      form.setValue("minAmount", method.minPayin || 1000);
-      form.setValue("maxAmount", method.maxPayin || 100000);
-    } else {
-      // Set default values for method type
-      form.setValue("minAmount", 1000);
-      form.setValue("maxAmount", 100000);
-    }
+    // Set default values for method type
+    form.setValue("minAmount", 1000);
+    form.setValue("maxAmount", 100000);
     
     // Clear bank selection when method changes
     form.setValue("bankType", "");
@@ -174,28 +127,26 @@ export function AddBTRequisiteDialog({
       }
 
       // Validate phone for SBP
-      if (data.bankType === "SBP" && !data.phoneNumber) {
+      if (selectedMethod.type === "SBP" && !data.phoneNumber) {
         toast.error("Введите номер телефона для СБП");
         return;
       }
 
-      // Find the method ID for the selected bank
-      const methodForBank = methods.find(
-        m => m.type === selectedMethod.type
-      );
-
-      if (!methodForBank) {
-        toast.error("Метод не найден");
-        return;
-      }
-
       const payload = {
-        ...data,
-        methodId: methodForBank.id,
-        deviceId: null, // Explicitly set deviceId to null for BT-entry requisites
+        cardNumber: selectedMethod.type === "CARD" ? data.cardNumber : "",
+        bankType: data.bankType,
+        methodType: selectedMethod.type === "CARD" ? "c2c" : "sbp",
+        recipientName: data.recipientName,
+        phoneNumber: data.phoneNumber || "",
+        minAmount: data.minAmount,
+        maxAmount: data.maxAmount,
+        intervalMinutes: 5,
+        sumLimit: data.sumLimit,
+        operationLimit: data.operationLimit,
       };
 
-      await traderApi.createRequisite(payload);
+      console.log('[BTEntrance] Creating requisite with data:', payload);
+      await traderApi.btEntrance.createRequisite(payload);
       toast.success("Реквизит успешно добавлен");
       form.reset();
       onOpenChange(false);
@@ -227,18 +178,18 @@ export function AddBTRequisiteDialog({
               name="methodId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Метод</FormLabel>
+                  <FormLabel>Тип платежа</FormLabel>
                   <Select
                     onValueChange={(value) => {
                       field.onChange(value);
                       handleMethodChange(value);
                     }}
                     value={field.value}
-                    disabled={loadingMethods}
+                    disabled={false}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Выберите метод" />
+                        <SelectValue placeholder="Выберите тип платежа" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -268,15 +219,11 @@ export function AddBTRequisiteDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {selectedMethodType === "SBP" ? (
-                        <SelectItem value="SBP">СБП</SelectItem>
-                      ) : (
-                        AVAILABLE_BANKS.filter(bank => bank.code !== "SBP").map((bank) => (
-                          <SelectItem key={bank.code} value={bank.code}>
-                            {bank.name}
-                          </SelectItem>
-                        ))
-                      )}
+                      {AVAILABLE_BANKS.filter(bank => bank.code !== "SBP").map((bank) => (
+                        <SelectItem key={bank.code} value={bank.code}>
+                          {bank.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -292,19 +239,14 @@ export function AddBTRequisiteDialog({
                   <FormItem>
                     <FormLabel>Номер карты</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="1234 5678 9012 3456"
-                        {...field}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\s/g, "");
-                          if (/^\d*$/.test(value) && value.length <= 16) {
-                            field.onChange(value);
-                          }
-                        }}
+                      <CardNumberInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={loading}
                       />
                     </FormControl>
                     <FormDescription>
-                      Введите номер карты без пробелов
+                      Введите номер карты
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -312,7 +254,7 @@ export function AddBTRequisiteDialog({
               />
             )}
 
-            {form.watch("bankType") === "SBP" && (
+            {selectedMethodType === "SBP" && (
               <FormField
                 control={form.control}
                 name="phoneNumber"
@@ -320,13 +262,10 @@ export function AddBTRequisiteDialog({
                   <FormItem>
                     <FormLabel>Номер телефона</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="+7 (999) 123-45-67"
-                        {...field}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/[^\d+]/g, "");
-                          field.onChange(value);
-                        }}
+                      <PhoneInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={loading}
                       />
                     </FormControl>
                     <FormDescription>
@@ -396,13 +335,14 @@ export function AddBTRequisiteDialog({
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="dailyLimit"
+                name="sumLimit"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Дневной лимит (₽)</FormLabel>
+                    <FormLabel>Общий лимит суммы (₽)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
+                        placeholder="0"
                         {...field}
                         onChange={(e) => field.onChange(Number(e.target.value))}
                       />
@@ -415,13 +355,14 @@ export function AddBTRequisiteDialog({
 
               <FormField
                 control={form.control}
-                name="monthlyLimit"
+                name="operationLimit"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Месячный лимит (₽)</FormLabel>
+                    <FormLabel>Лимит операций</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
+                        placeholder="0"
                         {...field}
                         onChange={(e) => field.onChange(Number(e.target.value))}
                       />
@@ -432,27 +373,6 @@ export function AddBTRequisiteDialog({
                 )}
               />
             </div>
-
-            <FormField
-              control={form.control}
-              name="maxCountTransactions"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Дневной лимит транзакций</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Максимальное количество сделок в день (0 = без ограничений, по умолчанию 5)
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
             <DialogFooter>
               <Button

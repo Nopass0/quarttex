@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Lightbulb } from "lucide-react";
+import { useTraderAuth } from "@/stores/auth";
 
 interface IdeaModalProps {
   open: boolean;
@@ -22,6 +23,8 @@ interface IdeaModalProps {
 export function IdeaModal({ open, onOpenChange }: IdeaModalProps) {
   const [idea, setIdea] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const token = useTraderAuth.getState().token;
 
   const handleSubmit = async () => {
     if (!idea.trim()) {
@@ -35,6 +38,7 @@ export function IdeaModal({ open, onOpenChange }: IdeaModalProps) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "x-trader-token": token,
         },
         body: JSON.stringify({ idea: idea.trim() }),
       });
@@ -62,7 +66,8 @@ export function IdeaModal({ open, onOpenChange }: IdeaModalProps) {
             Предложить идею
           </DialogTitle>
           <DialogDescription>
-            Поделитесь вашими идеями по улучшению платформы. Мы ценим каждое предложение!
+            Поделитесь вашими идеями по улучшению платформы. Мы ценим каждое
+            предложение!
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -93,7 +98,7 @@ export function IdeaModal({ open, onOpenChange }: IdeaModalProps) {
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting || !idea.trim()}
-              className="flex-1 bg-[#530FAD] hover:bg-[#005030]"
+              className="flex-1 bg-[#006039] hover:bg-[#005030]"
             >
               {isSubmitting ? "Отправка..." : "Отправить"}
             </Button>

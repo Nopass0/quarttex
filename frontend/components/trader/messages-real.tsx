@@ -25,6 +25,7 @@ import {
 import { toast } from 'sonner'
 import { traderApi } from '@/lib/api/trader'
 import { formatRelativeTime, cn } from '@/lib/utils'
+import { getFileUrl } from '@/lib/file-utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -86,12 +87,12 @@ const messageTypeIcons: Record<string, React.ElementType> = {
 
 const messageTypeColors: Record<string, string> = {
   SYSTEM: 'bg-blue-100 text-blue-800 border-blue-200',
-  TRANSACTION: 'bg-purple-100 text-purple-800 border-purple-200',
+  TRANSACTION: 'bg-green-100 text-green-800 border-green-200',
   PAYOUT: 'bg-purple-100 text-purple-800 border-purple-200',
   ACCOUNT: 'bg-gray-100 text-gray-800 border-gray-200',
   SECURITY: 'bg-red-100 text-red-800 border-red-200',
   DISPUTE: 'bg-orange-100 text-orange-800 border-orange-200',
-  DEPOSIT: 'bg-purple-100 text-purple-800 border-purple-200',
+  DEPOSIT: 'bg-emerald-100 text-emerald-800 border-emerald-200',
   WITHDRAWAL: 'bg-amber-100 text-amber-800 border-amber-200',
   DEVICE: 'bg-indigo-100 text-indigo-800 border-indigo-200',
   ANNOUNCEMENT: 'bg-pink-100 text-pink-800 border-pink-200'
@@ -109,13 +110,19 @@ export function TraderMessagesReal() {
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const fetchMessages = useCallback(async (pageNum: number, append = false) => {
     try {
-      if (!append) setLoading(true)
-      else setLoadingMore(true)
+      if (!append) {
+        setLoading(true)
+        setMessages([])
+        setCurrentPage(1)
+      } else {
+        setLoadingMore(true)
+      }
 
       const params = new URLSearchParams({
         page: pageNum.toString(),
@@ -136,6 +143,7 @@ export function TraderMessagesReal() {
       
       setUnreadCount(data.unreadCount)
       setTotalPages(data.pagination.totalPages)
+      setCurrentPage(pageNum)
       setHasMore(pageNum < data.pagination.totalPages)
     } catch (error) {
       toast.error('Не удалось загрузить сообщения')
@@ -144,6 +152,36 @@ export function TraderMessagesReal() {
       setLoadingMore(false)
     }
   }, [searchQuery, filter, typeFilter])
+
+  const loadAllMessages = useCallback(async () => {
+    if (currentPage >= totalPages) return
+    
+    setLoadingMore(true)
+    try {
+      const promises = []
+      for (let page = currentPage + 1; page <= totalPages; page++) {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: '20',
+          ...(searchQuery && { search: searchQuery }),
+          ...(filter !== 'all' && { filter }),
+          ...(typeFilter !== 'all' && { type: typeFilter }),
+        })
+        promises.push(traderApi.get(`/trader-messages?${params}`))
+      }
+      
+      const responses = await Promise.all(promises)
+      const allNewMessages = responses.flatMap(r => r.data.data.messages)
+      
+      setMessages(prev => [...prev, ...allNewMessages])
+      setCurrentPage(totalPages)
+      setHasMore(false)
+    } catch (error) {
+      toast.error('Не удалось загрузить все сообщения')
+    } finally {
+      setLoadingMore(false)
+    }
+  }, [currentPage, totalPages, searchQuery, filter, typeFilter])
 
   useEffect(() => {
     setPage(1)
@@ -154,12 +192,14 @@ export function TraderMessagesReal() {
     if (!scrollContainerRef.current || loadingMore || !hasMore) return
 
     const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current
-    if (scrollTop + clientHeight >= scrollHeight - 100) {
-      const nextPage = page + 1
-      setPage(nextPage)
-      fetchMessages(nextPage, true)
+    // Проверяем, достигли ли мы низа контейнера
+    if (scrollHeight - scrollTop - clientHeight < 100) {
+      const nextPage = currentPage + 1
+      if (nextPage <= totalPages) {
+        fetchMessages(nextPage, true)
+      }
     }
-  }, [page, loadingMore, hasMore, fetchMessages])
+  }, [currentPage, totalPages, loadingMore, hasMore, fetchMessages])
 
   useEffect(() => {
     const container = scrollContainerRef.current
@@ -353,22 +393,70 @@ export function TraderMessagesReal() {
 
       {/* Messages List */}
       <Card className="p-0">
-        <div
-          ref={scrollContainerRef}
-          className="max-h-[600px] overflow-y-auto"
-        >
-          {loading && !messages.length ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        <div className="relative">
+          {/* Progress indicator */}
+          {messages.length > 0 && (
+            <div className="sticky top-0 z-10 bg-white border-b px-4 py-2 flex items-center justify-between">
+              <span className="text-sm text-gray-600">
+                Показано {messages.length} сообщений
+              </span>
+              {hasMore && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const nextPage = currentPage + 1
+                      if (nextPage <= totalPages) {
+                        fetchMessages(nextPage, true)
+                      }
+                    }}
+                    disabled={loadingMore}
+                  >
+                    {loadingMore ? (
+                      <>
+                        <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                        Загрузка...
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="h-3 w-3 mr-2" />
+                        Загрузить еще
+                      </>
+                    )}
+                  </Button>
+                  
+                  {totalPages > 2 && currentPage < totalPages && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={loadAllMessages}
+                      disabled={loadingMore}
+                    >
+                      Загрузить все ({(totalPages - currentPage) * 20} сообщений)
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
-          ) : messages.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <Mail className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-              <p>Нет сообщений</p>
-            </div>
-          ) : (
-            <>
-              {Object.entries(groupedMessages).map(([dateKey, dateMessages]) => (
+          )}
+          
+          <div
+            ref={scrollContainerRef}
+            className="max-h-[600px] overflow-y-auto"
+          >
+            {loading && !messages.length ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <Mail className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <p>Нет сообщений</p>
+              </div>
+            ) : (
+              <>
+                {Object.entries(groupedMessages).map(([dateKey, dateMessages]) => (
                 <div key={dateKey}>
                   <div className="sticky top-0 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-600 border-b">
                     {formatDateGroup(dateKey)}
@@ -461,14 +549,24 @@ export function TraderMessagesReal() {
               ))}
               
               {loadingMore && (
-                <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                <div className="flex items-center justify-center py-4 border-t">
+                  <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                    <span className="text-sm text-gray-500">Загрузка сообщений...</span>
+                  </div>
+                </div>
+              )}
+              
+              {!hasMore && messages.length > 0 && (
+                <div className="text-center py-4 border-t text-sm text-gray-500">
+                  Все сообщения загружены ({messages.length} шт.)
                 </div>
               )}
               
               <div ref={messagesEndRef} />
             </>
           )}
+        </div>
         </div>
       </Card>
 
@@ -508,7 +606,7 @@ export function TraderMessagesReal() {
                     {selectedMessage.attachments.map((attachment) => (
                       <a
                         key={attachment.id}
-                        href={attachment.url}
+                        href={getFileUrl(attachment.url)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 p-2 rounded hover:bg-gray-50"

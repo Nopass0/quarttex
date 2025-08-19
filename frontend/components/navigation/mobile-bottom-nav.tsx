@@ -50,7 +50,7 @@ const traderMainItems: NavItem[] = [
   },
   {
     title: "БТ-Вход",
-    href: "/trader/bt-entry",
+    href: "/trader/bt-entrance",
     icon: AlertCircle,
   },
 ];
@@ -158,7 +158,7 @@ export function MobileBottomNav({ variant, onMoreClick }: MobileBottomNavProps) 
               className={cn(
                 "flex flex-col items-center justify-center gap-1 text-xs transition-colors",
                 isActive
-                  ? "text-[#530FAD] dark:text-[#530FAD]"
+                  ? "text-[#006039] dark:text-[#2d6a42]"
                   : "text-gray-600 dark:text-gray-400"
               )}
             >
@@ -170,7 +170,7 @@ export function MobileBottomNav({ variant, onMoreClick }: MobileBottomNavProps) 
         
         <button
           onClick={onMoreClick}
-          className="flex flex-col items-center justify-center gap-1 text-xs text-gray-600 dark:text-gray-400 transition-colors hover:text-[#530FAD] dark:hover:text-[#530FAD]"
+          className="flex flex-col items-center justify-center gap-1 text-xs text-gray-600 dark:text-gray-400 transition-colors hover:text-[#006039] dark:hover:text-[#2d6a42]"
         >
           <MoreHorizontal className="h-5 w-5" />
           <span>Ещё</span>
@@ -178,4 +178,5 @@ export function MobileBottomNav({ variant, onMoreClick }: MobileBottomNavProps) 
       </div>
     </div>
   );
+
 }

@@ -319,20 +319,22 @@ export function RequisitesEnhanced() {
       )
   
   const getTrafficPercentage = (current: number, limit: number) => {
-    return limit > 0 ? (current / limit) * 100 : 0
+    if (limit <= 0) return 0
+    const percentage = (current / limit) * 100
+    return Math.min(percentage, 100) // Cap at 100%
   }
   
   const getTrafficColor = (percentage: number) => {
     if (percentage >= 90) return "bg-red-500"
     if (percentage >= 70) return "bg-orange-500"
     if (percentage >= 50) return "bg-yellow-500"
-    return "bg-purple-500"
+    return "bg-green-500"
   }
   
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
       </div>
     )
   }
@@ -377,14 +379,14 @@ export function RequisitesEnhanced() {
             </div>
             
             {activeTab !== "devices" && (
-              <Button onClick={() => setRequisiteDialogOpen(true)} className="bg-[#530FAD] hover:bg-[#530FAD]/90">
+              <Button onClick={() => setRequisiteDialogOpen(true)} className="bg-[#006039] hover:bg-[#006039]/90">
                 <Plus className="mr-2 h-4 w-4" />
                 Добавить реквизит
               </Button>
             )}
             
             {activeTab === "devices" && (
-              <Button onClick={() => setDeviceDialogOpen(true)} className="bg-[#530FAD] hover:bg-[#530FAD]/90">
+              <Button onClick={() => setDeviceDialogOpen(true)} className="bg-[#006039] hover:bg-[#006039]/90">
                 <Plus className="mr-2 h-4 w-4" />
                 Добавить устройство
               </Button>
@@ -414,21 +416,21 @@ export function RequisitesEnhanced() {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm">
-                          <MoreVertical className="h-4 w-4 text-[#530FAD]" />
+                          <MoreVertical className="h-4 w-4 text-[#006039]" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => openEditDialog(requisite)}>
-                          <Edit className="mr-2 h-4 w-4 text-[#530FAD]" />
+                          <Edit className="mr-2 h-4 w-4 text-[#006039]" />
                           Редактировать
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => archiveRequisite(requisite.id)}>
-                          <Archive className="mr-2 h-4 w-4 text-[#530FAD]" />
+                          <Archive className="mr-2 h-4 w-4 text-[#006039]" />
                           Архивировать
                         </DropdownMenuItem>
                         {requisite.device && (
                           <DropdownMenuItem>
-                            <Link className="mr-2 h-4 w-4 text-[#530FAD]" />
+                            <Link className="mr-2 h-4 w-4 text-[#006039]" />
                             Отвязать устройство
                           </DropdownMenuItem>
                         )}
@@ -452,7 +454,7 @@ export function RequisitesEnhanced() {
                         <div className="flex items-center gap-2">
                           <div className={cn(
                             "h-2 w-2 rounded-full",
-                            requisite.device.isOnline ? "bg-purple-500" : "bg-gray-400"
+                            requisite.device.isOnline ? "bg-green-500" : "bg-gray-400"
                           )} />
                           {requisite.device.name}
                         </div>
@@ -470,6 +472,9 @@ export function RequisitesEnhanced() {
                       <span className="text-gray-500">Дневной трафик</span>
                       <span className="font-medium">
                         {requisite.turnoverDay.toLocaleString('ru-RU')} / {requisite.dailyLimit.toLocaleString('ru-RU')} ₽
+                        <span className="text-xs text-gray-500 ml-2">
+                          ({getTrafficPercentage(requisite.turnoverDay, requisite.dailyLimit).toFixed(1)}%)
+                        </span>
                       </span>
                     </div>
                     <Progress 
@@ -484,6 +489,9 @@ export function RequisitesEnhanced() {
                       <span className="text-gray-500">Месячный трафик</span>
                       <span className="font-medium">
                         {requisite.turnoverTotal.toLocaleString('ru-RU')} / {requisite.monthlyLimit.toLocaleString('ru-RU')} ₽
+                        <span className="text-xs text-gray-500 ml-2">
+                          ({getTrafficPercentage(requisite.turnoverTotal, requisite.monthlyLimit).toFixed(1)}%)
+                        </span>
                       </span>
                     </div>
                     <Progress 
@@ -499,7 +507,7 @@ export function RequisitesEnhanced() {
           
           {filteredRequisites.length === 0 && (
             <Card className="p-12 text-center">
-              <CreditCard className="h-12 w-12 mx-auto text-[#530FAD] mb-4" />
+              <CreditCard className="h-12 w-12 mx-auto text-[#006039] mb-4" />
               <p className="text-gray-500">Нет активных реквизитов</p>
             </Card>
           )}
@@ -511,7 +519,7 @@ export function RequisitesEnhanced() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-3">
-                    <CreditCard className="h-5 w-5 text-[#530FAD]" />
+                    <CreditCard className="h-5 w-5 text-[#006039]" />
                     <div>
                       <div className="font-medium">{requisite.recipientName}</div>
                       <div className="text-sm text-gray-500">**** {requisite.cardNumber.slice(-4)}</div>
@@ -531,7 +539,7 @@ export function RequisitesEnhanced() {
                     size="sm"
                     onClick={() => restoreRequisite(requisite.id)}
                   >
-                    <RotateCcw className="h-4 w-4 mr-2 text-[#530FAD]" />
+                    <RotateCcw className="h-4 w-4 mr-2 text-[#006039]" />
                     Восстановить
                   </Button>
                 </div>
@@ -541,7 +549,7 @@ export function RequisitesEnhanced() {
           
           {filteredRequisites.length === 0 && (
             <Card className="p-12 text-center">
-              <Archive className="h-12 w-12 mx-auto text-[#530FAD] mb-4" />
+              <Archive className="h-12 w-12 mx-auto text-[#006039] mb-4" />
               <p className="text-gray-500">Нет архивных реквизитов</p>
             </Card>
           )}
@@ -558,11 +566,11 @@ export function RequisitesEnhanced() {
                 <div className="flex items-center gap-4">
                   <div className={cn(
                     "h-12 w-12 rounded-full flex items-center justify-center",
-                    device.isOnline ? "bg-purple-100" : "bg-gray-100"
+                    device.isOnline ? "bg-green-100" : "bg-gray-100"
                   )}>
                     <Smartphone className={cn(
                       "h-6 w-6",
-                      device.isOnline ? "text-purple-600" : "text-gray-600"
+                      device.isOnline ? "text-green-600" : "text-gray-600"
                     )} />
                   </div>
                   <div>
@@ -582,7 +590,7 @@ export function RequisitesEnhanced() {
                       deleteDevice(device.id)
                     }}
                   >
-                    <Trash2 className="h-4 w-4 text-[#530FAD]" />
+                    <Trash2 className="h-4 w-4 text-[#006039]" />
                   </Button>
                 </div>
               </div>
@@ -591,7 +599,7 @@ export function RequisitesEnhanced() {
           
           {devices.length === 0 && (
             <Card className="p-12 text-center">
-              <Smartphone className="h-12 w-12 mx-auto text-[#530FAD] mb-4" />
+              <Smartphone className="h-12 w-12 mx-auto text-[#006039] mb-4" />
               <p className="text-gray-500">Нет подключенных устройств</p>
             </Card>
           )}
@@ -697,7 +705,7 @@ export function RequisitesEnhanced() {
             </Button>
             <Button 
               onClick={selectedRequisite ? handleUpdateRequisite : handleCreateRequisite}
-              className="bg-[#530FAD] hover:bg-[#530FAD]/90"
+              className="bg-[#006039] hover:bg-[#006039]/90"
             >
               {selectedRequisite ? "Сохранить" : "Добавить"}
             </Button>
@@ -734,7 +742,7 @@ export function RequisitesEnhanced() {
             </Button>
             <Button 
               onClick={createDevice}
-              className="bg-[#530FAD] hover:bg-[#530FAD]/90"
+              className="bg-[#006039] hover:bg-[#006039]/90"
               disabled={!deviceForm.name}
             >
               Создать
@@ -773,7 +781,7 @@ export function RequisitesEnhanced() {
                   Скопировать
                 </Button>
                 <Button
-                  className="flex-1 bg-[#530FAD] hover:bg-[#530FAD]/90"
+                  className="flex-1 bg-[#006039] hover:bg-[#006039]/90"
                   onClick={() => router.push(`/trader/devices/${selectedDevice.id}`)}
                 >
                   Перейти к устройству

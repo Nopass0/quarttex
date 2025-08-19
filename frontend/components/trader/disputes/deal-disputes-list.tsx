@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
@@ -187,8 +187,8 @@ const disputeStatusConfig = {
   RESOLVED_FAIL: {
     label: "Спор принят в сторону трейдера",
     description: "Решен в вашу пользу",
-    color: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
-    badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
+    color: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
+    badgeColor: "bg-green-50 text-green-700 border-green-200",
     icon: CheckCircle
   },
   CANCELLED: {
@@ -214,10 +214,10 @@ export function DealDisputesList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [activeTab, setActiveTab] = useState("active");
+  const expiredToastShownRef = useRef<Set<string>>(new Set());
 
   // Filters
   const [showFilters, setShowFilters] = useState(false);
-  const [filterMerchant, setFilterMerchant] = useState("");
   const [filterBank, setFilterBank] = useState("");
   const [filterDevice, setFilterDevice] = useState("");
   const [filterDateRange, setFilterDateRange] = useState<{
@@ -321,13 +321,23 @@ export function DealDisputesList() {
   const fetchDisputes = async () => {
     try {
       setLoading(true);
-      const params: any = {};
+      const params: any = { page: 1, limit: 50 };
       if (filterStatus !== "all") {
         params.status = filterStatus;
       }
 
-      const response = await traderApi.getDealDisputes(params);
-      setDisputes(response.data || []);
+      // Локальный таймаут, чтобы не висеть бесконечно при сетевых проблемах
+      const timeoutMs = 15000;
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Request timeout")), timeoutMs)
+      );
+
+      const response: any = await Promise.race([
+        traderApi.getDealDisputes(params),
+        timeoutPromise,
+      ]);
+
+      setDisputes(response?.data || []);
     } catch (error) {
       console.error("Failed to fetch disputes:", error);
       toast.error("Не удалось загрузить споры");
@@ -338,7 +348,6 @@ export function DealDisputesList() {
 
   const clearFilters = () => {
     setFilterStatus("all");
-    setFilterMerchant("");
     setFilterBank("");
     setFilterDevice("");
     setFilterDateRange({ from: undefined, to: undefined });
@@ -387,7 +396,6 @@ export function DealDisputesList() {
     if (searchQuery) {
       filtered = filtered.filter(dispute => 
         dispute.deal.numericId.toString().includes(searchQuery) ||
-        dispute.merchant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         dispute.deal.requisites?.cardNumber.includes(searchQuery) ||
         dispute.deal.requisites?.recipientName.toLowerCase().includes(searchQuery.toLowerCase())
       );
@@ -398,12 +406,6 @@ export function DealDisputesList() {
       filtered = filtered.filter(d => d.status === filterStatus);
     }
 
-    // Merchant filter
-    if (filterMerchant) {
-      filtered = filtered.filter(d => 
-        d.merchant.name.toLowerCase().includes(filterMerchant.toLowerCase())
-      );
-    }
 
     // Bank filter
     if (filterBank) {
@@ -521,9 +523,9 @@ export function DealDisputesList() {
               <Button variant="outline">
                 <SlidersHorizontal className="h-4 w-4 mr-2" />
                 Фильтры
-                {(filterMerchant || filterBank || filterDevice || filterDateRange.from || filterDateRange.to) && (
+                {(filterBank || filterDevice || filterDateRange.from || filterDateRange.to) && (
                   <Badge className="ml-2" variant="secondary">
-                    {[filterMerchant, filterBank, filterDevice, filterDateRange.from].filter(Boolean).length}
+                    {[filterBank, filterDevice, filterDateRange.from].filter(Boolean).length}
                   </Badge>
                 )}
               </Button>
@@ -533,15 +535,6 @@ export function DealDisputesList() {
                 <h4 className="font-medium text-sm">Дополнительные фильтры</h4>
                 
                 <div className="space-y-3">
-                  <div>
-                    <Label className="text-xs">Мерчант</Label>
-                    <Input
-                      placeholder="Название мерчанта"
-                      value={filterMerchant}
-                      onChange={(e) => setFilterMerchant(e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
 
                   <div>
                     <Label className="text-xs">Банк</Label>
@@ -700,8 +693,10 @@ export function DealDisputesList() {
                               createdAt={dispute.createdAt}
                               timeoutMinutes={getCurrentTimeoutMinutes()}
                               onExpired={() => {
-                                toast.error(`Время ответа на спор истекло`);
-                                fetchDisputes();
+                                if (!expiredToastShownRef.current.has(dispute.id)) {
+                                  expiredToastShownRef.current.add(dispute.id);
+                                  toast.error(`Время ответа на спор истекло`);
+                                }
                               }}
                             />
                           ) : (
@@ -731,10 +726,6 @@ export function DealDisputesList() {
                       <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
                         <span className="text-sm text-muted-foreground">
                           ID сделки: #{dispute.deal.numericId}
-                        </span>
-                        <span className="text-sm text-muted-foreground">•</span>
-                        <span className="text-sm text-muted-foreground">
-                          Мерчант: {dispute.merchant.name}
                         </span>
                       </div>
                     </div>
@@ -775,7 +766,7 @@ export function DealDisputesList() {
             <div className="flex flex-col h-[calc(90vh-120px)]">
               {/* Deal info */}
               <div className="p-6 pt-4 border-b">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Сумма</p>
                     <p className="font-medium">{formatAmount(disputeDetails.deal.amount)} ₽</p>
@@ -783,10 +774,6 @@ export function DealDisputesList() {
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Метод</p>
                     <p className="font-medium">{disputeDetails.deal.method?.name || "—"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Мерчант</p>
-                    <p className="font-medium">{disputeDetails.merchant.name}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Создан</p>
@@ -808,9 +795,12 @@ export function DealDisputesList() {
                           createdAt={disputeDetails.createdAt}
                           timeoutMinutes={getCurrentTimeoutMinutes()}
                           onExpired={() => {
-                            toast.error('Время ответа истекло. Спор будет закрыт в пользу мерчанта.');
-                            setShowDetailsDialog(false);
-                            fetchDisputes();
+                            if (!expiredToastShownRef.current.has(disputeDetails.id)) {
+                              expiredToastShownRef.current.add(disputeDetails.id);
+                              toast.error('Время ответа истекло. Спор будет закрыт в пользу мерчанта.');
+                            }
+                            // Обновим детали спора, не закрывая диалог
+                            fetchDisputeDetails(disputeDetails.id);
                           }}
                         />
                       </div>

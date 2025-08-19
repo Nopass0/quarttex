@@ -33,6 +33,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { traderApi } from "@/services/api";
+import { isWithoutDevice } from "@/lib/transactions";
 import { toast } from "sonner";
 import { useTraderAuth } from "@/stores/auth";
 import { useRouter } from "next/navigation";
@@ -145,6 +146,7 @@ interface Transaction {
   rate?: number | null;
   frozenUsdtAmount?: number | null;
   calculatedCommission?: number | null;
+  traderProfit?: number | null;
   deviceId?: string;
   merchant?: {
     id: string;
@@ -180,7 +182,7 @@ const statusConfig = {
   },
   READY: {
     label: "Выполнено",
-    color: "bg-purple-50 text-purple-600 border-purple-200",
+    color: "bg-green-50 text-green-600 border-green-200",
   },
   EXPIRED: { label: "Истекло", color: "bg-red-50 text-red-600 border-red-200" },
   CANCELED: {
@@ -202,9 +204,13 @@ const formatRemainingTime = (expiredAt: string) => {
   const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
   if (hours > 0) {
-    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}`;
   } else {
-    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    return `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
   }
 };
 
@@ -254,8 +260,8 @@ export function BtEntryList() {
       // Update the transaction status locally
       setTransactions((prev) =>
         prev.map((tx) =>
-          tx.id === transactionId ? { ...tx, status: "READY" } : tx,
-        ),
+          tx.id === transactionId ? { ...tx, status: "READY" } : tx
+        )
       );
 
       setSelectedTransaction(null);
@@ -269,14 +275,14 @@ export function BtEntryList() {
 
   const manualCloseTransaction = async (transactionId: string) => {
     try {
-      await traderApi.updateTransactionStatus(transactionId, "COMPLETED");
+      await traderApi.updateTransactionStatus(transactionId, "READY");
       toast.success("Сделка закрыта вручную");
 
       // Update the transaction status locally
       setTransactions((prev) =>
         prev.map((tx) =>
-          tx.id === transactionId ? { ...tx, status: "COMPLETED" } : tx,
-        ),
+          tx.id === transactionId ? { ...tx, status: "READY" } : tx
+        )
       );
 
       setSelectedTransaction(null);
@@ -342,28 +348,30 @@ export function BtEntryList() {
 
           const response = await traderApi.getTransactions(params);
           let newData = response.data || response.transactions || [];
-          
+
           // Filter only transactions without devices for BT-entry
-          newData = newData.filter((tx: any) => {
-            return !tx.deviceId || tx.deviceId === null;
-          });
-          
+          newData = newData.filter(isWithoutDevice);
+
           setTransactions((currentTransactions) => {
             const existingIds = new Set(currentTransactions.map((t) => t.id));
-            const newTransactions = newData.filter((tx: Transaction) => !existingIds.has(tx.id));
-            
+            const newTransactions = newData.filter(
+              (tx: Transaction) => !existingIds.has(tx.id)
+            );
+
             if (newTransactions.length > 0) {
               // Show notifications for new transactions
               newTransactions.forEach((tx: Transaction) => {
                 toast.success(`Новая сделка ${tx.numericId}`, {
-                  description: `${tx.amount.toLocaleString("ru-RU")} ₽ от ${tx.clientName}`,
+                  description: `${tx.amount.toLocaleString("ru-RU")} ₽ от ${
+                    tx.clientName
+                  }`,
                 });
               });
-              
+
               // Add new transactions to the beginning of the list
               return [...newTransactions, ...currentTransactions];
             }
-            
+
             return currentTransactions;
           });
 
@@ -381,7 +389,7 @@ export function BtEntryList() {
   // Timer for countdown update - only update if there are pending transactions
   useEffect(() => {
     const hasPendingTransactions = transactions.some(
-      (t) => t.status === "CREATED" || t.status === "IN_PROGRESS",
+      (t) => t.status === "CREATED" || t.status === "IN_PROGRESS"
     );
 
     if (hasPendingTransactions) {
@@ -437,7 +445,6 @@ export function BtEntryList() {
         }
       }
 
-
       // Add requisite filter
       if (filterRequisite !== "all") {
         params.requisiteId = filterRequisite;
@@ -478,24 +485,31 @@ export function BtEntryList() {
       console.log("[BtEntryList] Params sent:", params);
       // Handle both response formats
       let txData = response.data || response.transactions || [];
-      
+
       // Filter only transactions without devices for BT-entry
       // Check first transaction to understand structure
       if (txData.length > 0) {
         console.log("[BtEntryList] Sample transaction:", txData[0]);
       }
-      
+
       // Filter transactions where the requisite has no device
       txData = txData.filter((tx: any) => {
         // Check if the transaction has no deviceId (which comes from requisites.device)
-        return !tx.deviceId || tx.deviceId === null;
+        return isWithoutDevice(tx);
       });
-      
+
       const hasMoreData = txData.length === 50; // If we get full page, there might be more
 
-      console.log("[BtEntryList] All transactions:", response.data?.length || response.transactions?.length || 0);
-      console.log("[BtEntryList] Filtered (no device):", txData.length, "items");
-      
+      console.log(
+        "[BtEntryList] All transactions:",
+        response.data?.length || response.transactions?.length || 0
+      );
+      console.log(
+        "[BtEntryList] Filtered (no device):",
+        txData.length,
+        "items"
+      );
+
       // Also log if we have no transactions at all
       if (!response.data || response.data.length === 0) {
         console.log("[BtEntryList] No transactions received from API");
@@ -519,21 +533,24 @@ export function BtEntryList() {
         if (newTransactions.length > 0 && !loading && append && pageNum === 1) {
           newTransactions.forEach((tx) => {
             toast.success(`Новая сделка ${tx.numericId}`, {
-              description: `${tx.amount.toLocaleString("ru-RU")} ₽ от ${tx.clientName}`,
+              description: `${tx.amount.toLocaleString("ru-RU")} ₽ от ${
+                tx.clientName
+              }`,
             });
           });
 
           // Remove "new" flag after animation
           setTimeout(() => {
             setTransactions((prev) =>
-              prev.map((tx) => ({ ...tx, isNew: false })),
+              prev.map((tx) => ({ ...tx, isNew: false }))
             );
           }, 500);
         }
 
         // Sort transactions by createdAt to show newest first
-        const sortedData = [...newData].sort((a, b) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        const sortedData = [...newData].sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
 
         return append ? [...currentTransactions, ...sortedData] : sortedData;
@@ -584,7 +601,6 @@ export function BtEntryList() {
     }
   };
 
-
   const fetchRequisites = async () => {
     try {
       const response = await traderApi.getRequisites();
@@ -613,22 +629,18 @@ export function BtEntryList() {
         const usdtAmount = t.frozenUsdtAmount
           ? t.frozenUsdtAmount
           : t.rate
-            ? t.amount / t.rate
-            : t.amount / 95;
+          ? t.amount / t.rate
+          : t.amount / 95;
 
         return (
           t.numericId.toString().includes(searchQuery) ||
-          t.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (t.requisites?.bankType || "")
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          (t.merchant?.name || "")
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          (t.requisites?.cardNumber || "").includes(searchQuery) ||
           (t.requisites?.recipientName || "")
             .toLowerCase()
             .includes(searchQuery.toLowerCase()) ||
+          (t.requisites?.bankType || "")
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          (t.requisites?.cardNumber || "").includes(searchQuery) ||
           t.amount.toString().includes(searchQuery) || // Search by RUB amount
           usdtAmount.toFixed(2).includes(searchQuery) || // Search by USDT amount
           Math.round(usdtAmount).toString().includes(searchQuery) // Search by rounded USDT
@@ -644,7 +656,7 @@ export function BtEntryList() {
             (t) =>
               t.status === "CREATED" ||
               t.status === "EXPIRED" ||
-              t.status === "CANCELED",
+              t.status === "CANCELED"
           );
           break;
         case "credited":
@@ -659,21 +671,20 @@ export function BtEntryList() {
     // Amount filter
     if (filterAmountType === "exact" && filterAmount.exact) {
       filtered = filtered.filter(
-        (t) => t.amount === parseFloat(filterAmount.exact),
+        (t) => t.amount === parseFloat(filterAmount.exact)
       );
     } else if (filterAmountType === "range") {
       if (filterAmount.min) {
         filtered = filtered.filter(
-          (t) => t.amount >= parseFloat(filterAmount.min),
+          (t) => t.amount >= parseFloat(filterAmount.min)
         );
       }
       if (filterAmount.max) {
         filtered = filtered.filter(
-          (t) => t.amount <= parseFloat(filterAmount.max),
+          (t) => t.amount <= parseFloat(filterAmount.max)
         );
       }
     }
-
 
     // Requisite filter
     if (filterRequisite !== "all") {
@@ -688,7 +699,7 @@ export function BtEntryList() {
     // Date filter
     if (filterDateFrom) {
       filtered = filtered.filter(
-        (t) => new Date(t.createdAt) >= filterDateFrom,
+        (t) => new Date(t.createdAt) >= filterDateFrom
       );
     }
     if (filterDateTo) {
@@ -725,14 +736,38 @@ export function BtEntryList() {
   // Calculate stats for period
   const calculatePeriodStats = () => {
     const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+    const startOfDay = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+    const startOfWeek = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - now.getDay()
+    );
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfQuarter = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
-    const startOfHalfYear = new Date(now.getFullYear(), Math.floor(now.getMonth() / 6) * 6, 1);
+    const startOfQuarter = new Date(
+      now.getFullYear(),
+      Math.floor(now.getMonth() / 3) * 3,
+      1
+    );
+    const startOfHalfYear = new Date(
+      now.getFullYear(),
+      Math.floor(now.getMonth() / 6) * 6,
+      1
+    );
     const startOfYear = new Date(now.getFullYear(), 0, 1);
-    const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-    const endOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - 1
+    );
+    const endOfYesterday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
 
     let filterDate: Date;
     let endDate: Date | undefined;
@@ -770,14 +805,17 @@ export function BtEntryList() {
           if (tx.status === "READY" || tx.status === "COMPLETED") {
             acc.count += 1;
             // Calculate USDT amount
-            const usdtAmount = tx.frozenUsdtAmount || (tx.rate ? tx.amount / tx.rate : tx.amount / 95);
+            const usdtAmount =
+              tx.frozenUsdtAmount ||
+              (tx.rate ? tx.amount / tx.rate : tx.amount / 95);
             acc.totalAmount += usdtAmount;
-            acc.totalProfit += tx.calculatedCommission || 0;
+            // Use traderProfit for BT-entry transactions, calculatedCommission for regular ones
+            acc.totalProfit += tx.traderProfit || tx.calculatedCommission || 0;
           }
         }
         return acc;
       },
-      { count: 0, totalAmount: 0, totalProfit: 0 },
+      { count: 0, totalAmount: 0, totalProfit: 0 }
     );
   };
 
@@ -787,13 +825,13 @@ export function BtEntryList() {
     "[BtEntryList] Rendering with:",
     transactions.length,
     "transactions, filtered:",
-    filteredTransactions.length,
+    filteredTransactions.length
   );
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
       </div>
     );
   }
@@ -824,7 +862,7 @@ export function BtEntryList() {
       {/* Stats Blocks */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6">
         {/* Deals Stats */}
-        <Card className="p-3 md:p-4 border border-gray-200 dark:border-[#292133]">
+        <Card className="p-3 md:p-4 border border-gray-200 dark:border-[#29382f]">
           <div className="flex items-start justify-between">
             <div>
               <h3 className="text-sm text-gray-600 dark:text-gray-400 mb-2">
@@ -847,17 +885,30 @@ export function BtEntryList() {
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className="text-xs">
-                  <span className="hidden sm:inline">Период: </span>{period === "today" ? "за сегодня" : 
-                          period === "yesterday" ? "за вчера" :
-                          period === "week" ? "за неделю" :
-                          period === "month" ? "за месяц" :
-                          period === "quarter" ? "за квартал" :
-                          period === "halfyear" ? "за полгода" :
-                          period === "year" ? "за год" : "за сегодня"}
-                  <ChevronDown className="ml-1 h-3 w-3 text-[#530FAD] dark:text-[#530FAD]" />
+                  <span className="hidden sm:inline">Период: </span>
+                  {period === "today"
+                    ? "за сегодня"
+                    : period === "yesterday"
+                    ? "за вчера"
+                    : period === "week"
+                    ? "за неделю"
+                    : period === "month"
+                    ? "за месяц"
+                    : period === "quarter"
+                    ? "за квартал"
+                    : period === "halfyear"
+                    ? "за полгода"
+                    : period === "year"
+                    ? "за год"
+                    : "за сегодня"}
+                  <ChevronDown className="ml-1 h-3 w-3 text-[#006039] dark:text-[#2d6a42]" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-48 p-0" align="end" alignOffset={-10}>
+              <PopoverContent
+                className="w-48 p-0"
+                align="end"
+                alignOffset={-10}
+              >
                 <div className="max-h-64 overflow-auto">
                   <Button
                     variant="ghost"
@@ -922,7 +973,7 @@ export function BtEntryList() {
         </Card>
 
         {/* Profit Stats */}
-        <Card className="p-3 md:p-4 border border-gray-200 dark:border-[#292133]">
+        <Card className="p-3 md:p-4 border border-gray-200 dark:border-[#29382f]">
           <div className="flex items-start justify-between">
             <div>
               <h3 className="text-sm text-gray-600 dark:text-gray-400 mb-2">
@@ -940,17 +991,30 @@ export function BtEntryList() {
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className="text-xs">
-                  <span className="hidden sm:inline">Период: </span>{period === "today" ? "за сегодня" : 
-                          period === "yesterday" ? "за вчера" :
-                          period === "week" ? "за неделю" :
-                          period === "month" ? "за месяц" :
-                          period === "quarter" ? "за квартал" :
-                          period === "halfyear" ? "за полгода" :
-                          period === "year" ? "за год" : "за сегодня"}
-                  <ChevronDown className="ml-1 h-3 w-3 text-[#530FAD] dark:text-[#530FAD]" />
+                  <span className="hidden sm:inline">Период: </span>
+                  {period === "today"
+                    ? "за сегодня"
+                    : period === "yesterday"
+                    ? "за вчера"
+                    : period === "week"
+                    ? "за неделю"
+                    : period === "month"
+                    ? "за месяц"
+                    : period === "quarter"
+                    ? "за квартал"
+                    : period === "halfyear"
+                    ? "за полгода"
+                    : period === "year"
+                    ? "за год"
+                    : "за сегодня"}
+                  <ChevronDown className="ml-1 h-3 w-3 text-[#006039] dark:text-[#2d6a42]" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-48 p-0" align="end" alignOffset={-10}>
+              <PopoverContent
+                className="w-48 p-0"
+                align="end"
+                alignOffset={-10}
+              >
                 <div className="max-h-64 overflow-auto">
                   <Button
                     variant="ghost"
@@ -1016,16 +1080,16 @@ export function BtEntryList() {
       </div>
 
       {/* Search and Filters - Sticky */}
-      <div className="sticky top-0 z-10 bg-white dark:bg-[#0f0f0f] pb-3 md:pb-4 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 shadow-sm dark:shadow-[#292133]">
+      <div className="sticky top-0 z-10 bg-white dark:bg-[#0f0f0f] pb-3 md:pb-4 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 shadow-sm dark:shadow-[#29382f]">
         <div className="flex gap-2">
           {/* Search */}
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#530FAD] dark:text-[#530FAD] h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#006039] dark:text-[#2d6a42] h-4 w-4" />
             <Input
               placeholder="Поиск..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 border h-10 md:h-12 text-sm md:text-base border-gray-300 dark:border-[#292133] rounded-lg"
+              className="pl-10 border h-10 md:h-12 text-sm md:text-base border-gray-300 dark:border-[#29382f] rounded-lg"
             />
           </div>
 
@@ -1037,7 +1101,7 @@ export function BtEntryList() {
                 size="default"
                 className="gap-1 md:gap-2 h-10 md:h-12 px-3 md:px-6 text-sm md:text-base"
               >
-                <SlidersHorizontal className="h-4 w-4 text-[#530FAD]" />
+                <SlidersHorizontal className="h-4 w-4 text-[#006039]" />
                 <span className="hidden sm:inline">Не выбраны</span>
                 <span className="sm:hidden">Фильтры</span>
                 {(filterStatus !== "all" ||
@@ -1047,7 +1111,7 @@ export function BtEntryList() {
                   filterRequisite !== "all" ||
                   filterDateFrom ||
                   filterDateTo) && (
-                  <Badge className="ml-1 bg-[#530FAD] text-white">
+                  <Badge className="ml-1 bg-[#006039] text-white">
                     {
                       [
                         filterStatus !== "all",
@@ -1063,19 +1127,23 @@ export function BtEntryList() {
                 <ChevronDown
                   className={cn(
                     "h-4 w-4 transition-colors",
-                    filtersOpen ? "text-[#530FAD]" : "text-gray-400",
+                    filtersOpen ? "text-[#006039]" : "text-gray-400"
                   )}
                 />
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-[calc(100vw-2rem)] sm:w-[500px]" sideOffset={5}>
+            <PopoverContent
+              align="end"
+              className="w-[calc(100vw-2rem)] sm:w-[500px]"
+              sideOffset={5}
+            >
               <div className="space-y-4">
                 <h4 className="font-medium text-">Параметры поиска</h4>
 
                 {/* Status Filter */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-[#530FAD]" />
+                    <CheckCircle className="h-4 w-4 text-[#006039]" />
                     <Label className="text-sm">Статус платежа</Label>
                   </div>
                   <Popover>
@@ -1085,16 +1153,16 @@ export function BtEntryList() {
                         size="default"
                         className="w-full justify-between h-12"
                       >
-                        <span className={"text-[#530FAD]"}>
+                        <span className={"text-[#006039]"}>
                           {filterStatus === "all"
                             ? "Все сделки"
                             : filterStatus === "not_credited"
-                              ? "Не зачисленные сделки"
-                              : filterStatus === "credited"
-                                ? "Зачисленные сделки"
-                                : "Сделки выполняются"}
+                            ? "Не зачисленные сделки"
+                            : filterStatus === "credited"
+                            ? "Зачисленные сделки"
+                            : "Сделки выполняются"}
                         </span>
-                        <ChevronDown className="h-4 w-4 opacity-50 text-[#530FAD]" />
+                        <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
@@ -1113,9 +1181,9 @@ export function BtEntryList() {
                           variant="ghost"
                           size="default"
                           className={cn(
-                            "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                            "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                             filterStatus === "all" &&
-                              "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                              "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                           )}
                           onClick={() => setFilterStatus("all")}
                         >
@@ -1125,9 +1193,9 @@ export function BtEntryList() {
                           variant="ghost"
                           size="default"
                           className={cn(
-                            "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                            "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                             filterStatus === "not_credited" &&
-                              "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                              "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                           )}
                           onClick={() => setFilterStatus("not_credited")}
                         >
@@ -1137,9 +1205,9 @@ export function BtEntryList() {
                           variant="ghost"
                           size="default"
                           className={cn(
-                            "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                            "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                             filterStatus === "credited" &&
-                              "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                              "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                           )}
                           onClick={() => setFilterStatus("credited")}
                         >
@@ -1149,9 +1217,9 @@ export function BtEntryList() {
                           variant="ghost"
                           size="default"
                           className={cn(
-                            "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                            "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                             filterStatus === "in_progress" &&
-                              "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                              "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                           )}
                           onClick={() => setFilterStatus("in_progress")}
                         >
@@ -1166,7 +1234,7 @@ export function BtEntryList() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-[#530FAD]" />
+                      <DollarSign className="h-4 w-4 text-[#006039]" />
                       <Label className="text-sm">Сумма зачисления</Label>
                     </div>
                     <div className="flex items-center gap-2">
@@ -1174,8 +1242,8 @@ export function BtEntryList() {
                         className={cn(
                           "text-sm font-medium transition-colors",
                           filterAmountType === "exact"
-                            ? "text-[#530FAD]"
-                            : "text-gray-500 hover:text-gray-700",
+                            ? "text-[#006039]"
+                            : "text-gray-500 hover:text-gray-700"
                         )}
                         onClick={() => setFilterAmountType("exact")}
                       >
@@ -1186,8 +1254,8 @@ export function BtEntryList() {
                         className={cn(
                           "text-sm font-medium transition-colors",
                           filterAmountType === "range"
-                            ? "text-[#530FAD]"
-                            : "text-gray-500 hover:text-gray-700",
+                            ? "text-[#006039]"
+                            : "text-gray-500 hover:text-gray-700"
                         )}
                         onClick={() => setFilterAmountType("range")}
                       >
@@ -1255,11 +1323,10 @@ export function BtEntryList() {
                   </div>
                 </div>
 
-
                 {/* Requisite Filter */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4 text-[#530FAD]" />
+                    <CreditCard className="h-4 w-4 text-[#006039]" />
                     <Label className="text-sm">Реквизиты</Label>
                   </div>
                   <Popover>
@@ -1269,14 +1336,14 @@ export function BtEntryList() {
                         size="default"
                         className="w-full justify-between h-12"
                       >
-                        <span className={"text-[#530FAD]"}>
+                        <span className={"text-[#006039]"}>
                           {filterRequisite === "all"
                             ? "Все реквизиты"
                             : filterRequisite === "1"
-                              ? "Основная карта"
-                              : "Резервная карта"}
+                            ? "Основная карта"
+                            : "Резервная карта"}
                         </span>
-                        <ChevronDown className="h-4 w-4 opacity-50 text-[#530FAD]" />
+                        <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
@@ -1300,9 +1367,9 @@ export function BtEntryList() {
                           variant="ghost"
                           size="default"
                           className={cn(
-                            "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                            "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                             filterRequisite === "all" &&
-                              "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                              "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                           )}
                           onClick={() => setFilterRequisite("all")}
                         >
@@ -1328,7 +1395,7 @@ export function BtEntryList() {
                               requisite.cardNumber?.includes(requisiteSearch) ||
                               requisite.bankType
                                 ?.toLowerCase()
-                                .includes(requisiteSearch.toLowerCase()),
+                                .includes(requisiteSearch.toLowerCase())
                           )
                           .map((requisite) => (
                             <Button
@@ -1336,9 +1403,9 @@ export function BtEntryList() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                                 filterRequisite === requisite.id &&
-                                  "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                               )}
                               onClick={() => setFilterRequisite(requisite.id)}
                             >
@@ -1371,7 +1438,7 @@ export function BtEntryList() {
                 {/* Payment Method Filter */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-[#530FAD]" />
+                    <Building2 className="h-4 w-4 text-[#006039]" />
                     <Label className="text-sm">Метод оплаты</Label>
                   </div>
                   <Popover>
@@ -1381,10 +1448,10 @@ export function BtEntryList() {
                         size="default"
                         className="w-full justify-between h-12"
                       >
-                        <span className={"text-[#530FAD]"}>
+                        <span className={"text-[#006039]"}>
                           {filterMethod === "all" ? "Все методы" : filterMethod}
                         </span>
-                        <ChevronDown className="h-4 w-4 opacity-50 text-[#530FAD]" />
+                        <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
@@ -1408,9 +1475,9 @@ export function BtEntryList() {
                           variant="ghost"
                           size="default"
                           className={cn(
-                            "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                            "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                             filterMethod === "all" &&
-                              "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                              "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                           )}
                           onClick={() => setFilterMethod("all")}
                         >
@@ -1435,7 +1502,7 @@ export function BtEntryList() {
                                 .includes(methodSearch.toLowerCase()) ||
                               method.type
                                 ?.toLowerCase()
-                                .includes(methodSearch.toLowerCase()),
+                                .includes(methodSearch.toLowerCase())
                           )
                           .map((method) => {
                             // Try to extract bank type from method name or type
@@ -1450,9 +1517,9 @@ export function BtEntryList() {
                                 variant="ghost"
                                 size="default"
                                 className={cn(
-                                  "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                                  "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                                   filterMethod === method.id &&
-                                    "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                                    "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                                 )}
                                 onClick={() => setFilterMethod(method.id)}
                               >
@@ -1483,7 +1550,7 @@ export function BtEntryList() {
                 {/* Date Range */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-[#530FAD]" />
+                    <Calendar className="h-4 w-4 text-[#006039]" />
                     <Label className="text-sm">Дата создания платежа</Label>
                   </div>
                   <div className="flex gap-2">
@@ -1525,7 +1592,7 @@ export function BtEntryList() {
                   </Button>
                   <Button
                     size="sm"
-                    className="flex-1 h-12 bg-purple-100 hover:bg-purple-200 transition-colors duration-150 text-purple-500"
+                    className="flex-1 h-12 bg-green-100 hover:bg-green-200 transition-colors duration-150 text-green-500"
                     onClick={() => setFiltersOpen(false)}
                   >
                     Применить фильтры
@@ -1543,7 +1610,7 @@ export function BtEntryList() {
                 size="default"
                 className="gap-2 h-12 px-6"
               >
-                <ArrowUpDown className="h-4 w-4 text-[#530FAD]" />
+                <ArrowUpDown className="h-4 w-4 text-[#006039]" />
                 Сортировка
                 <ChevronDown className="h-4 w-4 text-gray-400" />
               </Button>
@@ -1616,8 +1683,8 @@ export function BtEntryList() {
                     );
                   case "READY":
                     return (
-                      <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                        <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                      <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                        <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
                       </div>
                     );
                   case "DISPUTE":
@@ -1669,7 +1736,7 @@ export function BtEntryList() {
               const getStatusBadgeColor = () => {
                 switch (transaction.status) {
                   case "READY":
-                    return "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800";
+                    return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800";
                   case "CREATED":
                   case "IN_PROGRESS":
                     return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800";
@@ -1684,23 +1751,26 @@ export function BtEntryList() {
                     Math.round(transaction.frozenUsdtAmount * 100) / 100
                   ).toFixed(2)
                 : transaction.rate
-                  ? (
-                      Math.round(
-                        (transaction.amount / transaction.rate) * 100,
-                      ) / 100
-                    ).toFixed(2)
-                  : (Math.round((transaction.amount / 95) * 100) / 100).toFixed(
-                      2,
-                    );
+                ? (
+                    Math.round((transaction.amount / transaction.rate) * 100) /
+                    100
+                  ).toFixed(2)
+                : (Math.round((transaction.amount / 95) * 100) / 100).toFixed(
+                    2
+                  );
 
               return (
                 <Card
                   key={transaction.id}
                   className={cn(
                     "p-3 md:p-4 hover:shadow-md dark:hover:shadow-gray-700 transition-all duration-300 cursor-pointer dark:bg-gray-800 dark:border-gray-700",
-                    transaction.isNew && "flash-once",
+                    transaction.isNew && "flash-once"
                   )}
-                  onClick={() => setSelectedTransaction(transaction)}
+                  onClick={() => {
+                    console.log("BT-Entry: Transaction clicked:", transaction);
+                    console.log("BT-Entry: Setting selectedTransaction");
+                    setSelectedTransaction(transaction);
+                  }}
                 >
                   <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
                     {/* Status Icon */}
@@ -1720,7 +1790,7 @@ export function BtEntryList() {
                           variant="outline"
                           className={cn(
                             "px-1.5 py-0.5 text-[10px] font-medium border rounded-md whitespace-nowrap",
-                            getStatusBadgeColor(),
+                            getStatusBadgeColor()
                           )}
                         >
                           {getStatusBadgeText()}
@@ -1737,7 +1807,7 @@ export function BtEntryList() {
                         Создан{" "}
                         {format(
                           new Date(transaction.createdAt),
-                          "HH:mm dd.MM.yyyy",
+                          "HH:mm dd.MM.yyyy"
                         )}
                       </div>
                     </div>
@@ -1754,7 +1824,7 @@ export function BtEntryList() {
                             {transaction.requisites?.cardNumber || "—"}
                           </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 md:mt-1 truncate">
-                            {transaction.clientName}
+                            {transaction.requisites?.recipientName || "—"}
                           </div>
                         </div>
                       </div>
@@ -1785,7 +1855,7 @@ export function BtEntryList() {
                         variant="outline"
                         className={cn(
                           "px-2 md:px-3 py-1 md:py-1.5 text-xs font-medium border rounded-xl whitespace-nowrap",
-                          getStatusBadgeColor(),
+                          getStatusBadgeColor()
                         )}
                       >
                         {getStatusBadgeText()}
@@ -1804,7 +1874,7 @@ export function BtEntryList() {
             {/* Loading more indicator */}
             {loadingMore && (
               <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin text-[#530FAD]" />
+                <Loader2 className="h-6 w-6 animate-spin text-[#006039]" />
                 <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                   Загрузка...
                 </span>
@@ -1815,9 +1885,12 @@ export function BtEntryList() {
       </div>
 
       {/* Transaction Details Dialog */}
+      {console.log("BT-Entry: selectedTransaction state:", selectedTransaction)}
+      {console.log("BT-Entry: Dialog should be open:", !!selectedTransaction)}
       <Dialog
         open={!!selectedTransaction}
         onOpenChange={() => {
+          console.log("BT-Entry: Dialog onOpenChange called");
           setSelectedTransaction(null);
           setShowRequisiteDetails(false);
         }}
@@ -1842,7 +1915,7 @@ export function BtEntryList() {
                       onClick={() => setShowRequisiteDetails(false)}
                       className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 -ml-2"
                     >
-                      <ChevronDown className="h-4 w-4 mr-1 rotate-90 text-[#530FAD]" />
+                      <ChevronDown className="h-4 w-4 mr-1 rotate-90 text-[#006039]" />
                       Назад
                     </Button>
                     <h3 className="font-medium dark:text-white">
@@ -1857,7 +1930,7 @@ export function BtEntryList() {
                         format(
                           new Date(selectedTransaction.createdAt),
                           "d MMM 'в' HH:mm",
-                          { locale: ru },
+                          { locale: ru }
                         )}
                     </div>
                     <Button
@@ -1869,7 +1942,7 @@ export function BtEntryList() {
                       }}
                       className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
                     >
-                      <X className="h-4 w-4 text-[#530FAD]" />
+                      <X className="h-4 w-4 text-[#006039]" />
                     </Button>
                   </>
                 )}
@@ -1882,8 +1955,8 @@ export function BtEntryList() {
                     {/* Status Icon */}
                     <div className="mb-4 flex justify-center">
                       {selectedTransaction.status === "READY" ? (
-                        <div className="w-20 h-20 rounded-3xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                          <CheckCircle2 className="h-10 w-10 text-purple-600 dark:text-purple-400" />
+                        <div className="w-20 h-20 rounded-3xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                          <CheckCircle2 className="h-10 w-10 text-green-600 dark:text-green-400" />
                         </div>
                       ) : selectedTransaction.status === "CREATED" ||
                         selectedTransaction.status === "IN_PROGRESS" ? (
@@ -1902,9 +1975,9 @@ export function BtEntryList() {
                       {selectedTransaction.status === "READY"
                         ? "Платеж зачислен"
                         : selectedTransaction.status === "CREATED" ||
-                            selectedTransaction.status === "IN_PROGRESS"
-                          ? "Ожидание платежа"
-                          : "Платеж не зачислен"}
+                          selectedTransaction.status === "IN_PROGRESS"
+                        ? "Ожидание платежа"
+                        : "Платеж не зачислен"}
                     </h2>
 
                     {/* Transaction ID */}
@@ -1914,15 +1987,15 @@ export function BtEntryList() {
 
                     {/* Amount */}
                     <div className="mb-1">
-                      <span className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                      <span className="text-3xl font-bold text-green-600 dark:text-green-400">
                         {selectedTransaction.frozenUsdtAmount
                           ? selectedTransaction.frozenUsdtAmount.toFixed(2)
                           : selectedTransaction.rate
-                            ? (
-                                selectedTransaction.amount /
-                                selectedTransaction.rate
-                              ).toFixed(2)
-                            : (selectedTransaction.amount / 95).toFixed(2)}{" "}
+                          ? (
+                              selectedTransaction.amount /
+                              selectedTransaction.rate
+                            ).toFixed(2)
+                          : (selectedTransaction.amount / 95).toFixed(2)}{" "}
                         USDT
                       </span>
                     </div>
@@ -1962,8 +2035,8 @@ export function BtEntryList() {
                       onClick={() => setShowRequisiteInfoModal(true)}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-[92px] h-[62px] rounded-md bg-gradient-to-tr from-purple-800 via-purple-400 to-purple-400 relative overflow-hidden">
-                          <div className="absolute inset-0 bg-gradient-to-r from-purple-800  to-transparent"></div>
+                        <div className="w-[92px] h-[62px] rounded-md bg-gradient-to-tr from-green-800 via-green-400 to-green-400 relative overflow-hidden">
+                          <div className="absolute inset-0 bg-gradient-to-r from-green-800  to-transparent"></div>
                           <div className="absolute top-2 right-4">
                             <svg
                               viewBox="0 0 30 18"
@@ -1991,7 +2064,7 @@ export function BtEntryList() {
                         <div className="text-left">
                           <p className="font-semibold text-xl dark:text-white">
                             {selectedTransaction.requisites?.recipientName ||
-                              selectedTransaction.clientName}
+                              "—"}
                           </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
                             {selectedTransaction.requisites?.cardNumber
@@ -2000,7 +2073,7 @@ export function BtEntryList() {
                           </p>
                         </div>
                       </div>
-                      <ChevronDown className="h-5 w-5 text-[#530FAD] -rotate-90" />
+                      <ChevronDown className="h-5 w-5 text-[#006039] -rotate-90" />
                     </Button>
                   </div>
 
@@ -2028,18 +2101,17 @@ export function BtEntryList() {
                         <span className="text-sm text-gray-500 dark:text-gray-400">
                           Прибыль
                         </span>
-                        <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
+                        <span className="text-lg font-semibold text-green-600 dark:text-green-400">
                           +{" "}
                           {selectedTransaction.calculatedCommission
                             ? selectedTransaction.calculatedCommission.toFixed(
-                                2,
+                                2
                               )
                             : "0.00"}{" "}
                           USDT
                         </span>
                       </div>
                     </div>
-
                   </div>
 
                   {/* Action Button */}
@@ -2054,7 +2126,7 @@ export function BtEntryList() {
                         </p>
                         <div className="space-y-2">
                           <Button
-                            className="w-full bg-purple-600 hover:bg-purple-700"
+                            className="w-full bg-green-600 hover:bg-green-700"
                             onClick={() =>
                               manualCloseTransaction(selectedTransaction.id)
                             }
@@ -2072,11 +2144,32 @@ export function BtEntryList() {
                       </div>
                     ) : selectedTransaction.status === "IN_PROGRESS" ? (
                       <Button
-                        className="w-full bg-[#530FAD] hover:bg-[#530FAD]/90"
+                        className="w-full bg-[#006039] hover:bg-[#006039]/90"
                         onClick={() => confirmPayment(selectedTransaction.id)}
                       >
                         Подтвердить платеж
                       </Button>
+                    ) : selectedTransaction.status === "EXPIRED" ? (
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-3">
+                          Время сделки истекло, но вы можете закрыть ее вручную
+                        </p>
+                        <Button
+                          className="w-full bg-orange-600 hover:bg-orange-700"
+                          onClick={() =>
+                            manualCloseTransaction(selectedTransaction.id)
+                          }
+                        >
+                          Закрыть вручную
+                        </Button>
+                        <Button
+                          className="w-full"
+                          variant="outline"
+                          onClick={() => setSelectedTransaction(null)}
+                        >
+                          Отмена
+                        </Button>
+                      </div>
                     ) : (
                       <Button
                         className="w-full"
@@ -2103,7 +2196,7 @@ export function BtEntryList() {
                       )}
                     </div>
                     <h3 className="text-lg font-semibold mb-1 dark:text-white">
-                      {selectedTransaction.clientName}
+                      {selectedTransaction.requisites?.recipientName || "—"}
                     </h3>
                     <p className="text-2xl font-bold mb-1 dark:text-white">
                       {selectedTransaction.requisites?.cardNumber || "—"}
@@ -2189,7 +2282,7 @@ export function BtEntryList() {
                         onClick={() => {
                           if (selectedTransaction.method?.id) {
                             router.push(
-                              `/trader/devices/${selectedTransaction.method.id}`,
+                              `/trader/devices/${selectedTransaction.method.id}`
                             );
                           } else {
                             toast.error("ID устройства не найден");
@@ -2198,7 +2291,7 @@ export function BtEntryList() {
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                            <Smartphone className="h-5 w-5 text-[#530FAD] dark:text-purple-400" />
+                            <Smartphone className="h-5 w-5 text-[#006039] dark:text-green-400" />
                           </div>
                           <div className="text-left">
                             <p className="text-sm font-medium dark:text-white">
@@ -2211,7 +2304,7 @@ export function BtEntryList() {
                             </p>
                           </div>
                         </div>
-                        <ChevronDown className="h-5 w-5 text-[#530FAD] dark:text-purple-400 -rotate-90" />
+                        <ChevronDown className="h-5 w-5 text-[#006039] dark:text-green-400 -rotate-90" />
                       </Button>
                     </div>
 
@@ -2233,7 +2326,7 @@ export function BtEntryList() {
                           className="w-full justify-start dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
                           onClick={() => toast.info("Функция в разработке")}
                         >
-                          <Eye className="h-4 w-4 mr-2 text-[#530FAD] dark:text-purple-400" />
+                          <Eye className="h-4 w-4 mr-2 text-[#006039] dark:text-green-400" />
                           Просмотр сделок по реквизиту
                         </Button>
                         <Button
@@ -2241,7 +2334,7 @@ export function BtEntryList() {
                           className="w-full justify-start dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
                           onClick={() => toast.info("Функция в разработке")}
                         >
-                          <CreditCard className="h-4 w-4 mr-2 text-[#530FAD] dark:text-purple-400" />
+                          <CreditCard className="h-4 w-4 mr-2 text-[#006039] dark:text-green-400" />
                           Подтвердить номер карты
                         </Button>
                         <Button
@@ -2249,7 +2342,7 @@ export function BtEntryList() {
                           className="w-full justify-start dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
                           onClick={() => toast.info("Функция в разработке")}
                         >
-                          <CreditCard className="h-4 w-4 mr-2 text-[#530FAD] dark:text-purple-400" />
+                          <CreditCard className="h-4 w-4 mr-2 text-[#006039] dark:text-green-400" />
                           Подтвердить номер счета
                         </Button>
                       </div>
@@ -2259,7 +2352,7 @@ export function BtEntryList() {
                   {/* Close Button */}
                   <div className="px-6 pb-6">
                     <Button
-                      className="w-full bg-[#530FAD] hover:bg-[#530FAD]/90"
+                      className="w-full bg-[#006039] hover:bg-[#006039]/90"
                       onClick={() => setShowRequisiteDetails(false)}
                     >
                       Закрыть
@@ -2285,9 +2378,7 @@ export function BtEntryList() {
             cardNumber:
               selectedTransaction.requisites?.cardNumber ||
               "2200 0000 0000 0000",
-            recipientName:
-              selectedTransaction.requisites?.recipientName ||
-              selectedTransaction.clientName,
+            recipientName: selectedTransaction.requisites?.recipientName || "—",
             phoneNumber: "+7 900 000 00 00",
             accountNumber: "40817810490069500347",
             status:

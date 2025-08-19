@@ -42,7 +42,7 @@ import {
 import { traderApi } from "@/services/api";
 import { toast } from "sonner";
 import { useTraderAuth } from "@/stores/auth";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTraderStore } from "@/stores/trader";
 import { TraderHeader } from "@/components/trader/trader-header";
 import {
@@ -195,7 +195,7 @@ const statusConfig = {
   },
   READY: {
     label: "Выполнено",
-    color: "bg-purple-50 text-purple-600 border-purple-200",
+    color: "bg-green-50 text-green-600 border-green-200",
   },
   EXPIRED: { label: "Истекло", color: "bg-red-50 text-red-600 border-red-200" },
   CANCELED: {
@@ -228,6 +228,7 @@ export function DealsList() {
   const [loading, setLoading] = useState(true);
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   // Applied filters (for actual filtering)
@@ -263,6 +264,7 @@ export function DealsList() {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [period, setPeriod] = useState("today"); // Period filter
+  const [periodStats, setPeriodStats] = useState({ count: 0, totalAmount: 0, totalProfit: 0 });
 
   // Real data for filters
   const [devices, setDevices] = useState<any[]>([]);
@@ -273,10 +275,14 @@ export function DealsList() {
   const [methodSearch, setMethodSearch] = useState("");
 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const setFinancials = useTraderStore((state) => state.setFinancials);
   const financials = useTraderStore((state) => state.financials);
 
   const confirmPayment = async (transactionId: string) => {
+    if (confirmingPayment) return; // Prevent double clicks
+    
+    setConfirmingPayment(true);
     try {
       await traderApi.updateTransactionStatus(transactionId, "READY");
       toast.success("Платеж подтвержден");
@@ -288,12 +294,18 @@ export function DealsList() {
         ),
       );
 
+      // Close dialog immediately after success
       setSelectedTransaction(null);
 
       // Refresh both transactions and profile to update profit
       await Promise.all([fetchTransactions(), fetchTraderProfile()]);
     } catch (error) {
+      console.error("Payment confirmation error:", error);
       toast.error("Не удалось подтвердить платеж");
+      // Still close dialog on error
+      setSelectedTransaction(null);
+    } finally {
+      setConfirmingPayment(false);
     }
   };
 
@@ -317,6 +329,21 @@ export function DealsList() {
       toast.error("Не удалось закрыть сделку");
     }
   };
+
+  // Handle selectedTransaction from query params
+  useEffect(() => {
+    const selectedTransactionId = searchParams.get('selectedTransaction');
+    if (selectedTransactionId && transactions.length > 0) {
+      const transaction = transactions.find(t => t.id === selectedTransactionId);
+      if (transaction) {
+        setSelectedTransaction(transaction);
+        // Remove the query param after handling it
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.delete('selectedTransaction');
+        router.replace(`${window.location.pathname}${newSearchParams.toString() ? '?' + newSearchParams.toString() : ''}`);
+      }
+    }
+  }, [searchParams, transactions, router]);
 
   // Infinite scroll handler
   useEffect(() => {
@@ -366,33 +393,88 @@ export function DealsList() {
       // Only fetch first page if not already loading
       if (!loading && !loadingMore) {
         try {
+          // Fetch with the same filters as applied
           const params: any = {
             page: 1,
             limit: 50,
           };
 
+          // Add status filter
+          if (appliedFilters.status !== "all") {
+            switch (appliedFilters.status) {
+              case "not_credited":
+                params.status = ["CREATED", "EXPIRED", "CANCELED"];
+                break;
+              case "credited":
+                params.status = "READY";
+                break;
+              case "in_progress":
+                params.status = "IN_PROGRESS";
+                break;
+            }
+          }
+
+          // Add other filters
+          if (appliedFilters.device !== "all") {
+            params.deviceId = appliedFilters.device;
+          }
+          if (appliedFilters.requisite !== "all") {
+            params.requisiteId = appliedFilters.requisite;
+          }
+          if (appliedFilters.methodType !== "all") {
+            params.methodType = appliedFilters.methodType;
+          }
+
           const response = await traderApi.getTransactions(params);
           const newData = response.data || response.transactions || [];
 
           setTransactions((currentTransactions) => {
-            const existingIds = new Set(currentTransactions.map((t) => t.id));
-            const newTransactions = newData.filter(
-              (tx: Transaction) => !existingIds.has(tx.id),
-            );
+            const existingMap = new Map(currentTransactions.map((t) => [t.id, t]));
+            const updatedTransactions: Transaction[] = [];
+            const newTransactions: Transaction[] = [];
 
+            // Check for new or updated transactions
+            newData.forEach((tx: Transaction) => {
+              const existing = existingMap.get(tx.id);
+              if (!existing) {
+                // New transaction
+                newTransactions.push(tx);
+                updatedTransactions.push({ ...tx, isNew: true });
+              } else if (existing.status !== tx.status || existing.matchedNotification?.id !== tx.matchedNotification?.id) {
+                // Status changed or notification linked
+                if (existing.status !== tx.status) {
+                  // Show notification about status change
+                  const statusText = tx.status === "READY" ? "подтверждена" : 
+                                   tx.status === "IN_PROGRESS" ? "в процессе" : 
+                                   tx.status === "COMPLETED" ? "завершена" : "обновлена";
+                  toast.info(`Сделка ${tx.numericId} ${statusText}`, {
+                    description: `${tx.amount.toLocaleString("ru-RU")} ₽`,
+                  });
+                }
+                updatedTransactions.push({ ...tx, isNew: false });
+                existingMap.delete(tx.id);
+              } else {
+                // No changes
+                updatedTransactions.push(existing);
+                existingMap.delete(tx.id);
+              }
+            });
+
+            // Show notifications for new transactions
             if (newTransactions.length > 0) {
-              // Show notifications for new transactions
               newTransactions.forEach((tx: Transaction) => {
                 toast.success(`Новая сделка ${tx.numericId}`, {
                   description: `${tx.amount.toLocaleString("ru-RU")} ₽ от ${tx.clientName}`,
                 });
               });
-
-              // Add new transactions to the beginning of the list
-              return [...newTransactions, ...currentTransactions];
             }
 
-            return currentTransactions;
+            // Keep remaining transactions that weren't in the new data (pagination)
+            existingMap.forEach((tx) => {
+              updatedTransactions.push(tx);
+            });
+
+            return updatedTransactions;
           });
 
           // Also update trader profile to refresh profit
@@ -404,7 +486,7 @@ export function DealsList() {
     }, 5000); // Check every 5 seconds for real-time updates
 
     return () => clearInterval(interval);
-  }, [loading, loadingMore]);
+  }, [loading, loadingMore, appliedFilters]);
 
   // Timer for countdown update - only update if there are pending transactions
   useEffect(() => {
@@ -451,6 +533,7 @@ export function DealsList() {
     appliedFilters.amount.max,
     appliedFilters.dateFrom,
     appliedFilters.dateTo,
+    period,
   ]);
 
   const fetchTransactions = async (pageNum = 1, append = false) => {
@@ -525,11 +608,18 @@ export function DealsList() {
         params.search = searchQuery;
       }
 
+      // Add period for stats
+      params.period = period;
+
       const response = await traderApi.getTransactions(params);
       console.log("[DealsList] API Response:", response);
       // Handle both response formats
       const txData = response.data || response.transactions || [];
       const hasMoreData = txData.length === 50; // If we get full page, there might be more
+
+      if (response.stats) {
+        setPeriodStats(response.stats);
+      }
 
       console.log("[DealsList] Transactions data:", txData.length, "items");
       if (txData.length > 0) {
@@ -780,93 +870,6 @@ export function DealsList() {
 
   const filteredTransactions = getFilteredTransactions();
 
-  // Calculate stats for period
-  const calculatePeriodStats = () => {
-    const now = new Date();
-    const startOfDay = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-    );
-    const startOfWeek = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate() - now.getDay(),
-    );
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfQuarter = new Date(
-      now.getFullYear(),
-      Math.floor(now.getMonth() / 3) * 3,
-      1,
-    );
-    const startOfHalfYear = new Date(
-      now.getFullYear(),
-      Math.floor(now.getMonth() / 6) * 6,
-      1,
-    );
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
-    const yesterday = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate() - 1,
-    );
-    const endOfYesterday = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-    );
-
-    let filterDate: Date;
-    let endDate: Date | undefined;
-
-    switch (period) {
-      case "yesterday":
-        filterDate = yesterday;
-        endDate = endOfYesterday;
-        break;
-      case "week":
-        filterDate = startOfWeek;
-        break;
-      case "month":
-        filterDate = startOfMonth;
-        break;
-      case "quarter":
-        filterDate = startOfQuarter;
-        break;
-      case "halfyear":
-        filterDate = startOfHalfYear;
-        break;
-      case "year":
-        filterDate = startOfYear;
-        break;
-      case "today":
-      default:
-        filterDate = startOfDay;
-        break;
-    }
-
-    return transactions.reduce(
-      (acc, tx) => {
-        const txDate = new Date(tx.createdAt);
-        if (txDate >= filterDate && (!endDate || txDate < endDate)) {
-          if (tx.status === "READY" || tx.status === "COMPLETED") {
-            acc.count += 1;
-            // Calculate USDT amount
-            const usdtAmount =
-              tx.frozenUsdtAmount ||
-              (tx.rate ? tx.amount / tx.rate : tx.amount / 95);
-            acc.totalAmount += usdtAmount;
-            acc.totalProfit += tx.calculatedCommission || 0;
-          }
-        }
-        return acc;
-      },
-      { count: 0, totalAmount: 0, totalProfit: 0 },
-    );
-  };
-
-  const periodStats = calculatePeriodStats();
-
   console.log(
     "[DealsList] Rendering with:",
     transactions.length,
@@ -877,7 +880,7 @@ export function DealsList() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
       </div>
     );
   }
@@ -896,7 +899,7 @@ export function DealsList() {
       {/* Stats Blocks */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6">
         {/* Deals Stats */}
-        <Card className="p-3 md:p-4 border border-gray-200 dark:border-[#292133]">
+        <Card className="p-3 md:p-4 border border-gray-200 dark:border-[#29382f]">
           <div className="flex items-start justify-between">
             <div>
               <h3 className="text-sm text-gray-600 dark:text-gray-400 mb-2">
@@ -935,7 +938,7 @@ export function DealsList() {
                               : period === "year"
                                 ? "за год"
                                 : "за сегодня"}
-                  <ChevronDown className="ml-1 h-3 w-3 text-[#530FAD] dark:text-[#530FAD]" />
+                  <ChevronDown className="ml-1 h-3 w-3 text-[#006039] dark:text-[#2d6a42]" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -1007,7 +1010,7 @@ export function DealsList() {
         </Card>
 
         {/* Profit Stats */}
-        <Card className="p-3 md:p-4 border border-gray-200 dark:border-[#292133]">
+        <Card className="p-3 md:p-4 border border-gray-200 dark:border-[#29382f]">
           <div className="flex items-start justify-between">
             <div>
               <h3 className="text-sm text-gray-600 dark:text-gray-400 mb-2">
@@ -1041,7 +1044,7 @@ export function DealsList() {
                               : period === "year"
                                 ? "за год"
                                 : "за сегодня"}
-                  <ChevronDown className="ml-1 h-3 w-3 text-[#530FAD] dark:text-[#530FAD]" />
+                  <ChevronDown className="ml-1 h-3 w-3 text-[#006039] dark:text-[#2d6a42]" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -1163,7 +1166,7 @@ export function DealsList() {
                 size="default"
                 className="gap-1 md:gap-2 h-10 md:h-12 px-3 md:px-6 text-sm md:text-base"
               >
-                <ArrowUpDown className="h-3.5 w-3.5 md:h-4 md:w-4 text-[#530FAD]" />
+                <ArrowUpDown className="h-3.5 w-3.5 md:h-4 md:w-4 text-[#006039]" />
                 <span className="hidden sm:inline">Сортировка</span>
                 <span className="sm:hidden">Сорт.</span>
                 <ChevronDown className="h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400" />
@@ -1214,7 +1217,7 @@ export function DealsList() {
         {/* Status Filter */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-[#530FAD]" />
+            <CheckCircle className="h-4 w-4 text-[#006039]" />
             <Label className="text-sm">Статус платежа</Label>
           </div>
           <Popover>
@@ -1224,7 +1227,7 @@ export function DealsList() {
                 size="default"
                 className="w-full justify-between h-12"
               >
-                <span className={"text-[#530FAD]"}>
+                <span className={"text-[#006039]"}>
                   {filterStatus === "all"
                     ? "Все сделки"
                     : filterStatus === "not_credited"
@@ -1233,7 +1236,7 @@ export function DealsList() {
                         ? "Зачисленные сделки"
                         : "Сделки выполняются"}
                 </span>
-                <ChevronDown className="h-4 w-4 opacity-50 text-[#530FAD]" />
+                <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
               </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -1252,9 +1255,9 @@ export function DealsList() {
                   variant="ghost"
                   size="default"
                   className={cn(
-                    "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                    "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                     filterStatus === "all" &&
-                      "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                      "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
                   )}
                   onClick={() => setFilterStatus("all")}
                 >
@@ -1264,9 +1267,9 @@ export function DealsList() {
                   variant="ghost"
                   size="default"
                   className={cn(
-                    "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                    "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                     filterStatus === "not_credited" &&
-                      "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                      "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
                   )}
                   onClick={() => setFilterStatus("not_credited")}
                 >
@@ -1276,9 +1279,9 @@ export function DealsList() {
                   variant="ghost"
                   size="default"
                   className={cn(
-                    "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                    "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                     filterStatus === "credited" &&
-                      "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                      "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
                   )}
                   onClick={() => setFilterStatus("credited")}
                 >
@@ -1288,9 +1291,9 @@ export function DealsList() {
                   variant="ghost"
                   size="default"
                   className={cn(
-                    "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                    "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                     filterStatus === "in_progress" &&
-                      "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                      "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
                   )}
                   onClick={() => setFilterStatus("in_progress")}
                 >
@@ -1305,7 +1308,7 @@ export function DealsList() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-[#530FAD]" />
+              <DollarSign className="h-4 w-4 text-[#006039]" />
               <Label className="text-sm">Сумма зачисления</Label>
             </div>
             <div className="flex items-center gap-2">
@@ -1313,7 +1316,7 @@ export function DealsList() {
                 className={cn(
                   "text-sm font-medium transition-colors",
                   filterAmountType === "exact"
-                    ? "text-[#530FAD]"
+                    ? "text-[#006039]"
                     : "text-gray-500 hover:text-gray-700",
                 )}
                 onClick={() => setFilterAmountType("exact")}
@@ -1325,7 +1328,7 @@ export function DealsList() {
                 className={cn(
                   "text-sm font-medium transition-colors",
                   filterAmountType === "range"
-                    ? "text-[#530FAD]"
+                    ? "text-[#006039]"
                     : "text-gray-500 hover:text-gray-700",
                 )}
                 onClick={() => setFilterAmountType("range")}
@@ -1397,7 +1400,7 @@ export function DealsList() {
         {/* Device Filter */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Smartphone className="h-4 w-4 text-[#530FAD]" />
+            <Smartphone className="h-4 w-4 text-[#006039]" />
             <Label className="text-sm">Устройства</Label>
           </div>
           <Popover>
@@ -1407,14 +1410,14 @@ export function DealsList() {
                 size="default"
                 className="w-full justify-between h-12"
               >
-                <span className={"text-[#530FAD]"}>
+                <span className={"text-[#006039]"}>
                   {filterDevice === "all"
                     ? "Все устройства"
                     : filterDevice === "1"
                       ? "Основное устройство"
                       : "Резервное устройство"}
                 </span>
-                <ChevronDown className="h-4 w-4 opacity-50 text-[#530FAD]" />
+                <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
               </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -1438,9 +1441,9 @@ export function DealsList() {
                   variant="ghost"
                   size="default"
                   className={cn(
-                    "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                    "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                     filterDevice === "all" &&
-                      "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                      "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
                   )}
                   onClick={() => setFilterDevice("all")}
                 >
@@ -1473,9 +1476,9 @@ export function DealsList() {
                       variant="ghost"
                       size="default"
                       className={cn(
-                        "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                        "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                         filterDevice === device.id &&
-                          "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                          "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
                       )}
                       onClick={() => setFilterDevice(device.id)}
                     >
@@ -1501,7 +1504,7 @@ export function DealsList() {
         {/* Requisite Filter */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4 text-[#530FAD]" />
+            <CreditCard className="h-4 w-4 text-[#006039]" />
             <Label className="text-sm">Реквизиты</Label>
           </div>
           <Popover>
@@ -1511,14 +1514,14 @@ export function DealsList() {
                 size="default"
                 className="w-full justify-between h-12"
               >
-                <span className={"text-[#530FAD]"}>
+                <span className={"text-[#006039]"}>
                   {filterRequisite === "all"
                     ? "Все реквизиты"
                     : filterRequisite === "1"
                       ? "Основная карта"
                       : "Резервная карта"}
                 </span>
-                <ChevronDown className="h-4 w-4 opacity-50 text-[#530FAD]" />
+                <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
               </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -1542,9 +1545,9 @@ export function DealsList() {
                   variant="ghost"
                   size="default"
                   className={cn(
-                    "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                    "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                     filterRequisite === "all" &&
-                      "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                      "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
                   )}
                   onClick={() => setFilterRequisite("all")}
                 >
@@ -1578,9 +1581,9 @@ export function DealsList() {
                       variant="ghost"
                       size="default"
                       className={cn(
-                        "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                        "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                         filterRequisite === requisite.id &&
-                          "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                          "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
                       )}
                       onClick={() => setFilterRequisite(requisite.id)}
                     >
@@ -1612,7 +1615,7 @@ export function DealsList() {
         {/* Payment Method Type Filter */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-[#530FAD]" />
+            <Building2 className="h-4 w-4 text-[#006039]" />
             <Label className="text-sm">Тип метода</Label>
           </div>
           <Select value={filterMethodType} onValueChange={setFilterMethodType}>
@@ -1630,7 +1633,7 @@ export function DealsList() {
         {/* Date Range */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-[#530FAD]" />
+            <Calendar className="h-4 w-4 text-[#006039]" />
             <Label className="text-sm">Дата создания платежа</Label>
           </div>
           <div className="flex gap-2">
@@ -1677,8 +1680,8 @@ export function DealsList() {
                     );
                   case "READY":
                     return (
-                      <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                        <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                      <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                        <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
                       </div>
                     );
                   case "DISPUTE":
@@ -1735,7 +1738,7 @@ export function DealsList() {
               const getStatusBadgeColor = () => {
                 switch (transaction.status) {
                   case "READY":
-                    return "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800";
+                    return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800";
                   case "CREATED":
                   case "IN_PROGRESS":
                     return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800";
@@ -1784,7 +1787,8 @@ export function DealsList() {
                         {transaction.numericId}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 hidden sm:block">
-                        {transaction.method?.name || "—"}
+                        {devices.find(d => d.id === transaction.deviceId)?.name || 
+                         transaction.method?.name || "—"}
                       </div>
                       {/* Mobile status */}
                       <div className="sm:hidden mt-1">
@@ -1843,7 +1847,7 @@ export function DealsList() {
                       {/* Profit - показываем только для статуса READY или COMPLETED */}
                       {(transaction.status === 'READY' || transaction.status === 'COMPLETED') && 
                        (transaction.calculatedCommission || transaction.profit || transaction.traderProfit) ? (
-                        <div className="text-xs text-purple-600 dark:text-purple-400 mt-0.5">
+                        <div className="text-xs text-green-600 dark:text-green-400 mt-0.5">
                           +{(transaction.calculatedCommission || transaction.profit || transaction.traderProfit || 0).toFixed(2)}
                         </div>
                       ) : null}
@@ -1883,7 +1887,7 @@ export function DealsList() {
             {/* Loading more indicator */}
             {loadingMore && (
               <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin text-[#530FAD]" />
+                <Loader2 className="h-6 w-6 animate-spin text-[#006039]" />
                 <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                   Загрузка...
                 </span>
@@ -1921,7 +1925,7 @@ export function DealsList() {
                       onClick={() => setShowRequisiteDetails(false)}
                       className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 -ml-2"
                     >
-                      <ChevronDown className="h-4 w-4 mr-1 rotate-90 text-[#530FAD]" />
+                      <ChevronDown className="h-4 w-4 mr-1 rotate-90 text-[#006039]" />
                       Назад
                     </Button>
                     <h3 className="font-medium dark:text-white">
@@ -1948,7 +1952,7 @@ export function DealsList() {
                       }}
                       className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
                     >
-                      <X className="h-4 w-4 text-[#530FAD]" />
+                      <X className="h-4 w-4 text-[#006039]" />
                     </Button>
                   </>
                 )}
@@ -1961,8 +1965,8 @@ export function DealsList() {
                     {/* Status Icon */}
                     <div className="mb-4 flex justify-center">
                       {selectedTransaction.status === "READY" ? (
-                        <div className="w-20 h-20 rounded-3xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                          <CheckCircle2 className="h-10 w-10 text-purple-600 dark:text-purple-400" />
+                        <div className="w-20 h-20 rounded-3xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                          <CheckCircle2 className="h-10 w-10 text-green-600 dark:text-green-400" />
                         </div>
                       ) : selectedTransaction.status === "CREATED" ||
                         selectedTransaction.status === "IN_PROGRESS" ? (
@@ -1993,7 +1997,7 @@ export function DealsList() {
 
                     {/* Amount */}
                     <div className="mb-1">
-                      <span className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                      <span className="text-3xl font-bold text-green-600 dark:text-green-400">
                         {selectedTransaction.frozenUsdtAmount
                           ? selectedTransaction.frozenUsdtAmount.toFixed(2)
                           : selectedTransaction.rate
@@ -2041,8 +2045,8 @@ export function DealsList() {
                       onClick={() => setShowRequisiteInfoModal(true)}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-[92px] h-[62px] rounded-md bg-gradient-to-tr from-purple-800 via-purple-400 to-purple-400 relative overflow-hidden">
-                          <div className="absolute inset-0 bg-gradient-to-r from-purple-800  to-transparent"></div>
+                        <div className="w-[92px] h-[62px] rounded-md bg-gradient-to-tr from-green-800 via-green-400 to-green-400 relative overflow-hidden">
+                          <div className="absolute inset-0 bg-gradient-to-r from-green-800  to-transparent"></div>
                           <div className="absolute top-2 right-4">
                             <svg
                               viewBox="0 0 30 18"
@@ -2079,7 +2083,7 @@ export function DealsList() {
                           </p>
                         </div>
                       </div>
-                      <ChevronDown className="h-5 w-5 text-[#530FAD] -rotate-90" />
+                      <ChevronDown className="h-5 w-5 text-[#006039] -rotate-90" />
                     </Button>
                   </div>
 
@@ -2107,7 +2111,7 @@ export function DealsList() {
                         <span className="text-sm text-gray-500 dark:text-gray-400">
                           Прибыль
                         </span>
-                        <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
+                        <span className="text-lg font-semibold text-green-600 dark:text-green-400">
                           +{" "}
                           {(selectedTransaction.calculatedCommission || 
                             selectedTransaction.profit || 
@@ -2127,7 +2131,7 @@ export function DealsList() {
                           onClick={() => {
                             if (selectedTransaction.deviceId) {
                               router.push(
-                                `/trader/devices/${selectedTransaction.deviceId}`,
+                                `/trader/devices/${selectedTransaction.deviceId}?from=transaction&transactionId=${selectedTransaction.id}`,
                               );
                             } else {
                               toast.error("ID устройства не найден");
@@ -2136,18 +2140,19 @@ export function DealsList() {
                         >
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                              <Smartphone className="h-5 w-5 text-[#530FAD] dark:text-purple-400" />
+                              <Smartphone className="h-5 w-5 text-[#006039] dark:text-green-400" />
                             </div>
                             <div className="text-left">
                               <p className="text-sm font-medium dark:text-white">
-                                {selectedTransaction.method.id}
+                                {devices.find(d => d.id === selectedTransaction.deviceId)?.name || 
+                                 "Устройство"}
                               </p>
                               <p className="text-xs text-gray-500 dark:text-gray-400">
                                 {selectedTransaction.method.name}
                               </p>
                             </div>
                           </div>
-                          <ChevronDown className="h-5 w-5 text-[#530FAD] dark:text-purple-400 -rotate-90" />
+                          <ChevronDown className="h-5 w-5 text-[#006039] dark:text-green-400 -rotate-90" />
                         </Button>
                       </div>
                     )}
@@ -2166,8 +2171,8 @@ export function DealsList() {
                           }}
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                              <MessageSquare className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                            <div className="w-10 h-10 rounded bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                              <MessageSquare className="h-5 w-5 text-green-600 dark:text-green-400" />
                             </div>
                             <div className="text-left flex-1 min-w-0">
                               <p className="text-sm font-medium dark:text-white">
@@ -2185,7 +2190,7 @@ export function DealsList() {
                               </p>
                             </div>
                           </div>
-                          <ChevronDown className="h-5 w-5 text-[#530FAD] dark:text-purple-400 -rotate-90" />
+                          <ChevronDown className="h-5 w-5 text-[#006039] dark:text-green-400 -rotate-90" />
                         </Button>
                       </div>
                     )}
@@ -2209,10 +2214,18 @@ export function DealsList() {
                     ) : selectedTransaction.status === "IN_PROGRESS" ? (
                       <div className="flex flex-col gap-2">
                         <Button
-                          className="w-full bg-[#530FAD] hover:bg-[#530FAD]/90"
+                          className="w-full bg-[#006039] hover:bg-[#006039]/90"
                           onClick={() => confirmPayment(selectedTransaction.id)}
+                          disabled={confirmingPayment}
                         >
-                          Подтвердить платеж
+                          {confirmingPayment ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Подтверждение...
+                            </>
+                          ) : (
+                            "Подтвердить платеж"
+                          )}
                         </Button>
                         <Button
                           className="w-full"
@@ -2228,11 +2241,17 @@ export function DealsList() {
                           Срок сделки истек
                         </p>
                         <Button
+                          className="w-full bg-orange-600 hover:bg-orange-700"
+                          onClick={() => manualCloseTransaction(selectedTransaction.id)}
+                        >
+                          Закрыть вручную
+                        </Button>
+                        <Button
                           className="w-full"
                           variant="outline"
                           onClick={() => setSelectedTransaction(null)}
                         >
-                          Закрыть
+                          Отмена
                         </Button>
                       </div>
                     ) : (
@@ -2356,7 +2375,7 @@ export function DealsList() {
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                            <Smartphone className="h-5 w-5 text-[#530FAD] dark:text-purple-400" />
+                            <Smartphone className="h-5 w-5 text-[#006039] dark:text-green-400" />
                           </div>
                           <div className="text-left">
                             <p className="text-sm font-medium dark:text-white">
@@ -2369,7 +2388,7 @@ export function DealsList() {
                             </p>
                           </div>
                         </div>
-                        <ChevronDown className="h-5 w-5 text-[#530FAD] dark:text-purple-400 -rotate-90" />
+                        <ChevronDown className="h-5 w-5 text-[#006039] dark:text-green-400 -rotate-90" />
                       </Button>
                     </div>
 
@@ -2391,7 +2410,7 @@ export function DealsList() {
                           className="w-full justify-start dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
                           onClick={() => toast.info("Функция в разработке")}
                         >
-                          <Eye className="h-4 w-4 mr-2 text-[#530FAD] dark:text-purple-400" />
+                          <Eye className="h-4 w-4 mr-2 text-[#006039] dark:text-green-400" />
                           Просмотр сделок по реквизиту
                         </Button>
                         <Button
@@ -2399,7 +2418,7 @@ export function DealsList() {
                           className="w-full justify-start dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
                           onClick={() => toast.info("Функция в разработке")}
                         >
-                          <CreditCard className="h-4 w-4 mr-2 text-[#530FAD] dark:text-purple-400" />
+                          <CreditCard className="h-4 w-4 mr-2 text-[#006039] dark:text-green-400" />
                           Подтвердить номер карты
                         </Button>
                         <Button
@@ -2407,7 +2426,7 @@ export function DealsList() {
                           className="w-full justify-start dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
                           onClick={() => toast.info("Функция в разработке")}
                         >
-                          <CreditCard className="h-4 w-4 mr-2 text-[#530FAD] dark:text-purple-400" />
+                          <CreditCard className="h-4 w-4 mr-2 text-[#006039] dark:text-green-400" />
                           Подтвердить номер счета
                         </Button>
                       </div>
@@ -2417,7 +2436,7 @@ export function DealsList() {
                   {/* Close Button */}
                   <div className="px-6 pb-6">
                     <Button
-                      className="w-full bg-[#530FAD] hover:bg-[#530FAD]/90"
+                      className="w-full bg-[#006039] hover:bg-[#006039]/90"
                       onClick={() => setShowRequisiteDetails(false)}
                     >
                       Закрыть

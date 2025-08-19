@@ -45,6 +45,7 @@ interface Message {
     amount: number
     status: string
   }
+  amount?: number
 }
 
 export function TraderMessagesV2() {
@@ -387,7 +388,7 @@ export function TraderMessagesV2() {
                       
                       {/* Amount */}
                       <div className={cn(styles.messageAmount, styles[style])}>
-                        {formatAmount(message.transaction?.amount)}
+                        {formatAmount(message.amount || message.transaction?.amount)}
                       </div>
                     </div>
                   </div>

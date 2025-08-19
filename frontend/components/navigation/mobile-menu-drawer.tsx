@@ -3,13 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { 
-  X, 
-  LogOut, 
-  Home, 
-  FileText, 
-  AlertCircle, 
-  Smartphone, 
+import {
+  X,
+  LogOut,
+  Home,
+  FileText,
+  AlertCircle,
+  Smartphone,
   CreditCard,
   MessageSquare,
   Wallet,
@@ -34,7 +34,8 @@ import {
   Trash2,
   BookOpen,
   Download,
-  Lightbulb
+  Lightbulb,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTraderAuth, useAdminAuth } from "@/stores/auth";
@@ -136,6 +137,11 @@ const adminNavItems: NavItem[] = [
     icon: Users,
   },
   {
+    title: "Агрегаторы",
+    href: "/admin/aggregators",
+    icon: Globe,
+  },
+  {
     title: "Сделки",
     href: "/admin/deals",
     icon: CreditCard,
@@ -146,6 +152,11 @@ const adminNavItems: NavItem[] = [
     icon: PiggyBank,
   },
   {
+    title: "Запросы Settle",
+    href: "/admin/settle-requests",
+    icon: Wallet,
+  },
+  {
     title: "Выплаты",
     href: "/admin/payouts",
     icon: DollarSign,
@@ -154,6 +165,11 @@ const adminNavItems: NavItem[] = [
     title: "Споры",
     href: "/admin/disputes",
     icon: AlertCircle,
+  },
+  {
+    title: "BOT по спорам",
+    href: "/admin/bot-disputes",
+    icon: Send,
   },
   {
     title: "Методы платежей",
@@ -181,16 +197,6 @@ const adminNavItems: NavItem[] = [
     icon: Settings,
   },
   {
-    title: "Telegram-уведомления",
-    href: "/admin/telegram-notifications",
-    icon: Send,
-  },
-  {
-    title: "Платежи",
-    href: "/admin/payment-details",
-    icon: Receipt,
-  },
-  {
     title: "Устройства",
     href: "/admin/devices",
     icon: Smartphone,
@@ -201,30 +207,40 @@ const adminNavItems: NavItem[] = [
     icon: Package,
   },
   {
-    title: "Техподдержка",
-    href: "/admin/support",
-    icon: Headphones,
-  },
-  {
     title: "Метрики",
     href: "/admin/metrics",
     icon: BarChart3,
   },
-  {
-    title: "Инструменты тестирования",
-    href: "/admin/test-tools",
-    icon: TestTube,
-  },
-  {
-    title: "Массовое удаление",
-    href: "/admin/bulk-delete",
-    icon: Trash2,
-  },
-  {
-    title: "Wellbit API",
-    href: "/wellbit/docs",
-    icon: BookOpen,
-  },
+  // {
+  //   title: "Telegram-уведомления",
+  //   href: "/admin/telegram-notifications",
+  //   icon: Send,
+  // },
+  // {
+  //   title: "Платежи",
+  //   href: "/admin/payment-details",
+  //   icon: Receipt,
+  // },
+  // {
+  //   title: "Техподдержка",
+  //   href: "/admin/support",
+  //   icon: Headphones,
+  // },
+  // {
+  //   title: "Инструменты тестирования",
+  //   href: "/admin/test-tools",
+  //   icon: TestTube,
+  // },
+  // {
+  //   title: "Массовое удаление",
+  //   href: "/admin/bulk-delete",
+  //   icon: Trash2,
+  // },
+  // {
+  //   title: "Wellbit API",
+  //   href: "/wellbit/docs",
+  //   icon: BookOpen,
+  // },
   {
     title: "Идеи",
     href: "/admin/ideas",
@@ -293,7 +309,11 @@ const merchantNavItems: NavItem[] = [
   },
 ];
 
-export function MobileMenuDrawer({ variant, isOpen, onClose }: MobileMenuDrawerProps) {
+export function MobileMenuDrawer({
+  variant,
+  isOpen,
+  onClose,
+}: MobileMenuDrawerProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
@@ -309,28 +329,28 @@ export function MobileMenuDrawer({ variant, isOpen, onClose }: MobileMenuDrawerP
     if (isOpen) {
       // Save current scroll position
       const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
+      document.body.style.position = "fixed";
       document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
     } else {
       // Restore scroll position
       const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
       if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
+        window.scrollTo(0, parseInt(scrollY || "0", 10) * -1);
       }
     }
 
     // Cleanup
     return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
     };
   }, [isOpen]);
 
@@ -365,7 +385,8 @@ export function MobileMenuDrawer({ variant, isOpen, onClose }: MobileMenuDrawerP
   const { auth, store } = getAuthHooks();
   const user = auth?.user;
   const financials = variant === "trader" ? store?.financials : null;
-  const { rate: rapiraRate } = useRapiraRate();
+  const source = (user as any)?.rateSource === "bybit" ? "bybit" : "rapira";
+  const { rate: rapiraRate } = useRapiraRate(source as any);
 
   const getNavItems = () => {
     switch (variant) {
@@ -416,10 +437,10 @@ export function MobileMenuDrawer({ variant, isOpen, onClose }: MobileMenuDrawerP
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (touchStart === null) return;
-    
+
     const currentY = e.touches[0].clientY;
     const diff = currentY - touchStart;
-    
+
     if (diff > 10) {
       e.preventDefault(); // Prevent page scroll
       setIsDragging(true);
@@ -459,216 +480,223 @@ export function MobileMenuDrawer({ variant, isOpen, onClose }: MobileMenuDrawerP
           <>
             {/* Backdrop */}
             <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          />
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={onClose}
+              className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            />
 
-          {/* Drawer */}
-          <motion.div
-            ref={drawerRef}
-            initial={{ y: "100%" }}
-            animate={{ y: isDragging ? getDrawerTransform() : 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 rounded-t-3xl shadow-xl md:hidden max-h-[90vh] flex flex-col touch-none"
-            style={{ touchAction: 'none' }}
-          >
-            {/* Handle bar */}
-            <div className="flex justify-center pt-2 pb-2">
-              <div className="w-12 h-1 bg-gray-300 dark:bg-gray-700 rounded-full" />
-            </div>
-
-            {/* Header with user info */}
-            <div className="px-6 pb-4 border-b border-gray-200 dark:border-gray-800">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {user?.name || user?.email || "Пользователь"}
-                  </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {user?.email}
-                  </p>
-                </div>
-                <button
-                  onClick={onClose}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  <X className="h-5 w-5 text-gray-500" />
-                </button>
+            {/* Drawer */}
+            <motion.div
+              ref={drawerRef}
+              initial={{ y: "100%" }}
+              animate={{ y: isDragging ? getDrawerTransform() : 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 rounded-t-3xl shadow-xl md:hidden max-h-[90vh] flex flex-col touch-none"
+              style={{ touchAction: "none" }}
+            >
+              {/* Handle bar */}
+              <div className="flex justify-center pt-2 pb-2">
+                <div className="w-12 h-1 bg-gray-300 dark:bg-gray-700 rounded-full" />
               </div>
 
-              {/* Balance info for traders - USDT only */}
-              {variant === "trader" && financials && (
-                <div className="mt-3">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Баланс USDT</p>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {financials.balanceUsdt.toFixed(2)} USDT
-                  </p>
+              {/* Header with user info */}
+              <div className="px-6 pb-4 border-b border-gray-200 dark:border-gray-800">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {user?.name || user?.email || "Пользователь"}
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {user?.email}
+                    </p>
+                  </div>
+                  <button
+                    onClick={onClose}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                  >
+                    <X className="h-5 w-5 text-gray-500" />
+                  </button>
                 </div>
-              )}
 
-              {variant === "trader" && rapiraRate && (
-                <div className="mt-2 p-2 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/10 dark:to-purple-800/10 rounded-lg border border-purple-500 dark:border-purple-600">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                      <span className="text-sm font-semibold text-gray-900 dark:text-gray-200">
-                        TRC-20
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm font-bold text-purple-600 dark:text-purple-400">
-                        {rapiraRate.rate.toFixed(2)}
-                      </span>
-                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                        ₽/USDT
-                      </span>
+                {/* Balance info for traders - USDT only */}
+                {variant === "trader" && financials && (
+                  <div className="mt-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Баланс USDT
+                    </p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                      {financials.balanceUsdt.toFixed(2)} USDT
+                    </p>
+                  </div>
+                )}
+
+                {variant === "trader" && rapiraRate && (
+                  <div className="mt-2 p-2 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/10 dark:to-teal-900/10 rounded-lg border border-emerald-500 dark:border-emerald-600">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                        <span className="text-sm font-semibold text-gray-900 dark:text-gray-200">
+                          TRC-20 ({source === "bybit" ? "Bybit" : "Rapira"})
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                          {rapiraRate.rate.toFixed(2)}
+                        </span>
+                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                          ₽/USDT
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Action buttons for traders */}
-              {variant === "trader" && (
-                <div className="mt-3 space-y-2">
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start gap-2 text-sm border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                    onClick={() => {
-                      setTelegramModalOpen(true);
-                      onClose();
-                    }}
-                  >
-                    <Send className="h-4 w-4" />
-                    <span>Подключить Telegram</span>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start gap-2 text-sm text-gray-700 hover:text-gray-950 dark:text-gray-300 dark:hover:text-gray-50"
-                    onClick={() => {
-                      setIdeaModalOpen(true);
-                      onClose();
-                    }}
-                  >
-                    <Lightbulb className="h-4 w-4 text-yellow-500" />
-                    <span>Предложить идею</span>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start gap-2 text-sm text-gray-700 hover:text-gray-950 dark:text-gray-300 dark:hover:text-gray-50"
-                    onClick={() => {
-                      window.open('/apk/quattrex.apk', '_blank');
-                    }}
-                  >
-                    <Download className="h-4 w-4 text-purple-600" />
-                    <span>Скачать APK</span>
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {/* Navigation items */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
-              <nav className="space-y-1">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = item.href && pathname === item.href;
-                  const isExpanded = expandedItems.includes(item.title);
-
-                  if (item.children) {
-                    return (
-                      <div key={item.title}>
-                        <button
-                          onClick={() => toggleExpanded(item.title)}
-                          className={cn(
-                            "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors",
-                            "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                          )}
-                        >
-                          <div className="flex items-center gap-3">
-                            <Icon className="h-5 w-5" />
-                            <span>{item.title}</span>
-                          </div>
-                          <ChevronRight
-                            className={cn(
-                              "h-4 w-4 transition-transform",
-                              isExpanded && "rotate-90"
-                            )}
-                          />
-                        </button>
-                        {isExpanded && (
-                          <div className="ml-8 mt-1 space-y-1">
-                            {item.children.map((child) => {
-                              const ChildIcon = child.icon;
-                              const isChildActive = child.href && pathname === child.href;
-                              
-                              return (
-                                <Link
-                                  key={child.title}
-                                  href={child.href || "#"}
-                                  onClick={onClose}
-                                  className={cn(
-                                    "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors",
-                                    isChildActive
-                                      ? "bg-[#530FAD]/10 text-[#530FAD] dark:text-[#530FAD]"
-                                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-                                  )}
-                                >
-                                  <ChildIcon className="h-4 w-4" />
-                                  <span>{child.title}</span>
-                                </Link>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <Link
-                      key={item.title}
-                      href={item.href || "#"}
-                      onClick={onClose}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors",
-                        isActive
-                          ? "bg-[#530FAD]/10 text-[#530FAD] dark:text-[#530FAD]"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                      )}
+                {/* Action buttons for traders */}
+                {variant === "trader" && (
+                  <div className="mt-3 space-y-2">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start gap-2 text-sm border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                      onClick={() => {
+                        setTelegramModalOpen(true);
+                        onClose();
+                      }}
                     >
-                      <Icon className="h-5 w-5" />
-                      <span>{item.title}</span>
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
+                      <Send className="h-4 w-4" />
+                      <span>Подключить Telegram</span>
+                    </Button>
 
-            {/* Logout button */}
-            <div className="p-4 border-t border-gray-200 dark:border-gray-800">
-              <Button
-                onClick={handleLogout}
-                variant="outline"
-                className="w-full"
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start gap-2 text-sm text-gray-700 hover:text-gray-950 dark:text-gray-300 dark:hover:text-gray-50"
+                      onClick={() => {
+                        setIdeaModalOpen(true);
+                        onClose();
+                      }}
+                    >
+                      <Lightbulb className="h-4 w-4 text-yellow-500" />
+                      <span>Предложить идею</span>
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start gap-2 text-sm text-gray-700 hover:text-gray-950 dark:text-gray-300 dark:hover:text-gray-50"
+                      onClick={() => {
+                        // Use direct navigation for better compatibility
+                        window.location.href = "/api/app/download-apk";
+                      }}
+                    >
+                      <Download className="h-4 w-4 text-green-600" />
+                      <span>Скачать APK</span>
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Navigation items */}
+              <div
+                className="flex-1 overflow-y-auto px-4 py-4 overscroll-contain"
+                style={{ WebkitOverflowScrolling: "touch" }}
               >
-                <LogOut className="mr-2 h-4 w-4" />
-                Выйти
-              </Button>
-            </div>
-          </motion.div>
-        </>
+                <nav className="space-y-1">
+                  {navItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = item.href && pathname === item.href;
+                    const isExpanded = expandedItems.includes(item.title);
+
+                    if (item.children) {
+                      return (
+                        <div key={item.title}>
+                          <button
+                            onClick={() => toggleExpanded(item.title)}
+                            className={cn(
+                              "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors",
+                              "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                            )}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Icon className="h-5 w-5" />
+                              <span>{item.title}</span>
+                            </div>
+                            <ChevronRight
+                              className={cn(
+                                "h-4 w-4 transition-transform",
+                                isExpanded && "rotate-90"
+                              )}
+                            />
+                          </button>
+                          {isExpanded && (
+                            <div className="ml-8 mt-1 space-y-1">
+                              {item.children.map((child) => {
+                                const ChildIcon = child.icon;
+                                const isChildActive =
+                                  child.href && pathname === child.href;
+
+                                return (
+                                  <Link
+                                    key={child.title}
+                                    href={child.href || "#"}
+                                    onClick={onClose}
+                                    className={cn(
+                                      "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors",
+                                      isChildActive
+                                        ? "bg-[#006039]/10 text-[#006039] dark:text-[#2d6a42]"
+                                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                    )}
+                                  >
+                                    <ChildIcon className="h-4 w-4" />
+                                    <span>{child.title}</span>
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <Link
+                        key={item.title}
+                        href={item.href || "#"}
+                        onClick={onClose}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors",
+                          isActive
+                            ? "bg-[#006039]/10 text-[#006039] dark:text-[#2d6a42]"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        )}
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span>{item.title}</span>
+                      </Link>
+                    );
+                  })}
+                </nav>
+              </div>
+
+              {/* Logout button */}
+              <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+                <Button
+                  onClick={handleLogout}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Выйти
+                </Button>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
-      
+
       {/* Modals */}
       {variant === "trader" && (
         <>
@@ -676,10 +704,7 @@ export function MobileMenuDrawer({ variant, isOpen, onClose }: MobileMenuDrawerP
             open={telegramModalOpen}
             onOpenChange={setTelegramModalOpen}
           />
-          <IdeaModal
-            open={ideaModalOpen}
-            onOpenChange={setIdeaModalOpen}
-          />
+          <IdeaModal open={ideaModalOpen} onOpenChange={setIdeaModalOpen} />
         </>
       )}
     </>

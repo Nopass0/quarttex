@@ -7,7 +7,9 @@ interface RapiraRate {
   timestamp: string;
 }
 
-export function useRapiraRate() {
+type RateSource = 'rapira' | 'bybit';
+
+export function useRapiraRate(source: RateSource = 'rapira') {
   const [rate, setRate] = useState<RapiraRate | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -15,10 +17,11 @@ export function useRapiraRate() {
 
   const fetchRate = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rapira-rate`);
+      const path = source === 'bybit' ? '/rapira-rate/bybit-rate' : '/rapira-rate';
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${path}`);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch Rapira rate');
+        throw new Error('Failed to fetch rate');
       }
       
       const data = await response.json();
@@ -31,7 +34,7 @@ export function useRapiraRate() {
         setError(data.error || 'Failed to fetch rate');
       }
     } catch (err) {
-      console.error('Error fetching Rapira rate:', err);
+      console.error('Error fetching rate:', err);
       setError('Ошибка загрузки курса');
     } finally {
       setLoading(false);
@@ -40,12 +43,10 @@ export function useRapiraRate() {
 
   useEffect(() => {
     fetchRate();
-    
     // Refresh rate every 30 seconds
     const interval = setInterval(fetchRate, 30000);
-    
     return () => clearInterval(interval);
-  }, []);
+  }, [source]);
 
   return { rate, baseRate, loading, error, refetch: fetchRate };
 }

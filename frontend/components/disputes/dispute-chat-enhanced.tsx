@@ -28,6 +28,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getFileUrl } from "@/lib/file-utils";
 
 interface DisputeMessage {
   id: string;
@@ -182,17 +183,8 @@ export function DisputeChatEnhanced({
     try {
       setDownloadingFiles(prev => new Set(prev).add(file.id));
       
-      // Create a proper download URL
-      let downloadUrl = file.url;
-      
-      // If it's a relative path, prepend the backend URL
-      if (!file.url.startsWith("http")) {
-        // Remove any leading slashes from the URL
-        const cleanUrl = file.url.startsWith("/") ? file.url : `/${file.url}`;
-        // Use the backend URL from environment or default
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-        downloadUrl = `${apiUrl}${cleanUrl}`;
-      }
+      // Use our utility function to get the correct URL
+      const downloadUrl = getFileUrl(file.url);
       
       // Open in new tab for preview or download
       window.open(downloadUrl, "_blank");
@@ -229,7 +221,7 @@ export function DisputeChatEnhanced({
       case "ADMIN":
         return "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-200";
       default:
-        return "bg-purple-100 text-purple-900 dark:bg-purple-900/20 dark:text-purple-300";
+        return "bg-green-100 text-green-900 dark:bg-green-900/20 dark:text-green-300";
     }
   };
 
@@ -245,14 +237,16 @@ export function DisputeChatEnhanced({
                   Спор по сделке #{disputeInfo.transactionId}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {userType === "trader" ? disputeInfo.merchantName : disputeInfo.traderName} • 
-                  {" "}{disputeInfo.amount.toLocaleString()} ₽
+                  {userType === "merchant" && disputeInfo.traderName && (
+                    <>{disputeInfo.traderName} • </>
+                  )}
+                  {(disputeInfo.amount || 0).toLocaleString()} ₽
                 </p>
               </div>
               <div className={cn(
                 "px-3 py-1 rounded-full text-sm font-medium",
                 isActive 
-                  ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                   : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
               )}>
                 {isActive ? "Активный" : "Закрыт"}
@@ -290,7 +284,7 @@ export function DisputeChatEnhanced({
                         "text-xs",
                         message.senderType === "MERCHANT" && "bg-purple-100 dark:bg-purple-900/30",
                         message.senderType === "ADMIN" && "bg-gray-100 dark:bg-gray-800",
-                        message.senderType === "TRADER" && "bg-purple-100 dark:bg-purple-900/30"
+                        message.senderType === "TRADER" && "bg-green-100 dark:bg-green-900/30"
                       )}>
                         {getSenderIcon(message.senderType)}
                       </AvatarFallback>

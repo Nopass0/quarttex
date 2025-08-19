@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
+import { getFileUrl } from "@/lib/file-utils";
 import {
   Dialog,
   DialogContent,
@@ -79,7 +80,7 @@ const statusConfig = {
   },
   RESOLVED_SUCCESS: { 
     label: "Решен в вашу пользу", 
-    color: "bg-purple-100 text-purple-800 border-purple-200",
+    color: "bg-green-100 text-green-800 border-green-200",
     icon: CheckCircle2 
   },
   RESOLVED_FAIL: { 
@@ -261,11 +262,11 @@ export function DisputeDetailDialog({
                       "p-2 rounded-full",
                       isMerchant && "bg-purple-100",
                       isAdmin && "bg-gray-100",
-                      isTrader && "bg-purple-100"
+                      isTrader && "bg-green-100"
                     )}>
                       {isMerchant && <User className="h-4 w-4 text-purple-600" />}
                       {isAdmin && <Shield className="h-4 w-4 text-gray-600" />}
-                      {isTrader && <User className="h-4 w-4 text-purple-600" />}
+                      {isTrader && <User className="h-4 w-4 text-green-600" />}
                     </div>
                     
                     <div className={cn(
@@ -276,7 +277,7 @@ export function DisputeDetailDialog({
                         "rounded-lg p-3 max-w-[80%]",
                         isMerchant && "bg-purple-50 text-purple-900",
                         isAdmin && "bg-gray-50 text-gray-900",
-                        isTrader && "bg-purple-50 text-purple-900 ml-auto"
+                        isTrader && "bg-green-50 text-green-900 ml-auto"
                       )}>
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xs font-medium">
@@ -297,7 +298,7 @@ export function DisputeDetailDialog({
                               return (
                                 <a
                                   key={attachment.id}
-                                  href={attachment.url}
+                                  href={getFileUrl(attachment.url)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="flex items-center gap-2 p-2 rounded bg-white/50 hover:bg-white/80 transition-colors"
@@ -370,7 +371,7 @@ export function DisputeDetailDialog({
                 <Button
                   onClick={handleSendMessage}
                   disabled={sendingMessage || (!newMessage.trim() && attachments.length === 0)}
-                  className="bg-[#530FAD] hover:bg-[#530FAD]/90"
+                  className="bg-[#006039] hover:bg-[#006039]/90"
                 >
                   {sendingMessage ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

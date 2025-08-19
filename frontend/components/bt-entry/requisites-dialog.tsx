@@ -26,26 +26,45 @@ interface RequisitesDialogProps {
 const bankTypes = [
   { value: "SBERBANK", label: "Сбербанк" },
   { value: "TBANK", label: "Т-Банк" },
-  { value: "TINKOFF", label: "Тинькофф" },
-  { value: "ALFABANK", label: "Альфа-Банк" },
   { value: "VTB", label: "ВТБ" },
+  { value: "ALFABANK", label: "Альфа-Банк" },
   { value: "RAIFFEISEN", label: "Райффайзенбанк" },
   { value: "GAZPROMBANK", label: "Газпромбанк" },
-  { value: "POCHTABANK", label: "Почта Банк" },
-  { value: "PSB", label: "ПСБ" },
-  { value: "SOVCOMBANK", label: "Совкомбанк" },
-  { value: "BSPB", label: "Банк Санкт-Петербург" },
-  { value: "RSHB", label: "Россельхозбанк" },
+  { value: "OTPBANK", label: "ОТП Банк" },
   { value: "OTKRITIE", label: "Открытие" },
-  { value: "URALSIB", label: "Уралсиб" },
-  { value: "MKB", label: "МКБ" },
   { value: "ROSBANK", label: "Росбанк" },
-  { value: "ZENIT", label: "Зенит" },
-  { value: "RUSSIAN_STANDARD", label: "Русский Стандарт" },
+  { value: "PROMSVYAZBANK", label: "Промсвязьбанк" },
+  { value: "SOVCOMBANK", label: "Совкомбанк" },
+  { value: "POCHTABANK", label: "Почта Банк" },
+  { value: "ROSSELKHOZBANK", label: "Россельхозбанк" },
+  { value: "MKB", label: "МКБ" },
+  { value: "URALSIB", label: "Уралсиб" },
+  { value: "AKBARS", label: "Ак Барс" },
+  { value: "SPBBANK", label: "Банк Санкт-Петербург" },
+  { value: "MTSBANK", label: "МТС Банк" },
+  { value: "OZONBANK", label: "Озон Банк" },
+  { value: "RENAISSANCE", label: "Ренессанс" },
   { value: "AVANGARD", label: "Авангард" },
   { value: "RNKB", label: "РНКБ" },
-  { value: "SBP", label: "СБП" },
-  { value: "AKBARS", label: "Ак Барс" },
+  { value: "LOKOBANK", label: "Локо-Банк" },
+  { value: "RUSSIANSTANDARD", label: "Русский Стандарт" },
+  { value: "HOMECREDIT", label: "Хоум Кредит" },
+  { value: "UNICREDIT", label: "ЮниКредит" },
+  { value: "CITIBANK", label: "Ситибанк" },
+  { value: "BCSBANK", label: "БКС Банк" },
+  { value: "ABSOLUTBANK", label: "Абсолют Банк" },
+  { value: "SVOYBANK", label: "Свой Банк" },
+  { value: "TRANSKAPITALBANK", label: "Транскапиталбанк" },
+  { value: "MTSMONEY", label: "МТС Деньги" },
+  { value: "FORABANK", label: "Фора-Банк" },
+  { value: "CREDITEUROPE", label: "Кредит Европа" },
+  { value: "BBRBANK", label: "ББР Банк" },
+  { value: "UBRIR", label: "УБРиР" },
+  { value: "GENBANK", label: "Генбанк" },
+  { value: "SINARA", label: "Синара" },
+  { value: "VLADBUSINESSBANK", label: "Владбизнесбанк" },
+  { value: "TAVRICHESKIY", label: "Таврический" },
+  { value: "DOLINSK", label: "Долинск" },
 ];
 
 export function RequisitesDialog({
@@ -64,8 +83,6 @@ export function RequisitesDialog({
     methodId: "",
     minAmount: "100",
     maxAmount: "100000",
-    dailyLimit: "500000",
-    monthlyLimit: "10000000",
   });
 
   // Fetch methods on mount
@@ -124,8 +141,6 @@ export function RequisitesDialog({
         methodId: formData.methodId,
         minAmount: parseInt(formData.minAmount),
         maxAmount: parseInt(formData.maxAmount),
-        dailyLimit: parseInt(formData.dailyLimit),
-        monthlyLimit: parseInt(formData.monthlyLimit),
         intervalMinutes: 5,
       };
 
@@ -155,8 +170,6 @@ export function RequisitesDialog({
         methodId: "",
         minAmount: "100",
         maxAmount: "100000",
-        dailyLimit: "500000",
-        monthlyLimit: "10000000",
       });
     } catch (error: any) {
       console.error("Failed to create requisite:", error);
@@ -301,33 +314,7 @@ export function RequisitesDialog({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="dailyLimit">Дневной лимит (₽)</Label>
-              <Input
-                id="dailyLimit"
-                type="number"
-                placeholder="500000"
-                value={formData.dailyLimit}
-                onChange={(e) =>
-                  setFormData({ ...formData, dailyLimit: e.target.value })
-                }
-                disabled={loading}
-              />
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="monthlyLimit">Месячный лимит (₽)</Label>
-              <Input
-                id="monthlyLimit"
-                type="number"
-                placeholder="10000000"
-                value={formData.monthlyLimit}
-                onChange={(e) =>
-                  setFormData({ ...formData, monthlyLimit: e.target.value })
-                }
-                disabled={loading}
-              />
-            </div>
           </div>
 
           <div className="flex justify-end gap-3">

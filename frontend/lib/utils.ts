@@ -8,17 +8,21 @@ export function cn(...inputs: ClassValue[]) {
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
 
 export function formatAmount(amount: number): string {
+  // Truncate to 2 decimal places instead of rounding
+  const truncated = Math.trunc(amount * 100) / 100
   return new Intl.NumberFormat('ru-RU', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
-  }).format(amount)
+  }).format(truncated)
 }
 
 export function formatCurrency(amount: number, currency: string = '₽'): string {
+  // Truncate to 2 decimal places instead of rounding
+  const truncated = Math.trunc(amount * 100) / 100
   const formatted = new Intl.NumberFormat('ru-RU', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
-  }).format(amount)
+  }).format(truncated)
   return `${formatted} ${currency}`
 }
 

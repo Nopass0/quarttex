@@ -14,6 +14,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { 
   ArrowLeft, 
   Smartphone, 
@@ -34,11 +40,17 @@ import {
   DollarSign,
   TrendingUp,
   TrendingDown,
-  Loader2
+  Loader2,
+  Edit,
+  Trash2,
+  MoreVertical,
+  Plus
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { traderApi } from '@/services/api'
+import { getBankIcon } from '@/lib/bank-utils'
 import { formatDateTime, cn } from '@/lib/utils'
+import { DeviceRequisitesSheet } from '@/components/trader/device-requisites-sheet'
 
 interface DeviceDetailProps {
   deviceId: string
@@ -53,12 +65,24 @@ interface Device {
   energy: number
   notifications: number
   token?: string
-  bankDetails?: Array<{
+  linkedBankDetails?: Array<{
     id: string
     bankType: string
     cardNumber: string
     recipientName: string
-    isActive: boolean
+    isArchived: boolean
+    isActive?: boolean
+    turnoverDay: number
+    turnoverTotal: number
+    dailyLimit: number
+    monthlyLimit: number
+    minAmount?: number
+    maxAmount?: number
+    maxCountTransactions?: number
+    transactionsReady?: number
+    transactionsInProgress?: number
+    method?: { type: string }
+    methodType?: string
   }>
   recentNotifications?: Array<{
     id: string
@@ -101,6 +125,8 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [activeTab, setActiveTab] = useState('info')
   const [transactionsLoading, setTransactionsLoading] = useState(false)
+  const [showRequisitesSheet, setShowRequisitesSheet] = useState(false)
+  const [editingRequisite, setEditingRequisite] = useState<any>(null)
 
   useEffect(() => {
     fetchDevice()
@@ -135,7 +161,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
       const allTransactions = response.data || response.transactions || []
       
       // Get all requisites (bank details) linked to this device
-      const deviceRequisiteIds = device.bankDetails?.map(bd => bd.id) || []
+      const deviceRequisiteIds = device.linkedBankDetails?.map(bd => bd.id) || []
       
       console.log('Device ID:', deviceId)
       console.log('Device requisite IDs:', deviceRequisiteIds)
@@ -187,6 +213,11 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
     }
   }
 
+  const handleEdit = (requisite: any) => {
+    setEditingRequisite(requisite)
+    setShowRequisitesSheet(true)
+  }
+
   if (loading || !device) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -199,7 +230,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
     const statusConfig = {
       CREATED: { color: 'bg-blue-100 text-blue-700', icon: Clock, text: 'Создана' },
       IN_PROGRESS: { color: 'bg-yellow-100 text-yellow-700', icon: Clock, text: 'В работе' },
-      READY: { color: 'bg-purple-100 text-purple-700', icon: CheckCircle, text: 'Выполнена' },
+      READY: { color: 'bg-green-100 text-green-700', icon: CheckCircle, text: 'Выполнена' },
       EXPIRED: { color: 'bg-gray-100 text-gray-700', icon: XCircle, text: 'Истекла' },
       CANCELED: { color: 'bg-red-100 text-red-700', icon: XCircle, text: 'Отменена' },
     }
@@ -241,7 +272,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
           <div>
             <h1 className="text-2xl font-bold">Устройство {device.name}</h1>
             <div className="flex items-center gap-4 mt-1">
-              <Badge className={device.isOnline ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}>
+              <Badge className={device.isOnline ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}>
                 {device.isOnline ? 'Онлайн' : 'Оффлайн'}
               </Badge>
               <Badge className={device.isWorking ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}>
@@ -274,9 +305,9 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Выполнено</p>
-                <p className="text-2xl font-bold text-purple-600">{completedTransactions}</p>
+                <p className="text-2xl font-bold text-green-600">{completedTransactions}</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-purple-400" />
+              <CheckCircle className="h-8 w-8 text-green-400" />
             </div>
           </CardContent>
         </Card>
@@ -298,9 +329,9 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Комиссия</p>
-                <p className="text-2xl font-bold text-purple-600">{totalCommission.toLocaleString('ru-RU')} ₽</p>
+                <p className="text-2xl font-bold text-green-600">{totalCommission.toLocaleString('ru-RU')} ₽</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-purple-400" />
+              <TrendingUp className="h-8 w-8 text-green-400" />
             </div>
           </CardContent>
         </Card>
@@ -311,7 +342,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
         <TabsList>
           <TabsTrigger value="info">
             <CreditCard className="w-4 h-4 mr-2" />
-            Реквизиты ({device.bankDetails?.length || 0})
+            Реквизиты ({device.linkedBankDetails?.length || 0})
           </TabsTrigger>
           <TabsTrigger value="notifications">
             <MessageSquare className="w-4 h-4 mr-2" />
@@ -372,37 +403,109 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
 
           <Card>
             <CardHeader>
-              <CardTitle>Привязанные реквизиты</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Привязанные реквизиты</CardTitle>
+                <Button
+                  size="default"
+                  variant="outline"
+                  onClick={() => setShowRequisitesSheet(true)}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Управление реквизитами
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
-              {device.bankDetails && device.bankDetails.length > 0 ? (
+              {device.linkedBankDetails && device.linkedBankDetails.length > 0 ? (
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Банк</TableHead>
-                        <TableHead>Номер карты</TableHead>
+                        <TableHead>Метод/Банк</TableHead>
+                        <TableHead>Номер карты/телефона</TableHead>
                         <TableHead>Получатель</TableHead>
+                        <TableHead>Лимиты</TableHead>
+                        <TableHead>Транзакции</TableHead>
                         <TableHead>Статус</TableHead>
+                        <TableHead></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {device.bankDetails.map((bank) => (
+                      {device.linkedBankDetails.map((bank) => (
                         <TableRow key={bank.id}>
                           <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Building className="w-4 h-4 text-gray-400" />
-                              <span className="font-medium">{bank.bankType}</span>
+                            <div className="space-y-1">
+                              <div className="text-xs text-gray-500">
+                                {bank.method?.type || bank.methodType || 'N/A'}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {React.createElement(getBankIcon(bank.bankType), { className: "w-4 h-4" })}
+                                <span className="font-medium">{bank.bankType}</span>
+                              </div>
                             </div>
                           </TableCell>
-                          <TableCell className="font-mono">
+                          <TableCell className="font-mono text-sm">
                             {bank.cardNumber}
                           </TableCell>
                           <TableCell>{bank.recipientName}</TableCell>
                           <TableCell>
+                            <div className="space-y-1 text-sm">
+                              <div>
+                                <span className="text-gray-500">День:</span> {bank.turnoverDay.toLocaleString('ru-RU')} / {bank.dailyLimit.toLocaleString('ru-RU')} ₽
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Лимит:</span> {bank.minAmount.toLocaleString('ru-RU')} - {bank.maxAmount.toLocaleString('ru-RU')} ₽
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Макс. транзакций:</span> {bank.maxCountTransactions || '∞'}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-2 text-sm">
+                              <div>
+                                <span className="text-gray-500">Готовых:</span> <span className="font-medium text-green-600">{bank.transactionsReady || 0}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">В процессе:</span> <span className="font-medium text-blue-600">{bank.transactionsInProgress || 0}</span>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
                             <Badge variant={bank.isActive ? "default" : "secondary"}>
                               {bank.isActive ? 'Активен' : 'Неактивен'}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => handleEdit(bank)}
+                                >
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Редактировать
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={async () => {
+                                    try {
+                                      await traderApi.unlinkDevice(deviceId, bank.id)
+                                      toast.success('Реквизит отвязан от устройства')
+                                      fetchDevice()
+                                    } catch (error) {
+                                      toast.error('Не удалось отвязать реквизит')
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Отвязать
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -550,6 +653,23 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Device Requisites Sheet */}
+      <DeviceRequisitesSheet
+        open={showRequisitesSheet}
+        onOpenChange={(open) => {
+          setShowRequisitesSheet(open);
+          if (!open) {
+            setEditingRequisite(null);
+          }
+        }}
+        deviceId={device.id}
+        existingRequisite={editingRequisite}
+        onSuccess={() => {
+          fetchDevice();
+          setEditingRequisite(null);
+        }}
+      />
     </div>
   )
 }

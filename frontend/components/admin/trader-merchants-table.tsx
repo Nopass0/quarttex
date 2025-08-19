@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -9,11 +9,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -22,285 +28,320 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Label } from '@/components/ui/label'
-import { Plus, Trash2, RefreshCw } from 'lucide-react'
-import { useAdminAuth } from '@/stores/auth'
-import { formatAmount } from '@/lib/utils'
-import { toast } from 'sonner'
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Plus, Trash2, RefreshCw, Settings } from "lucide-react";
+import { useAdminAuth } from "@/stores/auth";
+import { formatAmount } from "@/lib/utils";
+import { toast } from "sonner";
+import { FeeRangesDialog } from "./fee-ranges-dialog";
 
 type TraderMerchant = {
-  id: string
-  merchantId: string
-  merchantCode: string
-  merchantName: string
-  method: string
-  methodCode: string
-  feeIn: number
-  feeOut: number
-  isFeeInEnabled: boolean
-  isFeeOutEnabled: boolean
-  isMerchantEnabled: boolean
-  profitIn: number
-  profitOut: number
-}
+  id: string;
+  merchantId: string;
+  merchantCode: string;
+  merchantName: string;
+  method: string;
+  methodCode: string;
+  feeIn: number;
+  feeOut: number;
+  isFeeInEnabled: boolean;
+  isFeeOutEnabled: boolean;
+  isMerchantEnabled: boolean;
+  useFlexibleRates: boolean;
+  feeRangesCount: number;
+  profitIn: number;
+  profitOut: number;
+};
 
 type AvailableMerchant = {
-  id: string
-  name: string
-  token: string
+  id: string;
+  name: string;
+  token: string;
   methods: Array<{
-    id: string
-    code: string
-    name: string
-    type: string
-  }>
-}
+    id: string;
+    code: string;
+    name: string;
+    type: string;
+  }>;
+};
 
 type Statistics = {
-  totalIn: number
-  totalOut: number
-  profitIn: number
-  profitOut: number
-}
+  totalIn: number;
+  totalOut: number;
+  profitIn: number;
+  profitOut: number;
+};
 
 interface TraderMerchantsTableProps {
-  traderId: string
+  traderId: string;
 }
 
 export function TraderMerchantsTable({ traderId }: TraderMerchantsTableProps) {
-  const { token: adminToken } = useAdminAuth()
-  const [merchants, setMerchants] = useState<TraderMerchant[]>([])
-  const [statistics, setStatistics] = useState<Statistics | null>(null)
-  const [availableMerchants, setAvailableMerchants] = useState<AvailableMerchant[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [selectedMerchant, setSelectedMerchant] = useState<string>('')
-  const [selectedMethod, setSelectedMethod] = useState<string>('')
-  const [feeIn, setFeeIn] = useState<string>('0')
-  const [feeOut, setFeeOut] = useState<string>('0')
-  const [updatingFields, setUpdatingFields] = useState<Set<string>>(new Set())
-  const [localValues, setLocalValues] = useState<{ [key: string]: string }>({})
-  const debounceTimers = useRef<{ [key: string]: NodeJS.Timeout }>({})
+  const { token: adminToken } = useAdminAuth();
+  const [merchants, setMerchants] = useState<TraderMerchant[]>([]);
+  const [statistics, setStatistics] = useState<Statistics | null>(null);
+  const [availableMerchants, setAvailableMerchants] = useState<
+    AvailableMerchant[]
+  >([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedMerchant, setSelectedMerchant] = useState<string>("");
+  const [selectedMethod, setSelectedMethod] = useState<string>("");
+  const [feeIn, setFeeIn] = useState<string>("0");
+  const [feeOut, setFeeOut] = useState<string>("0");
+  const [updatingFields, setUpdatingFields] = useState<Set<string>>(new Set());
+  const [localValues, setLocalValues] = useState<{ [key: string]: string }>({});
+  const [feeRangesDialogOpen, setFeeRangesDialogOpen] = useState<string | null>(
+    null
+  );
+  const debounceTimers = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
   useEffect(() => {
     if (!traderId || !adminToken) {
-      console.warn('Missing traderId or adminToken:', { traderId, adminToken });
+      console.warn("Missing traderId or adminToken:", { traderId, adminToken });
       return;
     }
-    fetchMerchants()
-    fetchAvailableMerchants()
-  }, [traderId, adminToken])
+    fetchMerchants();
+    fetchAvailableMerchants();
+  }, [traderId, adminToken]);
 
   const fetchMerchants = async () => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
       const url = `${process.env.NEXT_PUBLIC_API_URL}/admin/traders/${traderId}/merchants`;
-      console.log('Fetching merchants from:', url);
-      
+      console.log("Fetching merchants from:", url);
+
       const response = await fetch(url, {
         headers: {
-          'x-admin-key': adminToken || '',
+          "x-admin-key": adminToken || "",
         },
-      })
-      
+      });
+
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Failed to fetch merchants:', response.status, errorText);
+        console.error("Failed to fetch merchants:", response.status, errorText);
         throw new Error(`Failed to fetch merchants: ${response.status}`);
       }
-      
-      const data = await response.json()
-      console.log('Merchants data:', data);
-      setMerchants(data.merchants || [])
-      setStatistics(data.statistics || null)
+
+      const data = await response.json();
+      console.log("Merchants data:", data);
+      setMerchants(data.merchants || []);
+      setStatistics(data.statistics || null);
     } catch (error) {
-      console.error('Error fetching merchants:', error);
-      toast.error('Не удалось загрузить список мерчантов')
+      console.error("Error fetching merchants:", error);
+      toast.error("Не удалось загрузить список мерчантов");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const fetchAvailableMerchants = async () => {
     try {
       const url = `${process.env.NEXT_PUBLIC_API_URL}/admin/traders/${traderId}/available-merchants`;
-      console.log('Fetching available merchants from:', url);
-      
+      console.log("Fetching available merchants from:", url);
+
       const response = await fetch(url, {
         headers: {
-          'x-admin-key': adminToken || '',
+          "x-admin-key": adminToken || "",
         },
-      })
-      
+      });
+
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Failed to fetch available merchants:', response.status, errorText);
-        throw new Error(`Failed to fetch available merchants: ${response.status}`);
+        console.error(
+          "Failed to fetch available merchants:",
+          response.status,
+          errorText
+        );
+        throw new Error(
+          `Failed to fetch available merchants: ${response.status}`
+        );
       }
-      
-      const data = await response.json()
-      console.log('Available merchants data:', data);
-      
+
+      const data = await response.json();
+      console.log("Available merchants data:", data);
+
       if (Array.isArray(data)) {
-        setAvailableMerchants(data)
+        setAvailableMerchants(data);
         if (data.length === 0) {
-          toast.info('Нет доступных мерчантов для добавления')
+          toast.info("Нет доступных мерчантов для добавления");
         }
       } else {
-        console.error('Unexpected response format:', data);
-        setAvailableMerchants([])
+        console.error("Unexpected response format:", data);
+        setAvailableMerchants([]);
       }
     } catch (error) {
-      console.error('Error fetching available merchants:', error);
-      toast.error('Не удалось загрузить доступных мерчантов')
+      console.error("Error fetching available merchants:", error);
+      toast.error("Не удалось загрузить доступных мерчантов");
     }
-  }
+  };
 
-  const handleNumberInputChange = (id: string, field: string, value: string) => {
-    const key = `${id}-${field}`
-    
+  const handleNumberInputChange = (
+    id: string,
+    field: string,
+    value: string
+  ) => {
+    const key = `${id}-${field}`;
+
     // Update local state immediately for responsive UI
-    setLocalValues(prev => ({ ...prev, [key]: value }))
-    
+    setLocalValues((prev) => ({ ...prev, [key]: value }));
+
     // Clear existing timer
     if (debounceTimers.current[key]) {
-      clearTimeout(debounceTimers.current[key])
+      clearTimeout(debounceTimers.current[key]);
     }
-    
+
     // Set new timer for API call
     debounceTimers.current[key] = setTimeout(() => {
-      const numericValue = parseFloat(value) || 0
-      handleUpdateField(id, field, numericValue)
-    }, 1000)
-  }
+      const numericValue = parseFloat(value) || 0;
+      handleUpdateField(id, field, numericValue);
+    }, 1000);
+  };
 
-  const handleUpdateField = async (id: string, field: string, value: number | boolean) => {
+  const handleUpdateField = async (
+    id: string,
+    field: string,
+    value: number | boolean
+  ) => {
     // Clear any existing timer for this field
-    const timerKey = `${id}-${field}`
+    const timerKey = `${id}-${field}`;
     if (debounceTimers.current[timerKey]) {
-      clearTimeout(debounceTimers.current[timerKey])
+      clearTimeout(debounceTimers.current[timerKey]);
     }
 
-    setUpdatingFields(prev => new Set(prev).add(timerKey))
-    
+    setUpdatingFields((prev) => new Set(prev).add(timerKey));
+
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/trader-merchant/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-key': adminToken || '',
-        },
-        body: JSON.stringify({ [field]: value }),
-      })
-      
-      if (!response.ok) throw new Error('Failed to update')
-      
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/trader-merchant/${id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "x-admin-key": adminToken || "",
+          },
+          body: JSON.stringify({ [field]: value }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to update");
+
       // Update merchants state
-      setMerchants(prev => prev.map(m => 
-        m.id === id ? { ...m, [field]: value } : m
-      ))
-      
+      setMerchants((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, [field]: value } : m))
+      );
+
       // Clear local value after successful update
-      const localKey = `${id}-${field}`
-      setLocalValues(prev => {
-        const newValues = { ...prev }
-        delete newValues[localKey]
-        return newValues
-      })
-      
-      toast.success('Обновлено')
+      const localKey = `${id}-${field}`;
+      setLocalValues((prev) => {
+        const newValues = { ...prev };
+        delete newValues[localKey];
+        return newValues;
+      });
+
+      toast.success("Обновлено");
     } catch (error) {
-      toast.error('Не удалось обновить')
+      toast.error("Не удалось обновить");
       // Revert on error
-      await fetchMerchants()
+      await fetchMerchants();
     } finally {
-      setUpdatingFields(prev => {
-        const newSet = new Set(prev)
-        newSet.delete(timerKey)
-        return newSet
-      })
+      setUpdatingFields((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(timerKey);
+        return newSet;
+      });
     }
-  }
+  };
 
   const handleAddMerchant = async () => {
     if (!selectedMerchant || !selectedMethod) {
-      toast.error('Выберите мерчанта и метод')
-      return
+      toast.error("Выберите мерчанта и метод");
+      return;
     }
 
     try {
-      setIsLoading(true)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/traders/${traderId}/merchants`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-key': adminToken || '',
-        },
-        body: JSON.stringify({
-          merchantId: selectedMerchant,
-          methodId: selectedMethod,
-          feeIn: parseFloat(feeIn) || 0,
-          feeOut: parseFloat(feeOut) || 0,
-        }),
-      })
+      setIsLoading(true);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/traders/${traderId}/merchants`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-admin-key": adminToken || "",
+          },
+          body: JSON.stringify({
+            merchantId: selectedMerchant,
+            methodId: selectedMethod,
+            feeIn: parseFloat(feeIn) || 0,
+            feeOut: parseFloat(feeOut) || 0,
+          }),
+        }
+      );
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to add merchant')
+        const error = await response.json();
+        throw new Error(error.error || "Failed to add merchant");
       }
 
-      setIsAddDialogOpen(false)
-      setSelectedMerchant('')
-      setSelectedMethod('')
-      setFeeIn('0')
-      setFeeOut('0')
-      await fetchMerchants()
-      await fetchAvailableMerchants()
-      toast.success('Мерчант добавлен')
+      setIsAddDialogOpen(false);
+      setSelectedMerchant("");
+      setSelectedMethod("");
+      setFeeIn("0");
+      setFeeOut("0");
+      await fetchMerchants();
+      await fetchAvailableMerchants();
+      toast.success("Мерчант добавлен");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Не удалось добавить мерчанта')
+      toast.error(
+        error instanceof Error ? error.message : "Не удалось добавить мерчанта"
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleDeleteMerchant = async (id: string) => {
-    if (!confirm('Вы уверены, что хотите удалить эту связь?')) return
+    if (!confirm("Вы уверены, что хотите удалить эту связь?")) return;
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/trader-merchant/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'x-admin-key': adminToken || '',
-        },
-      })
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/trader-merchant/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "x-admin-key": adminToken || "",
+          },
+        }
+      );
 
-      if (!response.ok) throw new Error('Failed to delete')
+      if (!response.ok) throw new Error("Failed to delete");
 
-      await fetchMerchants()
-      await fetchAvailableMerchants()
-      toast.success('Связь удалена')
+      await fetchMerchants();
+      await fetchAvailableMerchants();
+      toast.success("Связь удалена");
     } catch (error) {
-      toast.error('Не удалось удалить связь')
+      toast.error("Не удалось удалить связь");
     }
-  }
+  };
 
-  const selectedMerchantData = availableMerchants.find(m => m.id === selectedMerchant)
+  const selectedMerchantData = availableMerchants.find(
+    (m) => m.id === selectedMerchant
+  );
 
   if (isLoading && merchants.length === 0) {
     return (
       <div className="flex justify-center items-center py-8">
         <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
       </div>
-    )
+    );
   }
 
   return (
@@ -332,7 +373,10 @@ export function TraderMerchantsTable({ traderId }: TraderMerchantsTableProps) {
                   <Label htmlFor="merchant" className="text-right">
                     Мерчант
                   </Label>
-                  <Select value={selectedMerchant} onValueChange={setSelectedMerchant}>
+                  <Select
+                    value={selectedMerchant}
+                    onValueChange={setSelectedMerchant}
+                  >
                     <SelectTrigger className="col-span-3">
                       <SelectValue placeholder="Выберите мерчанта" />
                     </SelectTrigger>
@@ -350,7 +394,10 @@ export function TraderMerchantsTable({ traderId }: TraderMerchantsTableProps) {
                     <Label htmlFor="method" className="text-right">
                       Метод
                     </Label>
-                    <Select value={selectedMethod} onValueChange={setSelectedMethod}>
+                    <Select
+                      value={selectedMethod}
+                      onValueChange={setSelectedMethod}
+                    >
                       <SelectTrigger className="col-span-3">
                         <SelectValue placeholder="Выберите метод" />
                       </SelectTrigger>
@@ -401,10 +448,11 @@ export function TraderMerchantsTable({ traderId }: TraderMerchantsTableProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-
         <div className="overflow-x-auto">
           <Table>
-            <TableCaption>Управление комиссиями и статусами мерчантов</TableCaption>
+            <TableCaption>
+              Управление комиссиями и статусами мерчантов
+            </TableCaption>
             <TableHeader>
               <TableRow>
                 <TableHead>Мерчант</TableHead>
@@ -413,6 +461,7 @@ export function TraderMerchantsTable({ traderId }: TraderMerchantsTableProps) {
                 <TableHead>Комиссия выход (%)</TableHead>
                 <TableHead>Вход</TableHead>
                 <TableHead>Выход</TableHead>
+                <TableHead>Гибкие ставки</TableHead>
                 <TableHead>Действия</TableHead>
               </TableRow>
             </TableHeader>
@@ -423,22 +472,24 @@ export function TraderMerchantsTable({ traderId }: TraderMerchantsTableProps) {
                     <div className="space-y-1">
                       <div className="font-medium">{merchant.merchantName}</div>
                       <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <span 
+                        <span
                           className="font-mono cursor-pointer hover:text-gray-700"
                           onClick={() => {
-                            navigator.clipboard.writeText(merchant.merchantId)
-                            toast.success('ID скопирован')
+                            navigator.clipboard.writeText(merchant.merchantId);
+                            toast.success("ID скопирован");
                           }}
                           title={`Нажмите для копирования: ${merchant.merchantId}`}
                         >
                           {merchant.merchantId.slice(0, 5)}...
                         </span>
                         <span>•</span>
-                        <span 
+                        <span
                           className="font-mono cursor-pointer hover:text-gray-700"
                           onClick={() => {
-                            navigator.clipboard.writeText(merchant.merchantCode)
-                            toast.success('Код скопирован')
+                            navigator.clipboard.writeText(
+                              merchant.merchantCode
+                            );
+                            toast.success("Код скопирован");
                           }}
                           title={`Нажмите для копирования: ${merchant.merchantCode}`}
                         >
@@ -452,8 +503,16 @@ export function TraderMerchantsTable({ traderId }: TraderMerchantsTableProps) {
                     <Input
                       type="number"
                       step="0.01"
-                      value={localValues[`${merchant.id}-feeIn`] ?? merchant.feeIn}
-                      onChange={(e) => handleNumberInputChange(merchant.id, 'feeIn', e.target.value)}
+                      value={
+                        localValues[`${merchant.id}-feeIn`] ?? merchant.feeIn
+                      }
+                      onChange={(e) =>
+                        handleNumberInputChange(
+                          merchant.id,
+                          "feeIn",
+                          e.target.value
+                        )
+                      }
                       className="w-20"
                       disabled={updatingFields.has(`${merchant.id}-feeIn`)}
                     />
@@ -462,8 +521,16 @@ export function TraderMerchantsTable({ traderId }: TraderMerchantsTableProps) {
                     <Input
                       type="number"
                       step="0.01"
-                      value={localValues[`${merchant.id}-feeOut`] ?? merchant.feeOut}
-                      onChange={(e) => handleNumberInputChange(merchant.id, 'feeOut', e.target.value)}
+                      value={
+                        localValues[`${merchant.id}-feeOut`] ?? merchant.feeOut
+                      }
+                      onChange={(e) =>
+                        handleNumberInputChange(
+                          merchant.id,
+                          "feeOut",
+                          e.target.value
+                        )
+                      }
                       className="w-20"
                       disabled={updatingFields.has(`${merchant.id}-feeOut`)}
                     />
@@ -471,16 +538,62 @@ export function TraderMerchantsTable({ traderId }: TraderMerchantsTableProps) {
                   <TableCell>
                     <Switch
                       checked={merchant.isFeeInEnabled}
-                      onCheckedChange={(checked) => handleUpdateField(merchant.id, 'isFeeInEnabled', checked)}
-                      disabled={updatingFields.has(`${merchant.id}-isFeeInEnabled`)}
+                      onCheckedChange={(checked) =>
+                        handleUpdateField(
+                          merchant.id,
+                          "isFeeInEnabled",
+                          checked
+                        )
+                      }
+                      disabled={updatingFields.has(
+                        `${merchant.id}-isFeeInEnabled`
+                      )}
                     />
                   </TableCell>
                   <TableCell>
                     <Switch
                       checked={merchant.isFeeOutEnabled}
-                      onCheckedChange={(checked) => handleUpdateField(merchant.id, 'isFeeOutEnabled', checked)}
-                      disabled={updatingFields.has(`${merchant.id}-isFeeOutEnabled`)}
+                      onCheckedChange={(checked) =>
+                        handleUpdateField(
+                          merchant.id,
+                          "isFeeOutEnabled",
+                          checked
+                        )
+                      }
+                      disabled={updatingFields.has(
+                        `${merchant.id}-isFeeOutEnabled`
+                      )}
                     />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={merchant.useFlexibleRates}
+                        onCheckedChange={(checked) =>
+                          handleUpdateField(
+                            merchant.id,
+                            "useFlexibleRates",
+                            checked
+                          )
+                        }
+                        disabled={updatingFields.has(
+                          `${merchant.id}-useFlexibleRates`
+                        )}
+                      />
+                      {merchant.useFlexibleRates && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setFeeRangesDialogOpen(merchant.id)}
+                          className="text-xs"
+                        >
+                          <Settings className="h-3 w-3 mr-1" />
+                          {merchant.feeRangesCount > 0
+                            ? `${merchant.feeRangesCount} промежутков`
+                            : "Настроить"}
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Button
@@ -497,7 +610,18 @@ export function TraderMerchantsTable({ traderId }: TraderMerchantsTableProps) {
             </TableBody>
           </Table>
         </div>
+
+        {/* Fee Ranges Dialog */}
+        <FeeRangesDialog
+          traderMerchantId={feeRangesDialogOpen}
+          isOpen={!!feeRangesDialogOpen}
+          onClose={() => {
+            setFeeRangesDialogOpen(null);
+            // Refresh merchants list to update fee ranges count
+            fetchMerchants();
+          }}
+        />
       </CardContent>
     </Card>
-  )
+  );
 }

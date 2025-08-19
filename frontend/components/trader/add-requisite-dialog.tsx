@@ -35,6 +35,14 @@ import { traderApi } from "@/services/api";
 import { Loader2 } from "lucide-react";
 import { DeviceSelector } from "@/components/ui/device-selector";
 
+const numberField = (minValue: number) =>
+  z.preprocess((val) => {
+    if (val === "" || val === null || typeof val === "undefined") return undefined;
+    if (typeof val === "string" && val.trim() === "") return undefined;
+    const num = typeof val === "number" ? val : Number(val);
+    return Number.isNaN(num) ? undefined : num;
+  }, z.number().min(minValue));
+
 const formSchema = z.object({
   deviceId: z.string().min(1, "Выберите устройство"),
   methodId: z.string().min(1, "Выберите метод"),
@@ -42,14 +50,14 @@ const formSchema = z.object({
   cardNumber: z.string().optional(),
   recipientName: z.string().min(3, "Введите имя получателя"),
   phoneNumber: z.string().optional(),
-  minAmount: z.number().min(100),
-  maxAmount: z.number().min(1000),
-  dailyLimit: z.number().min(0),
-  monthlyLimit: z.number().min(0),
-  maxCountTransactions: z.number().min(0),
+  minAmount: numberField(100),
+  maxAmount: numberField(1000),
+  dailyLimit: numberField(0),
+  monthlyLimit: numberField(0),
+  maxCountTransactions: numberField(0),
 });
 
-type FormData = z.infer<typeof formSchema>;
+type FormData = z.input<typeof formSchema>;
 
 interface Method {
   id: string;
@@ -78,26 +86,48 @@ interface AddRequisiteDialogProps {
 }
 
 const AVAILABLE_BANKS = [
-  { code: "SBER", name: "Сбербанк" },
-  { code: "TBANK", name: "Т-Банк" },
-  { code: "VTB", name: "ВТБ" },
-  { code: "ALFA", name: "Альфа-Банк" },
-  { code: "GAZPROM", name: "Газпромбанк" },
-  { code: "OZON", name: "Ozon банк" },
-  { code: "RAIFF", name: "Райффайзен" },
-  { code: "POCHTA", name: "Почта Банк" },
-  { code: "RSHB", name: "Россельхозбанк" },
-  { code: "MTS", name: "МТС Банк" },
-  { code: "PSB", name: "ПСБ" },
-  { code: "SOVCOM", name: "Совкомбанк" },
-  { code: "URALSIB", name: "Уралсиб" },
-  { code: "MKB", name: "МКБ" },
-  { code: "ROSBANK", name: "Росбанк" },
-  { code: "OTKRITIE", name: "Открытие" },
-  { code: "AVANGARD", name: "Авангард" },
-  { code: "ZENIT", name: "Зенит" },
-  { code: "AKBARS", name: "Ак Барс" },
-  { code: "SBP", name: "СБП" }
+  { code: "SBERBANK", label: "Сбербанк" },
+  { code: "TBANK", label: "Т-Банк" },
+  { code: "VTB", label: "ВТБ" },
+  { code: "ALFABANK", label: "Альфа-Банк" },
+  { code: "RAIFFEISEN", label: "Райффайзенбанк" },
+  { code: "GAZPROMBANK", label: "Газпромбанк" },
+  { code: "OTPBANK", label: "ОТП Банк" },
+  { code: "OTKRITIE", label: "Открытие" },
+  { code: "ROSBANK", label: "Росбанк" },
+  { code: "PROMSVYAZBANK", label: "Промсвязьбанк" },
+  { code: "SOVCOMBANK", label: "Совкомбанк" },
+  { code: "POCHTABANK", label: "Почта Банк" },
+  { code: "ROSSELKHOZBANK", label: "Россельхозбанк" },
+  { code: "MKB", label: "МКБ" },
+  { code: "URALSIB", label: "Уралсиб" },
+  { code: "AKBARS", label: "Ак Барс" },
+  { code: "SPBBANK", label: "Банк Санкт-Петербург" },
+  { code: "MTSBANK", label: "МТС Банк" },
+  { code: "OZONBANK", label: "Озон Банк" },
+  { code: "RENAISSANCE", label: "Ренессанс" },
+  { code: "OTP", label: "ОТП Банк" },
+  { code: "AVANGARD", label: "Авангард" },
+  { code: "RNKB", label: "РНКБ" },
+  { code: "LOKOBANK", label: "Локо-Банк" },
+  { code: "RUSSIANSTANDARD", label: "Русский Стандарт" },
+  { code: "HOMECREDIT", label: "Хоум Кредит" },
+  { code: "UNICREDIT", label: "ЮниКредит" },
+  { code: "CITIBANK", label: "Ситибанк" },
+  { code: "BCSBANK", label: "БКС Банк" },
+  { code: "ABSOLUTBANK", label: "Абсолют Банк" },
+  { code: "SVOYBANK", label: "Свой Банк" },
+  { code: "TRANSKAPITALBANK", label: "Транскапиталбанк" },
+  { code: "MTSMONEY", label: "МТС Деньги" },
+  { code: "FORABANK", label: "Фора-Банк" },
+  { code: "CREDITEUROPE", label: "Кредит Европа" },
+  { code: "BBRBANK", label: "ББР Банк" },
+  { code: "UBRIR", label: "УБРиР" },
+  { code: "GENBANK", label: "Генбанк" },
+  { code: "SINARA", label: "Синара" },
+  { code: "VLADBUSINESSBANK", label: "Владбизнесбанк" },
+  { code: "TAVRICHESKIY", label: "Таврический" },
+  { code: "DOLINSK", label: "Долинск" }
 ];
 
 export function AddRequisiteDialog({
@@ -115,6 +145,8 @@ export function AddRequisiteDialog({
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
+    mode: "onChange",
+    reValidateMode: "onChange",
     defaultValues: {
       deviceId: deviceId || "",
       methodId: "",
@@ -124,9 +156,9 @@ export function AddRequisiteDialog({
       phoneNumber: "",
       minAmount: 1000,
       maxAmount: 100000,
-      dailyLimit: 500000,
+      dailyLimit: 0,
       monthlyLimit: 10000000,
-      maxCountTransactions: 5,
+      maxCountTransactions: 0,
     },
   });
 
@@ -224,7 +256,7 @@ export function AddRequisiteDialog({
         ...data,
         methodId: actualMethod?.id || data.methodId,
         methodType: selectedMethod.type,
-        intervalMinutes: 5, // Default interval
+        intervalMinutes: 5, // Требуется бэкендом
         // Set cardNumber as phoneNumber for SBP method
         cardNumber: selectedMethod.type === "sbp" ? (data.phoneNumber || "") : (data.cardNumber || ""),
       };
@@ -309,38 +341,36 @@ export function AddRequisiteDialog({
               )}
             />
 
-            {selectedMethod && (
-              <FormField
-                control={form.control}
-                name="bankType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Банк</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={!selectedMethod}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={
-                            !selectedMethod ? "Сначала выберите метод" : "Выберите банк"
-                          } />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {AVAILABLE_BANKS.filter(bank => bank.code !== "SBP").map((bank) => (
-                          <SelectItem key={bank.code} value={bank.code}>
-                            {bank.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+            <FormField
+              control={form.control}
+              name="bankType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Банк</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={!selectedMethod}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={
+                          !selectedMethod ? "Сначала выберите метод" : "Выберите банк"
+                        } />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {AVAILABLE_BANKS.filter(bank => bank.code !== "SBP").map((bank) => (
+                        <SelectItem key={bank.code} value={bank.code}>
+                          {bank.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {selectedMethod?.type === "c2c" && (
               <FormField
@@ -410,10 +440,16 @@ export function AddRequisiteDialog({
                     <FormLabel>Мин. сумма</FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder="1000"
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        value={(field.value as number | string | undefined) ?? ""}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          const digitsOnly = raw.replace(/\D/g, "");
+                          field.onChange(digitsOnly === "" ? undefined : Number(digitsOnly));
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -429,10 +465,16 @@ export function AddRequisiteDialog({
                     <FormLabel>Макс. сумма</FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder="100000"
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        value={(field.value as number | string | undefined) ?? ""}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          const digitsOnly = raw.replace(/\D/g, "");
+                          field.onChange(digitsOnly === "" ? undefined : Number(digitsOnly));
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -450,10 +492,16 @@ export function AddRequisiteDialog({
                     <FormLabel>Дневной лимит (₽)</FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder="500000"
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        value={(field.value as number | string | undefined) ?? ""}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          const digitsOnly = raw.replace(/\D/g, "");
+                          field.onChange(digitsOnly === "" ? undefined : Number(digitsOnly));
+                        }}
                       />
                     </FormControl>
                     <FormDescription>0 = без ограничений</FormDescription>
@@ -470,10 +518,16 @@ export function AddRequisiteDialog({
                     <FormLabel>Месячный лимит (₽)</FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder="10000000"
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        value={(field.value as number | string | undefined) ?? ""}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          const digitsOnly = raw.replace(/\D/g, "");
+                          field.onChange(digitsOnly === "" ? undefined : Number(digitsOnly));
+                        }}
                       />
                     </FormControl>
                     <FormDescription>0 = без ограничений</FormDescription>
@@ -491,9 +545,15 @@ export function AddRequisiteDialog({
                   <FormLabel>Дневной лимит транзакций</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
-                      {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={(field.value as number | string | undefined) ?? ""}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        const digitsOnly = raw.replace(/\D/g, "");
+                        field.onChange(digitsOnly === "" ? undefined : Number(digitsOnly));
+                      }}
                     />
                   </FormControl>
                   <FormDescription>
@@ -515,8 +575,8 @@ export function AddRequisiteDialog({
               </Button>
               <Button
                 type="submit"
-                disabled={loading}
-                className="bg-[#530FAD] hover:bg-[#530FAD]/90"
+                disabled={loading || !form.formState.isValid}
+                className="bg-[#006039] hover:bg-[#006039]/90"
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Добавить

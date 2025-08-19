@@ -30,6 +30,10 @@ export function useTraderFinancials() {
           referralBalance: referralBalance || 0,
           disputedBalance: disputedBalance || 0,
         })
+        // expose rateSource onto window for sidebar to read (quick fix without store shape change)
+        if (typeof window !== 'undefined') {
+          ;(window as any).__traderRateSource = data.rateSource || 'rapira'
+        }
       }
     } catch (error) {
       console.error('Failed to fetch trader financials:', error)

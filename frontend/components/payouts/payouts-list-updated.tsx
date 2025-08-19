@@ -85,7 +85,14 @@ interface Payout {
   expire_at: string;
   confirmed_at: string | null;
   cancelled_at?: string | null;
-  status?: "created" | "active" | "checking" | "completed" | "cancelled" | "expired" | "disputed";
+  status?:
+    | "created"
+    | "active"
+    | "checking"
+    | "completed"
+    | "cancelled"
+    | "expired"
+    | "disputed";
   cancelReason?: string;
   proofFiles?: string[];
   disputeFiles?: string[];
@@ -127,14 +134,16 @@ export function PayoutsList() {
   const [showRequisitesSearch, setShowRequisitesSearch] = useState(false);
   const [searchRequisites, setSearchRequisites] = useState("");
   const [selectedPayout, setSelectedPayout] = useState<Payout | null>(null);
-  const [teamEnabled, setTeamEnabled] = useState(false);
+  const [trafficEnabled, setTrafficEnabled] = useState(false);
   const [traderProfile, setTraderProfile] = useState<TraderProfile | null>(
     null,
   );
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
-  const [selectedPayoutForAction, setSelectedPayoutForAction] = useState<number | null>(null);
+  const [selectedPayoutForAction, setSelectedPayoutForAction] = useState<
+    number | null
+  >(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofFiles, setProofFiles] = useState<File[]>([]);
   const [cancelFiles, setCancelFiles] = useState<File[]>([]);
@@ -170,7 +179,6 @@ export function PayoutsList() {
     СБП: "/bank-logos/sbp.svg",
   };
 
-
   // Helper functions
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -178,7 +186,13 @@ export function PayoutsList() {
   };
 
   // Enhanced Timer component with visual indicators
-  const Timer = ({ expireAt, isAccepted = false }: { expireAt: string; isAccepted?: boolean }) => {
+  const Timer = ({
+    expireAt,
+    isAccepted = false,
+  }: {
+    expireAt: string;
+    isAccepted?: boolean;
+  }) => {
     const [currentTime, setCurrentTime] = useState(Date.now());
 
     useEffect(() => {
@@ -206,14 +220,23 @@ export function PayoutsList() {
 
     // Always use red color for the timer badge
     const bgClass = "bg-red-100/80";
-    const textClass = diff <= 5 * 60 * 1000 ? "text-red-700 font-semibold animate-pulse" : "text-red-700";
+    const textClass =
+      diff <= 5 * 60 * 1000
+        ? "text-red-700 font-semibold animate-pulse"
+        : "text-red-700";
     const iconClass = "text-red-600";
 
     return (
-      <div className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full", bgClass)}>
+      <div
+        className={cn(
+          "inline-flex items-center gap-1 px-2 py-0.5 rounded-full",
+          bgClass,
+        )}
+      >
         <Clock className={cn("h-3 w-3", iconClass)} />
         <span className={cn("text-xs tabular-nums", textClass)}>
-          {minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}
+          {minutes.toString().padStart(2, "0")}:
+          {seconds.toString().padStart(2, "0")}
         </span>
       </div>
     );
@@ -247,7 +270,7 @@ export function PayoutsList() {
 
     // Check status first, ignore confirmed_at for color determination
     if (payout.status === "completed") {
-      return "bg-purple-100 text-purple-700";
+      return "bg-green-100 text-green-700";
     } else if (payout.status === "cancelled") {
       return "bg-red-100 text-red-700";
     } else if (payout.status === "checking") {
@@ -292,12 +315,13 @@ export function PayoutsList() {
   };
 
   // Remove global timer update to prevent list flickering
-  
+
   // Handle scroll to load more
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const element = e.currentTarget;
-    const scrolledToBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 50;
-    
+    const scrolledToBottom =
+      element.scrollHeight - element.scrollTop <= element.clientHeight + 50;
+
     if (scrolledToBottom && hasMore && !loadingMore) {
       fetchPayouts(true);
     }
@@ -305,9 +329,9 @@ export function PayoutsList() {
 
   useEffect(() => {
     // Load team state from localStorage
-    const savedTeamState = localStorage.getItem("teamEnabled");
+    const savedTeamState = localStorage.getItem("trafficEnabled");
     if (savedTeamState !== null) {
-      setTeamEnabled(savedTeamState === "true");
+      setTrafficEnabled(savedTeamState === "true");
     }
 
     // Load banks first
@@ -318,7 +342,7 @@ export function PayoutsList() {
     fetchPayouts();
     fetchPayoutBalance();
   }, []);
-  
+
   // Load filters after banks are loaded
   useEffect(() => {
     if (availableBanks.length > 0) {
@@ -328,9 +352,9 @@ export function PayoutsList() {
 
   useEffect(() => {
     // Save team state to localStorage whenever it changes
-    localStorage.setItem("teamEnabled", teamEnabled.toString());
-  }, [teamEnabled]);
-  
+    localStorage.setItem("trafficEnabled", trafficEnabled.toString());
+  }, [trafficEnabled]);
+
   useEffect(() => {
     // Refetch payouts when tab changes
     fetchPayouts();
@@ -372,15 +396,15 @@ export function PayoutsList() {
           numericId: response.numericId || 0,
           email: response.email || "trader@example.com",
         });
-        // Initialize teamEnabled from profile
-        setTeamEnabled(response.teamEnabled || false);
+        // Initialize trafficEnabled from profile
+        setTrafficEnabled(response.trafficEnabled || false);
       }
     } catch (error) {
       console.error("Failed to fetch trader profile:", error);
       // Don't set mock data, just leave it null
     }
   };
-  
+
   const fetchPayoutDetails = async (payoutId: string) => {
     try {
       const response = await payoutApi.getPayoutDetails(payoutId);
@@ -392,18 +416,18 @@ export function PayoutsList() {
     }
     return null;
   };
-  
+
   const loadFilters = async () => {
     try {
       const response = await filtersApi.getFilters();
       if (response.success) {
         setSelectedTrafficType(response.filters.trafficTypes);
-        
+
         // Разделяем банки на СБП и карточные
         const sbpBanks: string[] = [];
         const cardBanks: string[] = [];
-        
-        response.filters.bankTypes.forEach(bank => {
+
+        response.filters.bankTypes.forEach((bank) => {
           // Проверяем, что банк существует в списке доступных банков
           if (availableBanks.includes(bank)) {
             if (bank === "СБП") {
@@ -413,10 +437,10 @@ export function PayoutsList() {
             }
           }
         });
-        
+
         setSelectedBanks(sbpBanks);
         setSelectedCardBanks(cardBanks);
-        
+
         // Устанавливаем баланс, если он больше 0
         if (response.filters.maxPayoutAmount > 0) {
           setBalanceInput(response.filters.maxPayoutAmount.toString());
@@ -426,17 +450,17 @@ export function PayoutsList() {
       console.error("Failed to load filters:", error);
     }
   };
-  
+
   const loadBanks = async () => {
     try {
       // Load banks for cards
-      const cardResponse = await filtersApi.getBanksList('card');
+      const cardResponse = await filtersApi.getBanksList("card");
       if (cardResponse.success) {
         setAvailableCardBanks(cardResponse.banks);
       }
 
       // Load banks for SBP
-      const sbpResponse = await filtersApi.getBanksList('sbp');
+      const sbpResponse = await filtersApi.getBanksList("sbp");
       if (sbpResponse.success) {
         setAvailableSbpBanks(sbpResponse.banks);
       }
@@ -447,7 +471,7 @@ export function PayoutsList() {
       console.error("Failed to load banks:", error);
     }
   };
-  
+
   const saveFilters = async () => {
     try {
       const allBanks = [...selectedBanks, ...selectedCardBanks];
@@ -468,7 +492,7 @@ export function PayoutsList() {
     }
     router.push("/trader/login");
   };
-  
+
   const fetchPayouts = async (loadMore = false) => {
     if (loadMore) {
       setLoadingMore(true);
@@ -476,7 +500,7 @@ export function PayoutsList() {
       setLoading(true);
       setPage(0);
     }
-    
+
     try {
       let status: string | undefined;
       switch (activeTab) {
@@ -500,30 +524,32 @@ export function PayoutsList() {
           status = undefined;
           break;
       }
-      
+
       const limit = 20;
       const offset = loadMore ? page * limit : 0;
-      
-      console.log(`Fetching payouts for tab: ${activeTab}, status filter: ${status}`);
-      
+
+      console.log(
+        `Fetching payouts for tab: ${activeTab}, status filter: ${status}`,
+      );
+
       const response = await payoutApi.getPayouts({
         status,
         search: searchId || searchRequisites || undefined,
         limit,
         offset,
       });
-      
+
       console.log(`API Response for ${activeTab}:`, response);
-      
+
       if (response.success) {
         // Convert API payouts to component format
-        const formattedPayouts: Payout[] = response.payouts.map(p => {
+        const formattedPayouts: Payout[] = response.payouts.map((p) => {
           console.log(`Converting payout ${p.numericId}:`, {
             status: `${p.status} -> ${p.status.toLowerCase()}`,
             actualTotalUsdt: p.actualTotalUsdt,
             traderFeeOut: p.traderFeeOut,
             totalUsdt: p.totalUsdt,
-            amountUsdt: p.amountUsdt
+            amountUsdt: p.amountUsdt,
           });
           return {
             id: p.numericId,
@@ -546,15 +572,15 @@ export function PayoutsList() {
             metadata: p.metadata,
           };
         });
-        
+
         if (loadMore) {
-          setPayouts(prev => [...prev, ...formattedPayouts]);
-          setPage(prev => prev + 1);
+          setPayouts((prev) => [...prev, ...formattedPayouts]);
+          setPage((prev) => prev + 1);
         } else {
           setPayouts(formattedPayouts);
           setPage(1);
         }
-        
+
         setHasMore(formattedPayouts.length === limit);
       }
     } catch (error) {
@@ -569,7 +595,7 @@ export function PayoutsList() {
       setLoadingMore(false);
     }
   };
-  
+
   const fetchPayoutBalance = async () => {
     try {
       const response = await payoutApi.getBalance();
@@ -582,7 +608,7 @@ export function PayoutsList() {
       toast.error("Не удалось загрузить баланс");
     }
   };
-  
+
   const handleSaveBalance = async () => {
     try {
       const balance = parseFloat(balanceInput);
@@ -590,7 +616,7 @@ export function PayoutsList() {
         toast.error("Неверная сумма баланса");
         return;
       }
-      
+
       const response = await payoutApi.updateBalance(balance);
       if (response.success) {
         setPayoutBalance(response.balance);
@@ -601,56 +627,70 @@ export function PayoutsList() {
       toast.error("Не удалось обновить баланс");
     }
   };
-  
+
   const handleAcceptPayout = async (payoutId: number) => {
     try {
-      const payout = payouts.find(p => p.id === payoutId);
+      const payout = payouts.find((p) => p.id === payoutId);
       if (!payout) return;
-      
+
       const response = await payoutApi.acceptPayout(payout.uuid);
       if (response.success) {
         toast.success("Выплата принята в работу");
-        fetchPayouts();
+        setPayouts((prev) =>
+          prev.map((p) =>
+            p.id === payoutId
+              ? {
+                  ...p,
+                  status: "active",
+                  accepted_at: new Date().toISOString(),
+                }
+              : p,
+          ),
+        );
         fetchPayoutBalance();
       }
     } catch (error: any) {
       console.error("Failed to accept payout:", error);
-      const errorMessage = error.response?.data?.error || "Не удалось принять выплату";
-      
-      // Always refresh the list after error to get the latest state
+      const errorMessage =
+        error.response?.data?.error || "Не удалось принять выплату";
+
+      // Refresh state after error to get the latest data
       fetchPayouts();
-      
-      // Provide more specific error messages
-      if (errorMessage.includes("not available for acceptance") || errorMessage.includes("already accepted")) {
+      fetchPayoutBalance();
+
+      if (
+        errorMessage.includes("not available for acceptance") ||
+        errorMessage.includes("already accepted")
+      ) {
         toast.error("Выплата уже принята другим трейдером");
       } else if (errorMessage.includes("Insufficient RUB balance")) {
         toast.error("Недостаточно средств на балансе RUB для принятия выплаты");
-      } else if (errorMessage.includes("Maximum simultaneous payouts reached")) {
+      } else if (
+        errorMessage.includes("Maximum simultaneous payouts reached")
+      ) {
         toast.error("Достигнут лимит одновременных выплат");
       } else if (errorMessage.includes("expired")) {
         toast.error("Выплата истекла");
-      } else if (errorMessage.includes("already accepted")) {
-        toast.error("Выплата уже принята другим трейдером");
       } else {
         toast.error(errorMessage);
       }
     }
   };
-  
+
   const handleConfirmPayout = async (payoutId: number) => {
     if (proofFiles.length === 0) {
       toast.error("Загрузите хотя бы один файл подтверждения");
       return;
     }
-    
+
     try {
-      const payout = payouts.find(p => p.id === payoutId);
+      const payout = payouts.find((p) => p.id === payoutId);
       if (!payout) return;
-      
+
       // Upload files first
       toast.info("Загрузка файлов...");
       const uploadedUrls = await fileUploadService.uploadFiles(proofFiles);
-      
+
       const response = await payoutApi.confirmPayout(payout.uuid, uploadedUrls);
       if (response.success) {
         toast.success("Выплата подтверждена");
@@ -664,29 +704,35 @@ export function PayoutsList() {
       }
     } catch (error: any) {
       console.error("Failed to confirm payout:", error);
-      const errorMessage = error.response?.data?.error || "Не удалось подтвердить выплату";
+      const errorMessage =
+        error.response?.data?.error || "Не удалось подтвердить выплату";
       toast.error(errorMessage);
     }
   };
-  
+
   const handleCancelPayout = async (payoutId: number) => {
     if (cancelReason.length < 5) {
       toast.error("Причина отмены должна содержать минимум 5 символов");
       return;
     }
-    
+
     try {
-      const payout = payouts.find(p => p.id === payoutId);
+      const payout = payouts.find((p) => p.id === payoutId);
       if (!payout) return;
-      
+
       // Upload files if any
       let uploadedUrls: string[] = [];
       if (cancelFiles.length > 0) {
         toast.info("Загрузка файлов...");
         uploadedUrls = await fileUploadService.uploadFiles(cancelFiles);
       }
-      
-      const response = await payoutApi.cancelPayout(payout.uuid, cancelReason, undefined, uploadedUrls);
+
+      const response = await payoutApi.cancelPayout(
+        payout.uuid,
+        cancelReason,
+        undefined,
+        uploadedUrls,
+      );
       if (response.success) {
         toast.success("Выплата отменена");
         setCancelDialogOpen(false);
@@ -698,7 +744,8 @@ export function PayoutsList() {
       }
     } catch (error: any) {
       console.error("Failed to cancel payout:", error);
-      const errorMessage = error.response?.data?.error || "Не удалось отменить выплату";
+      const errorMessage =
+        error.response?.data?.error || "Не удалось отменить выплату";
       toast.error(errorMessage);
     }
   };
@@ -708,20 +755,20 @@ export function PayoutsList() {
     return payouts.filter((payout) => {
       const now = new Date().getTime();
       const expiresAt = new Date(payout.expire_at).getTime();
-      
+
       // Hide expired payouts that were not accepted (created status)
       if (payout.status === "expired") {
         return false;
       }
-      
+
       // Hide created payouts that have expired (not accepted in time)
       if (payout.status === "created" && expiresAt < now) {
         return false;
       }
-      
+
       // Note: Active payouts (accepted) should remain visible even if expired
       // They will show "Истекло" status but won't disappear
-      
+
       if (searchId && !payout.id.toString().includes(searchId)) {
         return false;
       }
@@ -739,364 +786,382 @@ export function PayoutsList() {
   const PayoutCard = React.memo(({ payout }: { payout: Payout }) => {
     const isNotAccepted = payout.status === "created";
     // Show timer for payouts that have an expiration time and are not yet completed/cancelled
-    const showTimer = (payout.status === "created" || payout.status === "active") && 
-                     new Date(payout.expire_at).getTime() > new Date().getTime();
-    
+    const showTimer =
+      (payout.status === "created" || payout.status === "active") &&
+      new Date(payout.expire_at).getTime() > new Date().getTime();
+
     return (
-    <ContextMenu>
-      <ContextMenuTrigger>
-        <div
-          className="bg-card rounded-lg border border-border hover:bg-accent transition-colors cursor-pointer mb-4 min-h-[100px] max-xl:h-auto relative overflow-hidden"
-          onClick={async () => {
-            // Only show details for accepted payouts
-            if (payout.status !== "created") {
-              // Fetch full details with files
-              const details = await fetchPayoutDetails(payout.uuid);
-              if (details) {
-                setSelectedPayout({
-                  ...payout,
-                  disputeFiles: details.disputeFiles,
-                  disputeMessage: details.disputeMessage,
-                  proofFiles: details.proofFiles,
-                });
-              } else {
-                setSelectedPayout(payout);
+      <ContextMenu>
+        <ContextMenuTrigger>
+          <div
+            className="bg-card rounded-lg border border-border hover:bg-accent transition-colors cursor-pointer mb-4 min-h-[100px] max-xl:h-auto relative overflow-hidden"
+            onClick={async () => {
+              // Only show details for accepted payouts
+              if (payout.status !== "created") {
+                // Fetch full details with files
+                const details = await fetchPayoutDetails(payout.uuid);
+                if (details) {
+                  setSelectedPayout({
+                    ...payout,
+                    disputeFiles: details.disputeFiles,
+                    disputeMessage: details.disputeMessage,
+                    proofFiles: details.proofFiles,
+                  });
+                } else {
+                  setSelectedPayout(payout);
+                }
               }
-            }
-          }}
-        >
-          {/* Timer on the left side */}
-          {showTimer && (
-            <div className="absolute left-0 top-0 bottom-0 w-2 bg-red-500" />
-          )}
-          <div className="grid grid-cols-[40px_60px_140px_1fr_160px_160px_100px_180px] gap-4 items-center h-full px-5 py-5 max-xl:grid-cols-1 max-xl:gap-2 max-xl:h-auto">
-            {/* Timer Text */}
-            <div className="text-xs font-medium text-red-600 max-xl:text-center max-xl:text-lg max-xl:mb-2">
-              {showTimer ? <Timer expireAt={payout.expire_at} /> : ""}
-            </div>
-            
-            {/* Icon */}
-            <div className="flex items-center justify-center max-xl:hidden">
-              <div className="w-12 h-12 bg-muted rounded-lg shadow-sm flex items-center justify-center">
-                {payout.isCard ? (
-                  <CreditCard className="h-7 w-7 text-gray-700" />
-                ) : (
-                  <img
-                    src="/bank-logos/sbp.svg"
-                    alt="СБП"
-                    className="h-7 w-7"
-                  />
+            }}
+          >
+            {/* Timer on the left side */}
+            {showTimer && (
+              <div className="absolute left-0 top-0 bottom-0 w-2 bg-red-500" />
+            )}
+            <div className="grid grid-cols-[40px_60px_140px_1fr_160px_160px_100px_180px] gap-4 items-center h-full px-5 py-5 max-xl:grid-cols-1 max-xl:gap-2 max-xl:h-auto">
+              {/* Timer Text */}
+              <div className="text-xs font-medium text-red-600 max-xl:text-center max-xl:text-lg max-xl:mb-2">
+                {showTimer ? <Timer expireAt={payout.expire_at} /> : ""}
+              </div>
+
+              {/* Icon */}
+              <div className="flex items-center justify-center max-xl:hidden">
+                <div className="w-12 h-12 bg-muted rounded-lg shadow-sm flex items-center justify-center">
+                  {payout.isCard ? (
+                    <CreditCard className="h-7 w-7 text-gray-700" />
+                  ) : (
+                    <img
+                      src="/bank-logos/sbp.svg"
+                      alt="СБП"
+                      className="h-7 w-7"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* ID and Date */}
+              <div className="space-y-0.5 max-xl:text-center">
+                <div className="flex items-center gap-1">
+                  <div
+                    className="font-medium text-base hover:text-blue-600"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      copyToClipboard(payout.id.toString(), "ID");
+                    }}
+                  >
+                    {payout.id}
+                  </div>
+                  <button
+                    className="p-0.5 hover:bg-gray-100 rounded transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      copyToClipboard(payout.id.toString(), "ID");
+                    }}
+                  >
+                    <Copy className="h-3.5 w-3.5 text-gray-500" />
+                  </button>
+                </div>
+                <div className="text-xs text-gray-500">
+                  {format(new Date(payout.created_at), "dd.MM HH:mm", {
+                    locale: ru,
+                  })}
+                </div>
+                {payout.accepted_at && (
+                  <div className="text-xs text-green-600">
+                    Принято:{" "}
+                    {format(new Date(payout.accepted_at), "dd.MM.yyyy HH:mm", {
+                      locale: ru,
+                    })}
+                  </div>
+                )}
+                {payout.confirmed_at && (
+                  <div className="text-xs text-blue-600">
+                    Завершено:{" "}
+                    {format(new Date(payout.confirmed_at), "dd.MM.yyyy HH:mm", {
+                      locale: ru,
+                    })}
+                  </div>
+                )}
+                {/* Show expiration date for active and created statuses */}
+                {(payout.status === "active" ||
+                  payout.status === "created") && (
+                  <div className="text-xs text-orange-600">
+                    Истекает:{" "}
+                    {format(new Date(payout.expire_at), "dd.MM.yyyy HH:mm", {
+                      locale: ru,
+                    })}
+                  </div>
                 )}
               </div>
-            </div>
 
-            {/* ID and Date */}
-            <div className="space-y-0.5 max-xl:text-center">
-              <div className="flex items-center gap-1">
-                <div
-                  className="font-medium text-base hover:text-blue-600"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    copyToClipboard(payout.id.toString(), "ID");
-                  }}
-                >
-                  {payout.id}
+              {/* Requisites */}
+              <div className="flex items-center gap-3 max-xl:justify-center max-xl:text-center">
+                <div className="w-12 h-12 bg-muted rounded-lg shadow-sm flex items-center justify-center flex-shrink-0">
+                  {isNotAccepted ? (
+                    <div className="text-gray-400 text-lg font-bold">?</div>
+                  ) : bankLogos[payout.bank] ? (
+                    <img
+                      src={bankLogos[payout.bank]}
+                      alt={payout.bank}
+                      className="h-7 w-7"
+                    />
+                  ) : (
+                    <Building2 className="h-7 w-7 text-gray-400" />
+                  )}
                 </div>
-                <button
-                  className="p-0.5 hover:bg-gray-100 rounded transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    copyToClipboard(payout.id.toString(), "ID");
-                  }}
-                >
-                  <Copy className="h-3.5 w-3.5 text-gray-500" />
-                </button>
+                <div className="min-w-0 flex-1">
+                  {isNotAccepted ? (
+                    <>
+                      <div className="font-medium text-base text-gray-400">
+                        ••••••••••••
+                      </div>
+                      <div className="text-sm text-gray-400">Скрыто</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-1">
+                        <div className="font-medium text-base truncate">
+                          {payout.wallet}
+                        </div>
+                        <button
+                          className="p-0.5 hover:bg-gray-100 rounded transition-colors flex-shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            copyToClipboard(payout.wallet, "Реквизиты");
+                          }}
+                        >
+                          <Copy className="h-3.5 w-3.5 text-gray-500" />
+                        </button>
+                      </div>
+                      <div className="text-sm text-gray-500 truncate">
+                        {payout.bank}
+                      </div>
+                      {payout.metadata?.fio && (
+                        <div className="text-xs text-gray-600 truncate font-medium">
+                          {payout.metadata.fio}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
-              <div className="text-xs text-gray-500">
-                {format(new Date(payout.created_at), "dd.MM HH:mm", {
-                  locale: ru,
-                })}
-              </div>
-              {payout.accepted_at && (
-                <div className="text-xs text-purple-600">
-                  Принято: {format(new Date(payout.accepted_at), "dd.MM.yyyy HH:mm", {
-                    locale: ru,
-                  })}
-                </div>
-              )}
-              {payout.confirmed_at && (
-                <div className="text-xs text-blue-600">
-                  Завершено: {format(new Date(payout.confirmed_at), "dd.MM.yyyy HH:mm", {
-                    locale: ru,
-                  })}
-                </div>
-              )}
-              {/* Show expiration date for active and created statuses */}
-              {(payout.status === "active" || payout.status === "created") && (
-                <div className="text-xs text-orange-600">
-                  Истекает: {format(new Date(payout.expire_at), "dd.MM.yyyy HH:mm", {
-                    locale: ru,
-                  })}
-                </div>
-              )}
-            </div>
 
-            {/* Requisites */}
-            <div className="flex items-center gap-3 max-xl:justify-center max-xl:text-center">
-              <div className="w-12 h-12 bg-muted rounded-lg shadow-sm flex items-center justify-center flex-shrink-0">
-                {isNotAccepted ? (
-                  <div className="text-gray-400 text-lg font-bold">?</div>
-                ) : bankLogos[payout.bank] ? (
-                  <img
-                    src={bankLogos[payout.bank]}
-                    alt={payout.bank}
-                    className="h-7 w-7"
-                  />
-                ) : (
-                  <Building2 className="h-7 w-7 text-gray-400" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
+              {/* Amount */}
+              <div className="space-y-1 max-xl:text-center">
                 {isNotAccepted ? (
                   <>
                     <div className="font-medium text-base text-gray-400">
-                      ••••••••••••
+                      ••••• ₽
                     </div>
-                    <div className="text-sm text-gray-400">
-                      Скрыто
-                    </div>
+                    <div className="text-sm text-gray-400">••• USDT</div>
                   </>
                 ) : (
                   <>
                     <div className="flex items-center gap-1">
-                      <div className="font-medium text-base truncate">
-                        {payout.wallet}
-                      </div>
-                      <button
-                        className="p-0.5 hover:bg-gray-100 rounded transition-colors flex-shrink-0"
+                      <div
+                        className="font-medium text-base cursor-pointer hover:text-blue-600"
                         onClick={(e) => {
                           e.stopPropagation();
-                          copyToClipboard(payout.wallet, "Реквизиты");
+                          copyToClipboard(payout.amount.toString(), "Сумма");
+                        }}
+                      >
+                        {payout.amount.toLocaleString("ru-RU")} ₽
+                      </div>
+                      <button
+                        className="p-0.5 hover:bg-gray-100 rounded transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyToClipboard(payout.amount.toString(), "Сумма");
                         }}
                       >
                         <Copy className="h-3.5 w-3.5 text-gray-500" />
                       </button>
                     </div>
-                    <div className="text-sm text-gray-500 truncate">
-                      {payout.bank}
+                    <div className="text-sm text-gray-500">
+                      {payout.amountUsdt.toFixed(2)} USDT
                     </div>
-                    {payout.metadata?.fio && (
-                      <div className="text-xs text-gray-600 truncate font-medium">
-                        {payout.metadata.fio}
-                      </div>
-                    )}
                   </>
                 )}
               </div>
-            </div>
 
-            {/* Amount */}
-            <div className="space-y-1 max-xl:text-center">
-              {isNotAccepted ? (
-                <>
-                  <div className="font-medium text-base text-gray-400">
-                    ••••• ₽
-                  </div>
-                  <div className="text-sm text-gray-400">
-                    ••• USDT
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center gap-1">
-                    <div
-                      className="font-medium text-base cursor-pointer hover:text-blue-600"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        copyToClipboard(payout.amount.toString(), "Сумма");
-                      }}
-                    >
-                      {payout.amount.toLocaleString("ru-RU")} ₽
+              {/* Total */}
+              <div className="space-y-1 max-xl:text-center">
+                {isNotAccepted ? (
+                  <>
+                    <div className="font-medium text-base text-gray-400">
+                      ••• USDT
                     </div>
-                    <button
-                      className="p-0.5 hover:bg-gray-100 rounded transition-colors"
+                    <div className="text-sm text-gray-400">••••• ₽</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="font-medium text-base">
+                      {(() => {
+                        const profit =
+                          (payout.actualTotalUsdt || payout.totalUsdt) -
+                          payout.amountUsdt;
+                        const truncatedProfit = Math.trunc(profit * 100) / 100;
+                        console.log("Payout profit calculation:", {
+                          id: payout.id,
+                          actualTotalUsdt: payout.actualTotalUsdt,
+                          totalUsdt: payout.totalUsdt,
+                          amountUsdt: payout.amountUsdt,
+                          traderFeeOut: payout.traderFeeOut,
+                          profit,
+                          truncatedProfit,
+                        });
+                        return truncatedProfit.toFixed(2);
+                      })()}{" "}
+                      USDT
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {Math.trunc(
+                        (Math.trunc(
+                          ((payout.actualTotalUsdt || payout.totalUsdt) -
+                            payout.amountUsdt) *
+                            100,
+                        ) /
+                          100) *
+                          payout.rate,
+                      )}{" "}
+                      ₽
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Rate */}
+              <div className="font-semibold text-base max-xl:text-center">
+                {isNotAccepted ? (
+                  <span className="text-gray-400">••••</span>
+                ) : (
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      copyToClipboard(payout.rate.toFixed(2), "Курс");
+                    }}
+                    className="cursor-pointer"
+                  >
+                    {payout.rate.toFixed(2)}
+                  </span>
+                )}
+              </div>
+
+              {/* Status */}
+              <div className="max-xl:flex max-xl:justify-center">
+                {payout.status === "created" ? (
+                  <Button
+                    size="sm"
+                    className="h-9 px-4 bg-[#006039] hover:bg-[#004d2e] text-white"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAcceptPayout(payout.id);
+                    }}
+                  >
+                    Принять в работу
+                  </Button>
+                ) : payout.status === "active" && payout.accepted_at ? (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 hover:bg-green-50"
                       onClick={(e) => {
                         e.stopPropagation();
-                        copyToClipboard(payout.amount.toString(), "Сумма");
+                        setSelectedPayoutForAction(payout.id);
+                        setConfirmDialogOpen(true);
                       }}
                     >
-                      <Copy className="h-3.5 w-3.5 text-gray-500" />
-                    </button>
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 hover:bg-red-50"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPayoutForAction(payout.id);
+                        setCancelDialogOpen(true);
+                      }}
+                    >
+                      <X className="h-5 w-5 text-red-600" />
+                    </Button>
                   </div>
-                  <div className="text-sm text-gray-500">
-                    {payout.amountUsdt.toFixed(2)} USDT
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Total */}
-            <div className="space-y-1 max-xl:text-center">
-              {isNotAccepted ? (
-                <>
-                  <div className="font-medium text-base text-gray-400">
-                    ••• USDT
-                  </div>
-                  <div className="text-sm text-gray-400">
-                    ••••• ₽
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="font-medium text-base">
-                    {(() => {
-                      const profit = (payout.actualTotalUsdt || payout.totalUsdt) - payout.amountUsdt;
-                      console.log('Payout profit calculation:', {
-                        id: payout.id,
-                        actualTotalUsdt: payout.actualTotalUsdt,
-                        totalUsdt: payout.totalUsdt,
-                        amountUsdt: payout.amountUsdt,
-                        traderFeeOut: payout.traderFeeOut,
-                        profit
-                      });
-                      return profit.toFixed(2);
-                    })()} USDT
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {(((payout.actualTotalUsdt || payout.totalUsdt) - payout.amountUsdt) * payout.rate).toLocaleString("ru-RU", { maximumFractionDigits: 0 })} ₽
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Rate */}
-            <div className="font-semibold text-base max-xl:text-center">
-              {isNotAccepted ? (
-                <span className="text-gray-400">••••</span>
-              ) : (
-                <span
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    copyToClipboard(payout.rate.toFixed(2), "Курс");
-                  }}
-                  className="cursor-pointer"
-                >
-                  {payout.rate.toFixed(2)}
-                </span>
-              )}
-            </div>
-
-            {/* Status */}
-            <div className="max-xl:flex max-xl:justify-center">
-            {payout.status === "created" ? (
-              <Button
-                size="sm"
-                className="h-9 px-4 bg-[#530FAD] hover:bg-[#530FAD/90] text-white"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAcceptPayout(payout.id);
-                }}
-              >
-                Принять в работу
-              </Button>
-            ) : payout.status === "active" && payout.accepted_at ? (
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-8 w-8 p-0 hover:bg-purple-50"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedPayoutForAction(payout.id);
-                    setConfirmDialogOpen(true);
-                  }}
-                >
-                  <CheckCircle className="h-5 w-5 text-purple-600" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-8 w-8 p-0 hover:bg-red-50"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedPayoutForAction(payout.id);
-                    setCancelDialogOpen(true);
-                  }}
-                >
-                  <X className="h-5 w-5 text-red-600" />
-                </Button>
-              </div>
-            ) : (
-              <Badge
-                className={cn(
-                  "h-9 px-3 rounded-md flex items-center justify-center gap-1.5 text-sm font-medium transition-none hover:brightness-100",
-                  getStatusColor(payout),
-                )}
-                data-badge
-              >
-                {payout.status === "completed" || payout.confirmed_at ? (
-                  <CheckCircle className="h-4 w-4" />
-                ) : payout.status === "cancelled" ? (
-                  <X className="h-4 w-4" />
-                ) : payout.status === "expired" ||
-                  new Date(payout.expire_at).getTime() < new Date().getTime() ? (
-                  <Clock className="h-4 w-4" />
                 ) : (
-                  <Clock className="h-4 w-4" />
+                  <Badge
+                    className={cn(
+                      "h-9 px-3 rounded-md flex items-center justify-center gap-1.5 text-sm font-medium transition-none hover:brightness-100",
+                      getStatusColor(payout),
+                    )}
+                    data-badge
+                  >
+                    {payout.status === "completed" || payout.confirmed_at ? (
+                      <CheckCircle className="h-4 w-4" />
+                    ) : payout.status === "cancelled" ? (
+                      <X className="h-4 w-4" />
+                    ) : payout.status === "expired" ||
+                      new Date(payout.expire_at).getTime() <
+                        new Date().getTime() ? (
+                      <Clock className="h-4 w-4" />
+                    ) : (
+                      <Clock className="h-4 w-4" />
+                    )}
+                    <span>{getStatusText(payout)}</span>
+                  </Badge>
                 )}
-                <span>{getStatusText(payout)}</span>
-              </Badge>
-            )}
+              </div>
             </div>
           </div>
-        </div>
-      </ContextMenuTrigger>
-      <ContextMenuContent>
-        <ContextMenuItem
-          onClick={() =>
-            copyToClipboard(`${payout.wallet} ${payout.bank}`, "Реквизиты")
-          }
-        >
-          <Copy className="h-4 w-4 mr-2" />
-          Копировать всё
-        </ContextMenuItem>
-        <ContextMenuSeparator />
-        <ContextMenuItem
-          onClick={() => copyToClipboard(payout.wallet, "Номер")}
-        >
-          Копировать номер
-        </ContextMenuItem>
-        <ContextMenuItem onClick={() => copyToClipboard(payout.bank, "Банк")}>
-          Копировать банк
-        </ContextMenuItem>
-        {payout.metadata?.fio && (
-          <ContextMenuItem onClick={() => copyToClipboard(payout.metadata.fio!, "ФИО")}>
-            Копировать ФИО
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem
+            onClick={() =>
+              copyToClipboard(`${payout.wallet} ${payout.bank}`, "Реквизиты")
+            }
+          >
+            <Copy className="h-4 w-4 mr-2" />
+            Копировать всё
           </ContextMenuItem>
-        )}
-        {payout.status !== "created" && (
-          <>
-            <ContextMenuSeparator />
-            <ContextMenuItem onClick={async () => {
-              const details = await fetchPayoutDetails(payout.uuid);
-              if (details) {
-                setSelectedPayout({
-                  ...payout,
-                  disputeFiles: details.disputeFiles,
-                  disputeMessage: details.disputeMessage,
-                  proofFiles: details.proofFiles,
-                });
-              } else {
-                setSelectedPayout(payout);
-              }
-            }}>
-              <Eye className="h-4 w-4 mr-2" />
-              Подробнее
+          <ContextMenuSeparator />
+          <ContextMenuItem
+            onClick={() => copyToClipboard(payout.wallet, "Номер")}
+          >
+            Копировать номер
+          </ContextMenuItem>
+          <ContextMenuItem onClick={() => copyToClipboard(payout.bank, "Банк")}>
+            Копировать банк
+          </ContextMenuItem>
+          {payout.metadata?.fio && (
+            <ContextMenuItem
+              onClick={() => copyToClipboard(payout.metadata.fio!, "ФИО")}
+            >
+              Копировать ФИО
             </ContextMenuItem>
-          </>
-        )}
-      </ContextMenuContent>
-    </ContextMenu>
+          )}
+          {payout.status !== "created" && (
+            <>
+              <ContextMenuSeparator />
+              <ContextMenuItem
+                onClick={async () => {
+                  const details = await fetchPayoutDetails(payout.uuid);
+                  if (details) {
+                    setSelectedPayout({
+                      ...payout,
+                      disputeFiles: details.disputeFiles,
+                      disputeMessage: details.disputeMessage,
+                      proofFiles: details.proofFiles,
+                    });
+                  } else {
+                    setSelectedPayout(payout);
+                  }
+                }}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                Подробнее
+              </ContextMenuItem>
+            </>
+          )}
+        </ContextMenuContent>
+      </ContextMenu>
     );
   });
 
@@ -1113,15 +1178,19 @@ export function PayoutsList() {
             </Label>
             <Switch
               id="team-switch"
-              checked={teamEnabled}
+              checked={trafficEnabled}
               onCheckedChange={async (checked) => {
-                setTeamEnabled(checked);
+                setTrafficEnabled(checked);
                 try {
-                  await traderApi.updateProfile({ teamEnabled: checked });
-                  toast.success(checked ? "Получение выплат включено" : "Получение выплат выключено");
+                  await traderApi.updateProfile({ trafficEnabled: checked });
+                  toast.success(
+                    checked
+                      ? "Получение выплат включено"
+                      : "Получение выплат выключено",
+                  );
                 } catch (error) {
                   console.error("Failed to update team status:", error);
-                  setTeamEnabled(!checked); // Revert on error
+                  setTrafficEnabled(!checked); // Revert on error
                   toast.error("Не удалось обновить статус");
                 }
               }}
@@ -1137,13 +1206,13 @@ export function PayoutsList() {
               >
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
-                    <User className="h-4 w-4 text-[#530FAD]" />
+                    <User className="h-4 w-4 text-[#006039]" />
                   </div>
                   <span className="text-gray-700 font-medium">
                     ${traderProfile?.numericId || "0000"}
                   </span>
                 </div>
-                <ChevronDown className="h-4 w-4 text-[#530FAD]" />
+                <ChevronDown className="h-4 w-4 text-[#006039]" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -1151,7 +1220,7 @@ export function PayoutsList() {
                 onClick={handleLogout}
                 className="text-red-600 focus:text-red-600 hover:bg-gray-50 cursor-pointer"
               >
-                <LogOut className="mr-2 h-4 w-4 text-[#530FAD]" />
+                <LogOut className="mr-2 h-4 w-4 text-[#006039]" />
                 Выйти
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -1172,7 +1241,9 @@ export function PayoutsList() {
 
           {/* Traffic Type */}
           <div className="flex flex-col gap-1 max-xl:w-full max-xl:order-2">
-            <label className="text-xs text-muted-foreground">Выбор типа трафика:</label>
+            <label className="text-xs text-muted-foreground">
+              Выбор типа трафика:
+            </label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -1185,12 +1256,12 @@ export function PayoutsList() {
                     ) : (
                       <div className="flex gap-1">
                         {selectedTrafficType.includes("sbp") && (
-                          <Badge className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200">
+                          <Badge className="h-5 px-2 bg-green-100 text-green-700 border-green-200">
                             СБП
                           </Badge>
                         )}
                         {selectedTrafficType.includes("card") && (
-                          <Badge className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200">
+                          <Badge className="h-5 px-2 bg-green-100 text-green-700 border-green-200">
                             Карты
                           </Badge>
                         )}
@@ -1209,7 +1280,9 @@ export function PayoutsList() {
                       setSelectedTrafficType(newTypes);
                       saveFilters();
                     } else {
-                      const newTypes = selectedTrafficType.filter((t) => t !== "sbp");
+                      const newTypes = selectedTrafficType.filter(
+                        (t) => t !== "sbp",
+                      );
                       setSelectedTrafficType(newTypes);
                       saveFilters();
                     }
@@ -1229,7 +1302,9 @@ export function PayoutsList() {
                       setSelectedTrafficType(newTypes);
                       saveFilters();
                     } else {
-                      const newTypes = selectedTrafficType.filter((t) => t !== "card");
+                      const newTypes = selectedTrafficType.filter(
+                        (t) => t !== "card",
+                      );
                       setSelectedTrafficType(newTypes);
                       saveFilters();
                     }
@@ -1247,7 +1322,9 @@ export function PayoutsList() {
 
           {/* SBP Banks */}
           <div className="flex flex-col gap-1 max-xl:w-full max-xl:order-3">
-            <label className="text-xs text-muted-foreground">Выбор банков СБП:</label>
+            <label className="text-xs text-muted-foreground">
+              Выбор банков СБП:
+            </label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -1262,13 +1339,13 @@ export function PayoutsList() {
                         {selectedBanks.slice(0, 2).map((bank) => (
                           <Badge
                             key={bank}
-                            className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200"
+                            className="h-5 px-2 bg-green-100 text-green-700 border-green-200"
                           >
                             {bank}
                           </Badge>
                         ))}
                         {selectedBanks.length > 2 && (
-                          <Badge className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200">
+                          <Badge className="h-5 px-2 bg-green-100 text-green-700 border-green-200">
                             +{selectedBanks.length - 2}
                           </Badge>
                         )}
@@ -1292,7 +1369,9 @@ export function PayoutsList() {
                         setSelectedBanks(newBanks);
                         saveFilters();
                       } else {
-                        const newBanks = selectedBanks.filter((b) => b !== bank);
+                        const newBanks = selectedBanks.filter(
+                          (b) => b !== bank,
+                        );
                         setSelectedBanks(newBanks);
                         saveFilters();
                       }
@@ -1328,13 +1407,13 @@ export function PayoutsList() {
                         {selectedCardBanks.slice(0, 2).map((bank) => (
                           <Badge
                             key={bank}
-                            className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200"
+                            className="h-5 px-2 bg-green-100 text-green-700 border-green-200"
                           >
                             {bank}
                           </Badge>
                         ))}
                         {selectedCardBanks.length > 2 && (
-                          <Badge className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200">
+                          <Badge className="h-5 px-2 bg-green-100 text-green-700 border-green-200">
                             +{selectedCardBanks.length - 2}
                           </Badge>
                         )}
@@ -1349,28 +1428,30 @@ export function PayoutsList() {
                 className="w-[250px] max-h-[300px] overflow-y-auto"
               >
                 {availableCardBanks.map((bank) => (
-                    <DropdownMenuCheckboxItem
-                      key={bank}
-                      checked={selectedCardBanks.includes(bank)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          const newBanks = [...selectedCardBanks, bank];
-                          setSelectedCardBanks(newBanks);
-                          saveFilters();
-                        } else {
-                          const newBanks = selectedCardBanks.filter((b) => b !== bank);
-                          setSelectedCardBanks(newBanks);
-                          saveFilters();
-                        }
-                      }}
-                      className="cursor-pointer"
-                    >
-                      {selectedCardBanks.includes(bank) && (
-                        <Check className="h-4 w-4 mr-2" />
-                      )}
-                      {bank}
-                    </DropdownMenuCheckboxItem>
-                  ))}
+                  <DropdownMenuCheckboxItem
+                    key={bank}
+                    checked={selectedCardBanks.includes(bank)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        const newBanks = [...selectedCardBanks, bank];
+                        setSelectedCardBanks(newBanks);
+                        saveFilters();
+                      } else {
+                        const newBanks = selectedCardBanks.filter(
+                          (b) => b !== bank,
+                        );
+                        setSelectedCardBanks(newBanks);
+                        saveFilters();
+                      }
+                    }}
+                    className="cursor-pointer"
+                  >
+                    {selectedCardBanks.includes(bank) && (
+                      <Check className="h-4 w-4 mr-2" />
+                    )}
+                    {bank}
+                  </DropdownMenuCheckboxItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -1384,10 +1465,10 @@ export function PayoutsList() {
                 value={balanceInput}
                 onChange={(e) => setBalanceInput(e.target.value)}
                 onBlur={saveFilters}
-                className="h-12 w-32 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                className="h-12 w-32 focus:ring-2 focus:ring-green-500 focus:border-green-500"
               />
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="h-12 hover:text-current"
                 onClick={handleSaveBalance}
               >
@@ -1399,7 +1480,11 @@ export function PayoutsList() {
       </div>
 
       {/* Content with Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="flex-1 flex flex-col overflow-hidden"
+      >
         {/* Tabs Header */}
         <div className="bg-card px-6 pb-4">
           <TabsList className="h-12 p-1">
@@ -1427,132 +1512,136 @@ export function PayoutsList() {
         {/* Tab Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <>
-          {/* Mobile Search - Only visible on small screens */}
-          <div className="xl:hidden bg-card px-6 py-3 border-b">
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <Input
-                  placeholder="Поиск по ID..."
-                  value={searchId}
-                  onChange={(e) => setSearchId(e.target.value)}
-                  className="h-9"
-                />
-              </div>
-              <div className="flex-1">
-                <Input
-                  placeholder="Поиск реквизитов..."
-                  value={searchRequisites}
-                  onChange={(e) => setSearchRequisites(e.target.value)}
-                  className="h-9"
-                />
-              </div>
-            </div>
-          </div>
-          
-          {/* Column Headers */}
-          <div className="grid grid-cols-[40px_60px_140px_1fr_160px_160px_100px_180px] gap-4 items-center px-6 py-3 text-sm font-medium text-muted-foreground bg-card border-b max-xl:hidden">
-            <div></div>
-            <div></div>
-            <div className="flex items-center gap-2">
-              {showIdSearch ? (
-                <div className="flex items-center gap-1 animate-fade-in">
+            {/* Mobile Search - Only visible on small screens */}
+            <div className="xl:hidden bg-card px-6 py-3 border-b">
+              <div className="flex gap-2">
+                <div className="flex-1">
                   <Input
-                    placeholder="ID"
+                    placeholder="Поиск по ID..."
                     value={searchId}
                     onChange={(e) => setSearchId(e.target.value)}
-                    className="h-8 text-sm"
-                    autoFocus
+                    className="h-9"
                   />
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 w-8 p-0"
-                    onClick={() => {
-                      setShowIdSearch(false);
-                      setSearchId("");
-                    }}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
                 </div>
-              ) : (
-                <>
-                  <span>Заявка</span>
-                  <Search
-                    className="h-3.5 w-3.5 cursor-pointer text-gray-400 hover:text-gray-600"
-                    onClick={() => setShowIdSearch(true)}
-                  />
-                </>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {showRequisitesSearch ? (
-                <div className="flex items-center gap-1 animate-fade-in">
+                <div className="flex-1">
                   <Input
-                    placeholder="Поиск реквизитов"
+                    placeholder="Поиск реквизитов..."
                     value={searchRequisites}
                     onChange={(e) => setSearchRequisites(e.target.value)}
-                    className="h-8 text-sm"
-                    autoFocus
+                    className="h-9"
                   />
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 w-8 p-0"
-                    onClick={() => {
-                      setShowRequisitesSearch(false);
-                      setSearchRequisites("");
-                    }}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
                 </div>
-              ) : (
-                <>
-                  <span>Реквизиты</span>
-                  <Search
-                    className="h-3.5 w-3.5 cursor-pointer text-gray-400 hover:text-gray-600"
-                    onClick={() => setShowRequisitesSearch(true)}
-                  />
-                </>
-              )}
-            </div>
-            <div>Сумма</div>
-            <div>Прибыль</div>
-            <div>Курс</div>
-            <div>Статус</div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto" onScroll={handleScroll}>
-            <div className="p-6 space-y-4">
-              <AnimatePresence mode="popLayout">
-                {filteredPayouts.map((payout) => (
-                  <motion.div
-                    key={payout.id}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -100, transition: { duration: 0.3 } }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <PayoutCard payout={payout} />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-              {loadingMore && (
-                <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin text-[#530FAD]" />
-                  <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                    Загрузка...
-                  </span>
-                </div>
-              )}
-              {/* Count */}
-              <div className="text-sm text-gray-600 dark:text-gray-400 mt-4">
-                Найдено {filteredPayouts.length} записей
               </div>
             </div>
-          </div>
+
+            {/* Column Headers */}
+            <div className="grid grid-cols-[40px_60px_140px_1fr_160px_160px_100px_180px] gap-4 items-center px-6 py-3 text-sm font-medium text-muted-foreground bg-card border-b max-xl:hidden">
+              <div></div>
+              <div></div>
+              <div className="flex items-center gap-2">
+                {showIdSearch ? (
+                  <div className="flex items-center gap-1 animate-fade-in">
+                    <Input
+                      placeholder="ID"
+                      value={searchId}
+                      onChange={(e) => setSearchId(e.target.value)}
+                      className="h-8 text-sm"
+                      autoFocus
+                    />
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0"
+                      onClick={() => {
+                        setShowIdSearch(false);
+                        setSearchId("");
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <span>Заявка</span>
+                    <Search
+                      className="h-3.5 w-3.5 cursor-pointer text-gray-400 hover:text-gray-600"
+                      onClick={() => setShowIdSearch(true)}
+                    />
+                  </>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {showRequisitesSearch ? (
+                  <div className="flex items-center gap-1 animate-fade-in">
+                    <Input
+                      placeholder="Поиск реквизитов"
+                      value={searchRequisites}
+                      onChange={(e) => setSearchRequisites(e.target.value)}
+                      className="h-8 text-sm"
+                      autoFocus
+                    />
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0"
+                      onClick={() => {
+                        setShowRequisitesSearch(false);
+                        setSearchRequisites("");
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <span>Реквизиты</span>
+                    <Search
+                      className="h-3.5 w-3.5 cursor-pointer text-gray-400 hover:text-gray-600"
+                      onClick={() => setShowRequisitesSearch(true)}
+                    />
+                  </>
+                )}
+              </div>
+              <div>Сумма</div>
+              <div>Прибыль</div>
+              <div>Курс</div>
+              <div>Статус</div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto" onScroll={handleScroll}>
+              <div className="p-6 space-y-4">
+                <AnimatePresence mode="popLayout">
+                  {filteredPayouts.map((payout) => (
+                    <motion.div
+                      key={payout.id}
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{
+                        opacity: 0,
+                        x: -100,
+                        transition: { duration: 0.3 },
+                      }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <PayoutCard payout={payout} />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+                {loadingMore && (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-6 w-6 animate-spin text-[#006039]" />
+                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                      Загрузка...
+                    </span>
+                  </div>
+                )}
+                {/* Count */}
+                <div className="text-sm text-gray-600 dark:text-gray-400 mt-4">
+                  Найдено {filteredPayouts.length} записей
+                </div>
+              </div>
+            </div>
           </>
         </div>
       </Tabs>
@@ -1570,7 +1659,12 @@ export function PayoutsList() {
                 {selectedPayout && (
                   <button
                     className="p-1 hover:bg-gray-100 rounded transition-colors"
-                    onClick={() => copyToClipboard(selectedPayout.id.toString(), "ID выплаты")}
+                    onClick={() =>
+                      copyToClipboard(
+                        selectedPayout.id.toString(),
+                        "ID выплаты",
+                      )
+                    }
                   >
                     <Copy className="h-4 w-4 text-gray-500" />
                   </button>
@@ -1654,11 +1748,18 @@ export function PayoutsList() {
                   <div className="flex items-center gap-2">
                     <div>
                       <p className="font-medium">{selectedPayout.wallet}</p>
-                      <p className="text-sm text-gray-600">{selectedPayout.bank}</p>
+                      <p className="text-sm text-gray-600">
+                        {selectedPayout.bank}
+                      </p>
                     </div>
                     <button
                       className="p-1 hover:bg-gray-100 rounded transition-colors flex-shrink-0"
-                      onClick={() => copyToClipboard(`${selectedPayout.wallet} ${selectedPayout.bank}`, "Реквизиты")}
+                      onClick={() =>
+                        copyToClipboard(
+                          `${selectedPayout.wallet} ${selectedPayout.bank}`,
+                          "Реквизиты",
+                        )
+                      }
                     >
                       <Copy className="h-4 w-4 text-gray-500" />
                     </button>
@@ -1682,110 +1783,177 @@ export function PayoutsList() {
                 <div>
                   <p className="text-sm text-gray-500">Прибыль с выплаты</p>
                   <p className="font-medium">
-                    {((selectedPayout.actualTotalUsdt || selectedPayout.totalUsdt) - selectedPayout.amountUsdt).toFixed(2)} USDT
+                    {(
+                      Math.trunc(
+                        ((selectedPayout.actualTotalUsdt ||
+                          selectedPayout.totalUsdt) -
+                          selectedPayout.amountUsdt) *
+                          100,
+                      ) / 100
+                    ).toFixed(2)}{" "}
+                    USDT
                   </p>
                   <p className="text-sm text-gray-600">
-                    {(((selectedPayout.actualTotalUsdt || selectedPayout.totalUsdt) - selectedPayout.amountUsdt) * selectedPayout.rate).toLocaleString("ru-RU", { maximumFractionDigits: 0 })} ₽
+                    {Math.trunc(
+                      ((selectedPayout.actualTotalUsdt ||
+                        selectedPayout.totalUsdt) -
+                        selectedPayout.amountUsdt) *
+                        selectedPayout.rate,
+                    )}{" "}
+                    ₽
                   </p>
                 </div>
               </div>
-              {selectedPayout.proofFiles && selectedPayout.proofFiles.length > 0 && (
-                <div>
-                  <p className="text-sm text-gray-500 mb-2">Файлы подтверждения</p>
-                  <div className="space-y-2">
-                    {selectedPayout.proofFiles.map((file, index) => (
-                      <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-                        <CheckCircle className="h-4 w-4 text-purple-600" />
-                        <span className="text-sm">{file.includes('-') ? file.split('-').slice(1).join('-') : file}</span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="ml-auto"
-                          onClick={() => {
-                            window.open(`${process.env.NEXT_PUBLIC_API_URL}/uploads/payouts/${file}`, '_blank');
-                          }}
+              {selectedPayout.proofFiles &&
+                selectedPayout.proofFiles.length > 0 && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-2">
+                      Файлы подтверждения
+                    </p>
+                    <div className="space-y-2">
+                      {selectedPayout.proofFiles.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 p-2 bg-gray-50 rounded"
                         >
-                          Скачать
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {selectedPayout.cancellationHistory && selectedPayout.cancellationHistory.length > 0 && (
-                <div>
-                  <p className="text-sm text-gray-500 mb-2">История отмен от предыдущих трейдеров</p>
-                  <div className="space-y-4 max-h-60 overflow-y-auto">
-                    {selectedPayout.cancellationHistory.map((cancellation, index) => (
-                      <div key={index} className="p-3 bg-yellow-50 rounded border-l-4 border-yellow-400">
-                        <div className="flex items-center gap-2 mb-2">
-                          <AlertCircle className="h-4 w-4 text-yellow-600" />
-                          <span className="text-sm font-medium text-yellow-800">
-                            Трейдер: {cancellation.trader.name} (#{cancellation.trader.id.slice(-6)})
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span className="text-sm">
+                            {file.includes("-")
+                              ? file.split("-").slice(1).join("-")
+                              : file}
                           </span>
-                          <span className="text-xs text-gray-500 ml-auto">
-                            {format(new Date(cancellation.createdAt), "dd.MM.yyyy HH:mm", { locale: ru })}
-                          </span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="ml-auto"
+                            onClick={() => {
+                              window.open(
+                                `${process.env.NEXT_PUBLIC_API_URL}/uploads/payouts/${file}`,
+                                "_blank",
+                              );
+                            }}
+                          >
+                            Скачать
+                          </Button>
                         </div>
-                        <p className="text-sm text-gray-700 mb-2">
-                          <strong>Причина:</strong> {cancellation.reason}
-                        </p>
-                        {cancellation.files && cancellation.files.length > 0 && (
-                          <div className="space-y-1">
-                            <p className="text-xs text-gray-600 mb-1">Прикрепленные файлы:</p>
-                            {cancellation.files.map((file, fileIndex) => (
-                              <div key={fileIndex} className="flex items-center gap-2 text-xs">
-                                <span className="text-gray-600">
-                                  {file.includes('-') ? file.split('-').slice(1).join('-') : file}
-                                </span>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-6 px-2 text-xs"
-                                  onClick={() => {
-                                    window.open(`${process.env.NEXT_PUBLIC_API_URL}/uploads/payouts/${file}`, '_blank');
-                                  }}
-                                >
-                                  Скачать
-                                </Button>
-                              </div>
-                            ))}
+                      ))}
+                    </div>
+                  </div>
+                )}
+              {selectedPayout.cancellationHistory &&
+                selectedPayout.cancellationHistory.length > 0 && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-2">
+                      История отмен от предыдущих трейдеров
+                    </p>
+                    <div className="space-y-4 max-h-60 overflow-y-auto">
+                      {selectedPayout.cancellationHistory.map(
+                        (cancellation, index) => (
+                          <div
+                            key={index}
+                            className="p-3 bg-yellow-50 rounded border-l-4 border-yellow-400"
+                          >
+                            <div className="flex items-center gap-2 mb-2">
+                              <AlertCircle className="h-4 w-4 text-yellow-600" />
+                              <span className="text-sm font-medium text-yellow-800">
+                                Трейдер: {cancellation.trader.name} (#
+                                {cancellation.trader.id.slice(-6)})
+                              </span>
+                              <span className="text-xs text-gray-500 ml-auto">
+                                {format(
+                                  new Date(cancellation.createdAt),
+                                  "dd.MM.yyyy HH:mm",
+                                  { locale: ru },
+                                )}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-700 mb-2">
+                              <strong>Причина:</strong> {cancellation.reason}
+                            </p>
+                            {cancellation.files &&
+                              cancellation.files.length > 0 && (
+                                <div className="space-y-1">
+                                  <p className="text-xs text-gray-600 mb-1">
+                                    Прикрепленные файлы:
+                                  </p>
+                                  {cancellation.files.map((file, fileIndex) => (
+                                    <div
+                                      key={fileIndex}
+                                      className="flex items-center gap-2 text-xs"
+                                    >
+                                      <span className="text-gray-600">
+                                        {file.includes("-")
+                                          ? file.split("-").slice(1).join("-")
+                                          : file}
+                                      </span>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-6 px-2 text-xs"
+                                        onClick={() => {
+                                          window.open(
+                                            `${process.env.NEXT_PUBLIC_API_URL}/uploads/payouts/${file}`,
+                                            "_blank",
+                                          );
+                                        }}
+                                      >
+                                        Скачать
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                           </div>
-                        )}
-                      </div>
-                    ))}
+                        ),
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
-              
+                )}
+
               {/* Legacy dispute files support */}
-              {selectedPayout.disputeFiles && selectedPayout.disputeFiles.length > 0 && 
-               (!selectedPayout.cancellationHistory || selectedPayout.cancellationHistory.length === 0) && (
-                <div>
-                  <p className="text-sm text-gray-500 mb-2">Файлы от предыдущего трейдера (legacy)</p>
-                  {selectedPayout.disputeMessage && (
-                    <p className="text-sm text-gray-600 mb-2">Причина отмены: {selectedPayout.disputeMessage}</p>
-                  )}
-                  <div className="space-y-2">
-                    {selectedPayout.disputeFiles.map((file, index) => (
-                      <div key={index} className="flex items-center gap-2 p-2 bg-yellow-50 rounded">
-                        <AlertCircle className="h-4 w-4 text-yellow-600" />
-                        <span className="text-sm">{file.includes('-') ? file.split('-').slice(1).join('-') : file}</span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="ml-auto"
-                          onClick={() => {
-                            window.open(`${process.env.NEXT_PUBLIC_API_URL}/uploads/payouts/${file}`, '_blank');
-                          }}
+              {selectedPayout.disputeFiles &&
+                selectedPayout.disputeFiles.length > 0 &&
+                (!selectedPayout.cancellationHistory ||
+                  selectedPayout.cancellationHistory.length === 0) && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-2">
+                      Файлы от предыдущего трейдера (legacy)
+                    </p>
+                    {selectedPayout.disputeMessage && (
+                      <p className="text-sm text-gray-600 mb-2">
+                        Причина отмены: {selectedPayout.disputeMessage}
+                      </p>
+                    )}
+                    <div className="space-y-2">
+                      {selectedPayout.disputeFiles.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 p-2 bg-yellow-50 rounded"
                         >
-                          Скачать
-                        </Button>
-                      </div>
-                    ))}
+                          <AlertCircle className="h-4 w-4 text-yellow-600" />
+                          <span className="text-sm">
+                            {file.includes("-")
+                              ? file.split("-").slice(1).join("-")
+                              : file}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="ml-auto"
+                            onClick={() => {
+                              window.open(
+                                `${process.env.NEXT_PUBLIC_API_URL}/uploads/payouts/${file}`,
+                                "_blank",
+                              );
+                            }}
+                          >
+                            Скачать
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           )}
         </DialogContent>
@@ -1811,7 +1979,7 @@ export function PayoutsList() {
                     value="Недостаточно средств"
                     checked={cancelReason === "Недостаточно средств"}
                     onChange={(e) => setCancelReason(e.target.value)}
-                    className="w-4 h-4 text-purple-600"
+                    className="w-4 h-4 text-green-600"
                   />
                   <span className="text-sm">Недостаточно средств</span>
                 </label>
@@ -1822,7 +1990,7 @@ export function PayoutsList() {
                     value="Карта заблокирована"
                     checked={cancelReason === "Карта заблокирована"}
                     onChange={(e) => setCancelReason(e.target.value)}
-                    className="w-4 h-4 text-purple-600"
+                    className="w-4 h-4 text-green-600"
                   />
                   <span className="text-sm">Карта заблокирована</span>
                 </label>
@@ -1833,7 +2001,7 @@ export function PayoutsList() {
                     value="Технические проблемы"
                     checked={cancelReason === "Технические проблемы"}
                     onChange={(e) => setCancelReason(e.target.value)}
-                    className="w-4 h-4 text-purple-600"
+                    className="w-4 h-4 text-green-600"
                   />
                   <span className="text-sm">Технические проблемы</span>
                 </label>
@@ -1844,7 +2012,7 @@ export function PayoutsList() {
                     value="Подозрительная операция"
                     checked={cancelReason === "Подозрительная операция"}
                     onChange={(e) => setCancelReason(e.target.value)}
-                    className="w-4 h-4 text-purple-600"
+                    className="w-4 h-4 text-green-600"
                   />
                   <span className="text-sm">Подозрительная операция</span>
                 </label>
@@ -1874,12 +2042,12 @@ export function PayoutsList() {
                 >
                   {cancelFiles.length > 0 ? (
                     <>
-                      <CheckCircle className="h-6 w-6 text-purple-600 mb-1" />
+                      <CheckCircle className="h-6 w-6 text-green-600 mb-1" />
                       <p className="text-sm font-medium">
                         {cancelFiles.length} файл(ов) выбрано
                       </p>
                       <div className="text-xs text-gray-500 mt-1 max-w-full overflow-hidden text-ellipsis">
-                        {cancelFiles.map(f => f.name).join(", ")}
+                        {cancelFiles.map((f) => f.name).join(", ")}
                       </div>
                     </>
                   ) : (
@@ -1928,36 +2096,42 @@ export function PayoutsList() {
           </DialogHeader>
           <div className="space-y-4">
             {/* Payout Details Display */}
-            {selectedPayoutForAction && (() => {
-              const payout = payouts.find(p => p.id === selectedPayoutForAction);
-              if (!payout) return null;
-              
-              return (
-                <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                  <h4 className="font-medium text-sm text-gray-700">Данные выплаты:</h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <span className="text-gray-500">Реквизиты:</span>
-                      <p className="font-medium">{payout.wallet}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Банк:</span>
-                      <p className="font-medium">{payout.bank}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Сумма:</span>
-                      <p className="font-medium">{payout.amount.toLocaleString("ru-RU")} ₽</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">ID транзакции:</span>
-                      <p className="font-medium">${payout.id}</p>
+            {selectedPayoutForAction &&
+              (() => {
+                const payout = payouts.find(
+                  (p) => p.id === selectedPayoutForAction,
+                );
+                if (!payout) return null;
+
+                return (
+                  <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                    <h4 className="font-medium text-sm text-gray-700">
+                      Данные выплаты:
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-gray-500">Реквизиты:</span>
+                        <p className="font-medium">{payout.wallet}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Банк:</span>
+                        <p className="font-medium">{payout.bank}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Сумма:</span>
+                        <p className="font-medium">
+                          {payout.amount.toLocaleString("ru-RU")} ₽
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">ID транзакции:</span>
+                        <p className="font-medium">${payout.id}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })()}
-            
-            
+                );
+              })()}
+
             {/* File Upload */}
             <div className="space-y-2">
               <Label htmlFor="proof-files">Файлы подтверждения</Label>
@@ -1979,12 +2153,12 @@ export function PayoutsList() {
                 >
                   {proofFiles.length > 0 ? (
                     <>
-                      <CheckCircle className="h-8 w-8 text-purple-600 mb-2" />
+                      <CheckCircle className="h-8 w-8 text-green-600 mb-2" />
                       <p className="text-sm font-medium">
                         {proofFiles.length} файл(ов) выбрано
                       </p>
                       <div className="text-xs text-gray-500 mt-1">
-                        {proofFiles.map(f => f.name).join(", ")}
+                        {proofFiles.map((f) => f.name).join(", ")}
                       </div>
                     </>
                   ) : (
@@ -2015,7 +2189,7 @@ export function PayoutsList() {
               <Button
                 onClick={() => handleConfirmPayout(selectedPayoutForAction!)}
                 disabled={proofFiles.length === 0}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-green-600 hover:bg-green-700"
               >
                 Подтвердить выплату
               </Button>

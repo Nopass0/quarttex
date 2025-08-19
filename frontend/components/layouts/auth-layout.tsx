@@ -7,7 +7,7 @@ import { MobileMenuDrawer } from "@/components/navigation/mobile-menu-drawer"
 
 interface AuthLayoutProps {
   children: React.ReactNode
-  variant: "trader" | "admin" | "agent" | "merchant"
+  variant: "trader" | "admin" | "agent" | "merchant" | "aggregator"
 }
 
 export function AuthLayout({ children, variant }: AuthLayoutProps) {

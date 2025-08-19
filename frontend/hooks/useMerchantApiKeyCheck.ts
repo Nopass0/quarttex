@@ -5,11 +5,14 @@ import { useMerchantAuth } from '@/stores/merchant-auth'
 
 export const useMerchantApiKeyCheck = () => {
   const router = useRouter()
-  const { logout, sessionToken } = useMerchantAuth()
+  const { logout, sessionToken, role } = useMerchantAuth()
   const checkIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    if (!sessionToken) {
+
+    // Skip API key validation when using session-based auth
+    if (sessionToken) {
+
       return
     }
 
@@ -45,5 +48,5 @@ export const useMerchantApiKeyCheck = () => {
         clearInterval(checkIntervalRef.current)
       }
     }
-  }, [sessionToken, logout, router])
+  }, [sessionToken, role, logout, router])
 }

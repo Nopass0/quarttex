@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
+import { getFileUrl } from "@/lib/file-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -140,7 +141,7 @@ export function DisputeMessages({
         return {
           name: "Мерчант",
           icon: Building2,
-          color: "bg-purple-500",
+          color: "bg-green-500",
           align: userType === "merchant" && isOwnMessage ? "right" : "left"
         };
       case "ADMIN":
@@ -249,7 +250,7 @@ export function DisputeMessages({
                         return (
                           <a
                             key={attachment.id}
-                            href={attachment.url}
+                            href={getFileUrl(attachment.url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className={cn(

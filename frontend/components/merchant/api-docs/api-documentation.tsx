@@ -41,6 +41,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useMerchantAuth } from "@/stores/merchant-auth";
+import { BANKS } from "@/constants/banks";
 
 interface ApiEndpoint {
   method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
@@ -1113,7 +1114,7 @@ export function ApiDocumentation() {
       case "GET":
         return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
       case "POST":
-        return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400";
+        return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
       case "PUT":
         return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
       case "DELETE":
@@ -1745,7 +1746,7 @@ export function ApiDocumentation() {
 
             <div className="border rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
-                <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
                   COMPLETED
                 </Badge>
                 <span className="text-xs text-muted-foreground">Завершена</span>
@@ -1806,7 +1807,7 @@ export function ApiDocumentation() {
                 CHECKING
               </Badge>
               <ChevronRight className="h-4 w-4" />
-              <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+              <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
                 COMPLETED
               </Badge>
             </div>
@@ -2330,6 +2331,21 @@ print(result)`,
               </div>
             </TabsContent>
           </Tabs>
+        </CardContent>
+      </Card>
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Коды банков</CardTitle>
+          <CardDescription>
+            Поддерживаемые значения параметра <code>bank</code>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-64">
+            <pre className="text-xs whitespace-pre-wrap">
+{BANKS.map(b => `${b.code} - ${b.label}`).join('\n')}
+            </pre>
+          </ScrollArea>
         </CardContent>
       </Card>
     </div>

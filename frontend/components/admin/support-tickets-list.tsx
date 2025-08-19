@@ -273,16 +273,16 @@ export function SupportTicketsList() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'OPEN':
-        return <AlertCircle className="h-4 w-4 text-[#530FAD]" />
+        return <AlertCircle className="h-4 w-4 text-[#006039]" />
       case 'IN_PROGRESS':
-        return <Clock className="h-4 w-4 text-[#530FAD]" />
+        return <Clock className="h-4 w-4 text-[#006039]" />
       case 'WAITING_REPLY':
-        return <MessageSquare className="h-4 w-4 text-[#530FAD]" />
+        return <MessageSquare className="h-4 w-4 text-[#006039]" />
       case 'RESOLVED':
       case 'CLOSED':
-        return <CheckCircle className="h-4 w-4 text-[#530FAD]" />
+        return <CheckCircle className="h-4 w-4 text-[#006039]" />
       default:
-        return <Clock className="h-4 w-4 text-[#530FAD]" />
+        return <Clock className="h-4 w-4 text-[#006039]" />
     }
   }
   
@@ -295,7 +295,7 @@ export function SupportTicketsList() {
       case 'WAITING_REPLY':
         return 'bg-purple-100 text-purple-700'
       case 'RESOLVED':
-        return 'bg-purple-100 text-purple-700'
+        return 'bg-green-100 text-green-700'
       case 'CLOSED':
         return 'bg-gray-100 text-gray-700'
       default:
@@ -321,20 +321,20 @@ export function SupportTicketsList() {
   const getUserTypeIcon = (userType: string) => {
     switch (userType) {
       case 'TRADER':
-        return <User className="h-4 w-4 text-[#530FAD]" />
+        return <User className="h-4 w-4 text-[#006039]" />
       case 'AGENT':
-        return <Users className="h-4 w-4 text-[#530FAD]" />
+        return <Users className="h-4 w-4 text-[#006039]" />
       case 'MERCHANT':
-        return <Building2 className="h-4 w-4 text-[#530FAD]" />
+        return <Building2 className="h-4 w-4 text-[#006039]" />
       default:
-        return <User className="h-4 w-4 text-[#530FAD]" />
+        return <User className="h-4 w-4 text-[#006039]" />
     }
   }
   
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
       </div>
     )
   }
@@ -358,7 +358,7 @@ export function SupportTicketsList() {
                 <p className="text-sm text-gray-600">Активные</p>
                 <p className="text-2xl font-bold">{stats.totalActive}</p>
               </div>
-              <AlertCircle className="h-8 w-8 text-[#530FAD]" />
+              <AlertCircle className="h-8 w-8 text-[#006039]" />
             </div>
           </Card>
           
@@ -368,7 +368,7 @@ export function SupportTicketsList() {
                 <p className="text-sm text-gray-600">Сегодня</p>
                 <p className="text-2xl font-bold">{stats.todayCount}</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-[#530FAD]" />
+              <TrendingUp className="h-8 w-8 text-[#006039]" />
             </div>
           </Card>
           
@@ -378,7 +378,7 @@ export function SupportTicketsList() {
                 <p className="text-sm text-gray-600">В работе</p>
                 <p className="text-2xl font-bold">{stats.inProgressCount}</p>
               </div>
-              <Clock className="h-8 w-8 text-[#530FAD]" />
+              <Clock className="h-8 w-8 text-[#006039]" />
             </div>
           </Card>
           
@@ -388,7 +388,7 @@ export function SupportTicketsList() {
                 <p className="text-sm text-gray-600">Ожидают</p>
                 <p className="text-2xl font-bold">{stats.waitingReplyCount}</p>
               </div>
-              <MessageSquare className="h-8 w-8 text-[#530FAD]" />
+              <MessageSquare className="h-8 w-8 text-[#006039]" />
             </div>
           </Card>
           
@@ -398,7 +398,7 @@ export function SupportTicketsList() {
                 <p className="text-sm text-gray-600">Ср. время</p>
                 <p className="text-2xl font-bold">{stats.avgResponseTime}ч</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-[#530FAD]" />
+              <CheckCircle className="h-8 w-8 text-[#006039]" />
             </div>
           </Card>
         </div>
@@ -409,7 +409,7 @@ export function SupportTicketsList() {
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex-1 min-w-[200px]">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#530FAD] h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#006039] h-4 w-4" />
               <Input
                 placeholder="Поиск по теме или сообщению..."
                 value={searchQuery}
@@ -463,7 +463,7 @@ export function SupportTicketsList() {
             size="icon"
             onClick={fetchTickets}
           >
-            <RefreshCw className="h-4 w-4 text-[#530FAD]" />
+            <RefreshCw className="h-4 w-4 text-[#006039]" />
           </Button>
         </div>
       </Card>
@@ -525,7 +525,7 @@ export function SupportTicketsList() {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4 text-[#530FAD]" />
+                    <MessageSquare className="h-4 w-4 text-[#006039]" />
                     <span className="text-sm">{ticket.messageCount}</span>
                   </div>
                 </TableCell>
@@ -579,7 +579,7 @@ export function SupportTicketsList() {
                     size="icon"
                     onClick={() => setIsDetailsOpen(false)}
                   >
-                    <X className="h-4 w-4 text-[#530FAD]" />
+                    <X className="h-4 w-4 text-[#006039]" />
                   </Button>
                 </div>
               </DialogHeader>
@@ -601,7 +601,7 @@ export function SupportTicketsList() {
                             className={cn(
                               "max-w-[70%] rounded-lg p-4",
                               message.isFromSupport
-                                ? "bg-[#530FAD] text-white"
+                                ? "bg-[#006039] text-white"
                                 : "bg-gray-100"
                             )}
                           >
@@ -636,7 +636,7 @@ export function SupportTicketsList() {
                       <Button
                         onClick={sendReply}
                         disabled={isSending || !replyMessage.trim()}
-                        className="bg-[#530FAD] hover:bg-[#005030]"
+                        className="bg-[#006039] hover:bg-[#005030]"
                       >
                         {isSending ? (
                           <Loader2 className="h-4 w-4 animate-spin text-white" />

@@ -118,7 +118,7 @@ export function DepositDialog({ open, onOpenChange, onSuccess }: DepositDialogPr
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
           <div className="flex items-center justify-center h-32">
-            <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
           </div>
         </DialogContent>
       </Dialog>
@@ -178,7 +178,7 @@ export function DepositDialog({ open, onOpenChange, onSuccess }: DepositDialogPr
                 Отмена
               </Button>
               <Button
-                className="bg-[#530FAD] hover:bg-[#530FAD]/90"
+                className="bg-[#006039] hover:bg-[#006039]/90"
                 onClick={handleSubmit}
                 disabled={isLoading || !amount || parseFloat(amount) < settings.minAmount}
               >
