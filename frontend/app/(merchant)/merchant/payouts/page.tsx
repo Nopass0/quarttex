@@ -14,9 +14,14 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { DatePickerWithRange } from "@/components/ui/date-picker-range"
-import { Search, Filter, Download } from "lucide-react"
+import { Search, Filter, Download, Loader2 } from "lucide-react"
+import { exportPayoutsToExcel, type ExportPayout } from "@/lib/excel-export"
+import { API_URL } from "@/lib/utils"
+import { useMerchantAuth } from "@/stores/merchant-auth"
+import { toast } from "sonner"
 
 export default function MerchantPayoutsPage() {
+  const { sessionToken } = useMerchantAuth()
   const [filters, setFilters] = useState({
     status: "ALL",
     dateFrom: "",
@@ -29,6 +34,7 @@ export default function MerchantPayoutsPage() {
   })
 
   const [showFilters, setShowFilters] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }))
@@ -47,6 +53,61 @@ export default function MerchantPayoutsPage() {
     })
   }
 
+  const handleExport = async () => {
+    try {
+      setIsExporting(true)
+
+      const allPayouts: ExportPayout[] = []
+
+      const buildParams = (page: number) => {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: "100",
+        })
+        if (filters.status && filters.status !== "ALL") params.append("status", filters.status)
+        if (filters.dateFrom) params.append("dateFrom", filters.dateFrom)
+        if (filters.dateTo) params.append("dateTo", filters.dateTo)
+        if (filters.amountFrom) params.append("amountFrom", filters.amountFrom)
+        if (filters.amountTo) params.append("amountTo", filters.amountTo)
+        if (filters.search) params.append("search", filters.search)
+        if (filters.sortBy) params.append("sortBy", filters.sortBy)
+        if (filters.sortOrder) params.append("sortOrder", filters.sortOrder)
+        return params
+
+      }
+
+      let page = 1
+      let totalPages = 1
+
+      do {
+        const response = await fetch(
+          `${API_URL}/merchant/payouts?${buildParams(page)}`,
+          { headers: { Authorization: `Bearer ${sessionToken}` } }
+        )
+        if (!response.ok) {
+          throw new Error("Failed to fetch payouts for export")
+        }
+        const data = await response.json()
+        const payouts: ExportPayout[] = data.data || []
+        allPayouts.push(...payouts)
+        const meta = data.meta || data.pagination
+        totalPages = meta?.totalPages || meta?.pages || 1
+        page++
+      } while (page <= totalPages)
+
+      if (allPayouts.length === 0) {
+        toast.warning("Нет выплат для экспорта")
+        return
+      }
+      exportPayoutsToExcel(allPayouts, "merchant_payouts")
+    } catch (error) {
+      console.error("Failed to export payouts:", error)
+      toast.error("Не удалось экспортировать выплаты")
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -59,17 +120,31 @@ export default function MerchantPayoutsPage() {
         </div>
         
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             onClick={() => setShowFilters(!showFilters)}
           >
             <Filter className="h-4 w-4 mr-2" />
             {showFilters ? "Скрыть фильтры" : "Показать фильтры"}
           </Button>
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Экспорт
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExport}
+            disabled={isExporting}
+          >
+            {isExporting ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Экспорт...
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4 mr-2" />
+                Экспорт
+              </>
+            )}
           </Button>
         </div>
       </div>

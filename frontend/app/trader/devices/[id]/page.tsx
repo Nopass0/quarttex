@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import React, { useState, useEffect, useRef } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { AuthLayout } from "@/components/layouts/auth-layout";
 import { Card } from "@/components/ui/card";
@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -68,14 +69,16 @@ import {
   SlidersHorizontal,
   X,
   DollarSign,
+  Edit,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { cn, formatAmount } from "@/lib/utils";
+import { getBankIcon } from "@/lib/bank-utils";
 import QRCode from "qrcode";
 import { Logo } from "@/components/ui/logo";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AddRequisiteDialog } from "@/components/trader/add-requisite-dialog";
+import { DeviceRequisitesSheet } from "@/components/trader/device-requisites-sheet";
 import { getDeviceStatusWebSocket, DeviceStatusUpdate } from "@/services/device-status-ws";
 import { deviceWSManager } from "@/services/device-ws-manager";
 import { DeviceEmulator } from "@/services/device-emulator";
@@ -160,22 +163,33 @@ interface Message {
 export default function DeviceDetailsPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromTransaction = searchParams.get('from') === 'transaction';
+  const transactionId = searchParams.get('transactionId');
+  
   const [device, setDevice] = useState<DeviceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("messages");
   const [messages, setMessages] = useState<Message[]>([]);
+  const [messagesPage, setMessagesPage] = useState(1);
+  const [messagesTotalPages, setMessagesTotalPages] = useState(1);
+  const [loadingMoreMessages, setLoadingMoreMessages] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
   const [loadingDisputes, setLoadingDisputes] = useState(false);
   const [showQrDialog, setShowQrDialog] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState("");
-  const [showAddRequisiteDialog, setShowAddRequisiteDialog] = useState(false);
+  const [showRequisitesSheet, setShowRequisitesSheet] = useState(false);
+  const [hideArchived, setHideArchived] = useState(true);
+  const [editingRequisite, setEditingRequisite] = useState<any | null>(null);
   const [serverError, setServerError] = useState(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [messageSearch, setMessageSearch] = useState("");
   const [messageFilter, setMessageFilter] = useState("all");
   const deviceEmulatorRef = useRef<DeviceEmulator | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const expiredToastShownRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     fetchDevice();
@@ -199,12 +213,20 @@ export default function DeviceDetailsPage() {
             // Update device status from ping response
             setDevice(prevDevice => {
               if (!prevDevice) return null;
-              return {
+              const nextDevice = {
                 ...prevDevice,
                 isOnline: pingResult.device.isOnline,
                 isWorking: pingResult.device.isWorking,
-                lastActiveAt: pingResult.device.lastActiveAt
-              };
+                lastActiveAt: (pingResult.device as any).lastActiveAt
+              } as any;
+              if (
+                prevDevice.isOnline === nextDevice.isOnline &&
+                prevDevice.isWorking === nextDevice.isWorking &&
+                (prevDevice as any).lastActiveAt === nextDevice.lastActiveAt
+              ) {
+                return prevDevice;
+              }
+              return nextDevice;
             });
           }
         } catch (error) {
@@ -253,14 +275,24 @@ export default function DeviceDetailsPage() {
             }, 1000);
           }
           
-          return {
+          const nextDevice = {
             ...prevDevice,
             isOnline: update.isOnline,
             isWorking: !update.isOnline && prevDevice.isWorking ? false : prevDevice.isWorking,
             energy: update.batteryLevel ?? prevDevice.energy,
             batteryLevel: update.batteryLevel ?? prevDevice.batteryLevel,
             ethernetSpeed: update.networkSpeed ?? prevDevice.ethernetSpeed
-          };
+          } as any;
+          if (
+            nextDevice.isOnline === prevDevice.isOnline &&
+            nextDevice.isWorking === prevDevice.isWorking &&
+            nextDevice.energy === prevDevice.energy &&
+            nextDevice.batteryLevel === prevDevice.batteryLevel &&
+            nextDevice.ethernetSpeed === prevDevice.ethernetSpeed
+          ) {
+            return prevDevice;
+          }
+          return nextDevice;
         });
       }
     });
@@ -300,6 +332,12 @@ export default function DeviceDetailsPage() {
       if (deviceEmulatorRef.current) {
         deviceEmulatorRef.current.disconnect();
         deviceEmulatorRef.current = null;
+      }
+      
+      // Cancel any pending requests
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
       }
     };
   }, [params.id, device?.id]);
@@ -354,9 +392,26 @@ export default function DeviceDetailsPage() {
             // Обновляем сообщения
             const messagesResponse = await traderApi.getMessages({
               deviceId: deviceData.id,
+              page: 1,
               limit: 20,
             });
-            setMessages(messagesResponse.data || []);
+            const formattedMessages =
+              messagesResponse.data?.map((msg: any) => ({
+                id: msg.id,
+                type:
+                  msg.type === "AppNotification"
+                    ? "push"
+                    : msg.type === "SMS"
+                      ? "sms"
+                      : "call",
+                sender: msg.appName || msg.sender || "Неизвестно",
+                content: msg.message || msg.content,
+                timestamp: msg.createdAt || msg.timestamp,
+                status: msg.isProcessed ? "read" : "delivered",
+              })) || [];
+            setMessages(formattedMessages);
+            setMessagesPage(1);
+            setMessagesTotalPages(messagesResponse.meta?.totalPages || 1);
             
             // Auto-start emulator in development mode to maintain connection
             if (process.env.NODE_ENV === 'development' && !deviceEmulatorRef.current) {
@@ -399,37 +454,44 @@ export default function DeviceDetailsPage() {
   }, [showQrDialog, device, params.id]);
 
   useEffect(() => {
-    if (device?.id) {
-      // Auto-refresh messages every 5 seconds
-      const interval = setInterval(async () => {
-        try {
-          const messagesResponse = await traderApi.getMessages({
-            deviceId: device.id,
-            limit: 20,
-          });
-          const formattedMessages =
-            messagesResponse.data?.map((msg: any) => ({
-              id: msg.id,
-              type:
-                msg.type === "AppNotification"
-                  ? "push"
-                  : msg.type === "SMS"
-                    ? "sms"
-                    : "call",
-              sender: msg.appName || msg.sender || "Неизвестно",
-              content: msg.message || msg.content,
-              timestamp: msg.createdAt || msg.timestamp,
-              status: msg.isProcessed ? "read" : "delivered",
-            })) || [];
-          setMessages(formattedMessages);
-        } catch (error) {
-          console.error("Error refreshing messages:", error);
-        }
-      }, 5000);
-
-      return () => clearInterval(interval);
+    if (activeTab !== "messages" || !device?.id) {
+      return;
     }
-  }, [device?.id]);
+    // Auto-refresh messages every 5 seconds only when Messages tab is active
+    const interval = setInterval(async () => {
+      try {
+        const messagesResponse = await traderApi.getMessages({
+          deviceId: device.id,
+          page: 1,
+          limit: 20,
+        });
+        const formattedMessages =
+          messagesResponse.data?.map((msg: any) => ({
+            id: msg.id,
+            type:
+              msg.type === "AppNotification"
+                ? "push"
+                : msg.type === "SMS"
+                  ? "sms"
+                  : "call",
+            sender: msg.appName || msg.sender || "Неизвестно",
+            content: msg.message || msg.content,
+            timestamp: msg.createdAt || msg.timestamp,
+            status: msg.isProcessed ? "read" : "delivered",
+          })) || [];
+        setMessages(prev => {
+          const existingIds = new Set(formattedMessages.map(m => m.id));
+          const older = prev.filter(m => !existingIds.has(m.id));
+          return [...formattedMessages, ...older];
+        });
+        setMessagesTotalPages(messagesResponse.meta?.totalPages || 1);
+      } catch (error) {
+        console.error("Error refreshing messages:", error);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [activeTab, device?.id]);
 
   // Load transactions when deals tab is selected
   useEffect(() => {
@@ -439,10 +501,19 @@ export default function DeviceDetailsPage() {
   }, [activeTab, device?.id]);
 
   const fetchDevice = async () => {
+    // Cancel any previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+    
     try {
       setLoading(true);
       setServerError(false);
-      const deviceData = await traderApi.getDevice(params.id as string);
+      const deviceData = await traderApi.getDevice(params.id as string, { signal });
       console.log('[DeviceDetailsPage] Fetched device data:', {
         id: deviceData.id,
         name: deviceData.name,
@@ -468,8 +539,9 @@ export default function DeviceDetailsPage() {
       try {
         const messagesResponse = await traderApi.getMessages({
           deviceId: deviceData.id,
+          page: 1,
           limit: 20,
-        });
+        }, { signal });
         const formattedMessages =
           messagesResponse.data?.map((msg: any) => ({
             id: msg.id,
@@ -485,10 +557,20 @@ export default function DeviceDetailsPage() {
             status: msg.isProcessed ? "read" : "delivered",
           })) || [];
         setMessages(formattedMessages);
-      } catch (msgError) {
-        console.error("Error fetching messages:", msgError);
+        setMessagesPage(1);
+        setMessagesTotalPages(messagesResponse.meta?.totalPages || 1);
+      } catch (msgError: any) {
+        // Ignore aborted requests (happens when component unmounts)
+        if (msgError?.name !== "AbortError" && msgError?.message !== "Request aborted" && msgError?.code !== "ERR_CANCELED") {
+          console.error("Error fetching messages:", msgError);
+        }
       }
     } catch (error: any) {
+      // Ignore aborted requests
+      if (error?.name === "AbortError" || error?.message === "Request aborted" || error?.code === "ERR_CANCELED") {
+        return;
+      }
+      
       // Only log unexpected errors (server errors), not client errors like 404
       if (!error.response || error.response.status >= 500) {
         console.error("Error fetching device:", error);
@@ -522,7 +604,7 @@ export default function DeviceDetailsPage() {
         return;
       } else if (error.response?.data?.error) {
         toast.error(error.response.data.error);
-      } else if (error.message) {
+      } else if (error.message && error.message !== "Request aborted") {
         toast.error(`Ошибка: ${error.message}`);
       } else {
         toast.error("Не удалось загрузить данные устройства");
@@ -534,6 +616,40 @@ export default function DeviceDetailsPage() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMoreMessages = async () => {
+    if (!device?.id || messagesPage >= messagesTotalPages) return;
+    try {
+      setLoadingMoreMessages(true);
+      const nextPage = messagesPage + 1;
+      const response = await traderApi.getMessages({
+        deviceId: device.id,
+        page: nextPage,
+        limit: 20,
+      });
+      const newMessages =
+        response.data?.map((msg: any) => ({
+          id: msg.id,
+          type:
+            msg.type === "AppNotification"
+              ? "push"
+              : msg.type === "SMS"
+                ? "sms"
+                : "call",
+          sender: msg.appName || msg.sender || "Неизвестно",
+          content: msg.message || msg.content,
+          timestamp: msg.createdAt || msg.timestamp,
+          status: msg.isProcessed ? "read" : "delivered",
+        })) || [];
+      setMessages(prev => [...prev, ...newMessages]);
+      setMessagesPage(nextPage);
+      setMessagesTotalPages(response.meta?.totalPages || messagesTotalPages);
+    } catch (error) {
+      console.error("Error loading more messages:", error);
+    } finally {
+      setLoadingMoreMessages(false);
     }
   };
 
@@ -649,37 +765,44 @@ export default function DeviceDetailsPage() {
   };
 
   const fetchDisputes = async () => {
-    if (!device?.linkedBankDetails || device.linkedBankDetails.length === 0) {
+    if (!device) {
       setDisputes([]);
       return;
     }
 
     try {
       setLoadingDisputes(true);
-      
-      // Загружаем споры по сделкам
-      const dealDisputesRes = await traderApi.getDealDisputes({ status: 'all' });
-      const payoutDisputesRes = await traderApi.getPayoutDisputes({ status: 'all' });
-      
-      const dealDisputes = (dealDisputesRes.data || []).filter((dispute: any) => {
-        // Фильтруем споры, связанные с транзакциями этого устройства
-        return transactions.some(t => t.id === dispute.dealId);
+
+      const dealParams: any = { page: 1, limit: 50 };
+      const payoutParams: any = { page: 1, limit: 50, type: 'payouts' };
+
+      // Локальный таймаут, чтобы не зависать бесконечно
+      const timeoutMs = 15000;
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timeout')), timeoutMs)
+      );
+
+      const [dealDisputesRes, payoutDisputesRes]: any = await Promise.all([
+        Promise.race([traderApi.getDealDisputes(dealParams), timeoutPromise]),
+        Promise.race([traderApi.getPayoutDisputes(payoutParams), timeoutPromise])
+      ]);
+
+      const dealDisputes = (dealDisputesRes?.data || []).filter((dispute: any) => {
+        // Фильтруем споры по сделкам, где реквизиты принадлежат текущему устройству
+        return dispute?.deal?.requisites?.device?.id === device.id;
       });
-      
-      const payoutDisputes = (payoutDisputesRes.data || []).filter((dispute: any) => {
-        // Фильтруем споры по выплатам, связанные с реквизитами устройства
-        return device.linkedBankDetails?.some(bd => 
-          dispute.payout?.bankDetailId === bd.id
-        );
+
+      const payoutDisputes = (payoutDisputesRes?.data || []).filter((dispute: any) => {
+        // Фильтруем споры по выплатам по привязанным к устройству реквизитам
+        return device.linkedBankDetails?.some((bd: any) => dispute?.payout?.bankDetailId === bd.id);
       });
-      
+
       const allDisputes = [...dealDisputes, ...payoutDisputes];
-      
-      // Сортируем по дате создания (новые сначала)
-      allDisputes.sort((a, b) => 
+
+      allDisputes.sort((a: any, b: any) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
-      
+
       setDisputes(allDisputes);
     } catch (error) {
       console.error("Error fetching disputes:", error);
@@ -694,7 +817,7 @@ export default function DeviceDetailsPage() {
       <ProtectedRoute variant="trader">
         <AuthLayout variant="trader">
           <div className="flex items-center justify-center h-96">
-            <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
           </div>
         </AuthLayout>
       </ProtectedRoute>
@@ -727,7 +850,7 @@ export default function DeviceDetailsPage() {
                   К списку устройств
                 </Button>
                 <Button
-                  className="bg-[#530FAD] hover:bg-[#530FAD/90] dark:bg-[#530FAD] dark:hover:bg-[#530FAD/80]"
+                  className="bg-[#006039] hover:bg-[#004d2e] dark:bg-[#2d6a42] dark:hover:bg-[#236035]"
                   onClick={() => {
                     setServerError(false);
                     fetchDevice();
@@ -738,7 +861,7 @@ export default function DeviceDetailsPage() {
                 </Button>
               </div>
               {serverError && (
-                <div className="mt-6 p-4 bg-gray-100 dark:bg-[#292133]/30 rounded-lg max-w-2xl text-left">
+                <div className="mt-6 p-4 bg-gray-100 dark:bg-[#29382f]/30 rounded-lg max-w-2xl text-left">
                   <p className="text-sm font-medium text-gray-900 dark:text-[#eeeeee] mb-2">
                     Возможные причины ошибки:
                   </p>
@@ -771,7 +894,14 @@ export default function DeviceDetailsPage() {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 sm:h-10 sm:w-10"
-                onClick={() => router.push("/trader/devices")}
+                onClick={() => {
+                  if (fromTransaction && transactionId) {
+                    // Return to the deals page with the transaction selected
+                    router.push(`/trader/dashboard?selectedTransaction=${transactionId}`);
+                  } else {
+                    router.push("/trader/devices");
+                  }
+                }}
               >
                 <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
@@ -833,9 +963,8 @@ export default function DeviceDetailsPage() {
                     </Button>
                   ) : (
                     <Button
-                      className="bg-[#530FAD] hover:bg-[#530FAD]/90"
+                      className="bg-[#006039] hover:bg-[#006039]/90 h-8 px-3"
                       size="sm"
-                      className="h-8 px-3"
                       onClick={async () => {
                         try {
                           // First ping to get fresh status
@@ -874,7 +1003,7 @@ export default function DeviceDetailsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Phone Mockup */}
             <div className="lg:col-span-1 order-2 lg:order-1">
-              <Card className="p-1 border-none dark:bg-[#292133]/30 hidden sm:block">
+              <Card className="p-1 border-none dark:bg-[#29382f]/30 hidden sm:block">
                 <div className="relative mx-auto w-[240px] sm:w-[280px] h-[480px] sm:h-[560px]">
                   {/* Phone Frame */}
                   <div className="absolute inset-0 bg-gray-900 dark:bg-black rounded-[40px] border-[6px] border-gray-800 dark:border-gray-900">
@@ -915,8 +1044,8 @@ export default function DeviceDetailsPage() {
                           <Logo size="lg" />
                           {device.isOnline ? (
                             <>
-                              <div className="mt-10 p-4 rounded-full bg-purple-100 dark:bg-purple-900/30">
-                                <Globe className="w-10 h-10 text-purple-500 dark:text-[#530FAD]" />
+                              <div className="mt-10 p-4 rounded-full bg-green-100 dark:bg-green-900/30">
+                                <Globe className="w-10 h-10 text-green-500 dark:text-[#2d6a42]" />
                               </div>
                             </>
                           ) : (
@@ -951,7 +1080,7 @@ export default function DeviceDetailsPage() {
                                   <p className={cn(
                                     "rounded-md px-4 py-2 uppercase",
                                     device.isOnline 
-                                      ? "text-purple-500 dark:text-purple-300 bg-purple-200 dark:bg-purple-900/30"
+                                      ? "text-green-500 dark:text-green-300 bg-green-200 dark:bg-green-900/30"
                                       : "text-red-500 dark:text-red-300 bg-red-200 dark:bg-red-900/30"
                                   )}>
                                     {device.isOnline 
@@ -986,13 +1115,13 @@ export default function DeviceDetailsPage() {
               {/* Info Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {/* Device Info Card */}
-                <Card className="p-4 sm:p-6 dark:bg-[#292133]/30">
+                <Card className="p-4 sm:p-6 dark:bg-[#29382f]/30">
                   <div className="flex items-center justify-between mb-4">
-                    <Smartphone className="h-5 w-5 text-[#530FAD] dark:text-[#530FAD]" />
+                    <Smartphone className="h-5 w-5 text-[#006039] dark:text-[#2d6a42]" />
                     <Badge
                       className={
                         device.isOnline
-                          ? "bg-purple-100 text-purple-700 border-0 dark:bg-purple-900/30 dark:text-purple-400"
+                          ? "bg-green-100 text-green-700 border-0 dark:bg-green-900/30 dark:text-green-400"
                           : "bg-gray-100 text-gray-700 border-0 dark:bg-gray-800 dark:text-gray-400"
                       }
                     >
@@ -1009,9 +1138,9 @@ export default function DeviceDetailsPage() {
                 </Card>
 
                 {/* Status Card */}
-                <Card className="p-4 sm:p-6 dark:bg-[#292133]/30">
+                <Card className="p-4 sm:p-6 dark:bg-[#29382f]/30">
                   <div className="flex items-center justify-between mb-4">
-                    <Activity className="h-5 w-5 text-[#530FAD] dark:text-[#530FAD]" />
+                    <Activity className="h-5 w-5 text-[#006039] dark:text-[#2d6a42]" />
                     <span className="text-sm text-gray-500 dark:text-gray-400">Статус</span>
                   </div>
                   {console.log('[DeviceDetailsPage] Status card check:', {
@@ -1038,7 +1167,7 @@ export default function DeviceDetailsPage() {
                         className={cn(
                           "w-full justify-center py-2",
                           device.isWorking 
-                            ? "bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-800/30 dark:text-purple-300 dark:border-purple-600" 
+                            ? "bg-green-100 text-green-700 border-green-300 dark:bg-green-800/30 dark:text-green-300 dark:border-green-600" 
                             : "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-900/50 dark:text-gray-400 dark:border-gray-700"
                         )}
                       >
@@ -1049,10 +1178,10 @@ export default function DeviceDetailsPage() {
                 </Card>
 
                 {/* WiFi Status Card */}
-                <Card className="p-4 sm:p-6 dark:bg-[#292133]/30">
+                <Card className="p-4 sm:p-6 dark:bg-[#29382f]/30">
                   <div className="flex items-center justify-between mb-4">
                     {device.isOnline ? (
-                      <Wifi className="h-5 w-5 text-[#530FAD] dark:text-[#530FAD]" />
+                      <Wifi className="h-5 w-5 text-[#006039] dark:text-[#2d6a42]" />
                     ) : (
                       <WifiOff className="h-5 w-5 text-gray-500 dark:text-gray-500" />
                     )}
@@ -1071,9 +1200,9 @@ export default function DeviceDetailsPage() {
                 </Card>
 
                 {/* SIM Card Info Card */}
-                <Card className="p-4 sm:p-6 dark:bg-[#292133]/30">
+                <Card className="p-4 sm:p-6 dark:bg-[#29382f]/30">
                   <div className="flex items-center justify-between mb-4">
-                    <Globe className="h-5 w-5 text-[#530FAD] dark:text-[#530FAD]" />
+                    <Globe className="h-5 w-5 text-[#006039] dark:text-[#2d6a42]" />
                     <span className="text-sm text-gray-500 dark:text-gray-400">Сеть</span>
                   </div>
                   <h3 className="font-semibold mb-1 dark:text-[#eeeeee]">
@@ -1092,39 +1221,101 @@ export default function DeviceDetailsPage() {
               <Card className="p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                   <h3 className="font-semibold">Привязанные реквизиты</h3>
-                  <Button
-                    size="sm"
-                    className="h-8 px-3 bg-[#530FAD] hover:bg-[#530FAD]/90 w-full sm:w-auto"
-                    onClick={() => setShowAddRequisiteDialog(true)}
-                  >
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Добавить
-                  </Button>
+                  <div className="flex items-center gap-3">
+                    <Label htmlFor="hide-archived" className="flex items-center gap-2 text-sm">
+                      <Checkbox id="hide-archived" checked={hideArchived} onCheckedChange={(c) => setHideArchived(!!c)} />
+                      Скрыть архив
+                    </Label>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-4 w-full sm:w-auto"
+                      onClick={() => setShowRequisitesSheet(true)}
+                    >
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Управление реквизитами
+                    </Button>
+                  </div>
                 </div>
 
                 {device.linkedBankDetails &&
                 device.linkedBankDetails.length > 0 ? (
                   <ScrollArea className="h-[150px]">
                     <div className="space-y-3">
-                      {device.linkedBankDetails.map((req: any) => (
+                      {console.log('[DeviceDetailsPage] Requisites:', {
+                        total: device.linkedBankDetails.length,
+                        hideArchived,
+                        requisites: device.linkedBankDetails.map((r: any) => ({
+                          id: r.id,
+                          isActive: r.isActive,
+                          isArchived: r.isArchived,
+                          cardNumber: r.cardNumber
+                        }))
+                      })}
+                      {device.linkedBankDetails
+                        .filter((req: any) => !hideArchived || !req.isArchived)
+                        .map((req: any) => (
                         <div
                           key={req.id}
-                          className="flex items-center justify-between p-3 bg-gray-50 dark:bg-[#292133]/30 rounded-lg"
+                          className="flex items-center justify-between p-3 bg-gray-50 dark:bg-[#29382f]/30 rounded-lg"
                         >
                           <div className="flex items-center gap-3">
-                            <CreditCard className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                            {getBankIcon(req.bankType, "sm")}
                             <div>
                               <p className="font-medium dark:text-[#eeeeee]">
-                                **** {req.cardNumber?.slice(-4) || "0000"}
+                                {req.cardNumber || req.phoneNumber || "Не указан"}
                               </p>
                               <p className="text-sm text-gray-500 dark:text-gray-400">
-                                {req.bankType} • {req.recipientName}
+                                {req.methodType || req.method?.type || 'N/A'} • {req.bankType} • {req.recipientName}
                               </p>
                             </div>
                           </div>
-                          <Badge variant="outline" className="text-xs">
-                            {req.isActive ? "Активен" : "Неактивен"}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            {(req?.deviceId || req?.device || req?.hasDevice) && (
+                              <Badge
+                                className={cn(
+                                  "text-xs",
+                                  device.isWorking
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-gray-100 text-gray-800"
+                                )}
+                              >
+                                {device.isWorking ? "Устройство: в работе" : "Устройство: не в работе"}
+                              </Badge>
+                            )}
+                            <Badge
+                              className={cn(
+                                "text-xs",
+                                req.isActive && !req.isArchived
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-gray-100 text-gray-800"
+                              )}
+                            >
+                              {req.isActive ? "Реквизит: активен" : "Реквизит: неактивен"}
+                            </Badge>
+                            <Badge
+                              className={cn(
+                                "text-xs",
+                                req.isArchived
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-gray-100 text-gray-800"
+                              )}
+                            >
+                              {req.isArchived ? "В архиве" : "Не в архиве"}
+                            </Badge>
+                            {!device?.isWorking && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setEditingRequisite(req);
+                                  setShowRequisitesSheet(true);
+                                }}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1146,7 +1337,7 @@ export default function DeviceDetailsPage() {
                 <TabsList className="h-12 p-0 bg-transparent rounded-none w-full sm:w-auto min-w-max justify-start">
                   <TabsTrigger
                     value="messages"
-                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#530FAD] rounded-none px-3 sm:px-6 text-xs sm:text-sm whitespace-nowrap"
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#006039] rounded-none px-3 sm:px-6 text-xs sm:text-sm whitespace-nowrap"
                   >
                     <MessageSquare className="h-4 w-4 mr-1 sm:mr-2" />
                     <span className="hidden sm:inline">Сообщения</span>
@@ -1154,21 +1345,21 @@ export default function DeviceDetailsPage() {
                   </TabsTrigger>
                   <TabsTrigger
                     value="deals"
-                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#530FAD] rounded-none px-3 sm:px-6 text-xs sm:text-sm whitespace-nowrap"
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#006039] rounded-none px-3 sm:px-6 text-xs sm:text-sm whitespace-nowrap"
                   >
                     <CreditCard className="h-4 w-4 mr-1 sm:mr-2" />
                     Сделки
                   </TabsTrigger>
                   <TabsTrigger
                     value="disputes"
-                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#530FAD] rounded-none px-3 sm:px-6 text-xs sm:text-sm whitespace-nowrap"
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#006039] rounded-none px-3 sm:px-6 text-xs sm:text-sm whitespace-nowrap"
                   >
                     <Scale className="h-4 w-4 mr-1 sm:mr-2" />
                     Споры
                   </TabsTrigger>
                   <TabsTrigger
                     value="events"
-                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#530FAD] rounded-none px-3 sm:px-6 text-xs sm:text-sm whitespace-nowrap"
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-[#006039] rounded-none px-3 sm:px-6 text-xs sm:text-sm whitespace-nowrap"
                   >
                     <Clock className="h-4 w-4 mr-1 sm:mr-2" />
                     События
@@ -1202,146 +1393,164 @@ export default function DeviceDetailsPage() {
                   </div>
                 </div>
                 
-                <div className="p-4 sm:p-6 pt-3 sm:pt-4 space-y-3">
-                  {messages
-                    .filter(message => {
-                      const matchesSearch = message.content.toLowerCase().includes(messageSearch.toLowerCase()) ||
-                                          message.sender.toLowerCase().includes(messageSearch.toLowerCase());
-                      const matchesFilter = messageFilter === "all" || message.type === messageFilter;
-                      return matchesSearch && matchesFilter;
-                    })
-                    .length === 0 ? (
-                    <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                      <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-                      <p>Нет сообщений</p>
-                    </div>
-                  ) : (
-                    messages
+                <ScrollArea className="h-[60vh] overscroll-contain">
+                  <div className="p-4 sm:p-6 pt-3 sm:pt-4 space-y-3">
+                    {messages
                       .filter(message => {
                         const matchesSearch = message.content.toLowerCase().includes(messageSearch.toLowerCase()) ||
                                             message.sender.toLowerCase().includes(messageSearch.toLowerCase());
                         const matchesFilter = messageFilter === "all" || message.type === messageFilter;
                         return matchesSearch && matchesFilter;
                       })
-                      .map((message) => {
-                    // Determine message styling based on content
-                    const isBank = message.sender?.toLowerCase().includes('bank') || 
-                                  message.sender?.toLowerCase().includes('сбер') ||
-                                  message.sender?.toLowerCase().includes('тинькофф') ||
-                                  message.sender?.toLowerCase().includes('альфа');
-                    const isAmount = message.content.match(/\d+[\s,.]?\d*\s*(руб|RUB|₽)/i);
-                    const iconColor = isBank ? "primary" : message.type === "push" ? "accent" : "warning";
-                    
-                    return (
-                      <div
-                        key={message.id}
-                        className="block hover:bg-gray-50 dark:hover:bg-[#292133]/30 transition-colors rounded-lg"
-                      >
-                        <div className="p-4">
-                          <div className="flex items-start gap-4">
-                            {/* Icon */}
-                            <div className={cn(
-                              "p-2.5 rounded-lg flex items-center justify-center flex-shrink-0",
-                              iconColor === "primary" && "bg-blue-100 dark:bg-blue-900/30",
-                              iconColor === "accent" && "bg-purple-100 dark:bg-purple-900/30",
-                              iconColor === "warning" && "bg-yellow-100 dark:bg-yellow-900/30"
-                            )}>
-                              {message.type === "sms" && (
-                                <MessageSquare className={cn(
-                                  "h-5 w-5",
-                                  iconColor === "primary" && "text-blue-600 dark:text-blue-400",
-                                  iconColor === "accent" && "text-purple-600 dark:text-purple-400",
-                                  iconColor === "warning" && "text-yellow-600 dark:text-yellow-400"
-                                )} />
-                              )}
-                              {message.type === "push" && (
-                                <MessageCircle className={cn(
-                                  "h-5 w-5",
-                                  iconColor === "primary" && "text-blue-600 dark:text-blue-400",
-                                  iconColor === "accent" && "text-purple-600 dark:text-purple-400",
-                                  iconColor === "warning" && "text-yellow-600 dark:text-yellow-400"
-                                )} />
-                              )}
-                              {message.type === "call" && (
-                                <Users className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-                              )}
-                            </div>
-                            
-                            {/* Content */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className={cn(
-                                  "font-medium text-sm",
-                                  iconColor === "primary" && "text-gray-900 dark:text-[#eeeeee]",
-                                  iconColor === "accent" && "text-purple-600 dark:text-purple-400",
-                                  iconColor === "warning" && "text-yellow-600 dark:text-yellow-400"
-                                )}>
-                                  {message.sender}
-                                </span>
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  {format(new Date(message.timestamp), "HH:mm")}
-                                </span>
-                              </div>
-                              <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
-                                {message.content}
-                              </p>
-                              
-                              {/* Amount or device info */}
-                              {isAmount && (
-                                <div className="flex items-center gap-3 mt-3">
-                                  <div className="p-1.5 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                                    <DollarSign className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                                  </div>
-                                  <div className="flex-1">
-                                    <p className="text-sm font-medium text-gray-900 dark:text-[#eeeeee]">
-                                      {isAmount[0]}
-                                    </p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                                      Сумма операции
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
-                              
-                              {!isAmount && (
-                                <div className="flex items-center gap-3 mt-3">
-                                  <div className="p-1.5 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                                    <Smartphone className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                                  </div>
-                                  <div className="flex-1">
-                                    <p className="text-sm font-medium text-gray-900 dark:text-[#eeeeee]">
-                                      {device.name}
-                                    </p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                                      {message.type === "sms" ? "SMS сообщение" : "Push уведомление"}
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                            
-                            {/* Status or amount on the right */}
-                            {isAmount && (
-                              <span className={cn(
-                                "text-sm font-semibold ml-auto flex-shrink-0",
-                                iconColor === "primary" && "text-gray-900 dark:text-[#eeeeee]"
+                      .length === 0 ? (
+                      <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                        <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                        <p>Нет сообщений</p>
+                      </div>
+                    ) : (
+                      messages
+                        .filter(message => {
+                          const matchesSearch = message.content.toLowerCase().includes(messageSearch.toLowerCase()) ||
+                                              message.sender.toLowerCase().includes(messageSearch.toLowerCase());
+                          const matchesFilter = messageFilter === "all" || message.type === messageFilter;
+                          return matchesSearch && matchesFilter;
+                        })
+                        .map((message) => {
+                      // Determine message styling based on content
+                      const isBank = message.sender?.toLowerCase().includes('bank') || 
+                                    message.sender?.toLowerCase().includes('сбер') ||
+                                    message.sender?.toLowerCase().includes('тинькофф') ||
+                                    message.sender?.toLowerCase().includes('альфа');
+                      const isAmount = message.content.match(/\d+[\s,.]?\d*\s*(руб|RUB|₽)/i);
+                      const iconColor = isBank ? "primary" : message.type === "push" ? "accent" : "warning";
+                      
+                      return (
+                        <div
+                          key={message.id}
+                          className="block hover:bg-gray-50 dark:hover:bg-[#29382f]/30 transition-colors rounded-lg"
+                        >
+                          <div className="p-4">
+                            <div className="flex items-start gap-4">
+                              {/* Icon */}
+                              <div className={cn(
+                                "p-2.5 rounded-lg flex items-center justify-center flex-shrink-0",
+                                iconColor === "primary" && "bg-blue-100 dark:bg-blue-900/30",
+                                iconColor === "accent" && "bg-purple-100 dark:bg-purple-900/30",
+                                iconColor === "warning" && "bg-yellow-100 dark:bg-yellow-900/30"
                               )}>
-                                {isAmount[0]}
-                              </span>
-                            )}
+                                {message.type === "sms" && (
+                                  <MessageSquare className={cn(
+                                    "h-5 w-5",
+                                    iconColor === "primary" && "text-blue-600 dark:text-blue-400",
+                                    iconColor === "accent" && "text-purple-600 dark:text-purple-400",
+                                    iconColor === "warning" && "text-yellow-600 dark:text-yellow-400"
+                                  )} />
+                                )}
+                                {message.type === "push" && (
+                                  <MessageCircle className={cn(
+                                    "h-5 w-5",
+                                    iconColor === "primary" && "text-blue-600 dark:text-blue-400",
+                                    iconColor === "accent" && "text-purple-600 dark:text-purple-400",
+                                    iconColor === "warning" && "text-yellow-600 dark:text-yellow-400"
+                                  )} />
+                                )}
+                                {message.type === "call" && (
+                                  <Users className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                                )}
+                              </div>
+                              
+                              {/* Content */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className={cn(
+                                    "font-medium text-sm",
+                                    iconColor === "primary" && "text-gray-900 dark:text-[#eeeeee]",
+                                    iconColor === "accent" && "text-purple-600 dark:text-purple-400",
+                                    iconColor === "warning" && "text-yellow-600 dark:text-yellow-400"
+                                  )}>
+                                    {message.sender}
+                                  </span>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    {format(new Date(message.timestamp), "HH:mm")}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
+                                  {message.content}
+                                </p>
+                                
+                                {/* Amount or device info */}
+                                {isAmount && (
+                                  <div className="flex items-center gap-3 mt-3">
+                                    <div className="p-1.5 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                      <DollarSign className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-sm font-medium text-gray-900 dark:text-[#eeeeee]">
+                                        {isAmount[0]}
+                                      </p>
+                                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                                        Сумма операции
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {!isAmount && (
+                                  <div className="flex items-center gap-3 mt-3">
+                                    <div className="p-1.5 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                      <Smartphone className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-sm font-medium text-gray-900 dark:text-[#eeeeee]">
+                                        {device.name}
+                                      </p>
+                                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                                        {message.type === "sms" ? "SMS сообщение" : "Push уведомление"}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Status or amount on the right */}
+                              {isAmount && (
+                                <span className={cn(
+                                  "text-sm font-semibold ml-auto flex-shrink-0",
+                                  iconColor === "primary" && "text-gray-900 dark:text-[#eeeeee]"
+                                )}>
+                                  {isAmount[0]}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })
-                )}
-                </div>
+                      );
+                    })
+                  )}
+                  </div>
+                  {messagesPage < messagesTotalPages && (
+                    <div className="p-4 sm:p-6 pt-0">
+                      <Button
+                        variant="outline"
+                        onClick={loadMoreMessages}
+                        disabled={loadingMoreMessages}
+                        className="w-full"
+                      >
+                        {loadingMoreMessages ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          'Загрузить еще'
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </ScrollArea>
               </TabsContent>
 
               <TabsContent value="deals" className="p-6">
                 {loadingTransactions ? (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
+                    <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
                   </div>
                 ) : transactions.length === 0 ? (
                   <div className="text-center py-12 text-gray-500 dark:text-gray-400">
@@ -1350,76 +1559,78 @@ export default function DeviceDetailsPage() {
                     <p className="text-sm mt-2">Сделки, связанные с реквизитами этого устройства, будут отображаться здесь</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {transactions.map((transaction) => (
-                      <Card
-                        key={transaction.id}
-                        className="p-4 hover:shadow-md transition-all cursor-pointer"
-                        onClick={() => window.location.href = `/trader/deals`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className={cn(
-                              "p-2 rounded-lg",
-                              transaction.status === "READY" ? "bg-purple-100 dark:bg-purple-900/30" :
-                              transaction.status === "IN_PROGRESS" ? "bg-yellow-100 dark:bg-yellow-900/30" :
-                              transaction.status === "DISPUTE" ? "bg-orange-100 dark:bg-orange-900/30" :
-                              transaction.status === "EXPIRED" ? "bg-gray-100 dark:bg-gray-700" :
-                              "bg-red-100 dark:bg-red-900/30"
-                            )}>
-                              <CreditCard className={cn(
-                                "h-5 w-5",
-                                transaction.status === "READY" ? "text-purple-600 dark:text-purple-400" :
-                                transaction.status === "IN_PROGRESS" ? "text-yellow-600 dark:text-yellow-400" :
-                                transaction.status === "DISPUTE" ? "text-orange-600 dark:text-orange-400" :
-                                transaction.status === "EXPIRED" ? "text-gray-600 dark:text-gray-400" :
-                                "text-red-600 dark:text-red-400"
-                              )} />
-                            </div>
-                            <div>
-                              <h3 className="font-semibold">
-                                Сделка #{transaction.numericId}
-                              </h3>
-                              <div className="flex items-center gap-4 mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                <span>{transaction.merchant?.name || "Неизвестный мерчант"}</span>
-                                <span>{new Date(transaction.createdAt).toLocaleString('ru-RU')}</span>
+                  <ScrollArea className="h-[60vh] overscroll-contain">
+                    <div className="space-y-4">
+                      {transactions.map((transaction) => (
+                        <Card
+                          key={transaction.id}
+                          className="p-4 hover:shadow-md transition-all cursor-pointer"
+                          onClick={() => window.location.href = `/trader/deals`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className={cn(
+                                "p-2 rounded-lg",
+                                transaction.status === "READY" ? "bg-green-100 dark:bg-green-900/30" :
+                                transaction.status === "IN_PROGRESS" ? "bg-yellow-100 dark:bg-yellow-900/30" :
+                                transaction.status === "DISPUTE" ? "bg-orange-100 dark:bg-orange-900/30" :
+                                transaction.status === "EXPIRED" ? "bg-gray-100 dark:bg-gray-700" :
+                                "bg-red-100 dark:bg-red-900/30"
+                              )}>
+                                <CreditCard className={cn(
+                                  "h-5 w-5",
+                                  transaction.status === "READY" ? "text-green-600 dark:text-green-400" :
+                                  transaction.status === "IN_PROGRESS" ? "text-yellow-600 dark:text-yellow-400" :
+                                  transaction.status === "DISPUTE" ? "text-orange-600 dark:text-orange-400" :
+                                  transaction.status === "EXPIRED" ? "text-gray-600 dark:text-gray-400" :
+                                  "text-red-600 dark:text-red-400"
+                                )} />
+                              </div>
+                              <div>
+                                <h3 className="font-semibold">
+                                  Сделка #{transaction.numericId}
+                                </h3>
+                                <div className="flex items-center gap-4 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                  <span>{transaction.merchant?.name || "Неизвестный мерчант"}</span>
+                                  <span>{new Date(transaction.createdAt).toLocaleString('ru-RU')}</span>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-semibold">{formatAmount(transaction.amount)} ₽</p>
-                            <Badge className={cn(
-                              "mt-1",
-                              transaction.status === "READY" ? "bg-purple-100 text-purple-800" :
-                              transaction.status === "IN_PROGRESS" ? "bg-yellow-100 text-yellow-800" :
-                              transaction.status === "DISPUTE" ? "bg-orange-100 text-orange-800" :
-                              transaction.status === "EXPIRED" ? "bg-gray-100 text-gray-800" :
-                              "bg-red-100 text-red-800"
-                            )}>
-                              {transaction.status === "READY" ? "Завершена" :
-                               transaction.status === "IN_PROGRESS" ? "В работе" :
-                               transaction.status === "DISPUTE" ? "Спор" :
-                               transaction.status === "EXPIRED" ? "Истекла" :
-                               transaction.status === "CANCELED" ? "Отменена" :
-                               transaction.status}
-                            </Badge>
-                            {transaction.dealDispute && (
-                              <Badge className="ml-2 bg-orange-100 text-orange-800">
-                                Спор
+                            <div className="text-right">
+                              <p className="font-semibold">{formatAmount(transaction.amount)} ₽</p>
+                              <Badge className={cn(
+                                "mt-1",
+                                transaction.status === "READY" ? "bg-green-100 text-green-800" :
+                                transaction.status === "IN_PROGRESS" ? "bg-yellow-100 text-yellow-800" :
+                                transaction.status === "DISPUTE" ? "bg-orange-100 text-orange-800" :
+                                transaction.status === "EXPIRED" ? "bg-gray-100 text-gray-800" :
+                                "bg-red-100 text-red-800"
+                              )}>
+                                {transaction.status === "READY" ? "Завершена" :
+                                 transaction.status === "IN_PROGRESS" ? "В работе" :
+                                 transaction.status === "DISPUTE" ? "Спор" :
+                                 transaction.status === "EXPIRED" ? "Истекла" :
+                                 transaction.status === "CANCELED" ? "Отменена" :
+                                 transaction.status}
                               </Badge>
-                            )}
+                              {transaction.dealDispute && (
+                                <Badge className="ml-2 bg-orange-100 text-orange-800">
+                                  Спор
+                                </Badge>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </ScrollArea>
                 )}
               </TabsContent>
 
               <TabsContent value="disputes" className="p-6">
                 {loadingDisputes ? (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
+                    <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
                   </div>
                 ) : disputes.length === 0 ? (
                   <div className="text-center py-12 text-gray-500 dark:text-gray-400">
@@ -1428,72 +1639,74 @@ export default function DeviceDetailsPage() {
                     <p className="text-sm mt-2">Споры, связанные со сделками этого устройства, будут отображаться здесь</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {disputes.map((dispute) => (
-                      <Card
-                        key={dispute.id}
-                        className="p-4 hover:shadow-md transition-all cursor-pointer"
-                        onClick={() => window.location.href = `/trader/disputes`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className={cn(
-                              "p-2 rounded-lg",
-                              dispute.status === "OPEN" ? "bg-yellow-100 dark:bg-yellow-900/30" :
-                              dispute.status === "IN_PROGRESS" ? "bg-blue-100 dark:bg-blue-900/30" :
-                              dispute.status === "RESOLVED_SUCCESS" ? "bg-purple-100 dark:bg-purple-900/30" :
-                              dispute.status === "RESOLVED_FAIL" ? "bg-red-100 dark:bg-red-900/30" :
-                              "bg-gray-100 dark:bg-gray-700"
-                            )}>
-                              <Scale className={cn(
-                                "h-5 w-5",
-                                dispute.status === "OPEN" ? "text-yellow-600 dark:text-yellow-400" :
-                                dispute.status === "IN_PROGRESS" ? "text-blue-600 dark:text-blue-400" :
-                                dispute.status === "RESOLVED_SUCCESS" ? "text-purple-600 dark:text-purple-400" :
-                                dispute.status === "RESOLVED_FAIL" ? "text-red-600 dark:text-red-400" :
-                                "text-gray-600 dark:text-gray-400"
-                              )} />
-                            </div>
-                            <div>
-                              <h3 className="font-semibold">
-                                {dispute.deal ? 
-                                  `Спор по сделке #${dispute.deal.numericId}` : 
-                                  `Спор по выплате #${dispute.payout?.numericId || "?"}`
-                                }
-                              </h3>
-                              <div className="flex items-center gap-4 mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                <span>{dispute.merchant?.name || "Неизвестный мерчант"}</span>
-                                <span>{new Date(dispute.createdAt).toLocaleString('ru-RU')}</span>
+                  <ScrollArea className="h-[60vh] overscroll-contain">
+                    <div className="space-y-4">
+                      {disputes.map((dispute) => (
+                        <Card
+                          key={dispute.id}
+                          className="p-4 hover:shadow-md transition-all cursor-pointer"
+                          onClick={() => window.location.href = `/trader/disputes`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className={cn(
+                                "p-2 rounded-lg",
+                                dispute.status === "OPEN" ? "bg-yellow-100 dark:bg-yellow-900/30" :
+                                dispute.status === "IN_PROGRESS" ? "bg-blue-100 dark:bg-blue-900/30" :
+                                dispute.status === "RESOLVED_SUCCESS" ? "bg-green-100 dark:bg-green-900/30" :
+                                dispute.status === "RESOLVED_FAIL" ? "bg-red-100 dark:bg-red-900/30" :
+                                "bg-gray-100 dark:bg-gray-700"
+                              )}>
+                                <Scale className={cn(
+                                  "h-5 w-5",
+                                  dispute.status === "OPEN" ? "text-yellow-600 dark:text-yellow-400" :
+                                  dispute.status === "IN_PROGRESS" ? "text-blue-600 dark:text-blue-400" :
+                                  dispute.status === "RESOLVED_SUCCESS" ? "text-green-600 dark:text-green-400" :
+                                  dispute.status === "RESOLVED_FAIL" ? "text-red-600 dark:text-red-400" :
+                                  "text-gray-600 dark:text-gray-400"
+                                )} />
+                              </div>
+                              <div>
+                                <h3 className="font-semibold">
+                                  {dispute.deal ? 
+                                    `Спор по сделке #${dispute.deal.numericId}` : 
+                                    `Спор по выплате #${dispute.payout?.numericId || "?"}`
+                                  }
+                                </h3>
+                                <div className="flex items-center gap-4 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                  <span>{dispute.merchant?.name || "Неизвестный мерчант"}</span>
+                                  <span>{new Date(dispute.createdAt).toLocaleString('ru-RU')}</span>
+                                </div>
                               </div>
                             </div>
+                            <div className="text-right">
+                              <p className="font-semibold">
+                                {dispute.deal ? 
+                                  formatAmount(dispute.deal.amount) : 
+                                  formatAmount(dispute.payout?.amount || 0)
+                                } ₽
+                              </p>
+                              <Badge className={cn(
+                                "mt-1",
+                                dispute.status === "OPEN" ? "bg-yellow-100 text-yellow-800" :
+                                dispute.status === "IN_PROGRESS" ? "bg-blue-100 text-blue-800" :
+                                dispute.status === "RESOLVED_SUCCESS" ? "bg-green-100 text-green-800" :
+                                dispute.status === "RESOLVED_FAIL" ? "bg-red-100 text-red-800" :
+                                "bg-gray-100 text-gray-800"
+                              )}>
+                                {dispute.status === "OPEN" ? "Открыт" :
+                                 dispute.status === "IN_PROGRESS" ? "На рассмотрении" :
+                                 dispute.status === "RESOLVED_SUCCESS" ? "В вашу пользу" :
+                                 dispute.status === "RESOLVED_FAIL" ? "Не в вашу пользу" :
+                                 dispute.status === "CANCELLED" ? "Отменен" :
+                                 dispute.status}
+                              </Badge>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <p className="font-semibold">
-                              {dispute.deal ? 
-                                formatAmount(dispute.deal.amount) : 
-                                formatAmount(dispute.payout?.amount || 0)
-                              } ₽
-                            </p>
-                            <Badge className={cn(
-                              "mt-1",
-                              dispute.status === "OPEN" ? "bg-yellow-100 text-yellow-800" :
-                              dispute.status === "IN_PROGRESS" ? "bg-blue-100 text-blue-800" :
-                              dispute.status === "RESOLVED_SUCCESS" ? "bg-purple-100 text-purple-800" :
-                              dispute.status === "RESOLVED_FAIL" ? "bg-red-100 text-red-800" :
-                              "bg-gray-100 text-gray-800"
-                            )}>
-                              {dispute.status === "OPEN" ? "Открыт" :
-                               dispute.status === "IN_PROGRESS" ? "На рассмотрении" :
-                               dispute.status === "RESOLVED_SUCCESS" ? "В вашу пользу" :
-                               dispute.status === "RESOLVED_FAIL" ? "Не в вашу пользу" :
-                               dispute.status === "CANCELLED" ? "Отменен" :
-                               dispute.status}
-                            </Badge>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </ScrollArea>
                 )}
               </TabsContent>
 
@@ -1501,20 +1714,20 @@ export default function DeviceDetailsPage() {
                 <div className="space-y-4">
                   {/* Device Status Events */}
                   {device.isOnline && (
-                    <div className="border rounded-lg p-4 bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800">
+                    <div className="border rounded-lg p-4 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-full">
-                          <CheckCircle className="h-5 w-5 text-purple-600 dark:text-[#530FAD]" />
+                        <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-full">
+                          <CheckCircle className="h-5 w-5 text-green-600 dark:text-[#2d6a42]" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-medium text-purple-900 dark:text-purple-100">
+                          <p className="font-medium text-green-900 dark:text-green-100">
                             Устройство в сети
                           </p>
-                          <p className="text-sm text-purple-700 dark:text-purple-300">
+                          <p className="text-sm text-green-700 dark:text-green-300">
                             Активно и готово к работе
                           </p>
                         </div>
-                        <span className="text-xs text-purple-600 dark:text-purple-400">
+                        <span className="text-xs text-green-600 dark:text-green-400">
                           {format(new Date(), "HH:mm")}
                         </span>
                       </div>
@@ -1560,7 +1773,7 @@ export default function DeviceDetailsPage() {
 
                   {/* Last Health Check */}
                   {device.lastHealthCheck && (
-                    <div className="border dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-[#292133]/30 transition-colors">
+                    <div className="border dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-[#29382f]/30 transition-colors">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full">
                           <Shield className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -1581,7 +1794,7 @@ export default function DeviceDetailsPage() {
                   )}
 
                   {/* Device Creation */}
-                  <div className="border dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-[#292133]/30 transition-colors">
+                  <div className="border dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-[#29382f]/30 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full">
                         <Smartphone className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -1647,8 +1860,8 @@ export default function DeviceDetailsPage() {
               <div className="flex items-center gap-2 text-sm">
                 {device.isOnline ? (
                   <>
-                    <CheckCircle className="h-4 w-4 text-purple-500" />
-                    <span className="text-purple-600">Устройство подключено</span>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-green-600">Устройство подключено</span>
                   </>
                 ) : (
                   <>
@@ -1667,12 +1880,21 @@ export default function DeviceDetailsPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Add Requisite Dialog */}
-        <AddRequisiteDialog
-          open={showAddRequisiteDialog}
-          onOpenChange={setShowAddRequisiteDialog}
-          deviceId={device?.id}
-          onSuccess={fetchDevice}
+        {/* Device Requisites Sheet */}
+        <DeviceRequisitesSheet
+          open={showRequisitesSheet}
+          onOpenChange={(open) => {
+            setShowRequisitesSheet(open);
+            if (!open) {
+              setEditingRequisite(null);
+            }
+          }}
+          deviceId={device?.id || ""}
+          existingRequisite={editingRequisite}
+          onSuccess={() => {
+            fetchDevice();
+            setEditingRequisite(null);
+          }}
         />
       </AuthLayout>
     </ProtectedRoute>

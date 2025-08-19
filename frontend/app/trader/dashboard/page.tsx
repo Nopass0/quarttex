@@ -98,24 +98,24 @@ const getBankIcon = (bankType: string, size: "sm" | "md" = "md") => {
 
 // Device status function - copied from devices page
 const getDeviceStatusInfo = (device: any) => {
-  if (!device.isRegistered) {
+  if (!device.isWorking) {
     return {
-      title: "Не зарегистрировано в системе",
-      description: "Пройдите регистрацию в мобильном приложении",
+      title: "Не в работе",
+      description: "Устройство не в работе",
       badge: {
-        text: "Без регистрации",
+        text: "Не в работе",
         className: "bg-red-50 text-red-600 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800",
       },
       iconColor: "text-red-500 dark:text-red-400",
     };
   }
 
-  if (device.isOnline || device.status === "working") {
+  if (device.isOnline && !device.isWorking) {
     return {
-      title: `Реквизиты: ${device.linkedBankDetails || device.activeRequisites || 0}`,
-      description: device.lastSeen ? `Последняя активность: ${device.lastSeen}` : "Активно",
+      title: `Онлайн, но не в работе`,
+      description: "Устройство не в работе",
       badge: {
-        text: "В работе",
+        text: "Онлайн, но не в работе",
         className: "bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600",
       },
       iconColor: "text-gray-600 dark:text-gray-400",
@@ -123,12 +123,10 @@ const getDeviceStatusInfo = (device: any) => {
   }
 
   return {
-    title: `Реквизиты: ${device.linkedBankDetails || device.activeRequisites || 0}`,
-    description: device.stoppedAt
-      ? `Остановлено: ${device.stoppedAt}`
-      : "Остановлено",
+    title: `В работе`,
+    description: "Устройство в работе",
     badge: {
-      text: "Не в работе",
+      text: "В работе",
       className: "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-900/50 dark:text-gray-400 dark:border-gray-700",
     },
     iconColor: "text-gray-500 dark:text-gray-500",
@@ -248,9 +246,13 @@ export default function TraderDashboardPage() {
       setLoading(true);
       const response = await traderApi.getDashboard(period);
 
-      if (response.success && response.data) {
-        setDashboardData(response.data);
-      }
+      // Some environments return the data directly while others wrap it
+      // in a { success, data } object. Handle both cases to ensure the
+      // dashboard renders devices consistently.
+      const data = (response && "data" in response) ? response.data : response;
+      console.log('Dashboard data:', data);
+      console.log('Devices:', data?.devices);
+      setDashboardData(data);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
       // Set empty data on error
@@ -281,7 +283,7 @@ export default function TraderDashboardPage() {
       case "device_stopped":
         return { color: "bg-orange-500", title: "Устройство остановлено" };
       case "device_started":
-        return { color: "bg-purple-500", title: "Устройство запущено" };
+        return { color: "bg-green-500", title: "Устройство запущено" };
       case "deal_failed":
         return { color: "bg-red-500", title: "Сделка не завершена" };
       case "dispute_opened":
@@ -295,7 +297,7 @@ export default function TraderDashboardPage() {
     const statusConfig: Record<string, { label: string; className: string }> = {
       READY: {
         label: "Готово",
-        className: "bg-purple-100 text-purple-700 border-purple-200",
+        className: "bg-green-100 text-green-700 border-green-200",
       },
       IN_PROGRESS: {
         label: "В работе",
@@ -345,7 +347,7 @@ export default function TraderDashboardPage() {
             {/* Stats Blocks */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6">
               {/* Deals Stats */}
-              <Card className="p-3 md:p-4 border border-gray-200 dark:border-[#292133]">
+              <Card className="p-3 md:p-4 border border-gray-200 dark:border-[#29382f]">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div>
                     <h3 className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-1 md:mb-2">
@@ -369,15 +371,15 @@ export default function TraderDashboardPage() {
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="text-xs w-full sm:w-auto">
                         Период: {periodLabels[period]}
-                        <ChevronDown className="ml-1 h-3 w-3 text-[#530FAD] dark:text-[#530FAD]" />
+                        <ChevronDown className="ml-1 h-3 w-3 text-[#006039] dark:text-[#2d6a42]" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-48 p-0 dark:bg-[#292133] dark:border-gray-700" align="end">
+                    <DropdownMenuContent className="w-48 p-0 dark:bg-[#29382f] dark:border-gray-700" align="end">
                       <div className="max-h-64 overflow-auto">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[#292133]/50"
+                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
                           onClick={() => setPeriod("today")}
                         >
                           За сегодня
@@ -385,7 +387,7 @@ export default function TraderDashboardPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[#292133]/50"
+                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
                           onClick={() => setPeriod("week")}
                         >
                           За неделю
@@ -393,7 +395,7 @@ export default function TraderDashboardPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[#292133]/50"
+                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
                           onClick={() => setPeriod("month")}
                         >
                           За месяц
@@ -401,7 +403,7 @@ export default function TraderDashboardPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[#292133]/50"
+                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
                           onClick={() => setPeriod("year")}
                         >
                           За год
@@ -413,7 +415,7 @@ export default function TraderDashboardPage() {
               </Card>
 
               {/* Profit Stats */}
-              <Card className="p-3 md:p-4 border border-gray-200 dark:border-[#292133]">
+              <Card className="p-3 md:p-4 border border-gray-200 dark:border-[#29382f]">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div>
                     <h3 className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-1 md:mb-2">Прибыль</h3>
@@ -430,15 +432,15 @@ export default function TraderDashboardPage() {
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="text-xs w-full sm:w-auto">
                         Период: {periodLabels[period]}
-                        <ChevronDown className="ml-1 h-3 w-3 text-[#530FAD] dark:text-[#530FAD]" />
+                        <ChevronDown className="ml-1 h-3 w-3 text-[#006039] dark:text-[#2d6a42]" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-48 p-0 dark:bg-[#292133] dark:border-gray-700" align="end">
+                    <DropdownMenuContent className="w-48 p-0 dark:bg-[#29382f] dark:border-gray-700" align="end">
                       <div className="max-h-64 overflow-auto">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[#292133]/50"
+                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
                           onClick={() => setPeriod("today")}
                         >
                           За сегодня
@@ -446,7 +448,7 @@ export default function TraderDashboardPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[#292133]/50"
+                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
                           onClick={() => setPeriod("week")}
                         >
                           За неделю
@@ -454,7 +456,7 @@ export default function TraderDashboardPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[#292133]/50"
+                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
                           onClick={() => setPeriod("month")}
                         >
                           За месяц
@@ -462,7 +464,7 @@ export default function TraderDashboardPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[#292133]/50"
+                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
                           onClick={() => setPeriod("year")}
                         >
                           За год
@@ -542,7 +544,7 @@ export default function TraderDashboardPage() {
                 className="flex items-center justify-between group"
               >
                 <h2 className="text-base md:text-lg font-medium">Устройства</h2>
-                <div className="flex items-center gap-1 text-[#530FAD]">
+                <div className="flex items-center gap-1 text-[#006039]">
                   <span className="text-xs md:text-sm">Показать все</span>
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -598,6 +600,9 @@ export default function TraderDashboardPage() {
                               <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
                                 ID: {device.numericId || device.id || "N/A"}
                               </p>
+                              <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
+                                {statusInfo.description}
+                              </p>
                             </div>
                           </div>
 
@@ -628,7 +633,7 @@ export default function TraderDashboardPage() {
               className="flex items-center justify-between group"
             >
               <h2 className="text-lg font-medium">Открытые споры</h2>
-              <div className="flex items-center gap-1 text-[#530FAD]">
+              <div className="flex items-center gap-1 text-[#006039]">
                 <span className="text-sm">Показать все</span>
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </div>
@@ -699,7 +704,7 @@ export default function TraderDashboardPage() {
               className="flex items-center justify-between group"
             >
               <h2 className="text-lg font-medium">Последние сделки</h2>
-              <div className="flex items-center gap-1 text-[#530FAD]">
+              <div className="flex items-center gap-1 text-[#006039]">
                 <span className="text-sm">Показать все</span>
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </div>
@@ -741,8 +746,8 @@ export default function TraderDashboardPage() {
                     switch (deal.status) {
                       case "READY":
                         return (
-                          <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                            <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                          <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                            <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
                           </div>
                         );
                       case "CREATED":
@@ -805,7 +810,7 @@ export default function TraderDashboardPage() {
                   const getStatusBadgeColor = () => {
                     switch (deal.status) {
                       case "READY":
-                        return "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800";
+                        return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800";
                       case "CREATED":
                       case "IN_PROGRESS":
                         return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800";

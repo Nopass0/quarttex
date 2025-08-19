@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { TransactionsList } from "@/components/merchant/transactions-list"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -14,9 +14,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { DatePickerWithRange } from "@/components/ui/date-picker-range"
-import { Search, Filter, Download } from "lucide-react"
+import { Search, Filter, Download, Loader2 } from "lucide-react"
+import { exportTransactionsToExcel, type ExportTransaction } from "@/lib/excel-export"
+import { useMerchantAuth } from "@/stores/merchant-auth"
+import { toast } from "sonner"
 
 export default function MerchantDealsPage() {
+  const { sessionToken } = useMerchantAuth()
   const [filters, setFilters] = useState({
     type: "ALL",
     status: "ALL",
@@ -30,6 +34,35 @@ export default function MerchantDealsPage() {
   })
 
   const [showFilters, setShowFilters] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+  const [merchantInfo, setMerchantInfo] = useState<{ countInRubEquivalent: boolean } | null>(null)
+
+  // Fetch merchant info on mount
+  useEffect(() => {
+    const fetchMerchantInfo = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/merchant/auth/me`,
+          {
+            headers: {
+              'Authorization': `Bearer ${sessionToken}`,
+            },
+          }
+        )
+        if (response.ok) {
+          const data = await response.json()
+          console.log('Merchant countInRubEquivalent:', data.merchant.countInRubEquivalent)
+          setMerchantInfo({ countInRubEquivalent: data.merchant.countInRubEquivalent })
+        }
+      } catch (error) {
+        console.error('Failed to fetch merchant info:', error)
+      }
+    }
+    
+    if (sessionToken) {
+      fetchMerchantInfo()
+    }
+  }, [sessionToken])
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }))
@@ -47,6 +80,59 @@ export default function MerchantDealsPage() {
       sortBy: "createdAt",
       sortOrder: "desc"
     })
+  }
+
+  const handleExport = async () => {
+    try {
+      setIsExporting(true)
+      
+      // Build query params for export
+      const params = new URLSearchParams({
+        page: "1",
+        limit: "10000", // Export all available transactions
+      })
+
+      // Add filters
+      if (filters.type && filters.type !== 'ALL') params.append('type', filters.type)
+      if (filters.status && filters.status !== 'ALL') params.append('status', filters.status)
+      if (filters.dateFrom) params.append('dateFrom', filters.dateFrom)
+      if (filters.dateTo) params.append('dateTo', filters.dateTo)
+      if (filters.amountFrom) params.append('amountFrom', filters.amountFrom)
+      if (filters.amountTo) params.append('amountTo', filters.amountTo)
+      if (filters.search) params.append('search', filters.search)
+      if (filters.sortBy) params.append('sortBy', filters.sortBy)
+      if (filters.sortOrder) params.append('sortOrder', filters.sortOrder)
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/merchant/dashboard/transactions?${params}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${sessionToken}`,
+          },
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch transactions for export')
+      }
+
+      const data = await response.json()
+      const transactions: ExportTransaction[] = data.data || []
+
+      if (transactions.length === 0) {
+        toast.warning('Нет транзакций для экспорта')
+        return
+      }
+
+      // Export to Excel with merchant settings
+      exportTransactionsToExcel(transactions, 'merchant_transactions', merchantInfo?.countInRubEquivalent)
+      toast.success(`Экспортировано ${transactions.length} транзакций`)
+    } catch (error) {
+      console.error('Export error:', error)
+      toast.error('Не удалось экспортировать транзакции')
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   return (
@@ -72,9 +158,22 @@ export default function MerchantDealsPage() {
               <Filter className="h-4 w-4 mr-2" />
               Фильтры
             </Button>
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Экспорт
+            <Button 
+              variant="outline"
+              onClick={handleExport}
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Экспорт...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 mr-2" />
+                  Экспорт
+                </>
+              )}
             </Button>
           </div>
 

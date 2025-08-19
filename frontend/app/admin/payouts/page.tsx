@@ -14,11 +14,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { adminApi as api } from '@/services/api'
-import { formatAmount, formatDate } from '@/lib/utils'
-import { 
-  DollarSign, 
-  Search, 
-  Loader2, 
+import { formatAmount, formatDateTime } from '@/lib/utils'
+import {
+  DollarSign,
+  Search,
+  Loader2,
   Download,
   Eye,
   Settings,
@@ -29,7 +29,9 @@ import {
   Clock,
   FileText,
   Check,
-  X
+  X,
+  Send,
+  RefreshCw
 } from 'lucide-react'
 
 interface Payout {
@@ -58,6 +60,7 @@ interface Payout {
   cancelReason?: string
   disputeMessage?: string
   proofFiles?: string[]
+  merchantWebhookUrl?: string
   cancellationHistory?: Array<{
     id: string
     reason: string
@@ -79,11 +82,21 @@ interface Payout {
   }
 }
 
+interface CallbackHistory {
+  id: string
+  url: string
+  payload: any
+  response?: string | null
+  statusCode?: number | null
+  error?: string | null
+  createdAt: string
+}
+
 const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
   CREATED: { label: 'Создан', color: 'bg-blue-100 text-blue-800', icon: Clock },
   ACTIVE: { label: 'Активен', color: 'bg-yellow-100 text-yellow-800', icon: AlertCircle },
   CHECKING: { label: 'Проверка', color: 'bg-purple-100 text-purple-800', icon: Eye },
-  COMPLETED: { label: 'Завершен', color: 'bg-purple-100 text-purple-800', icon: CheckCircle },
+  COMPLETED: { label: 'Завершен', color: 'bg-green-100 text-green-800', icon: CheckCircle },
   CANCELLED: { label: 'Отменен', color: 'bg-red-100 text-red-800', icon: XCircle },
   EXPIRED: { label: 'Истек', color: 'bg-gray-100 text-gray-800', icon: Clock },
   DISPUTED: { label: 'Спор', color: 'bg-orange-100 text-orange-800', icon: AlertCircle },
@@ -92,11 +105,17 @@ const statusConfig: Record<string, { label: string; color: string; icon: any }> 
 export default function AdminPayoutsPage() {
   const [payouts, setPayouts] = useState<Payout[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [search, setSearch] = useState('')
+
+  const [idFilter, setIdFilter] = useState('')
+  const [amountFilter, setAmountFilter] = useState('')
+
   const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [directionFilter, setDirectionFilter] = useState<string>('all')
+  const [merchantFilter, setMerchantFilter] = useState('all')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [merchants, setMerchants] = useState<{ id: string; name: string }[]>([])
   const [selectedPayout, setSelectedPayout] = useState<Payout | null>(null)
   const [activeTab, setActiveTab] = useState('all')
   const [reviewDialog, setReviewDialog] = useState<{open: boolean, payout: Payout | null, action: 'approve' | 'reject'}>({
@@ -107,19 +126,39 @@ export default function AdminPayoutsPage() {
   const [rejectReason, setRejectReason] = useState('')
   const [testPayoutDialog, setTestPayoutDialog] = useState(false)
   const [testPayoutLoading, setTestPayoutLoading] = useState(false)
+  const [callbackHistory, setCallbackHistory] = useState<CallbackHistory[]>([])
+  const [loadingCallbacks, setLoadingCallbacks] = useState(false)
 
   useEffect(() => {
     loadPayouts()
-  }, [statusFilter, directionFilter, currentPage, activeTab])
+
+  }, [statusFilter, merchantFilter, amountFilter, dateFrom, dateTo, currentPage, activeTab])
+
+
+  useEffect(() => {
+    const loadMerchants = async () => {
+      try {
+        const res = await api.getMerchants()
+
+        const list = res.data || res.merchants || []
+
+        setMerchants(list)
+      } catch (e) {
+        console.error('Failed to load merchants', e)
+      }
+    }
+    loadMerchants()
+  }, [])
 
   const loadPayouts = async () => {
     setIsLoading(true)
     try {
+
       const params = new URLSearchParams({
         limit: '20',
         page: currentPage.toString(),
       })
-      
+
       // Apply status filter based on active tab
       let status = statusFilter
       if (activeTab === 'checking') {
@@ -131,20 +170,33 @@ export default function AdminPayoutsPage() {
       } else if (statusFilter !== 'all') {
         params.append('status', statusFilter)
       }
-      
+
+
       if (status !== 'all' && status) {
         params.append('status', status)
       }
-      
-      if (directionFilter !== 'all') {
-        params.append('direction', directionFilter)
-      }
-      
-      if (search) {
-        params.append('search', search)
+
+
+      if (idFilter) {
+        params.append('id', idFilter)
       }
 
+      if (amountFilter) {
+        const n = parseFloat(amountFilter)
+        if (!isNaN(n)) params.append('amount', n.toString())
+      }
+
+
+      if (merchantFilter !== 'all') {
+        params.append('merchantId', merchantFilter)
+      }
+
+      if (dateFrom) params.append('dateFrom', dateFrom)
+      if (dateTo) params.append('dateTo', dateTo)
+
+
       const response = await api.getPayouts(Object.fromEntries(params))
+
       console.log('Payouts response:', response) // Debug log
       setPayouts(response.data || [])
       setTotalPages(response.meta?.totalPages || 1)
@@ -241,11 +293,47 @@ export default function AdminPayoutsPage() {
     }
   }
 
+  const loadCallbackHistory = async (payoutId: string) => {
+    setLoadingCallbacks(true)
+    try {
+      const data = await api.getPayoutCallbackHistory(payoutId)
+      setCallbackHistory(data.callbackHistory || [])
+    } catch (error) {
+      toast.error('Ошибка загрузки истории колбэков')
+    } finally {
+      setLoadingCallbacks(false)
+    }
+  }
+
+  const sendCallback = async (payout: Payout) => {
+    try {
+      const result = await api.sendPayoutCallback(payout.id)
+      if (result.success) {
+        toast.success('Колбэк отправлен')
+        loadCallbackHistory(payout.id)
+      } else {
+        toast.error('Ошибка отправки колбэка')
+      }
+    } catch (error) {
+      toast.error('Ошибка отправки колбэка')
+    }
+  }
+
+  const openPayoutDetails = (payout: Payout) => {
+    setSelectedPayout(payout)
+    loadCallbackHistory(payout.id)
+  }
+
   const PayoutDetailsDialog = () => {
     if (!selectedPayout) return null
 
     return (
-      <Dialog open={!!selectedPayout} onOpenChange={() => setSelectedPayout(null)}>
+      <Dialog open={!!selectedPayout} onOpenChange={(open) => {
+        if (!open) {
+          setSelectedPayout(null)
+          setCallbackHistory([])
+        }
+      }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Детали выплаты ${selectedPayout.numericId}</DialogTitle>
@@ -320,32 +408,32 @@ export default function AdminPayoutsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-gray-600">Создана</Label>
-                <p className="font-medium">{formatDate(selectedPayout.createdAt)}</p>
+                <p className="font-medium">{formatDateTime(selectedPayout.createdAt)}</p>
               </div>
               <div>
                 <Label className="text-gray-600">Истекает</Label>
-                <p className="font-medium">{formatDate(selectedPayout.expireAt)}</p>
+                <p className="font-medium">{formatDateTime(selectedPayout.expireAt)}</p>
               </div>
             </div>
 
             {selectedPayout.acceptedAt && (
               <div>
                 <Label className="text-gray-600">Принята в работу</Label>
-                <p className="font-medium">{formatDate(selectedPayout.acceptedAt)}</p>
+                <p className="font-medium">{formatDateTime(selectedPayout.acceptedAt)}</p>
               </div>
             )}
 
             {selectedPayout.confirmedAt && (
               <div>
                 <Label className="text-gray-600">Подтверждена</Label>
-                <p className="font-medium">{formatDate(selectedPayout.confirmedAt)}</p>
+                <p className="font-medium">{formatDateTime(selectedPayout.confirmedAt)}</p>
               </div>
             )}
 
             {selectedPayout.cancelledAt && (
               <div>
                 <Label className="text-gray-600">Отменена</Label>
-                <p className="font-medium">{formatDate(selectedPayout.cancelledAt)}</p>
+                <p className="font-medium">{formatDateTime(selectedPayout.cancelledAt)}</p>
                 {selectedPayout.cancelReason && (
                   <p className="text-sm text-gray-500 mt-1">Причина: {selectedPayout.cancelReason}</p>
                 )}
@@ -371,6 +459,86 @@ export default function AdminPayoutsPage() {
               </div>
             )}
 
+            <div className="space-y-3">
+              <Label className="text-gray-600">Webhook URL</Label>
+              <div className="bg-gray-50 p-3 rounded-md">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 text-xs break-all">{selectedPayout.merchantWebhookUrl || 'Не указан'}</div>
+                  {selectedPayout.merchantWebhookUrl && (
+                    <Button variant="outline" size="sm" onClick={() => sendCallback(selectedPayout)}>
+                      <Send className="h-3 w-3 mr-1" /> Отправить
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-gray-600">История колбэков</Label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => loadCallbackHistory(selectedPayout.id)}
+                  disabled={loadingCallbacks}
+                >
+                  {loadingCallbacks ? (
+                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                  ) : (
+                    <RefreshCw className="h-3 w-3 mr-1" />
+                  )}
+                  Обновить
+                </Button>
+              </div>
+
+              {loadingCallbacks ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                </div>
+              ) : callbackHistory.length > 0 ? (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {callbackHistory.map((callback) => (
+                    <div key={callback.id} className="bg-gray-50 p-3 rounded-md border">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <div className="text-sm font-medium">
+                            {formatDateTime(callback.createdAt)}
+                          </div>
+                          <div className="text-xs text-gray-600 break-all">{callback.url}</div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {callback.statusCode ? (
+                            <Badge
+                              className={
+                                callback.statusCode >= 200 && callback.statusCode < 300
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-red-100 text-red-800'
+                              }
+                            >
+                              {callback.statusCode}
+                            </Badge>
+                          ) : null}
+                          {callback.error && (
+                            <Badge className="bg-red-100 text-red-800">Ошибка</Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        <pre className="whitespace-pre-wrap break-all">
+                          {JSON.stringify(callback.payload, null, 2)}
+                        </pre>
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        {callback.response || (callback.error ? callback.error : 'Нет ответа')}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">История пуста</p>
+              )}
+            </div>
+
             {selectedPayout.cancellationHistory && selectedPayout.cancellationHistory.length > 0 && (
               <div>
                 <Label className="text-gray-600">История отмен</Label>
@@ -385,7 +553,7 @@ export default function AdminPayoutsPage() {
                           </span>
                         </div>
                         <span className="text-xs text-gray-500">
-                          {formatDate(cancellation.createdAt)}
+                          {formatDateTime(cancellation.createdAt)}
                         </span>
                       </div>
                       <p className="text-sm text-gray-700 mb-2">
@@ -428,7 +596,7 @@ export default function AdminPayoutsPage() {
                   Отклонить
                 </Button>
                 <Button
-                  className="bg-purple-600 hover:bg-purple-700"
+                  className="bg-green-600 hover:bg-green-700"
                   onClick={() => setReviewDialog({ 
                     open: true, 
                     payout: selectedPayout, 
@@ -466,7 +634,7 @@ export default function AdminPayoutsPage() {
             <div className="space-y-2">
               <Label>Причина отклонения</Label>
               <textarea
-                className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="Укажите причину отклонения..."
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
@@ -480,7 +648,7 @@ export default function AdminPayoutsPage() {
             </Button>
             <Button
               onClick={() => handleReviewPayout(payout.id, action)}
-              className={action === 'approve' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-red-600 hover:bg-red-700'}
+              className={action === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
             >
               {action === 'approve' ? 'Одобрить' : 'Отклонить'}
             </Button>
@@ -548,14 +716,14 @@ export default function AdminPayoutsPage() {
                 </Badge>
               </TableCell>
               <TableCell>
-                {formatDate(payout.createdAt)}
+                {formatDateTime(payout.createdAt)}
               </TableCell>
               <TableCell>
                 <div className="flex gap-2">
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => setSelectedPayout(payout)}
+                    onClick={() => openPayoutDetails(payout)}
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
@@ -563,7 +731,7 @@ export default function AdminPayoutsPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-purple-600 hover:text-purple-700"
+                      className="text-green-600 hover:text-green-700"
                       onClick={() => setReviewDialog({ 
                         open: true, 
                         payout, 
@@ -625,20 +793,20 @@ export default function AdminPayoutsPage() {
             <CardHeader>
               <CardTitle>Фильтры</CardTitle>
             </CardHeader>
+
             <CardContent>
-              <form onSubmit={handleSearch} className="flex gap-4">
-                <div className="flex-1">
-                  <Input
-                    placeholder="Поиск по ID, кошельку или сумме"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full"
-                  />
-                </div>
-                {activeTab === 'all' && (
-                  <>
+              <form onSubmit={handleSearch} className="space-y-4">
+                <Input
+                  placeholder="Поиск по ID выплаты"
+                  value={idFilter}
+                  onChange={(e) => setIdFilter(e.target.value)}
+                  className="w-full min-w-[300px]"
+                />
+                <div className="flex flex-wrap gap-2">
+
+                  {activeTab === 'all' && (
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="w-[180px]">
+                      <SelectTrigger className="w-full sm:w-[180px]">
                         <SelectValue placeholder="Статус" />
                       </SelectTrigger>
                       <SelectContent>
@@ -652,21 +820,49 @@ export default function AdminPayoutsPage() {
                         <SelectItem value="DISPUTED">Спор</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Select value={directionFilter} onValueChange={setDirectionFilter}>
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Направление" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Все направления</SelectItem>
-                        <SelectItem value="IN">Входящие (IN)</SelectItem>
-                        <SelectItem value="OUT">Исходящие (OUT)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </>
-                )}
-                <Button type="submit">
-                  <Search className="h-4 w-4" />
-                </Button>
+                  )}
+
+                  <Input
+                    type="number"
+                    placeholder="Сумма"
+                    value={amountFilter}
+                    onChange={(e) => { setAmountFilter(e.target.value); setCurrentPage(1) }}
+                    className="w-[140px]"
+                  />
+
+                  <Select value={merchantFilter} onValueChange={setMerchantFilter}>
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                      <SelectValue placeholder="Мерчант" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Все мерчанты</SelectItem>
+                      {merchants.map(m => (
+                        <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="datetime-local"
+                    value={dateFrom}
+                    onChange={(e) => { setDateFrom(e.target.value); setCurrentPage(1) }}
+
+                    className="w-[200px]"
+
+                    placeholder="От"
+                  />
+                  <Input
+                    type="datetime-local"
+                    value={dateTo}
+                    onChange={(e) => { setDateTo(e.target.value); setCurrentPage(1) }}
+
+                    className="w-[200px]"
+
+                    placeholder="До"
+                  />
+                  <Button type="submit" className="w-full sm:w-auto">
+                    <Search className="h-4 w-4" />
+                  </Button>
+                </div>
               </form>
             </CardContent>
           </Card>

@@ -2,13 +2,13 @@
 
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { AuthLayout } from "@/components/layouts/auth-layout";
-import { MessagesListNew } from "@/components/trader/messages-list-new";
+import { TraderMessagesV2 } from "@/components/trader/messages-v2";
 
 export default function MessagesPage() {
   return (
     <ProtectedRoute variant="trader">
       <AuthLayout variant="trader">
-        <MessagesListNew />
+        <TraderMessagesV2 />
       </AuthLayout>
     </ProtectedRoute>
   );

@@ -7,7 +7,7 @@ import { AuthLayout } from '@/components/layouts/auth-layout'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Copy, ArrowLeft, RefreshCw, Activity, DollarSign, Key, TestTube } from 'lucide-react'
+import { Copy, ArrowLeft, RefreshCw, Activity, DollarSign, Key, TestTube, Settings, Loader2 } from 'lucide-react'
 import { useAdminAuth } from '@/stores/auth'
 import { toast } from 'sonner'
 import { formatAmount } from '@/lib/utils'
@@ -16,6 +16,24 @@ import { MerchantExtraSettlements } from '@/components/admin/merchant-extra-sett
 import { TestMerchantTransactions } from '@/components/admin/test-merchant-transactions'
 import { WellbitTestDialog } from '@/components/admin/wellbit-test-dialog'
 import { QuickTransactionCreate } from '@/components/admin/quick-transaction-create'
+import { MerchantTransactions } from '@/components/admin/merchant-transactions'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  endOfDay,
+  endOfMonth,
+  endOfYear,
+  startOfDay,
+  startOfMonth,
+  startOfYear,
+  subDays,
+  subHours,
+} from 'date-fns'
 
 type Merchant = {
   id: string
@@ -25,6 +43,7 @@ type Merchant = {
   apiKeyPrivate?: string | null
   disabled: boolean
   banned: boolean
+  countInRubEquivalent: boolean
   balanceUsdt: number
   balanceRub?: number
   createdAt: string
@@ -50,6 +69,9 @@ export default function MerchantDetailPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isGeneratingKeys, setIsGeneratingKeys] = useState(false)
   const [showTestDialog, setShowTestDialog] = useState(false)
+  const [balanceFormula, setBalanceFormula] = useState<any>(null)
+  const [selectedPeriod, setSelectedPeriod] = useState('all')
+  const [isResetting2FA, setIsResetting2FA] = useState(false)
   
   console.log('MerchantDetailPage: Rendering with merchantId:', merchantId)
   
@@ -60,6 +82,7 @@ export default function MerchantDetailPage() {
   useEffect(() => {
     fetchMerchant()
   }, [merchantId])
+
 
   const handleGenerateKeys = async () => {
     try {
@@ -93,6 +116,28 @@ export default function MerchantDetailPage() {
     }
   }
 
+  const handleReset2FA = async () => {
+    if (!merchant) return
+    try {
+      setIsResetting2FA(true)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/merchant/reset-2fa`, {
+        method: 'POST',
+        headers: {
+          'x-admin-key': adminToken || '',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: merchant.id })
+      })
+      if (!response.ok) throw new Error('Failed to reset 2FA')
+      toast.success('2FA мерчанта сброшена')
+      await fetchMerchant()
+    } catch (e) {
+      toast.error('Не удалось сбросить 2FA')
+    } finally {
+      setIsResetting2FA(false)
+    }
+  }
+
   const fetchMerchant = async () => {
     console.log('fetchMerchant: Starting fetch for merchantId:', merchantId)
     console.log('fetchMerchant: Admin token:', adminToken)
@@ -113,6 +158,7 @@ export default function MerchantDetailPage() {
       const data = await response.json()
       console.log('fetchMerchant: Received data:', data)
       setMerchant(data)
+      await fetchBalanceFormula(selectedPeriod)
     } catch (error) {
       console.error('fetchMerchant: Error:', error)
       toast.error('Не удалось загрузить данные мерчанта')
@@ -121,6 +167,69 @@ export default function MerchantDetailPage() {
       setIsLoading(false)
     }
   }
+
+  const getDateRange = (period: string) => {
+    const now = new Date()
+    let startDate: Date
+    let endDate: Date = now
+    switch (period) {
+      case '24h':
+        startDate = subHours(now, 24)
+        break
+      case 'today':
+        startDate = startOfDay(now)
+        endDate = endOfDay(now)
+        break
+      case 'yesterday':
+        startDate = startOfDay(subDays(now, 1))
+        endDate = endOfDay(subDays(now, 1))
+        break
+      case 'week':
+        startDate = subDays(now, 7)
+        break
+      case 'month':
+        startDate = startOfMonth(now)
+        endDate = endOfMonth(now)
+        break
+      case 'year':
+        startDate = startOfYear(now)
+        endDate = endOfYear(now)
+        break
+      case 'all':
+      default:
+        startDate = new Date(0)
+    }
+    return { startDate, endDate }
+  }
+
+  const fetchBalanceFormula = async (period: string) => {
+    try {
+      const { startDate, endDate } = getDateRange(period)
+      const params = new URLSearchParams({
+        pageSize: '1',
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      })
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/merchant/${merchantId}/transactions?${params.toString()}`,
+        {
+          headers: {
+            'x-admin-key': adminToken || '',
+          },
+        }
+      )
+      if (response.ok) {
+        const data = await response.json()
+        setBalanceFormula(data.balanceFormula)
+      }
+    } catch (error) {
+      console.error('Failed to fetch balance formula:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchBalanceFormula(selectedPeriod)
+  }, [selectedPeriod])
 
   const copyToClipboard = (text: string, message: string = 'Скопировано в буфер обмена') => {
     navigator.clipboard.writeText(text)
@@ -145,43 +254,45 @@ export default function MerchantDetailPage() {
         <div className="space-y-6 max-w-7xl mx-auto">
           {/* Header */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => router.push('/admin/merchants')}
-                  className="hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <ArrowLeft className="h-5 w-5" />
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div>
+                <Button variant="ghost" size="sm" onClick={() => router.push('/admin/merchants')} className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
+                  <ArrowLeft className="h-4 w-4 mr-2" /> Назад к списку
                 </Button>
-                <div>
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-3xl font-bold">{merchant.name}</h1>
-                    {isTestMerchant && (
-                      <Badge className="bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700">
-                        Тестовый мерчант
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-400 mt-1 flex items-center gap-2">
-                    <span className="text-sm">ID:</span>
-                    <code className="text-sm bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded font-mono">{merchant.id}</code>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(merchant.id, 'ID скопирован')}
-                      className="h-7 w-7 p-0"
-                    >
-                      <Copy className="h-3 w-3" />
-                    </Button>
-                  </p>
-                </div>
+                <h1 className="text-2xl font-semibold mt-2 lg:mt-0">{merchant?.name || 'Мерчант'}</h1>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                {isWellbitMerchant && (
+                  <Button onClick={handleGenerateKeys} disabled={isGeneratingKeys} className="bg-purple-600 hover:bg-purple-700">
+                    {isGeneratingKeys ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Обновляем ключи
+                      </>
+                    ) : (
+                      <>
+                        <Key className="h-4 w-4 mr-2" /> Сгенерировать Wellbit ключи
+                      </>
+                    )}
+                  </Button>
+                )}
+                <Button variant="outline" onClick={handleReset2FA} disabled={isResetting2FA}>
+                  {isResetting2FA ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Сбрасываем 2FA
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2" /> Сбросить 2FA
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+            <div className="flex items-center justify-between mt-4">
+              <div className="flex items-center gap-4">
                 <Badge 
                   variant={merchant.disabled ? 'secondary' : 'default'}
-                  className={merchant.disabled ? 'bg-gray-100 dark:bg-gray-700' : 'bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700'}
+                  className={merchant.disabled ? 'bg-gray-100 dark:bg-gray-700' : 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700'}
                 >
                   {merchant.disabled ? 'Отключен' : 'Активен'}
                 </Badge>
@@ -262,18 +373,124 @@ export default function MerchantDetailPage() {
                     <TestTube className="h-4 w-4 mr-2" />
                     Тестировать API
                   </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push('/admin/wellbit-keys')}
+                    className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Настройки Wellbit
+                  </Button>
                 </div>
               </div>
             </div>
           )}
 
           {/* Quick Transaction Creation */}
-          <QuickTransactionCreate 
+          <QuickTransactionCreate
             merchantId={merchantId}
             merchantToken={merchant.token}
             merchantName={merchant.name}
             merchantMethods={merchant.merchantMethods?.filter(m => m.isEnabled) || []}
           />
+
+          <div className="flex justify-end mb-4">
+            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Период" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="24h">24 часа</SelectItem>
+                <SelectItem value="today">Сегодня</SelectItem>
+                <SelectItem value="yesterday">Вчера</SelectItem>
+                <SelectItem value="week">Неделя</SelectItem>
+                <SelectItem value="month">Месяц</SelectItem>
+                <SelectItem value="year">Год</SelectItem>
+                <SelectItem value="all">Все время</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Balance Formula Display */}
+          {balanceFormula && (
+            <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-6">
+              <h2 className="text-lg font-semibold mb-4 text-[#006039] dark:text-green-400">
+                Баланс {merchant?.countInRubEquivalent ? '₽' : 'USDT'}
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  {merchant?.countInRubEquivalent ? (
+                    <div className="text-3xl font-bold text-[#006039] dark:text-green-400">
+                      {formatAmount(balanceFormula.currentBalanceRub)} ₽
+                    </div>
+                  ) : (
+                    <>
+                      <div className="text-3xl font-bold text-[#006039] dark:text-green-400">
+                        {formatAmount(balanceFormula.currentBalance)} USDT
+                      </div>
+                      <div className="text-lg text-gray-600 dark:text-gray-400 mt-1">
+                        {formatAmount(balanceFormula.currentBalanceRub)} ₽
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className="space-y-2 text-sm">
+                  <h3 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Формула расчета баланса:</h3>
+                  {merchant?.countInRubEquivalent ? (
+                    <div className="space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Сумма успешных сделок:</span>
+                        <span className="text-green-600 dark:text-green-400">+{formatAmount(balanceFormula.totalSuccessfulDealsRub)} ₽</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Комиссия платформы со сделок:</span>
+                        <span className="text-red-600 dark:text-red-400">-{formatAmount(balanceFormula.platformCommissionDealsRub)} ₽</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Сумма выплат:</span>
+                        <span className="text-red-600 dark:text-red-400">-{formatAmount(balanceFormula.totalPayoutsRub)} ₽</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Комиссия платформы с выплат:</span>
+                        <span className="text-red-600 dark:text-red-400">-{formatAmount(balanceFormula.platformCommissionPayoutsRub)} ₽</span>
+                      </div>
+                      <div className="border-t dark:border-gray-700 pt-1 mt-2">
+                        <div className="flex justify-between font-medium">
+                          <span className="text-gray-700 dark:text-gray-300">Итоговый баланс:</span>
+                          <span className="text-[#006039] dark:text-green-400">{formatAmount(balanceFormula.currentBalanceRub)} ₽</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Сумма успешных сделок:</span>
+                        <span className="text-green-600 dark:text-green-400">+{formatAmount(balanceFormula.totalSuccessfulDealsUsdt)} USDT</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Комиссия платформы со сделок:</span>
+                        <span className="text-red-600 dark:text-red-400">-{formatAmount(balanceFormula.platformCommissionDeals)} USDT</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Сумма выплат:</span>
+                        <span className="text-red-600 dark:text-red-400">-{formatAmount(balanceFormula.totalPayoutsUsdt)} USDT</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Комиссия платформы с выплат:</span>
+                        <span className="text-red-600 dark:text-red-400">-{formatAmount(balanceFormula.platformCommissionPayouts)} USDT</span>
+                      </div>
+                      <div className="border-t dark:border-gray-700 pt-1 mt-2">
+                        <div className="flex justify-between font-medium">
+                          <span className="text-gray-700 dark:text-gray-300">Итоговый баланс:</span>
+                          <span className="text-[#006039] dark:text-green-400">{formatAmount(balanceFormula.currentBalance)} USDT</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -281,12 +498,12 @@ export default function MerchantDetailPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Баланс (рубли)</p>
-                  <p className="text-2xl font-bold text-[#530FAD] dark:text-purple-400 mt-1">
+                  <p className="text-2xl font-bold text-[#006039] dark:text-green-400 mt-1">
                     {formatAmount(merchant.balanceRub || 0)} ₽
                   </p>
                 </div>
-                <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-                  <DollarSign className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                  <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
                 </div>
               </div>
             </div>
@@ -372,6 +589,10 @@ export default function MerchantDetailPage() {
               </TabsContent>
             )}
             
+            <TabsContent value="transactions" className="mt-6">
+              <MerchantTransactions merchantId={merchantId} />
+            </TabsContent>
+            
             <TabsContent value="milk-deals" className="mt-6">
               <MerchantMilkDeals merchantId={merchantId} />
             </TabsContent>
@@ -394,8 +615,8 @@ export default function MerchantDetailPage() {
                       {merchant.merchantMethods.map((mm) => (
                         <div key={mm.id} className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                           <div className="flex items-center gap-4">
-                            <div className={`p-2 rounded-lg ${mm.isEnabled ? 'bg-purple-50 dark:bg-purple-900/30' : 'bg-gray-100 dark:bg-gray-700'}`}>
-                              <Activity className={`h-5 w-5 ${mm.isEnabled ? 'text-purple-600 dark:text-purple-400' : 'text-gray-400 dark:text-gray-500'}`} />
+                            <div className={`p-2 rounded-lg ${mm.isEnabled ? 'bg-green-50 dark:bg-green-900/30' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                              <Activity className={`h-5 w-5 ${mm.isEnabled ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`} />
                             </div>
                             <div>
                               <div className="font-medium">{mm.method.name}</div>
@@ -410,7 +631,7 @@ export default function MerchantDetailPage() {
                           </div>
                           <Badge 
                             variant={mm.isEnabled ? 'default' : 'secondary'}
-                            className={mm.isEnabled ? 'bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700' : 'dark:bg-gray-700 dark:text-gray-400'}
+                            className={mm.isEnabled ? 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700' : 'dark:bg-gray-700 dark:text-gray-400'}
                           >
                             {mm.isEnabled ? 'Активен' : 'Отключен'}
                           </Badge>

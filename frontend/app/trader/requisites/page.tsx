@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/table";
 import { BankCard } from "@/components/ui/bank-card";
 import Image from "next/image";
-import { Progress } from "@/components/ui/progress";
 import { traderApi } from "@/services/api";
 import { toast } from "sonner";
 import {
@@ -43,6 +42,9 @@ import {
   ChevronDown,
   ArrowUpDown,
   SlidersHorizontal,
+  MoreVertical,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import {
   Dialog,
@@ -68,9 +70,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { TraderHeader } from "@/components/trader/trader-header";
-import { RequisiteInfoModal } from "@/components/requisites/requisite-info-modal";
 import { StickySearchFilters } from "@/components/ui/sticky-search-filters";
 import { useDebounce } from "@/hooks/use-debounce";
+import { RequisitesSheet } from "@/components/trader/requisites-sheet";
 
 interface Requisite {
   id: string;
@@ -81,19 +83,23 @@ interface Requisite {
   phoneNumber?: string;
   minAmount: number;
   maxAmount: number;
-  dailyLimit: number;
-  monthlyLimit: number;
+  currentTotalAmount: number;
+  operationLimit: number;
+  sumLimit: number;
+  activeDeals: number;
   intervalMinutes: number;
   turnoverDay: number;
   turnoverTotal: number;
   successfulDeals: number;
   totalDeals: number;
   isArchived: boolean;
+  isActive: boolean;
   hasDevice: boolean;
   device?: {
     id: string;
     name: string;
     isOnline: boolean;
+    isWorking?: boolean;
   };
   createdAt: string;
   updatedAt: string;
@@ -106,30 +112,31 @@ export default function TraderRequisitesPage() {
   const [selectedRequisites, setSelectedRequisites] = useState<string[]>([]);
   const [bulkAction, setBulkAction] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showRequisitesSheet, setShowRequisitesSheet] = useState(false);
   const [methods, setMethods] = useState<any[]>([]);
   const [devices, setDevices] = useState<any[]>([]);
   const [addingRequisite, setAddingRequisite] = useState(false);
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
-  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "stopped" | "blocked">("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "stopped" | "archived">("all");
   const [filterDevice, setFilterDevice] = useState<string>("all");
   const [deviceSearch, setDeviceSearch] = useState("");
   const [deviceSearchInternal, setDeviceSearchInternal] = useState("");
   const [selectedRequisiteForInfo, setSelectedRequisiteForInfo] =
     useState<Requisite | null>(null);
+  const [editingRequisite, setEditingRequisite] = useState<Requisite | null>(null);
+  const [currentTab, setCurrentTab] = useState<"working" | "archived">("working");
 
-  // Form state
+  // Form state (числовые поля как строки, чтобы позволять полную очистку)
   const [requisiteForm, setRequisiteForm] = useState({
     methodType: "",
     bankType: "",
     cardNumber: "",
     recipientName: "",
     phoneNumber: "",
-    minAmount: 100,
-    maxAmount: 50000,
-    dailyLimit: 500000,
-    monthlyLimit: 5000000,
-    intervalMinutes: 0,
-    deviceId: "",
+    minAmount: "100",
+    maxAmount: "50000",
+    operationLimit: "0",
+    sumLimit: "0",
   });
 
   useEffect(() => {
@@ -142,12 +149,47 @@ export default function TraderRequisitesPage() {
     try {
       setLoading(true);
       const data = await traderApi.getRequisites();
-      // Add mock data for successful deals if not present
-      const requisitesWithDeals = data.map((req: any) => ({
-        ...req,
-        successfulDeals: req.successfulDeals || Math.floor(Math.random() * 50),
-        totalDeals: req.totalDeals || Math.floor(Math.random() * 60) + 10,
-      }));
+      console.log('[Requisites] Raw data from API:', data);
+      // Ensure data is an array
+      const dataArray = Array.isArray(data) ? data : [];
+      const requisitesWithDeals = dataArray.map((req: any) => {
+        console.log('[Requisites] Processing requisite:', req?.id, {
+          currentTotalAmount: req?.currentTotalAmount,
+          successfulDeals: req?.successfulDeals,
+          totalDeals: req?.totalDeals,
+          activeDeals: req?.activeDeals,
+          sumLimit: req?.sumLimit,
+          methodType: req?.methodType,
+          fullObject: req
+        });
+        // Ensure all required fields exist
+        return {
+          ...req,
+          id: req?.id || '',
+          methodType: req?.methodType || '',
+          bankType: req?.bankType || '',
+          cardNumber: req?.cardNumber || '',
+          recipientName: req?.recipientName || '',
+          phoneNumber: req?.phoneNumber || '',
+          minAmount: Number(req?.minAmount ?? 0),
+          maxAmount: Number(req?.maxAmount ?? 0),
+          currentTotalAmount: Number(req?.currentTotalAmount ?? 0),
+          operationLimit: Number(req?.operationLimit ?? 0),
+          sumLimit: Number(req?.sumLimit ?? 0),
+          activeDeals: Number(req?.activeDeals ?? 0),
+          intervalMinutes: req?.intervalMinutes || 0,
+          turnoverDay: req?.turnoverDay || 0,
+          turnoverTotal: req?.turnoverTotal || 0,
+          successfulDeals: Number(req?.successfulDeals ?? 0),
+          totalDeals: Number(req?.totalDeals ?? 0),
+          isArchived: req?.isArchived || false,
+          isActive: req?.isActive !== undefined ? req?.isActive : true,
+          hasDevice: req?.hasDevice || false,
+          device: req?.device || null,
+          createdAt: req?.createdAt || new Date().toISOString(),
+          updatedAt: req?.updatedAt || new Date().toISOString(),
+        };
+      });
       setRequisites(requisitesWithDeals);
     } catch (error) {
       console.error("Error fetching requisites:", error);
@@ -197,12 +239,18 @@ export default function TraderRequisitesPage() {
         return;
       }
 
-      // Prepare data, converting empty string to null for deviceId
+      // Prepare data
       const requisiteData = {
         ...requisiteForm,
-        deviceId: requisiteForm.deviceId || null,
-        intervalMinutes: 5 // По умолчанию 5 минут между транзакциями
+        minAmount: Number(requisiteForm.minAmount),
+        maxAmount: Number(requisiteForm.maxAmount),
+        operationLimit: Number(requisiteForm.operationLimit),
+        sumLimit: Number(requisiteForm.sumLimit),
+        deviceId: null, // Always null since we removed device selection
+        intervalMinutes: 5 // Default value
       };
+      
+      console.log('[Requisites] Creating requisite with data:', requisiteData);
       
       await traderApi.createRequisite(requisiteData);
       toast.success("Реквизит успешно добавлен");
@@ -216,12 +264,10 @@ export default function TraderRequisitesPage() {
         cardNumber: "",
         recipientName: "",
         phoneNumber: "",
-        minAmount: 100,
-        maxAmount: 50000,
-        dailyLimit: 500000,
-        monthlyLimit: 5000000,
-        intervalMinutes: 0,
-        deviceId: "",
+        minAmount: "100",
+        maxAmount: "50000",
+        operationLimit: "0",
+        sumLimit: "0",
       });
     } catch (error: any) {
       console.error("Error creating requisite:", error);
@@ -241,15 +287,15 @@ export default function TraderRequisitesPage() {
       switch (bulkAction) {
         case "stop":
           for (const id of selectedRequisites) {
-            await traderApi.archiveRequisite(id, true);
+            await traderApi.stopRequisite(id);
           }
-          toast.success(`Остановлено реквизитов: ${selectedRequisites.length}`);
+          toast.success(`Деактивировано реквизитов: ${selectedRequisites.length}`);
           break;
         case "start":
           for (const id of selectedRequisites) {
-            await traderApi.archiveRequisite(id, false);
+            await traderApi.startRequisite(id);
           }
-          toast.success(`Запущено реквизитов: ${selectedRequisites.length}`);
+          toast.success(`Активировано реквизитов: ${selectedRequisites.length}`);
           break;
       }
 
@@ -258,6 +304,46 @@ export default function TraderRequisitesPage() {
       await fetchRequisites();
     } catch (error) {
       toast.error("Не удалось выполнить действие");
+    }
+  };
+
+  const handleToggleStatus = async (requisite: Requisite) => {
+    try {
+      if (requisite.isActive) {
+        await traderApi.stopRequisite(requisite.id);
+        toast.success("Реквизит деактивирован");
+      } else {
+        await traderApi.startRequisite(requisite.id);
+        toast.success("Реквизит активирован");
+      }
+      await fetchRequisites();
+    } catch (error) {
+      console.error("Failed to toggle requisite status:", error);
+      toast.error("Не удалось изменить статус реквизита");
+    }
+  };
+
+  const handleDelete = async (requisiteId: string) => {
+    if (!confirm("Вы уверены, что хотите удалить этот реквизит?")) return;
+
+    try {
+      await traderApi.deleteRequisite(requisiteId);
+      toast.success("Реквизит удален");
+      await fetchRequisites();
+    } catch (error) {
+      console.error("Failed to delete requisite:", error);
+      toast.error("Не удалось удалить реквизит");
+    }
+  };
+
+  const handleArchive = async (requisite: Requisite) => {
+    try {
+      await traderApi.updateRequisite(requisite.id, { isArchived: !requisite.isArchived });
+      toast.success(requisite.isArchived ? "Реквизит разархивирован" : "Реквизит архивирован");
+      await fetchRequisites();
+    } catch (error) {
+      console.error("Failed to archive/unarchive requisite:", error);
+      toast.error("Не удалось изменить статус архивации");
     }
   };
 
@@ -276,6 +362,7 @@ export default function TraderRequisitesPage() {
   };
 
   const filteredRequisites = requisites
+    .filter((requisite) => (currentTab === "archived" ? requisite.isArchived : !requisite.isArchived))
     .filter((requisite) => {
       const matchesSearch =
         requisite.cardNumber.includes(searchQuery) ||
@@ -286,9 +373,9 @@ export default function TraderRequisitesPage() {
 
       const matchesStatus =
         filterStatus === "all" ||
-        (filterStatus === "active" && !requisite.isArchived) ||
-        (filterStatus === "stopped" && requisite.isArchived) ||
-        (filterStatus === "blocked" && requisite.isArchived);
+        (filterStatus === "active" && requisite.isActive && !requisite.isArchived) ||
+        (filterStatus === "stopped" && !requisite.isActive && !requisite.isArchived) ||
+        (filterStatus === "archived" && requisite.isArchived);
 
       const matchesDevice =
         filterDevice === "all" ||
@@ -320,7 +407,7 @@ export default function TraderRequisitesPage() {
     if (percentage >= 90) return "text-red-500";
     if (percentage >= 70) return "text-orange-500";
     if (percentage >= 50) return "text-yellow-500";
-    return "text-purple-500";
+    return "text-green-500";
   };
 
   const getBankLogo = (bankType: string): string => {
@@ -373,7 +460,7 @@ export default function TraderRequisitesPage() {
       <ProtectedRoute variant="trader">
         <AuthLayout variant="trader">
           <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
           </div>
         </AuthLayout>
       </ProtectedRoute>
@@ -397,6 +484,24 @@ export default function TraderRequisitesPage() {
             </div>
           </div>
 
+          {/* Top Tabs: Working vs Archived */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant={currentTab === "working" ? "default" : "outline"}
+              className={currentTab === "working" ? "bg-[#006039] hover:bg-[#006039]/90 text-white" : ""}
+              onClick={() => setCurrentTab("working")}
+            >
+              Рабочие реквизиты
+            </Button>
+            <Button
+              variant={currentTab === "archived" ? "default" : "outline"}
+              className={currentTab === "archived" ? "bg-[#006039] hover:bg-[#006039]/90 text-white" : ""}
+              onClick={() => setCurrentTab("archived")}
+            >
+              Архив
+            </Button>
+          </div>
+
           {/* Search and Filters - Sticky */}
           <StickySearchFilters
             searchPlaceholder="Поиск..."
@@ -413,7 +518,7 @@ export default function TraderRequisitesPage() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="gap-1 md:gap-2 h-10 md:h-12 px-3 md:px-6 text-sm md:text-base">
-                    <ArrowUpDown className="h-4 w-4 text-[#530FAD]" />
+                    <ArrowUpDown className="h-4 w-4 text-[#006039]" />
                     <span className="hidden sm:inline">{sortOrder === "newest" ? "Сначала новые" : "Сначала старые"}</span>
                     <span className="sm:hidden">{sortOrder === "newest" ? "Новые" : "Старые"}</span>
                     <ChevronDown className="h-4 w-4 text-gray-500" />
@@ -434,7 +539,7 @@ export default function TraderRequisitesPage() {
                     {/* Status Filter */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-[#530FAD]" />
+                        <CheckCircle className="h-4 w-4 text-[#006039]" />
                         <Label className="text-sm">Статус реквизитов</Label>
                       </div>
                       <Popover>
@@ -444,7 +549,7 @@ export default function TraderRequisitesPage() {
                             size="default"
                             className="w-full justify-between h-12"
                           >
-                            <span className="text-[#530FAD]">
+                            <span className="text-[#006039]">
                               {filterStatus === "all"
                                 ? "Все реквизиты"
                                 : filterStatus === "active"
@@ -453,7 +558,7 @@ export default function TraderRequisitesPage() {
                                     ? "Выключенные"
                                     : "Архивированные"}
                             </span>
-                            <ChevronDown className="h-4 w-4 opacity-50 text-[#530FAD]" />
+                            <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-[465px] p-0" align="start" sideOffset={5}>
@@ -462,9 +567,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                                 filterStatus === "all" &&
-                                  "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                               )}
                               onClick={() => setFilterStatus("all")}
                             >
@@ -474,9 +579,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                                 filterStatus === "active" &&
-                                  "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                               )}
                               onClick={() => setFilterStatus("active")}
                             >
@@ -486,9 +591,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                                 filterStatus === "stopped" &&
-                                  "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                               )}
                               onClick={() => setFilterStatus("stopped")}
                             >
@@ -498,11 +603,11 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
-                                filterStatus === "blocked" &&
-                                  "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                                filterStatus === "archived" &&
+                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                               )}
-                              onClick={() => setFilterStatus("blocked")}
+                              onClick={() => setFilterStatus("archived")}
                             >
                               Архивированные
                             </Button>
@@ -514,7 +619,7 @@ export default function TraderRequisitesPage() {
                     {/* Device Filter */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Smartphone className="h-4 w-4 text-[#530FAD]" />
+                        <Smartphone className="h-4 w-4 text-[#006039]" />
                         <Label className="text-sm">Устройство</Label>
                       </div>
                       <Popover>
@@ -524,14 +629,14 @@ export default function TraderRequisitesPage() {
                             size="default"
                             className="w-full justify-between h-12"
                           >
-                            <span className="text-[#530FAD]">
+                            <span className="text-[#006039]">
                               {filterDevice === "all"
                                 ? "Все устройства"
                                 : filterDevice === "none"
                                   ? "Без устройства"
                                   : devices.find(d => d.id === filterDevice)?.name || "Выберите устройство"}
                             </span>
-                            <ChevronDown className="h-4 w-4 opacity-50 text-[#530FAD]" />
+                            <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-[465px] p-0" align="start" sideOffset={5}>
@@ -556,9 +661,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                                 filterDevice === "all" &&
-                                  "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                               )}
                               onClick={() => setFilterDevice("all")}
                             >
@@ -568,9 +673,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                                 filterDevice === "none" &&
-                                  "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                               )}
                               onClick={() => setFilterDevice("none")}
                             >
@@ -586,9 +691,9 @@ export default function TraderRequisitesPage() {
                                   variant="ghost"
                                   size="default"
                                   className={cn(
-                                    "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                                    "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                                     filterDevice === device.id &&
-                                      "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                                      "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                                   )}
                                   onClick={() => setFilterDevice(device.id)}
                                 >
@@ -596,7 +701,7 @@ export default function TraderRequisitesPage() {
                                     <Smartphone className="h-4 w-4" />
                                     <span>{device.name}</span>
                                     {device.isOnline && (
-                                      <div className="w-2 h-2 bg-purple-500 rounded-full" />
+                                      <div className="w-2 h-2 bg-green-500 rounded-full" />
                                     )}
                                   </div>
                                 </Button>
@@ -620,13 +725,13 @@ export default function TraderRequisitesPage() {
                     <SelectContent>
                       <SelectItem value="stop">
                         <div className="flex items-center">
-                          <PauseCircle className="mr-2 h-4 w-4 text-[#530FAD]" />
+                          <PauseCircle className="mr-2 h-4 w-4 text-[#006039]" />
                           Остановить
                         </div>
                       </SelectItem>
                       <SelectItem value="start">
                         <div className="flex items-center">
-                          <PlayCircle className="mr-2 h-4 w-4 text-[#530FAD]" />
+                          <PlayCircle className="mr-2 h-4 w-4 text-[#006039]" />
                           Запустить
                         </div>
                       </SelectItem>
@@ -636,7 +741,7 @@ export default function TraderRequisitesPage() {
                   <Button
                     onClick={handleBulkAction}
                     disabled={!bulkAction}
-                    className="bg-[#530FAD] hover:bg-[#530FAD]/90"
+                    className="bg-[#006039] hover:bg-[#006039]/90"
                   >
                     Применить
                   </Button>
@@ -648,12 +753,17 @@ export default function TraderRequisitesPage() {
           {/* Requisites List */}
           <div className="space-y-3">
             {filteredRequisites.map((requisite) => {
-              const successRate =
-                requisite.totalDeals > 0
-                  ? (requisite.successfulDeals / requisite.totalDeals) * 100
-                  : 0;
+              console.log('[Requisites] Rendering requisite:', requisite.id, {
+                activeDeals: requisite.activeDeals,
+                sumLimit: requisite.sumLimit,
+                currentTotalAmount: requisite.currentTotalAmount,
+                methodType: requisite.methodType
+              });
               const paymentSystem = detectPaymentSystem(requisite.cardNumber);
 
+              // Determine if requisite is actually working
+              const isWorking = requisite.isActive && (!requisite.hasDevice || (requisite.device?.isOnline === true));
+              
               return (
                 <div key={requisite.id} className="relative">
                   {/* Checkbox - positioned outside card */}
@@ -665,13 +775,12 @@ export default function TraderRequisitesPage() {
                   />
 
                   <Card
-                    className="pl-10 md:pl-12 pr-3 md:pr-4 py-3 md:py-4 hover:shadow-md transition-all duration-300 cursor-pointer border-gray-100"
-                    onClick={() => setSelectedRequisiteForInfo(requisite)}
+                    className="pl-10 md:pl-12 pr-3 md:pr-4 py-3 md:py-4 hover:shadow-md transition-all duration-300 border-gray-100"
                   >
                     {/* Mobile Layout */}
                     <div className="md:hidden">
                       <div className="space-y-3">
-                        {/* Top Row: Bank Logo, Name, Device, Status */}
+                        {/* Top Row: Bank Logo, Name with Device, Status */}
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-start gap-3 flex-1 min-w-0">
                             {/* Bank Logo */}
@@ -692,8 +801,8 @@ export default function TraderRequisitesPage() {
                               </div>
                               {requisite.device && (
                                 <div className="flex items-center gap-1 mt-1">
-                                  <Smartphone className="h-3 w-3 text-purple-600" />
-                                  <span className="text-xs text-purple-600 truncate">
+                                  <Smartphone className="h-3 w-3 text-green-600" />
+                                  <span className="text-xs text-green-600 truncate">
                                     {requisite.device.name}
                                   </span>
                                 </div>
@@ -701,42 +810,118 @@ export default function TraderRequisitesPage() {
                             </div>
                           </div>
 
-                          {/* Status Badge */}
-                          <div className="flex-shrink-0">
-                            {requisite.isArchived ? (
-                              <Badge className="bg-gray-100 text-gray-600 border-gray-300 text-xs px-2 py-1">
-                                Остановлен
+                          {/* Status Badge and Actions */}
+                          <div className="flex items-center gap-2">
+                            <div className="flex-shrink-0 flex items-center gap-1 flex-wrap">
+                              {requisite.device && (
+                                <Badge className={cn(
+                                  "text-xs px-2 py-1",
+                                  (requisite.device.isWorking ?? requisite.device.isOnline)
+                                    ? "bg-green-50 text-green-700 border-green-200"
+                                    : "bg-gray-100 text-gray-600 border-gray-300"
+                                )}>
+                                  {(requisite.device.isWorking ?? requisite.device.isOnline)
+                                    ? "Устройство: в работе"
+                                    : "Устройство: не в работе"}
+                                </Badge>
+                              )}
+                              <Badge className={cn(
+                                "text-xs px-2 py-1",
+                                requisite.isActive && !requisite.isArchived
+                                  ? "bg-blue-50 text-blue-700 border-blue-200"
+                                  : "bg-gray-100 text-gray-600 border-gray-300"
+                              )}>
+                                {requisite.isActive ? "Реквизит: активен" : "Реквизит: неактивен"}
                               </Badge>
-                            ) : (
-                              <Badge className="bg-purple-50 text-purple-700 border-purple-200 text-xs px-2 py-1">
-                                В работе
-                              </Badge>
-                            )}
+                              {/* Archive badge removed per new UX */}
+                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => {
+                                  setEditingRequisite(requisite);
+                                  setShowRequisitesSheet(true);
+                                }}>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Редактировать
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleArchive(requisite)}>
+                                  {requisite.isArchived ? (
+                                    <>
+                                      <Archive className="mr-2 h-4 w-4" />
+                                      Разархивировать
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Archive className="mr-2 h-4 w-4" />
+                                      Архивировать
+                                    </>
+                                  )}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleDelete(requisite.id)}
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Удалить
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
                         </div>
 
-                        {/* Card Number */}
-                        <div className="flex items-center gap-2">
-                          {paymentSystem !== "unknown" && (
-                            <PaymentSystemIcon system={paymentSystem} />
-                          )}
-                          <span className="font-medium text-gray-900 text-sm">
-                            {requisite.cardNumber.replace(/(\d{4})/g, "$1 ").trim()}
-                          </span>
-                        </div>
-
-                        {/* Success Rate */}
+                        {/* Card Number and Method */}
                         <div className="space-y-1">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-600">
-                              Успешные сделки: {requisite.successfulDeals || 0} из{" "}
-                              {requisite.totalDeals || 0}
-                            </span>
-                            <span className="text-sm font-medium text-gray-900">
-                              {successRate.toFixed(0)}%
+                          <div className="flex items-center gap-2">
+                            {paymentSystem !== "unknown" && (
+                              <PaymentSystemIcon system={paymentSystem} />
+                            )}
+                            <span className="font-medium text-gray-900 text-sm">
+                              {requisite.cardNumber.replace(/(\d{4})/g, "$1 ").trim()}
                             </span>
                           </div>
-                          <Progress value={successRate} className="h-1.5" />
+                          <div className="text-xs text-gray-600">
+                            <span>Метод: {requisite.methodType === 'sbp' ? 'СБП' : requisite.methodType === 'c2c' ? 'C2C' : requisite.methodType || ''}</span>
+                          </div>
+                        </div>
+
+                        {/* Success Rate and Limits */}
+                        <div className="space-y-2">
+                          <div className="text-xs text-gray-600">
+                            Успешные сделки: {requisite.successfulDeals || 0}
+                          </div>
+
+                          {/* Limits Info */}
+                          <div className="flex flex-wrap gap-3 text-xs">
+                            <div>
+                              <span className="text-gray-600">Лимиты суммы: </span>
+                              <span className="font-medium">
+                                {(requisite.minAmount || 0).toLocaleString()} - {(requisite.maxAmount || 0).toLocaleString()} ₽
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Активные сделки: </span>
+                              <span className="font-medium">
+                                {requisite.activeDeals || 0}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Общий лимит: </span>
+                              <span className="font-medium">
+                                {(requisite.currentTotalAmount || 0).toLocaleString()} / {requisite.sumLimit === 0 ? '∞' : (requisite.sumLimit || 0).toLocaleString()} ₽
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Лимит операций: </span>
+                              <span className="font-medium">
+                                {requisite.operationLimit === 0 ? '∞' : (requisite.operationLimit || 0)}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -754,59 +939,133 @@ export default function TraderRequisitesPage() {
                         />
                       </div>
 
-                      {/* Requisite Info + Card Number */}
+                      {/* Requisite Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3">
-                          <div className="font-medium text-gray-900">
-                            {requisite.recipientName}
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-3">
+                            <div className="font-medium text-gray-900">
+                              {requisite.recipientName}
+                            </div>
+                            {requisite.device && (
+                              <div className="flex items-center gap-1.5">
+                                <Smartphone className="h-3.5 w-3.5 text-green-600" />
+                                <span className="text-sm text-green-600">
+                                  {requisite.device.name}
+                                </span>
+                              </div>
+                            )}
                           </div>
-                          {requisite.device && (
-                            <div className="flex items-center gap-1.5">
-                              <Smartphone className="h-3.5 w-3.5 text-purple-600" />
-                              <span className="text-sm text-purple-600">
-                                {requisite.device.name}
+                          {/* Card Number and Method */}
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                              {paymentSystem !== "unknown" && (
+                                <PaymentSystemIcon system={paymentSystem} />
+                              )}
+                              <span className="font-semibold text-gray-900">
+                                {requisite.cardNumber.replace(/(\d{4})/g, "$1 ").trim()}
                               </span>
                             </div>
-                          )}
-                          {/* Card Number - moved closer to name/device */}
-                          <div className="flex items-center gap-2">
-                            {paymentSystem !== "unknown" && (
-                              <PaymentSystemIcon system={paymentSystem} />
-                            )}
-                            <span className="font-semibold text-gray-900">
-                              {requisite.cardNumber.replace(/(\d{4})/g, "$1 ").trim()}
+                            <span className="text-sm text-gray-600">
+                              Метод: {requisite.methodType === 'sbp' ? 'СБП' : requisite.methodType === 'c2c' ? 'C2C' : requisite.methodType || ''}
                             </span>
                           </div>
                         </div>
                       </div>
 
                     {/* Success Rate */}
-                    <div className="flex-shrink-0">
-                      <div className="flex items-center gap-2">
-                        <div className="w-32">
-                          <Progress value={successRate} className="h-1.5" />
-                          <div className="text-xs text-gray-600 mt-1">
-                            Успешные сделки: {requisite.successfulDeals || 0} из{" "}
-                            {requisite.totalDeals || 0}
-                          </div>
-                        </div>
-                        <span className="text-sm font-medium text-gray-900">
-                          {successRate.toFixed(0)}%
+                    <div className="flex-shrink-0 text-sm text-gray-600">
+                      Успешные сделки: {requisite.successfulDeals || 0}
+                    </div>
+                    
+                    {/* Limits Info - in one column */}
+                    <div className="flex-shrink-0 space-y-1 text-sm">
+                      <div>
+                        <span className="text-gray-600">Лимиты суммы: </span>
+                        <span className="font-medium">
+                          {(requisite.minAmount || 0).toLocaleString()} - {(requisite.maxAmount || 0).toLocaleString()} ₽
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Активные сделки: </span>
+                        <span className="font-medium">
+                          {requisite.activeDeals || 0}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Общий лимит: </span>
+                        <span className="font-medium">
+                          {(requisite.currentTotalAmount || 0).toLocaleString()} / {requisite.sumLimit === 0 ? '∞' : (requisite.sumLimit || 0).toLocaleString()} ₽
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Лимит операций: </span>
+                        <span className="font-medium">
+                          {requisite.operationLimit === 0 ? '∞' : (requisite.operationLimit || 0)}
                         </span>
                       </div>
                     </div>
 
-                      {/* Status */}
-                      <div className="flex-shrink-0">
-                        {requisite.isArchived ? (
-                          <div className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-medium">
-                            Остановлен
-                          </div>
-                        ) : (
-                          <div className="px-4 py-2 bg-purple-50 text-purple-700 rounded-lg font-medium">
-                            В работе
-                          </div>
-                        )}
+                      {/* Status and Actions */}
+                      <div className="flex items-center gap-2">
+                        <div className="flex-shrink-0 flex items-center gap-2">
+                          {requisite.device && (
+                            <Badge className={cn(
+                              "px-3 py-2",
+                              (requisite.device.isWorking ?? requisite.device.isOnline)
+                                ? "bg-green-50 text-green-700"
+                                : "bg-gray-100 text-gray-600"
+                            )}>
+                              {(requisite.device.isWorking ?? requisite.device.isOnline)
+                                ? "Устройство: в работе"
+                                : "Устройство: не в работе"}
+                            </Badge>
+                          )}
+                          <Badge className={cn(
+                            "px-3 py-2",
+                            requisite.isActive && !requisite.isArchived
+                              ? "bg-blue-50 text-blue-700"
+                              : "bg-gray-100 text-gray-600"
+                          )}>
+                            {requisite.isActive ? "Реквизит: активен" : "Реквизит: неактивен"}
+                          </Badge>
+                          {/* Archive badge removed per new UX */}
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => {
+                              setEditingRequisite(requisite);
+                              setShowRequisitesSheet(true);
+                            }}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Редактировать
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleArchive(requisite)}>
+                              {requisite.isArchived ? (
+                                <>
+                                  <Archive className="mr-2 h-4 w-4" />
+                                  Разархивировать
+                                </>
+                              ) : (
+                                <>
+                                  <Archive className="mr-2 h-4 w-4" />
+                                  Архивировать
+                                </>
+                              )}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleDelete(requisite.id)}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Удалить
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   </Card>
@@ -817,11 +1076,25 @@ export default function TraderRequisitesPage() {
 
           {filteredRequisites.length === 0 && (
             <div className="text-center py-12">
-              <CreditCard className="h-12 w-12 mx-auto text-[#530FAD] mb-4" />
+              <CreditCard className="h-12 w-12 mx-auto text-[#006039] mb-4" />
               <p className="text-gray-500">Реквизиты не найдены</p>
             </div>
           )}
         </div>
+
+        {/* Requisites Sheet */}
+        <RequisitesSheet
+          open={showRequisitesSheet}
+          onOpenChange={(open) => {
+            setShowRequisitesSheet(open);
+            if (!open) {
+              setEditingRequisite(null);
+            }
+          }}
+          onSuccess={fetchRequisites}
+          existingRequisite={editingRequisite}
+          devices={devices}
+        />
 
         {/* Add Requisite Dialog */}
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
@@ -867,19 +1140,45 @@ export default function TraderRequisitesPage() {
                     <SelectContent>
                       <SelectItem value="SBERBANK">Сбербанк</SelectItem>
                       <SelectItem value="TBANK">Т-Банк</SelectItem>
-                      <SelectItem value="TINKOFF">Тинькофф</SelectItem>
                       <SelectItem value="VTB">ВТБ</SelectItem>
                       <SelectItem value="ALFABANK">Альфа-Банк</SelectItem>
                       <SelectItem value="RAIFFEISEN">Райффайзен</SelectItem>
                       <SelectItem value="GAZPROMBANK">Газпромбанк</SelectItem>
+                      <SelectItem value="OTPBANK">ОТП Банк</SelectItem>
                       <SelectItem value="OTKRITIE">Открытие</SelectItem>
                       <SelectItem value="ROSBANK">Росбанк</SelectItem>
-                      <SelectItem value="PSB">ПСБ</SelectItem>
+                      <SelectItem value="PROMSVYAZBANK">Промсвязьбанк</SelectItem>
                       <SelectItem value="SOVCOMBANK">Совкомбанк</SelectItem>
                       <SelectItem value="POCHTABANK">Почта Банк</SelectItem>
-                      <SelectItem value="RSHB">Россельхозбанк</SelectItem>
+                      <SelectItem value="ROSSELKHOZBANK">Россельхозбанк</SelectItem>
                       <SelectItem value="MKB">МКБ</SelectItem>
                       <SelectItem value="URALSIB">Уралсиб</SelectItem>
+                      <SelectItem value="AKBARS">Ак Барс</SelectItem>
+                      <SelectItem value="SPBBANK">Банк Санкт-Петербург</SelectItem>
+                      <SelectItem value="MTSBANK">МТС Банк</SelectItem>
+                      <SelectItem value="OZONBANK">Озон Банк</SelectItem>
+                      <SelectItem value="RENAISSANCE">Ренессанс</SelectItem>
+                      <SelectItem value="AVANGARD">Авангард</SelectItem>
+                      <SelectItem value="RNKB">РНКБ</SelectItem>
+                      <SelectItem value="LOKOBANK">Локо-Банк</SelectItem>
+                      <SelectItem value="RUSSIANSTANDARD">Русский Стандарт</SelectItem>
+                      <SelectItem value="HOMECREDIT">Хоум Кредит</SelectItem>
+                      <SelectItem value="UNICREDIT">ЮниКредит</SelectItem>
+                      <SelectItem value="CITIBANK">Ситибанк</SelectItem>
+                      <SelectItem value="BCSBANK">БКС Банк</SelectItem>
+                      <SelectItem value="ABSOLUTBANK">Абсолют Банк</SelectItem>
+                      <SelectItem value="SVOYBANK">Свой Банк</SelectItem>
+                      <SelectItem value="TRANSKAPITALBANK">Транскапиталбанк</SelectItem>
+                      <SelectItem value="MTSMONEY">МТС Деньги</SelectItem>
+                      <SelectItem value="FORABANK">Фора-Банк</SelectItem>
+                      <SelectItem value="CREDITEUROPE">Кредит Европа</SelectItem>
+                      <SelectItem value="BBRBANK">ББР Банк</SelectItem>
+                      <SelectItem value="UBRIR">УБРиР</SelectItem>
+                      <SelectItem value="GENBANK">Генбанк</SelectItem>
+                      <SelectItem value="SINARA">Синара</SelectItem>
+                      <SelectItem value="VLADBUSINESSBANK">Владбизнесбанк</SelectItem>
+                      <SelectItem value="TAVRICHESKIY">Таврический</SelectItem>
+                      <SelectItem value="DOLINSK">Долинск</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -940,14 +1239,17 @@ export default function TraderRequisitesPage() {
                   <Label htmlFor="minAmount" className="text-sm">Мин. сумма транзакции</Label>
                   <Input
                     id="minAmount"
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={requisiteForm.minAmount}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const digitsOnly = e.target.value.replace(/\D/g, "");
                       setRequisiteForm({
                         ...requisiteForm,
-                        minAmount: parseInt(e.target.value) || 0,
-                      })
-                    }
+                        minAmount: digitsOnly,
+                      });
+                    }}
                     className="text-sm md:text-base"
                   />
                 </div>
@@ -956,75 +1258,64 @@ export default function TraderRequisitesPage() {
                   <Label htmlFor="maxAmount" className="text-sm">Макс. сумма транзакции</Label>
                   <Input
                     id="maxAmount"
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={requisiteForm.maxAmount}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const digitsOnly = e.target.value.replace(/\D/g, "");
                       setRequisiteForm({
                         ...requisiteForm,
-                        maxAmount: parseInt(e.target.value) || 0,
-                      })
-                    }
+                        maxAmount: digitsOnly,
+                      });
+                    }}
                     className="text-sm md:text-base"
                   />
                 </div>
               </div>
+
+
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                 <div>
-                  <Label htmlFor="dailyLimit" className="text-sm">Дневной лимит</Label>
+                  <Label htmlFor="operationLimit" className="text-sm">Лимит операций (всего)</Label>
                   <Input
-                    id="dailyLimit"
-                    type="number"
-                    value={requisiteForm.dailyLimit}
-                    onChange={(e) =>
+                    id="operationLimit"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={requisiteForm.operationLimit}
+                    onChange={(e) => {
+                      const digitsOnly = e.target.value.replace(/\D/g, "");
                       setRequisiteForm({
                         ...requisiteForm,
-                        dailyLimit: parseInt(e.target.value) || 0,
-                      })
-                    }
+                        operationLimit: digitsOnly,
+                      });
+                    }}
+                    placeholder="0 = без ограничений"
                     className="text-sm md:text-base"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="monthlyLimit" className="text-sm">Месячный лимит</Label>
+                  <Label htmlFor="sumLimit" className="text-sm">Лимит общей суммы (₽)</Label>
                   <Input
-                    id="monthlyLimit"
-                    type="number"
-                    value={requisiteForm.monthlyLimit}
-                    onChange={(e) =>
+                    id="sumLimit"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={requisiteForm.sumLimit}
+                    onChange={(e) => {
+                      const digitsOnly = e.target.value.replace(/\D/g, "");
                       setRequisiteForm({
                         ...requisiteForm,
-                        monthlyLimit: parseInt(e.target.value) || 0,
-                      })
-                    }
+                        sumLimit: digitsOnly,
+                      });
+                    }}
+                    placeholder="0 = без ограничений"
                     className="text-sm md:text-base"
                   />
                 </div>
-              </div>
-
-              <div>
-                <Label htmlFor="device" className="text-sm">
-                  Привязать к устройству (опционально)
-                </Label>
-                <Select
-                  value={requisiteForm.deviceId}
-                  onValueChange={(value) =>
-                    setRequisiteForm({ ...requisiteForm, deviceId: value })
-                  }
-                >
-                  <SelectTrigger id="device" className="text-sm md:text-base">
-                    <SelectValue placeholder="Выберите устройство" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Без устройства</SelectItem>
-                    {devices.map((device) => (
-                      <SelectItem key={device.id} value={device.id}>
-                        {device.name} {device.isOnline && "(В сети)"}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
             </div>
 
@@ -1037,7 +1328,7 @@ export default function TraderRequisitesPage() {
                 Отмена
               </Button>
               <Button
-                className="bg-[#530FAD] hover:bg-[#530FAD]/90 w-full sm:w-auto"
+                className="bg-[#006039] hover:bg-[#006039]/90 w-full sm:w-auto"
                 onClick={handleCreateRequisite}
                 disabled={addingRequisite}
               >
@@ -1050,39 +1341,6 @@ export default function TraderRequisitesPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Requisite Info Modal */}
-        {selectedRequisiteForInfo && (
-          <RequisiteInfoModal
-            open={!!selectedRequisiteForInfo}
-            onOpenChange={(open) => !open && setSelectedRequisiteForInfo(null)}
-            requisite={{
-              id: selectedRequisiteForInfo.id,
-              bankType: selectedRequisiteForInfo.bankType,
-              cardNumber: selectedRequisiteForInfo.cardNumber,
-              recipientName: selectedRequisiteForInfo.recipientName,
-              phoneNumber: selectedRequisiteForInfo.phoneNumber,
-              accountNumber: "40817810490069500347", // Mock account number
-              status: selectedRequisiteForInfo.isArchived
-                ? "inactive"
-                : "active",
-              isArchived: selectedRequisiteForInfo.isArchived,
-              device: selectedRequisiteForInfo.device,
-              stats: {
-                turnover24h: 0,
-                deals24h: 0,
-                profit24h: 0,
-                conversion24h: 0,
-              },
-              verifications: {
-                cardNumber: false,
-                accountNumber: false,
-                phoneNumber: selectedRequisiteForInfo.phoneNumber
-                  ? true
-                  : false,
-              },
-            }}
-          />
-        )}
       </AuthLayout>
     </ProtectedRoute>
   );

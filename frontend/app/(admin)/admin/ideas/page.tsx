@@ -32,7 +32,14 @@ import {
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { Search, Eye, CheckCircle, Clock, XCircle, MessageSquare } from "lucide-react";
+import {
+  Search,
+  Eye,
+  CheckCircle,
+  Clock,
+  XCircle,
+  MessageSquare,
+} from "lucide-react";
 import { useAdminAuth } from "@/stores/auth";
 
 interface Idea {
@@ -52,7 +59,7 @@ interface Idea {
 const statusConfig = {
   PENDING: { label: "Ожидает", color: "bg-yellow-500", icon: Clock },
   REVIEWING: { label: "На рассмотрении", color: "bg-blue-500", icon: Eye },
-  APPROVED: { label: "Одобрено", color: "bg-purple-500", icon: CheckCircle },
+  APPROVED: { label: "Одобрено", color: "bg-green-500", icon: CheckCircle },
   REJECTED: { label: "Отклонено", color: "bg-red-500", icon: XCircle },
 };
 
@@ -74,7 +81,7 @@ export default function AdminIdeasPage() {
     try {
       const response = await fetch("/api/admin/ideas", {
         headers: {
-          Authorization: `Bearer ${token}`,
+          "x-admin-key": token,
         },
       });
 
@@ -89,14 +96,18 @@ export default function AdminIdeasPage() {
     }
   };
 
-  const updateIdeaStatus = async (ideaId: string, status: string, notes?: string) => {
+  const updateIdeaStatus = async (
+    ideaId: string,
+    status: string,
+    notes?: string,
+  ) => {
     setUpdatingStatus(true);
     try {
       const response = await fetch(`/api/admin/ideas/${ideaId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "x-admin-key": token,
         },
         body: JSON.stringify({ status, adminNotes: notes }),
       });
@@ -115,20 +126,24 @@ export default function AdminIdeasPage() {
   };
 
   const filteredIdeas = ideas.filter((idea) => {
-    const matchesSearch = 
+    const matchesSearch =
       idea.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
       idea.user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (idea.user.name && idea.user.name.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    const matchesStatus = statusFilter === "all" || idea.status === statusFilter;
-    
+      (idea.user.name &&
+        idea.user.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const matchesStatus =
+      statusFilter === "all" || idea.status === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Идеи пользователей</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          Идеи пользователей
+        </h1>
         <p className="text-muted-foreground">
           Просмотр и управление предложениями от пользователей
         </p>
@@ -209,7 +224,7 @@ export default function AdminIdeasPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge 
+                          <Badge
                             variant="secondary"
                             className={`${statusConfig[idea.status].color} text-white`}
                           >
@@ -269,21 +284,27 @@ export default function AdminIdeasPage() {
               <div>
                 <Label>Дата создания</Label>
                 <p className="text-sm">
-                  {format(new Date(selectedIdea.createdAt), "d MMMM yyyy, HH:mm", {
-                    locale: ru,
-                  })}
+                  {format(
+                    new Date(selectedIdea.createdAt),
+                    "d MMMM yyyy, HH:mm",
+                    {
+                      locale: ru,
+                    },
+                  )}
                 </p>
               </div>
               <div>
                 <Label>Содержание идеи</Label>
                 <div className="mt-1 p-3 bg-muted rounded-md">
-                  <p className="text-sm whitespace-pre-wrap">{selectedIdea.content}</p>
+                  <p className="text-sm whitespace-pre-wrap">
+                    {selectedIdea.content}
+                  </p>
                 </div>
               </div>
               <div>
                 <Label>Текущий статус</Label>
                 <div className="mt-1">
-                  <Badge 
+                  <Badge
                     variant="secondary"
                     className={`${statusConfig[selectedIdea.status].color} text-white`}
                   >
@@ -305,9 +326,11 @@ export default function AdminIdeasPage() {
               <div className="flex gap-2 pt-4">
                 {selectedIdea.status !== "APPROVED" && (
                   <Button
-                    onClick={() => updateIdeaStatus(selectedIdea.id, "APPROVED", adminNotes)}
+                    onClick={() =>
+                      updateIdeaStatus(selectedIdea.id, "APPROVED", adminNotes)
+                    }
                     disabled={updatingStatus}
-                    className="bg-purple-600 hover:bg-purple-700"
+                    className="bg-green-600 hover:bg-green-700"
                   >
                     <CheckCircle className="h-4 w-4 mr-1" />
                     Одобрить
@@ -315,7 +338,9 @@ export default function AdminIdeasPage() {
                 )}
                 {selectedIdea.status !== "REVIEWING" && (
                   <Button
-                    onClick={() => updateIdeaStatus(selectedIdea.id, "REVIEWING", adminNotes)}
+                    onClick={() =>
+                      updateIdeaStatus(selectedIdea.id, "REVIEWING", adminNotes)
+                    }
                     disabled={updatingStatus}
                     variant="outline"
                   >
@@ -325,7 +350,9 @@ export default function AdminIdeasPage() {
                 )}
                 {selectedIdea.status !== "REJECTED" && (
                   <Button
-                    onClick={() => updateIdeaStatus(selectedIdea.id, "REJECTED", adminNotes)}
+                    onClick={() =>
+                      updateIdeaStatus(selectedIdea.id, "REJECTED", adminNotes)
+                    }
                     disabled={updatingStatus}
                     variant="destructive"
                   >

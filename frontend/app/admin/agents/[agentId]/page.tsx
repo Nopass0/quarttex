@@ -39,7 +39,8 @@ import {
 } from '@/components/ui/table'
 import { DatePickerWithRange } from '@/components/ui/date-range-picker'
 import { DateRange } from 'react-day-picker'
-import { addDays } from 'date-fns'
+import { addDays, format } from 'date-fns'
+import { ru } from 'date-fns/locale'
 import { AgentMerchantsTable } from '@/components/admin/agent-merchants-table'
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { AuthLayout } from "@/components/layouts/auth-layout"
@@ -314,7 +315,7 @@ function AgentProfileContent() {
           size="icon"
           onClick={() => router.push('/admin/agents')}
         >
-          <ArrowLeft className="h-4 w-4 text-[#530FAD]" />
+          <ArrowLeft className="h-4 w-4 text-[#006039]" />
         </Button>
         <h1 className="text-3xl font-bold">Профиль агента</h1>
       </div>
@@ -435,7 +436,7 @@ function AgentProfileContent() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Дата регистрации</p>
-              <p className="font-medium">{new Date(agent.createdAt).toLocaleDateString('ru-RU')}</p>
+              <p className="font-medium">{format(new Date(agent.createdAt), 'dd.MM.yyyy HH:mm', { locale: ru })}</p>
             </div>
           </CardContent>
         </Card>
@@ -474,7 +475,7 @@ function AgentProfileContent() {
             <Dialog open={isAddTraderDialogOpen} onOpenChange={setIsAddTraderDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
-                  <UserPlus className="mr-2 h-4 w-4 text-[#530FAD]" />
+                  <UserPlus className="mr-2 h-4 w-4 text-[#006039]" />
                   Добавить трейдера
                 </Button>
               </DialogTrigger>
@@ -552,7 +553,7 @@ function AgentProfileContent() {
                     {earningsData && (
                       <TableCell>${formatAmount(traderEarnings?.earnings || 0)}</TableCell>
                     )}
-                    <TableCell>{new Date(at.createdAt).toLocaleDateString('ru-RU')}</TableCell>
+                    <TableCell>{format(new Date(at.createdAt), 'dd.MM.yyyy HH:mm', { locale: ru })}</TableCell>
                     <TableCell>
                       <Button
                         variant="ghost"
@@ -560,7 +561,7 @@ function AgentProfileContent() {
                         onClick={() => handleRemoveTrader(at.traderId)}
                         className="text-red-600 hover:text-red-700"
                       >
-                        <Trash2 className="h-4 w-4 text-[#530FAD]" />
+                        <Trash2 className="h-4 w-4 text-[#006039]" />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -599,7 +600,7 @@ function AgentProfileContent() {
                         {team.tradersCount} трейдеров
                       </Badge>
                     </TableCell>
-                    <TableCell>{new Date(team.createdAt).toLocaleDateString('ru-RU')}</TableCell>
+                    <TableCell>{format(new Date(team.createdAt), 'dd.MM.yyyy HH:mm', { locale: ru })}</TableCell>
                     <TableCell>
                       <Button
                         variant="outline"
@@ -641,7 +642,7 @@ function AgentProfileContent() {
               {agent.agentPayouts.map((payout) => (
                 <TableRow key={payout.id}>
                   <TableCell>
-                    {new Date(payout.periodStart).toLocaleDateString('ru-RU')} - {new Date(payout.periodEnd).toLocaleDateString('ru-RU')}
+                    {format(new Date(payout.periodStart), 'dd.MM.yyyy HH:mm', { locale: ru })} - {format(new Date(payout.periodEnd), 'dd.MM.yyyy HH:mm', { locale: ru })}
                   </TableCell>
                   <TableCell>${formatAmount(payout.earnings)}</TableCell>
                   <TableCell>${formatAmount(payout.amount)}</TableCell>
@@ -651,7 +652,7 @@ function AgentProfileContent() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {payout.paidAt ? new Date(payout.paidAt).toLocaleDateString('ru-RU') : '-'}
+                    {payout.paidAt ? format(new Date(payout.paidAt), 'dd.MM.yyyy HH:mm', { locale: ru }) : '-'}
                   </TableCell>
                   <TableCell>
                     {payout.txHash ? (
