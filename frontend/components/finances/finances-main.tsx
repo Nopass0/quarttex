@@ -305,7 +305,7 @@ export function FinancesMain() {
       case "completed":
         return (
           <Badge
-            className="bg-green-100 border-green-200 dark:bg-green-900/30 dark:border-green-800"
+            className="bg-purple-100 border-purple-200 dark:bg-purple-900/30 dark:border-purple-800"
             style={{ color: "#006039" }}
           >
             Завершено
@@ -744,7 +744,7 @@ export function FinancesMain() {
                 <div className="flex gap-2 flex-1 sm:flex-initial">
                   <Select value={filterType} onValueChange={setFilterType}>
                     <SelectTrigger className="flex-1 sm:flex-initial sm:w-[180px] h-9 md:h-10 text-sm md:text-base dark:bg-[#0f0f0f] dark:border-gray-600 dark:text-[#eeeeee]">
-                      <Filter className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1 md:mr-2 text-green-700 dark:text-[#2d6a42]" />
+                      <Filter className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1 md:mr-2 text-purple-700 dark:text-[#2d6a42]" />
                       <SelectValue placeholder="Тип" />
                     </SelectTrigger>
                     <SelectContent className="dark:bg-[#29382f] dark:border-gray-700">
@@ -760,7 +760,7 @@ export function FinancesMain() {
 
                   <Select value={filterStatus} onValueChange={setFilterStatus}>
                     <SelectTrigger className="flex-1 sm:flex-initial sm:w-[150px] h-9 md:h-10 text-sm md:text-base dark:bg-[#0f0f0f] dark:border-gray-600 dark:text-[#eeeeee]">
-                      <ArrowUpDown className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1 md:mr-2 text-green-700 dark:text-[#2d6a42]" />
+                      <ArrowUpDown className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1 md:mr-2 text-purple-700 dark:text-[#2d6a42]" />
                       <SelectValue placeholder="Статус" />
                     </SelectTrigger>
                     <SelectContent className="dark:bg-[#29382f] dark:border-gray-700">
@@ -774,7 +774,7 @@ export function FinancesMain() {
 
                   <Select value={dateRange} onValueChange={setDateRange}>
                     <SelectTrigger className="hidden sm:flex sm:w-[140px] h-9 md:h-10 text-sm md:text-base dark:bg-[#0f0f0f] dark:border-gray-600 dark:text-[#eeeeee]">
-                      <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1 md:mr-2 text-green-700 dark:text-[#2d6a42]" />
+                      <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1 md:mr-2 text-purple-700 dark:text-[#2d6a42]" />
                       <SelectValue placeholder="Период" />
                     </SelectTrigger>
                     <SelectContent className="dark:bg-[#29382f] dark:border-gray-700">

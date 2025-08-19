@@ -500,7 +500,7 @@ export function Sidebar({ variant }: SidebarProps) {
             "w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200",
             "text-gray-800 hover:text-gray-950 font-semibold dark:text-[#eeeeee] dark:hover:text-[#eeeeee]",
             isActive
-              ? "bg-[#006039]/10 text-[#006039] font-medium border-l-4 border-[#006039] -ml-[1px] dark:bg-[#2d6a42]/10 dark:text-[#2d6a42] dark:border-[#2d6a42]"
+              ? "bg-purple-600/10 text-purple-600 font-medium border-l-4 border-purple-600 -ml-[1px] dark:bg-purple-600/10 dark:text-purple-400 dark:border-purple-400"
               : "hover:bg-gray-50 dark:hover:bg-[#29382f]/20",
             level > 0 && "pl-12"
           )}
@@ -508,10 +508,10 @@ export function Sidebar({ variant }: SidebarProps) {
           <div
             className={cn(
               "flex items-center justify-center w-5 h-5",
-              isActive && "text-[#006039]"
+              isActive && "text-purple-600"
             )}
           >
-            <item.icon className="h-5 w-5 text-[#006039] dark:text-[#2d6a42]" />
+            <item.icon className="h-5 w-5 text-purple-600 dark:text-purple-400" />
           </div>
           <span className="flex-1 text-left text-sm font-semibold">
             {item.title}
@@ -519,7 +519,7 @@ export function Sidebar({ variant }: SidebarProps) {
           {hasChildren && (
             <ChevronDown
               className={cn(
-                "h-4 w-4 transition-transform text-[#006039]",
+                "h-4 w-4 transition-transform text-purple-600",
                 isExpanded && "rotate-180"
               )}
             />
@@ -573,7 +573,7 @@ export function Sidebar({ variant }: SidebarProps) {
               <div className="text-xs text-gray-500 dark:text-gray-400">
                 {agent.email}
               </div>
-              <div className="text-xs text-[#006039] dark:text-[#2d6a42] font-medium">
+              <div className="text-xs text-purple-600 dark:text-purple-400 font-medium">
                 Комиссия: {agent.commissionRate}%
               </div>
             </div>
@@ -602,19 +602,19 @@ export function Sidebar({ variant }: SidebarProps) {
               <div className="text-xs text-gray-500 dark:text-gray-400">
                 {aggregator.email}
               </div>
-              <div className="flex items-center justify-between p-3 bg-gradient-to-r from-[#006039]/10 to-[#006039]/5 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-600/10 to-purple-600/5 rounded-lg">
                 <div>
                   <div className="text-xs text-gray-600 dark:text-gray-400">
                     Баланс USDT
                   </div>
-                  <div className="text-lg font-bold text-[#006039] dark:text-[#2d6a42]">
+                  <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
                     {aggregatorBalance.toFixed(2)}
                   </div>
                 </div>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="border-[#006039] text-[#006039] hover:bg-[#006039] hover:text-white"
+                  className="border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white"
                   onClick={() => {
                     // Открываем модальное окно пополнения
                     if (typeof window !== "undefined") {
@@ -644,7 +644,7 @@ export function Sidebar({ variant }: SidebarProps) {
                     <span className="text-sm font-semibold">
                       {(financials.trustBalance || 0).toFixed(2)}
                     </span>
-                    <span className="text-xs font-medium text-[#006039]">
+                    <span className="text-xs font-medium text-purple-600">
                       USDT
                     </span>
                   </div>
@@ -678,7 +678,7 @@ export function Sidebar({ variant }: SidebarProps) {
                     <span className="text-sm font-semibold">
                       {(financials.deposit || 0).toFixed(2)}
                     </span>
-                    <span className="text-xs font-medium text-[#006039]">
+                    <span className="text-xs font-medium text-purple-600">
                       USDT
                     </span>
                   </div>
@@ -692,14 +692,14 @@ export function Sidebar({ variant }: SidebarProps) {
                     Прибыль
                   </span>
                   <div className="flex items-center gap-1">
-                    <span className="text-sm font-semibold text-[#006039]">
+                    <span className="text-sm font-semibold text-purple-600">
                       +
                       {(
                         (financials.profitFromDeals || 0) +
                         (financials.profitFromPayouts || 0)
                       ).toFixed(2)}
                     </span>
-                    <span className="text-xs font-medium text-[#006039]">
+                    <span className="text-xs font-medium text-purple-600">
                       USDT
                     </span>
                   </div>
@@ -743,13 +743,13 @@ export function Sidebar({ variant }: SidebarProps) {
               )}
 
               {/* Download APK Button */}
-              <div className="mt-6 p-3 bg-gradient-to-r from-[#006039]/10 to-[#006039]/5 rounded-lg border border-[#006039]/20">
+              <div className="mt-6 p-3 bg-gradient-to-r from-purple-600/10 to-purple-600/5 rounded-lg border border-purple-600/20">
                 <p className="text-xs text-gray-600 mb-2">
                   Приложение для автоматизации сделок
                 </p>
                 <Button
                   variant="default"
-                  className="w-full justify-center gap-2 bg-[#006039] hover:bg-[#006039]/90 text-white"
+                  className="w-full justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white"
                   onClick={() => {
                     toast.success("Загрузка APK началась");
                     // Use direct navigation for better compatibility
@@ -797,7 +797,7 @@ export function Sidebar({ variant }: SidebarProps) {
             className="w-full justify-start text-gray-800 hover:text-gray-950 font-semibold hover:bg-gray-50 dark:text-gray-200 dark:hover:text-gray-50 dark:hover:bg-gray-800"
             onClick={handleLogout}
           >
-            <LogOut className="h-5 w-5 mr-3 text-[#006039] dark:text-green-400" />
+            <LogOut className="h-5 w-5 mr-3 text-purple-600 dark:text-purple-400" />
             <span className="text-sm font-semibold">Выход</span>
           </Button>
         </div>
@@ -817,10 +817,10 @@ export function Sidebar({ variant }: SidebarProps) {
               className={cn(
                 "flex flex-col items-center gap-1 p-2 rounded-lg transition-colors",
                 "hover:bg-accent/50",
-                pathname === item.href && "text-[#006039]"
+                pathname === item.href && "text-purple-600"
               )}
             >
-              <item.icon className="h-5 w-5 text-[#006039] dark:text-[#2d6a42]" />
+              <item.icon className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               <span className="text-xs">{item.title}</span>
             </button>
           ))}
@@ -828,7 +828,7 @@ export function Sidebar({ variant }: SidebarProps) {
             onClick={() => setMobileMenuOpen(true)}
             className="flex flex-col items-center gap-1 p-2 rounded-lg transition-colors hover:bg-accent/50"
           >
-            <MoreHorizontal className="h-5 w-5 text-[#006039]" />
+            <MoreHorizontal className="h-5 w-5 text-purple-600" />
             <span className="text-xs">Ещё</span>
           </button>
         </div>
@@ -845,7 +845,7 @@ export function Sidebar({ variant }: SidebarProps) {
                 size="icon"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <X className="h-5 w-5 text-[#006039]" />
+                <X className="h-5 w-5 text-purple-600" />
               </Button>
             </div>
             <nav className="flex-1 overflow-y-auto p-4 space-y-1">

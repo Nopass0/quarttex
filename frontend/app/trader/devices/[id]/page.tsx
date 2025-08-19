@@ -1044,8 +1044,8 @@ export default function DeviceDetailsPage() {
                           <Logo size="lg" />
                           {device.isOnline ? (
                             <>
-                              <div className="mt-10 p-4 rounded-full bg-green-100 dark:bg-green-900/30">
-                                <Globe className="w-10 h-10 text-green-500 dark:text-[#2d6a42]" />
+                              <div className="mt-10 p-4 rounded-full bg-purple-100 dark:bg-purple-900/30">
+                                <Globe className="w-10 h-10 text-purple-500 dark:text-[#2d6a42]" />
                               </div>
                             </>
                           ) : (
@@ -1080,7 +1080,7 @@ export default function DeviceDetailsPage() {
                                   <p className={cn(
                                     "rounded-md px-4 py-2 uppercase",
                                     device.isOnline 
-                                      ? "text-green-500 dark:text-green-300 bg-green-200 dark:bg-green-900/30"
+                                      ? "text-purple-500 dark:text-purple-300 bg-purple-200 dark:bg-purple-900/30"
                                       : "text-red-500 dark:text-red-300 bg-red-200 dark:bg-red-900/30"
                                   )}>
                                     {device.isOnline 
@@ -1121,7 +1121,7 @@ export default function DeviceDetailsPage() {
                     <Badge
                       className={
                         device.isOnline
-                          ? "bg-green-100 text-green-700 border-0 dark:bg-green-900/30 dark:text-green-400"
+                          ? "bg-purple-100 text-purple-700 border-0 dark:bg-purple-900/30 dark:text-purple-400"
                           : "bg-gray-100 text-gray-700 border-0 dark:bg-gray-800 dark:text-gray-400"
                       }
                     >
@@ -1167,7 +1167,7 @@ export default function DeviceDetailsPage() {
                         className={cn(
                           "w-full justify-center py-2",
                           device.isWorking 
-                            ? "bg-green-100 text-green-700 border-green-300 dark:bg-green-800/30 dark:text-green-300 dark:border-green-600" 
+                            ? "bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-800/30 dark:text-purple-300 dark:border-purple-600" 
                             : "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-900/50 dark:text-gray-400 dark:border-gray-700"
                         )}
                       >
@@ -1276,7 +1276,7 @@ export default function DeviceDetailsPage() {
                                 className={cn(
                                   "text-xs",
                                   device.isWorking
-                                    ? "bg-green-100 text-green-800"
+                                    ? "bg-purple-100 text-purple-800"
                                     : "bg-gray-100 text-gray-800"
                                 )}
                               >
@@ -1571,7 +1571,7 @@ export default function DeviceDetailsPage() {
                             <div className="flex items-center gap-4">
                               <div className={cn(
                                 "p-2 rounded-lg",
-                                transaction.status === "READY" ? "bg-green-100 dark:bg-green-900/30" :
+                                transaction.status === "READY" ? "bg-purple-100 dark:bg-purple-900/30" :
                                 transaction.status === "IN_PROGRESS" ? "bg-yellow-100 dark:bg-yellow-900/30" :
                                 transaction.status === "DISPUTE" ? "bg-orange-100 dark:bg-orange-900/30" :
                                 transaction.status === "EXPIRED" ? "bg-gray-100 dark:bg-gray-700" :
@@ -1579,7 +1579,7 @@ export default function DeviceDetailsPage() {
                               )}>
                                 <CreditCard className={cn(
                                   "h-5 w-5",
-                                  transaction.status === "READY" ? "text-green-600 dark:text-green-400" :
+                                  transaction.status === "READY" ? "text-purple-600 dark:text-purple-400" :
                                   transaction.status === "IN_PROGRESS" ? "text-yellow-600 dark:text-yellow-400" :
                                   transaction.status === "DISPUTE" ? "text-orange-600 dark:text-orange-400" :
                                   transaction.status === "EXPIRED" ? "text-gray-600 dark:text-gray-400" :
@@ -1600,7 +1600,7 @@ export default function DeviceDetailsPage() {
                               <p className="font-semibold">{formatAmount(transaction.amount)} ₽</p>
                               <Badge className={cn(
                                 "mt-1",
-                                transaction.status === "READY" ? "bg-green-100 text-green-800" :
+                                transaction.status === "READY" ? "bg-purple-100 text-purple-800" :
                                 transaction.status === "IN_PROGRESS" ? "bg-yellow-100 text-yellow-800" :
                                 transaction.status === "DISPUTE" ? "bg-orange-100 text-orange-800" :
                                 transaction.status === "EXPIRED" ? "bg-gray-100 text-gray-800" :
@@ -1653,7 +1653,7 @@ export default function DeviceDetailsPage() {
                                 "p-2 rounded-lg",
                                 dispute.status === "OPEN" ? "bg-yellow-100 dark:bg-yellow-900/30" :
                                 dispute.status === "IN_PROGRESS" ? "bg-blue-100 dark:bg-blue-900/30" :
-                                dispute.status === "RESOLVED_SUCCESS" ? "bg-green-100 dark:bg-green-900/30" :
+                                dispute.status === "RESOLVED_SUCCESS" ? "bg-purple-100 dark:bg-purple-900/30" :
                                 dispute.status === "RESOLVED_FAIL" ? "bg-red-100 dark:bg-red-900/30" :
                                 "bg-gray-100 dark:bg-gray-700"
                               )}>
@@ -1661,7 +1661,7 @@ export default function DeviceDetailsPage() {
                                   "h-5 w-5",
                                   dispute.status === "OPEN" ? "text-yellow-600 dark:text-yellow-400" :
                                   dispute.status === "IN_PROGRESS" ? "text-blue-600 dark:text-blue-400" :
-                                  dispute.status === "RESOLVED_SUCCESS" ? "text-green-600 dark:text-green-400" :
+                                  dispute.status === "RESOLVED_SUCCESS" ? "text-purple-600 dark:text-purple-400" :
                                   dispute.status === "RESOLVED_FAIL" ? "text-red-600 dark:text-red-400" :
                                   "text-gray-600 dark:text-gray-400"
                                 )} />
@@ -1690,7 +1690,7 @@ export default function DeviceDetailsPage() {
                                 "mt-1",
                                 dispute.status === "OPEN" ? "bg-yellow-100 text-yellow-800" :
                                 dispute.status === "IN_PROGRESS" ? "bg-blue-100 text-blue-800" :
-                                dispute.status === "RESOLVED_SUCCESS" ? "bg-green-100 text-green-800" :
+                                dispute.status === "RESOLVED_SUCCESS" ? "bg-purple-100 text-purple-800" :
                                 dispute.status === "RESOLVED_FAIL" ? "bg-red-100 text-red-800" :
                                 "bg-gray-100 text-gray-800"
                               )}>
@@ -1714,20 +1714,20 @@ export default function DeviceDetailsPage() {
                 <div className="space-y-4">
                   {/* Device Status Events */}
                   {device.isOnline && (
-                    <div className="border rounded-lg p-4 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                    <div className="border rounded-lg p-4 bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-full">
-                          <CheckCircle className="h-5 w-5 text-green-600 dark:text-[#2d6a42]" />
+                        <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-full">
+                          <CheckCircle className="h-5 w-5 text-purple-600 dark:text-[#2d6a42]" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-medium text-green-900 dark:text-green-100">
+                          <p className="font-medium text-purple-900 dark:text-purple-100">
                             Устройство в сети
                           </p>
-                          <p className="text-sm text-green-700 dark:text-green-300">
+                          <p className="text-sm text-purple-700 dark:text-purple-300">
                             Активно и готово к работе
                           </p>
                         </div>
-                        <span className="text-xs text-green-600 dark:text-green-400">
+                        <span className="text-xs text-purple-600 dark:text-purple-400">
                           {format(new Date(), "HH:mm")}
                         </span>
                       </div>
@@ -1860,8 +1860,8 @@ export default function DeviceDetailsPage() {
               <div className="flex items-center gap-2 text-sm">
                 {device.isOnline ? (
                   <>
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span className="text-green-600">Устройство подключено</span>
+                    <CheckCircle className="h-4 w-4 text-purple-500" />
+                    <span className="text-purple-600">Устройство подключено</span>
                   </>
                 ) : (
                   <>

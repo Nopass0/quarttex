@@ -117,7 +117,7 @@ export function DepositsTab() {
       case "CHECKING":
         return <Badge variant="secondary"><Loader2 className="mr-1 h-3 w-3 animate-spin" />Проверка</Badge>;
       case "CONFIRMED":
-        return <Badge variant="default" className="bg-green-600"><CheckCircle2 className="mr-1 h-3 w-3" />Подтверждено</Badge>;
+        return <Badge variant="default" className="bg-purple-600"><CheckCircle2 className="mr-1 h-3 w-3" />Подтверждено</Badge>;
       case "FAILED":
         return <Badge variant="destructive"><XCircle className="mr-1 h-3 w-3" />Ошибка</Badge>;
       case "EXPIRED":
@@ -325,7 +325,7 @@ export function DepositsTab() {
                       )}
                       
                       {deposit.confirmedAt && (
-                        <p className="text-sm text-green-600">
+                        <p className="text-sm text-purple-600">
                           Подтверждено: {formatDate(deposit.confirmedAt)}
                         </p>
                       )}

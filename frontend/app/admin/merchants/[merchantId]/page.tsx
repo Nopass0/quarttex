@@ -292,7 +292,7 @@ export default function MerchantDetailPage() {
               <div className="flex items-center gap-4">
                 <Badge 
                   variant={merchant.disabled ? 'secondary' : 'default'}
-                  className={merchant.disabled ? 'bg-gray-100 dark:bg-gray-700' : 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700'}
+                  className={merchant.disabled ? 'bg-gray-100 dark:bg-gray-700' : 'bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700'}
                 >
                   {merchant.disabled ? 'Отключен' : 'Активен'}
                 </Badge>
@@ -414,18 +414,18 @@ export default function MerchantDetailPage() {
           {/* Balance Formula Display */}
           {balanceFormula && (
             <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-6">
-              <h2 className="text-lg font-semibold mb-4 text-[#006039] dark:text-green-400">
+              <h2 className="text-lg font-semibold mb-4 text-[#006039] dark:text-purple-400">
                 Баланс {merchant?.countInRubEquivalent ? '₽' : 'USDT'}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   {merchant?.countInRubEquivalent ? (
-                    <div className="text-3xl font-bold text-[#006039] dark:text-green-400">
+                    <div className="text-3xl font-bold text-[#006039] dark:text-purple-400">
                       {formatAmount(balanceFormula.currentBalanceRub)} ₽
                     </div>
                   ) : (
                     <>
-                      <div className="text-3xl font-bold text-[#006039] dark:text-green-400">
+                      <div className="text-3xl font-bold text-[#006039] dark:text-purple-400">
                         {formatAmount(balanceFormula.currentBalance)} USDT
                       </div>
                       <div className="text-lg text-gray-600 dark:text-gray-400 mt-1">
@@ -440,7 +440,7 @@ export default function MerchantDetailPage() {
                     <div className="space-y-1">
                       <div className="flex justify-between">
                         <span className="text-gray-600 dark:text-gray-400">Сумма успешных сделок:</span>
-                        <span className="text-green-600 dark:text-green-400">+{formatAmount(balanceFormula.totalSuccessfulDealsRub)} ₽</span>
+                        <span className="text-purple-600 dark:text-purple-400">+{formatAmount(balanceFormula.totalSuccessfulDealsRub)} ₽</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600 dark:text-gray-400">Комиссия платформы со сделок:</span>
@@ -457,7 +457,7 @@ export default function MerchantDetailPage() {
                       <div className="border-t dark:border-gray-700 pt-1 mt-2">
                         <div className="flex justify-between font-medium">
                           <span className="text-gray-700 dark:text-gray-300">Итоговый баланс:</span>
-                          <span className="text-[#006039] dark:text-green-400">{formatAmount(balanceFormula.currentBalanceRub)} ₽</span>
+                          <span className="text-[#006039] dark:text-purple-400">{formatAmount(balanceFormula.currentBalanceRub)} ₽</span>
                         </div>
                       </div>
                     </div>
@@ -465,7 +465,7 @@ export default function MerchantDetailPage() {
                     <div className="space-y-1">
                       <div className="flex justify-between">
                         <span className="text-gray-600 dark:text-gray-400">Сумма успешных сделок:</span>
-                        <span className="text-green-600 dark:text-green-400">+{formatAmount(balanceFormula.totalSuccessfulDealsUsdt)} USDT</span>
+                        <span className="text-purple-600 dark:text-purple-400">+{formatAmount(balanceFormula.totalSuccessfulDealsUsdt)} USDT</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600 dark:text-gray-400">Комиссия платформы со сделок:</span>
@@ -482,7 +482,7 @@ export default function MerchantDetailPage() {
                       <div className="border-t dark:border-gray-700 pt-1 mt-2">
                         <div className="flex justify-between font-medium">
                           <span className="text-gray-700 dark:text-gray-300">Итоговый баланс:</span>
-                          <span className="text-[#006039] dark:text-green-400">{formatAmount(balanceFormula.currentBalance)} USDT</span>
+                          <span className="text-[#006039] dark:text-purple-400">{formatAmount(balanceFormula.currentBalance)} USDT</span>
                         </div>
                       </div>
                     </div>
@@ -498,12 +498,12 @@ export default function MerchantDetailPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Баланс (рубли)</p>
-                  <p className="text-2xl font-bold text-[#006039] dark:text-green-400 mt-1">
+                  <p className="text-2xl font-bold text-[#006039] dark:text-purple-400 mt-1">
                     {formatAmount(merchant.balanceRub || 0)} ₽
                   </p>
                 </div>
-                <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
-                  <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
+                <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                  <DollarSign className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                 </div>
               </div>
             </div>
@@ -615,8 +615,8 @@ export default function MerchantDetailPage() {
                       {merchant.merchantMethods.map((mm) => (
                         <div key={mm.id} className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                           <div className="flex items-center gap-4">
-                            <div className={`p-2 rounded-lg ${mm.isEnabled ? 'bg-green-50 dark:bg-green-900/30' : 'bg-gray-100 dark:bg-gray-700'}`}>
-                              <Activity className={`h-5 w-5 ${mm.isEnabled ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`} />
+                            <div className={`p-2 rounded-lg ${mm.isEnabled ? 'bg-purple-50 dark:bg-purple-900/30' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                              <Activity className={`h-5 w-5 ${mm.isEnabled ? 'text-purple-600 dark:text-purple-400' : 'text-gray-400 dark:text-gray-500'}`} />
                             </div>
                             <div>
                               <div className="font-medium">{mm.method.name}</div>
@@ -631,7 +631,7 @@ export default function MerchantDetailPage() {
                           </div>
                           <Badge 
                             variant={mm.isEnabled ? 'default' : 'secondary'}
-                            className={mm.isEnabled ? 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700' : 'dark:bg-gray-700 dark:text-gray-400'}
+                            className={mm.isEnabled ? 'bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700' : 'dark:bg-gray-700 dark:text-gray-400'}
                           >
                             {mm.isEnabled ? 'Активен' : 'Отключен'}
                           </Badge>

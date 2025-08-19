@@ -289,7 +289,7 @@ export function TransactionsList({ filters }: TransactionsListProps) {
                       <TableCell className="text-right">
                         {transaction.effectiveRate ? formatAmount(transaction.effectiveRate) : '-'}
                       </TableCell>
-                      <TableCell className="text-right font-medium text-[#006039] dark:text-green-400">
+                      <TableCell className="text-right font-medium text-[#006039] dark:text-purple-400">
                         {usdtAmount ? formatAmount(usdtAmount) : '-'}
                       </TableCell>
                     </>

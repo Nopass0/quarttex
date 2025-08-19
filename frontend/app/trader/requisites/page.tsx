@@ -407,7 +407,7 @@ export default function TraderRequisitesPage() {
     if (percentage >= 90) return "text-red-500";
     if (percentage >= 70) return "text-orange-500";
     if (percentage >= 50) return "text-yellow-500";
-    return "text-green-500";
+    return "text-purple-500";
   };
 
   const getBankLogo = (bankType: string): string => {
@@ -567,9 +567,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                 filterStatus === "all" &&
-                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                                  "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
                               onClick={() => setFilterStatus("all")}
                             >
@@ -579,9 +579,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                 filterStatus === "active" &&
-                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                                  "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
                               onClick={() => setFilterStatus("active")}
                             >
@@ -591,9 +591,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                 filterStatus === "stopped" &&
-                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                                  "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
                               onClick={() => setFilterStatus("stopped")}
                             >
@@ -603,9 +603,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                 filterStatus === "archived" &&
-                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                                  "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
                               onClick={() => setFilterStatus("archived")}
                             >
@@ -661,9 +661,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                 filterDevice === "all" &&
-                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                                  "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
                               onClick={() => setFilterDevice("all")}
                             >
@@ -673,9 +673,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                 filterDevice === "none" &&
-                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                                  "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
                               onClick={() => setFilterDevice("none")}
                             >
@@ -691,9 +691,9 @@ export default function TraderRequisitesPage() {
                                   variant="ghost"
                                   size="default"
                                   className={cn(
-                                    "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                                    "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                     filterDevice === device.id &&
-                                      "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                                      "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                                   )}
                                   onClick={() => setFilterDevice(device.id)}
                                 >
@@ -701,7 +701,7 @@ export default function TraderRequisitesPage() {
                                     <Smartphone className="h-4 w-4" />
                                     <span>{device.name}</span>
                                     {device.isOnline && (
-                                      <div className="w-2 h-2 bg-green-500 rounded-full" />
+                                      <div className="w-2 h-2 bg-purple-500 rounded-full" />
                                     )}
                                   </div>
                                 </Button>
@@ -801,8 +801,8 @@ export default function TraderRequisitesPage() {
                               </div>
                               {requisite.device && (
                                 <div className="flex items-center gap-1 mt-1">
-                                  <Smartphone className="h-3 w-3 text-green-600" />
-                                  <span className="text-xs text-green-600 truncate">
+                                  <Smartphone className="h-3 w-3 text-purple-600" />
+                                  <span className="text-xs text-purple-600 truncate">
                                     {requisite.device.name}
                                   </span>
                                 </div>
@@ -817,7 +817,7 @@ export default function TraderRequisitesPage() {
                                 <Badge className={cn(
                                   "text-xs px-2 py-1",
                                   (requisite.device.isWorking ?? requisite.device.isOnline)
-                                    ? "bg-green-50 text-green-700 border-green-200"
+                                    ? "bg-purple-50 text-purple-700 border-purple-200"
                                     : "bg-gray-100 text-gray-600 border-gray-300"
                                 )}>
                                   {(requisite.device.isWorking ?? requisite.device.isOnline)
@@ -948,8 +948,8 @@ export default function TraderRequisitesPage() {
                             </div>
                             {requisite.device && (
                               <div className="flex items-center gap-1.5">
-                                <Smartphone className="h-3.5 w-3.5 text-green-600" />
-                                <span className="text-sm text-green-600">
+                                <Smartphone className="h-3.5 w-3.5 text-purple-600" />
+                                <span className="text-sm text-purple-600">
                                   {requisite.device.name}
                                 </span>
                               </div>
@@ -1012,7 +1012,7 @@ export default function TraderRequisitesPage() {
                             <Badge className={cn(
                               "px-3 py-2",
                               (requisite.device.isWorking ?? requisite.device.isOnline)
-                                ? "bg-green-50 text-green-700"
+                                ? "bg-purple-50 text-purple-700"
                                 : "bg-gray-100 text-gray-600"
                             )}>
                               {(requisite.device.isWorking ?? requisite.device.isOnline)

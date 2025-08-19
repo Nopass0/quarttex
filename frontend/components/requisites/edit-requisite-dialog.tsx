@@ -366,7 +366,7 @@ export function EditRequisiteDialog({
               <p className="text-sm text-gray-600">
                 Устройство: <span className="font-medium">{requisite.device.name}</span>
                 {requisite.device.isOnline && (
-                  <span className="ml-2 text-green-600">● В сети</span>
+                  <span className="ml-2 text-purple-600">● В сети</span>
                 )}
               </p>
             </div>

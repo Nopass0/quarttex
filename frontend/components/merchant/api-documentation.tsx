@@ -39,7 +39,7 @@ interface ApiDocumentationProps {
 
 const methodColors = {
   GET: 'bg-blue-500',
-  POST: 'bg-green-500',
+  POST: 'bg-purple-500',
   PUT: 'bg-orange-500',
   DELETE: 'bg-red-500',
   PATCH: 'bg-purple-500',

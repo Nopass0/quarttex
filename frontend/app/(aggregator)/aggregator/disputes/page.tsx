@@ -324,7 +324,7 @@ export default function AggregatorDisputes() {
                     <TrendingUp className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-green-600">
+                    <div className="text-2xl font-bold text-purple-600">
                       {statistics.successRate}%
                     </div>
                     <p className="text-xs text-muted-foreground">
@@ -373,10 +373,10 @@ export default function AggregatorDisputes() {
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <CheckCircle className="h-4 w-4 text-purple-600" />
                           <span className="text-sm">Решены в пользу</span>
                         </div>
-                        <span className="font-semibold text-green-600">
+                        <span className="font-semibold text-purple-600">
                           {statistics.resolvedSuccessDisputes}
                         </span>
                       </div>
@@ -416,7 +416,7 @@ export default function AggregatorDisputes() {
                       </div>
                       <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                         <div className="text-center">
-                          <div className="text-2xl font-semibold text-green-600">
+                          <div className="text-2xl font-semibold text-purple-600">
                             {statistics.resolvedSuccessDisputes}
                           </div>
                           <p className="text-xs text-muted-foreground">Выиграно</p>

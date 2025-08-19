@@ -132,7 +132,7 @@ export default function AggregatorDisputeDetailPage() {
       case "MERCHANT":
         return "bg-blue-100 text-blue-800"
       case "AGGREGATOR":
-        return "bg-green-100 text-green-800"
+        return "bg-purple-100 text-purple-800"
       case "ADMIN":
         return "bg-purple-100 text-purple-800"
       default:

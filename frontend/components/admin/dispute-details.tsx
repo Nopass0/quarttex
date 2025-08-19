@@ -196,7 +196,7 @@ export function DisputeDetails({ type, disputeId }: DisputeDetailsProps) {
       case 'RESOLVED_SUCCESS':
         return <Badge variant="destructive" className="bg-red-500">Решен (мерчант)</Badge>
       case 'RESOLVED_FAIL':
-        return <Badge variant="default" className="bg-green-500">Решен (трейдер)</Badge>
+        return <Badge variant="default" className="bg-purple-500">Решен (трейдер)</Badge>
       default:
         return <Badge variant="secondary">{status}</Badge>
     }
@@ -218,7 +218,7 @@ export function DisputeDetails({ type, disputeId }: DisputeDetailsProps) {
     } else if (msg.senderType === 'MERCHANT') {
       return { name: dispute?.merchant.name || 'Мерчант', color: 'text-blue-600', bg: 'bg-blue-50' }
     } else if (msg.senderType === 'TRADER') {
-      return { name: dispute?.trader.name || 'Трейдер', color: 'text-green-600', bg: 'bg-green-50' }
+      return { name: dispute?.trader.name || 'Трейдер', color: 'text-purple-600', bg: 'bg-purple-50' }
     }
     return { name: 'Система', color: 'text-gray-600', bg: 'bg-gray-50' }
   }

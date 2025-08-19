@@ -191,7 +191,7 @@ const statusConfig: Record<
   },
   READY: {
     label: "Готова",
-    color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
+    color: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100",
     icon: CheckCircle,
   },
   MILK: {
@@ -1005,7 +1005,7 @@ export default function AdminDealsPage() {
                               className={
                                 callback.statusCode >= 200 &&
                                 callback.statusCode < 300
-                                  ? "bg-green-100 text-green-800"
+                                  ? "bg-purple-100 text-purple-800"
                                   : "bg-red-100 text-red-800"
                               }
                             >

@@ -163,7 +163,7 @@ const statusIcons: Record<Status, any> = {
 const statusColors: Record<Status, string> = {
   CREATED: "bg-gray-100 text-gray-700",
   IN_PROGRESS: "bg-blue-100 text-blue-700",
-  READY: "bg-green-100 text-green-700",
+  READY: "bg-purple-100 text-purple-700",
   CANCELED: "bg-red-100 text-red-700",
   EXPIRED: "bg-orange-100 text-orange-700",
   DISPUTE: "bg-purple-100 text-purple-700",

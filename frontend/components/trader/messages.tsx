@@ -132,7 +132,7 @@ export function TraderMessages() {
   const getMessageBadge = (message: Message) => {
     if (message.matchedTransactionId) {
       return (
-        <Badge className="bg-green-100 text-green-700">
+        <Badge className="bg-purple-100 text-purple-700">
           Сопоставлено
         </Badge>
       )
@@ -270,11 +270,11 @@ export function TraderMessages() {
                       {/* Message Icon */}
                       <div className={cn(
                         "p-2 rounded-lg",
-                        message.type === 'notification' ? "bg-blue-100" : "bg-green-100"
+                        message.type === 'notification' ? "bg-blue-100" : "bg-purple-100"
                       )}>
                         <Icon className={cn(
                           "w-5 h-5",
-                          message.type === 'notification' ? "text-blue-600" : "text-green-600"
+                          message.type === 'notification' ? "text-blue-600" : "text-purple-600"
                         )} />
                       </div>
 
@@ -324,7 +324,7 @@ export function TraderMessages() {
                             {formatDateTime(message.timestamp)}
                           </span>
                           {message.transaction && (
-                            <span className="flex items-center gap-1 text-green-600">
+                            <span className="flex items-center gap-1 text-purple-600">
                               <Building className="w-3 h-3" />
                               {message.transaction.amount.toLocaleString('ru-RU')} ₽
                             </span>

@@ -182,7 +182,7 @@ const statusConfig = {
   },
   READY: {
     label: "Выполнено",
-    color: "bg-green-50 text-green-600 border-green-200",
+    color: "bg-purple-50 text-purple-600 border-purple-200",
   },
   EXPIRED: { label: "Истекло", color: "bg-red-50 text-red-600 border-red-200" },
   CANCELED: {
@@ -1181,9 +1181,9 @@ export function BtEntryList() {
                           variant="ghost"
                           size="default"
                           className={cn(
-                            "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                            "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                             filterStatus === "all" &&
-                              "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                              "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                           )}
                           onClick={() => setFilterStatus("all")}
                         >
@@ -1193,9 +1193,9 @@ export function BtEntryList() {
                           variant="ghost"
                           size="default"
                           className={cn(
-                            "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                            "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                             filterStatus === "not_credited" &&
-                              "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                              "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                           )}
                           onClick={() => setFilterStatus("not_credited")}
                         >
@@ -1205,9 +1205,9 @@ export function BtEntryList() {
                           variant="ghost"
                           size="default"
                           className={cn(
-                            "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                            "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                             filterStatus === "credited" &&
-                              "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                              "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                           )}
                           onClick={() => setFilterStatus("credited")}
                         >
@@ -1217,9 +1217,9 @@ export function BtEntryList() {
                           variant="ghost"
                           size="default"
                           className={cn(
-                            "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                            "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                             filterStatus === "in_progress" &&
-                              "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                              "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                           )}
                           onClick={() => setFilterStatus("in_progress")}
                         >
@@ -1367,9 +1367,9 @@ export function BtEntryList() {
                           variant="ghost"
                           size="default"
                           className={cn(
-                            "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                            "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                             filterRequisite === "all" &&
-                              "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                              "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                           )}
                           onClick={() => setFilterRequisite("all")}
                         >
@@ -1403,9 +1403,9 @@ export function BtEntryList() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                 filterRequisite === requisite.id &&
-                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                                  "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
                               onClick={() => setFilterRequisite(requisite.id)}
                             >
@@ -1475,9 +1475,9 @@ export function BtEntryList() {
                           variant="ghost"
                           size="default"
                           className={cn(
-                            "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                            "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                             filterMethod === "all" &&
-                              "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                              "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                           )}
                           onClick={() => setFilterMethod("all")}
                         >
@@ -1517,9 +1517,9 @@ export function BtEntryList() {
                                 variant="ghost"
                                 size="default"
                                 className={cn(
-                                  "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                                  "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                   filterMethod === method.id &&
-                                    "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                                    "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                                 )}
                                 onClick={() => setFilterMethod(method.id)}
                               >
@@ -1592,7 +1592,7 @@ export function BtEntryList() {
                   </Button>
                   <Button
                     size="sm"
-                    className="flex-1 h-12 bg-green-100 hover:bg-green-200 transition-colors duration-150 text-green-500"
+                    className="flex-1 h-12 bg-purple-100 hover:bg-purple-200 transition-colors duration-150 text-purple-500"
                     onClick={() => setFiltersOpen(false)}
                   >
                     Применить фильтры
@@ -1683,8 +1683,8 @@ export function BtEntryList() {
                     );
                   case "READY":
                     return (
-                      <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                        <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+                      <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                        <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                       </div>
                     );
                   case "DISPUTE":
@@ -1736,7 +1736,7 @@ export function BtEntryList() {
               const getStatusBadgeColor = () => {
                 switch (transaction.status) {
                   case "READY":
-                    return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800";
+                    return "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800";
                   case "CREATED":
                   case "IN_PROGRESS":
                     return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800";
@@ -1955,8 +1955,8 @@ export function BtEntryList() {
                     {/* Status Icon */}
                     <div className="mb-4 flex justify-center">
                       {selectedTransaction.status === "READY" ? (
-                        <div className="w-20 h-20 rounded-3xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                          <CheckCircle2 className="h-10 w-10 text-green-600 dark:text-green-400" />
+                        <div className="w-20 h-20 rounded-3xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                          <CheckCircle2 className="h-10 w-10 text-purple-600 dark:text-purple-400" />
                         </div>
                       ) : selectedTransaction.status === "CREATED" ||
                         selectedTransaction.status === "IN_PROGRESS" ? (
@@ -1987,7 +1987,7 @@ export function BtEntryList() {
 
                     {/* Amount */}
                     <div className="mb-1">
-                      <span className="text-3xl font-bold text-green-600 dark:text-green-400">
+                      <span className="text-3xl font-bold text-purple-600 dark:text-purple-400">
                         {selectedTransaction.frozenUsdtAmount
                           ? selectedTransaction.frozenUsdtAmount.toFixed(2)
                           : selectedTransaction.rate
@@ -2035,8 +2035,8 @@ export function BtEntryList() {
                       onClick={() => setShowRequisiteInfoModal(true)}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-[92px] h-[62px] rounded-md bg-gradient-to-tr from-green-800 via-green-400 to-green-400 relative overflow-hidden">
-                          <div className="absolute inset-0 bg-gradient-to-r from-green-800  to-transparent"></div>
+                        <div className="w-[92px] h-[62px] rounded-md bg-gradient-to-tr from-purple-800 via-purple-400 to-purple-400 relative overflow-hidden">
+                          <div className="absolute inset-0 bg-gradient-to-r from-purple-800  to-transparent"></div>
                           <div className="absolute top-2 right-4">
                             <svg
                               viewBox="0 0 30 18"
@@ -2101,7 +2101,7 @@ export function BtEntryList() {
                         <span className="text-sm text-gray-500 dark:text-gray-400">
                           Прибыль
                         </span>
-                        <span className="text-lg font-semibold text-green-600 dark:text-green-400">
+                        <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
                           +{" "}
                           {selectedTransaction.calculatedCommission
                             ? selectedTransaction.calculatedCommission.toFixed(
@@ -2126,7 +2126,7 @@ export function BtEntryList() {
                         </p>
                         <div className="space-y-2">
                           <Button
-                            className="w-full bg-green-600 hover:bg-green-700"
+                            className="w-full bg-purple-600 hover:bg-purple-700"
                             onClick={() =>
                               manualCloseTransaction(selectedTransaction.id)
                             }
@@ -2291,7 +2291,7 @@ export function BtEntryList() {
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                            <Smartphone className="h-5 w-5 text-[#006039] dark:text-green-400" />
+                            <Smartphone className="h-5 w-5 text-[#006039] dark:text-purple-400" />
                           </div>
                           <div className="text-left">
                             <p className="text-sm font-medium dark:text-white">
@@ -2304,7 +2304,7 @@ export function BtEntryList() {
                             </p>
                           </div>
                         </div>
-                        <ChevronDown className="h-5 w-5 text-[#006039] dark:text-green-400 -rotate-90" />
+                        <ChevronDown className="h-5 w-5 text-[#006039] dark:text-purple-400 -rotate-90" />
                       </Button>
                     </div>
 
@@ -2326,7 +2326,7 @@ export function BtEntryList() {
                           className="w-full justify-start dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
                           onClick={() => toast.info("Функция в разработке")}
                         >
-                          <Eye className="h-4 w-4 mr-2 text-[#006039] dark:text-green-400" />
+                          <Eye className="h-4 w-4 mr-2 text-[#006039] dark:text-purple-400" />
                           Просмотр сделок по реквизиту
                         </Button>
                         <Button
@@ -2334,7 +2334,7 @@ export function BtEntryList() {
                           className="w-full justify-start dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
                           onClick={() => toast.info("Функция в разработке")}
                         >
-                          <CreditCard className="h-4 w-4 mr-2 text-[#006039] dark:text-green-400" />
+                          <CreditCard className="h-4 w-4 mr-2 text-[#006039] dark:text-purple-400" />
                           Подтвердить номер карты
                         </Button>
                         <Button
@@ -2342,7 +2342,7 @@ export function BtEntryList() {
                           className="w-full justify-start dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
                           onClick={() => toast.info("Функция в разработке")}
                         >
-                          <CreditCard className="h-4 w-4 mr-2 text-[#006039] dark:text-green-400" />
+                          <CreditCard className="h-4 w-4 mr-2 text-[#006039] dark:text-purple-400" />
                           Подтвердить номер счета
                         </Button>
                       </div>

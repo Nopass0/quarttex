@@ -161,7 +161,7 @@ export default function MerchantSettleHistoryPage() {
             <CardTitle className="text-sm font-medium">Завершенные</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-purple-600">
               {history.filter(h => h.status === "COMPLETED").length}
             </div>
           </CardContent>
@@ -230,7 +230,7 @@ export default function MerchantSettleHistoryPage() {
                       <TableCell className="font-medium">
                         {formatAmount(request.amount)} ₽
                       </TableCell>
-                      <TableCell className="font-medium text-green-600">
+                      <TableCell className="font-medium text-purple-600">
                         {calculateUSDT(request.amount, request.rate)} USDT
                       </TableCell>
                       <TableCell>{request.rate.toFixed(2)}</TableCell>
@@ -372,7 +372,7 @@ export default function MerchantSettleHistoryPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Эквивалент в USDT</p>
-                  <p className="text-xl font-bold text-green-600">
+                  <p className="text-xl font-bold text-purple-600">
                     {calculateUSDT(selectedRequest.amount, selectedRequest.rate)} USDT
                   </p>
                 </div>

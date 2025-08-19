@@ -194,7 +194,7 @@ echo "HMAC Signature: " . $signature;`}</code></pre>
                   <code className="bg-muted px-2 py-1 rounded text-sm">/payment/create</code>
                 </TableCell>
                 <TableCell>
-                  <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">POST</Badge>
+                  <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">POST</Badge>
                 </TableCell>
                 <TableCell>Эндпоинт для приёма запроса на создание платежа</TableCell>
                 <TableCell>
@@ -206,7 +206,7 @@ echo "HMAC Signature: " . $signature;`}</code></pre>
                   <code className="bg-muted px-2 py-1 rounded text-sm">/payment/get</code>
                 </TableCell>
                 <TableCell>
-                  <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">POST</Badge>
+                  <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">POST</Badge>
                 </TableCell>
                 <TableCell>Эндпоинт для предоставления данных платежа</TableCell>
                 <TableCell>
@@ -218,7 +218,7 @@ echo "HMAC Signature: " . $signature;`}</code></pre>
                   <code className="bg-muted px-2 py-1 rounded text-sm">/payment/status</code>
                 </TableCell>
                 <TableCell>
-                  <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">POST</Badge>
+                  <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">POST</Badge>
                 </TableCell>
                 <TableCell>Эндпоинт для установки платежу определённого статуса</TableCell>
                 <TableCell>
@@ -237,7 +237,7 @@ echo "HMAC Signature: " . $signature;`}</code></pre>
           <CardHeader>
             <CardTitle className="text-xl">Создание платежа</CardTitle>
             <div className="flex items-center gap-2">
-              <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">POST</Badge>
+              <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">POST</Badge>
               <code className="text-sm bg-muted px-2 py-1 rounded">{baseUrl}/api/wellbit/payment/create</code>
             </div>
           </CardHeader>
@@ -388,7 +388,7 @@ echo "HMAC Signature: " . $signature;`}</code></pre>
           <CardHeader>
             <CardTitle className="text-xl">Получение данных по платежу</CardTitle>
             <div className="flex items-center gap-2">
-              <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">POST</Badge>
+              <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">POST</Badge>
               <code className="text-sm bg-muted px-2 py-1 rounded">{baseUrl}/api/wellbit/payment/get</code>
             </div>
           </CardHeader>
@@ -468,7 +468,7 @@ echo "HMAC Signature: " . $signature;`}</code></pre>
           <CardHeader>
             <CardTitle className="text-xl">Установка статуса платежа</CardTitle>
             <div className="flex items-center gap-2">
-              <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">POST</Badge>
+              <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">POST</Badge>
               <code className="text-sm bg-muted px-2 py-1 rounded">{baseUrl}/api/wellbit/payment/status</code>
             </div>
           </CardHeader>
@@ -629,7 +629,7 @@ echo "HMAC Signature: " . $signature;`}</code></pre>
             </div>
             <Separator />
             <div className="flex items-start gap-3">
-              <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 mt-0.5">
+              <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 mt-0.5">
                 <CheckCircle className="h-3 w-3 mr-1" />
                 complete
               </Badge>

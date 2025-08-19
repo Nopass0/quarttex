@@ -612,7 +612,7 @@ function TraderProfileContent() {
             </div>
             <div className="space-y-1">
               <p className="text-sm text-gray-500">Депозит</p>
-              <p className="font-semibold text-lg text-green-600">
+              <p className="font-semibold text-lg text-purple-600">
                 ${formatAmount(trader.deposit)}
               </p>
             </div>
@@ -963,7 +963,7 @@ function TraderProfileContent() {
               <Separator />
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Общая прибыль</p>
-                <p className="font-semibold text-lg text-green-600">
+                <p className="font-semibold text-lg text-purple-600">
                   $
                   {formatAmount(
                     dateFilter.startDate || dateFilter.endDate

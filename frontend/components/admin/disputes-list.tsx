@@ -184,7 +184,7 @@ export function AdminDisputesList() {
       case 'RESOLVED_SUCCESS':
         return <Badge variant="destructive" className="bg-red-500">Решен (мерчант)</Badge>
       case 'RESOLVED_FAIL':
-        return <Badge variant="default" className="bg-green-500">Решен (трейдер)</Badge>
+        return <Badge variant="default" className="bg-purple-500">Решен (трейдер)</Badge>
       default:
         return <Badge variant="secondary">{status}</Badge>
     }

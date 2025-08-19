@@ -67,7 +67,7 @@ export function DisputeTimer({ createdAt, timeoutMinutes, onExpired, className }
     if (timeLeft <= 300) return 'text-red-500 dark:text-red-400' // Less than 5 minutes
     if (timeLeft <= 600) return 'text-orange-500 dark:text-orange-400' // Less than 10 minutes
     if (timeLeft <= 900) return 'text-yellow-500 dark:text-yellow-400' // Less than 15 minutes
-    return 'text-green-600 dark:text-green-400'
+    return 'text-purple-600 dark:text-purple-400'
   }
 
   const getProgressPercentage = () => {
@@ -97,7 +97,7 @@ export function DisputeTimer({ createdAt, timeoutMinutes, onExpired, className }
             timeLeft <= 300 ? 'bg-red-400' :
             timeLeft <= 600 ? 'bg-orange-400' :
             timeLeft <= 900 ? 'bg-yellow-400' :
-            'bg-green-500'
+            'bg-purple-500'
           )}
           style={{ width: `${getProgressPercentage()}%` }}
         />

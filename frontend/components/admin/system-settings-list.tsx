@@ -210,7 +210,7 @@ export function SystemSettingsList() {
       {/* Wallet Settings */}
       <Card className="p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Wallet className="h-5 w-5 text-green-600" />
+          <Wallet className="h-5 w-5 text-purple-600" />
           <h2 className="text-lg font-semibold">Настройки кошелька для пополнений</h2>
         </div>
         

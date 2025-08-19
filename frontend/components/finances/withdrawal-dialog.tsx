@@ -171,8 +171,8 @@ export function WithdrawalDialog({ open, onOpenChange, defaultBalanceType }: Wit
             Выведите средства на внешний кошелек
           </DialogDescription>
           {balances && (
-            <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-              <div className="text-sm text-green-800 dark:text-green-300">
+            <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+              <div className="text-sm text-purple-800 dark:text-purple-300">
                 <div className="font-medium mb-1">Доступная прибыль для вывода:</div>
                 <div className="space-y-1">
                   <div className="flex justify-between">
@@ -329,7 +329,7 @@ export function WithdrawalDialog({ open, onOpenChange, defaultBalanceType }: Wit
 
         {step === 2 && (
           <div className="space-y-4 text-center">
-            <div className="p-6 rounded-lg bg-green-50">
+            <div className="p-6 rounded-lg bg-purple-50">
               <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-[#006039]" />
               <h3 className="font-semibold text-lg mb-2">Заявка создана</h3>
               <p className="text-sm text-gray-600 mb-4">

@@ -483,7 +483,7 @@ export function TradersList() {
                     <div className="text-sm font-medium">${formatAmount(trader.trustBalance)}</div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm font-medium text-green-600">${formatAmount(trader.deposit || 0)}</div>
+                    <div className="text-sm font-medium text-purple-600">${formatAmount(trader.deposit || 0)}</div>
                   </TableCell>
                   <TableCell>₽{formatAmount(trader.turnover)}</TableCell>
                   <TableCell>

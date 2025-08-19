@@ -212,7 +212,7 @@ export function MessagesList() {
       case "warning":
         return <AlertCircle className="h-5 w-5 text-orange-500" />;
       case "success":
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return <CheckCircle className="h-5 w-5 text-purple-500" />;
       case "system":
         return <Info className="h-5 w-5 text-gray-500" />;
       default:

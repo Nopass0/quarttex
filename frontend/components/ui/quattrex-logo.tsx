@@ -1,7 +1,10 @@
 export default function QuatrexLogo({
   className = "",
   size = "md",
-}: { className?: string; size?: "sm" | "md" | "lg" }) {
+}: {
+  className?: string;
+  size?: "sm" | "md" | "lg"
+}) {
   const sizeClasses = {
     sm: "h-10",
     md: "h-14",
@@ -19,11 +22,11 @@ export default function QuatrexLogo({
       {/* Logo Icon */}
       <div className={`${iconSizeClasses[size]} relative`}>
         {/* Outer glow effect */}
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-400 to-purple-600 blur-sm opacity-60 dark:opacity-80"></div>
-
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-400 to-purple-600 blur-sm opacity-60"></div>
+        
         {/* Main container */}
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500 via-purple-600 to-purple-800 p-0.5">
-          <div className="w-full h-full rounded-[15px] bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900 dark:from-purple-600 dark:via-purple-700 dark:to-purple-800 flex items-center justify-center relative overflow-hidden">
+          <div className="w-full h-full rounded-[15px] bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900 flex items-center justify-center relative overflow-hidden">
             {/* Background geometric pattern */}
             <div className="absolute inset-0">
               {/* Diagonal lines */}
@@ -32,7 +35,6 @@ export default function QuatrexLogo({
                 <div className="absolute bottom-2 right-2 w-4 h-0.5 bg-white/15 rotate-45 origin-right"></div>
                 <div className="absolute top-1/2 right-1 w-3 h-0.5 bg-white/10 -rotate-45"></div>
               </div>
-
               {/* Dots pattern */}
               <div className="absolute top-1 right-1 w-1 h-1 bg-white/30 rounded-full"></div>
               <div className="absolute bottom-1 left-1 w-1.5 h-1.5 bg-white/20 rounded-full"></div>
@@ -53,7 +55,7 @@ export default function QuatrexLogo({
                   fill="none"
                   className="drop-shadow-sm"
                 />
-
+                
                 {/* Q tail with arrow effect */}
                 <path
                   d="M28 28l6 6M32 30l2 2 2-2"
@@ -62,7 +64,7 @@ export default function QuatrexLogo({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-
+                
                 {/* Inner design elements */}
                 <g opacity="0.9">
                   {/* Trading chart pattern */}
@@ -74,7 +76,7 @@ export default function QuatrexLogo({
                     strokeLinejoin="round"
                     fill="none"
                   />
-
+                  
                   {/* Data points */}
                   <circle cx="14" cy="20" r="1.5" fill="currentColor" />
                   <circle cx="17" cy="17" r="1.5" fill="currentColor" />
@@ -82,16 +84,25 @@ export default function QuatrexLogo({
                   <circle cx="23" cy="16" r="1.5" fill="currentColor" />
                   <circle cx="26" cy="19" r="1.5" fill="currentColor" />
                 </g>
-
+                
                 {/* Modern geometric accents */}
                 <g opacity="0.7">
                   {/* Top right accent */}
-                  <path d="M26 12l4-4M28 14l2-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-
+                  <path
+                    d="M26 12l4-4M28 14l2-2"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
                   {/* Bottom left accent */}
-                  <path d="M14 28l-4 4M12 26l-2 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  <path
+                    d="M14 28l-4 4M12 26l-2 2"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
                 </g>
-
+                
                 {/* Digital circuit elements */}
                 <g opacity="0.6">
                   <path
@@ -100,7 +111,6 @@ export default function QuatrexLogo({
                     strokeWidth="1"
                     strokeLinecap="round"
                   />
-
                   <path
                     d="M24 15h6M26 18h4M24 21h6M27 24h3"
                     stroke="currentColor"
@@ -108,7 +118,7 @@ export default function QuatrexLogo({
                     strokeLinecap="round"
                   />
                 </g>
-
+                
                 {/* Center highlight */}
                 <circle cx="20" cy="20" r="2" fill="currentColor" opacity="0.8" />
               </g>
@@ -120,16 +130,17 @@ export default function QuatrexLogo({
       {/* Logo Text */}
       <div className="flex flex-col">
         <span
-          className={`bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 dark:from-purple-400 dark:via-purple-500 dark:to-purple-600 bg-clip-text text-transparent font-bold tracking-wide ${
+          className={`bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 bg-clip-text text-transparent font-bold tracking-wide ${
             size === "sm" ? "text-2xl" : size === "md" ? "text-3xl" : "text-4xl"
           }`}
           style={{
-            fontFamily: 'var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            fontFamily:
+              'var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             fontWeight: 800,
             letterSpacing: "0.02em",
           }}
         >
-          QUATT<span className="text-purple-500 dark:text-purple-400">REX</span>
+          QUATT<span className="text-purple-500">REX</span>
         </span>
       </div>
     </div>

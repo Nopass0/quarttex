@@ -249,7 +249,7 @@ export function DevicesList() {
     const diffHours = (now.getTime() - lastActive.getTime()) / (1000 * 60 * 60)
     
     if (diffHours < 1) {
-      return { label: 'Онлайн', variant: 'default' as const, color: 'text-green-600' }
+      return { label: 'Онлайн', variant: 'default' as const, color: 'text-purple-600' }
     } else if (diffHours < 24) {
       return { label: 'Сегодня', variant: 'secondary' as const, color: 'text-blue-600' }
     } else if (diffHours < 168) { // 7 days
@@ -274,14 +274,14 @@ export function DevicesList() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-green-200">
+        <Card className="border-purple-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium text-green-600">Активных</CardTitle>
+            <CardTitle className="text-base font-medium text-purple-600">Активных</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <p className="text-2xl font-bold text-green-600">{statistics.active}</p>
-              <Activity className="h-8 w-8 text-green-400" />
+              <p className="text-2xl font-bold text-purple-600">{statistics.active}</p>
+              <Activity className="h-8 w-8 text-purple-400" />
             </div>
           </CardContent>
         </Card>

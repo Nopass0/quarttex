@@ -361,7 +361,7 @@ function MetricsContent() {
                 <p className="text-sm text-muted-foreground">
                   Прибыль без агентских
                 </p>
-                <p className="text-xl font-bold text-green-600">
+                <p className="text-xl font-bold text-purple-600">
                   {formatCurrency(metrics.platformProfitBeforeAgents, "USDT")}
                 </p>
               </div>
@@ -369,7 +369,7 @@ function MetricsContent() {
                 <p className="text-sm text-muted-foreground">
                   Прибыль с агентскими
                 </p>
-                <p className="text-xl font-bold text-green-600">
+                <p className="text-xl font-bold text-purple-600">
                   {formatCurrency(metrics.platformProfitAfterAgents, "USDT")}
                 </p>
               </div>
@@ -442,7 +442,7 @@ function MetricsContent() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Приняты</p>
-              <p className="text-xl font-bold text-green-600">
+              <p className="text-xl font-bold text-purple-600">
                 {metrics.orderStats.accepted}
               </p>
             </div>

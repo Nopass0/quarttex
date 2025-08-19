@@ -83,7 +83,7 @@ const statusConfig = {
   CREATED: { label: "Создана", color: "bg-yellow-50 text-yellow-600 border-yellow-200" },
   PENDING: { label: "Ожидает", color: "bg-blue-50 text-blue-600 border-blue-200" },
   PROCESSING: { label: "В обработке", color: "bg-blue-50 text-blue-600 border-blue-200" },
-  COMPLETED: { label: "Выполнено", color: "bg-green-50 text-green-600 border-green-200" },
+  COMPLETED: { label: "Выполнено", color: "bg-purple-50 text-purple-600 border-purple-200" },
   FAILED: { label: "Ошибка", color: "bg-red-50 text-red-600 border-red-200" },
   CANCELLED: { label: "Отменено", color: "bg-gray-50 text-gray-600 border-gray-200" },
 }
@@ -305,9 +305,9 @@ export function PayoutsList() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Прибыль</p>
-              <p className="text-2xl font-bold text-green-600">+{stats.profit.toFixed(2)} {stats.currency}</p>
+              <p className="text-2xl font-bold text-purple-600">+{stats.profit.toFixed(2)} {stats.currency}</p>
             </div>
-            <TrendingUp className="h-8 w-8 text-green-500" />
+            <TrendingUp className="h-8 w-8 text-purple-500" />
           </div>
         </Card>
 
@@ -620,8 +620,8 @@ export function PayoutsList() {
                   )
                 case "COMPLETED":
                   return (
-                    <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
-                      <CheckCircle className="h-6 w-6 text-green-600" />
+                    <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
+                      <CheckCircle className="h-6 w-6 text-purple-600" />
                     </div>
                   )
                 case "FAILED":

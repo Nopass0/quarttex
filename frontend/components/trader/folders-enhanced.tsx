@@ -341,7 +341,7 @@ export function FoldersEnhanced() {
                           disabled={activeCount === totalCount}
                           className="dark:border-gray-600 dark:hover:bg-[#29382f]/50"
                         >
-                          <PlayCircle className="h-4 w-4 mr-1 text-green-600 dark:text-green-500" />
+                          <PlayCircle className="h-4 w-4 mr-1 text-purple-600 dark:text-purple-500" />
                           Запустить все
                         </Button>
                         <Button
@@ -421,7 +421,7 @@ export function FoldersEnhanced() {
                                     className={cn(
                                       "min-w-[80px] justify-center",
                                       !requisite.isArchived 
-                                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800" 
+                                        ? "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800" 
                                         : "dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
                                     )}
                                   >

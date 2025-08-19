@@ -127,7 +127,7 @@ export default function ElementsTestPage() {
                   You can add components to your app.
                 </AlertDescription>
               </Alert>
-              <Alert className="border-green-500">
+              <Alert className="border-purple-500">
                 <Check className="h-4 w-4" />
                 <AlertTitle>Success!</AlertTitle>
                 <AlertDescription>
@@ -797,7 +797,7 @@ export default function ElementsTestPage() {
                   defaultValue={[30]} 
                   max={100} 
                   step={1}
-                  className="[&_[role=slider]]:bg-gradient-to-r [&_[role=slider]]:from-green-500 [&_[role=slider]]:to-emerald-500"
+                  className="[&_[role=slider]]:bg-gradient-to-r [&_[role=slider]]:from-purple-500 [&_[role=slider]]:to-emerald-500"
                 />
               </div>
             </CardContent>
@@ -1780,7 +1780,7 @@ export default function ElementsTestPage() {
                 title="Analytics"
                 description="Track your website analytics with beautiful charts"
                 header={
-                  <div className="h-32 rounded-lg bg-gradient-to-br from-green-400 to-emerald-600 magic-float" />
+                  <div className="h-32 rounded-lg bg-gradient-to-br from-purple-400 to-emerald-600 magic-float" />
                 }
                 icon={<Zap className="h-4 w-4 text-primary" />}
               />
@@ -1972,7 +1972,7 @@ export default function ElementsTestPage() {
                             <p className="font-medium">Зарплата</p>
                             <p className="text-sm text-gray-400">Вчера, 15:00</p>
                           </div>
-                          <span className="text-xl text-green-400">+₽85,000</span>
+                          <span className="text-xl text-purple-400">+₽85,000</span>
                         </div>
                         <div className="flex justify-between py-3 border-b border-gray-800">
                           <div>
@@ -2149,9 +2149,9 @@ export default function ElementsTestPage() {
                       time="14:30"
                       frameColor="#2a2a2a"
                     >
-                      <div className="h-full bg-gradient-to-br from-green-50 to-blue-50 p-6 flex items-center justify-center">
+                      <div className="h-full bg-gradient-to-br from-purple-50 to-blue-50 p-6 flex items-center justify-center">
                         <div className="text-center">
-                          <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-teal-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                          <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-teal-600 rounded-full mx-auto mb-4 flex items-center justify-center">
                             <span className="text-white text-3xl font-bold">A</span>
                           </div>
                           <h3 className="text-xl font-semibold">Android 14</h3>

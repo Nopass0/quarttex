@@ -228,13 +228,13 @@ export function MerchantMilkDeals({ merchantId }: MerchantMilkDealsProps) {
             <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{statistics.failAggregator}</p>
           </CardContent>
         </Card>
-        <Card className="border-green-200 dark:border-green-900 dark:bg-gray-800">
+        <Card className="border-purple-200 dark:border-purple-900 dark:bg-gray-800">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium text-green-600 dark:text-green-400">Прочие</CardTitle>
+            <CardTitle className="text-base font-medium text-purple-600 dark:text-purple-400">Прочие</CardTitle>
             <CardDescription className="text-xs dark:text-gray-400">Другие проблемные платежи</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{statistics.success}</p>
+            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{statistics.success}</p>
           </CardContent>
         </Card>
       </div>

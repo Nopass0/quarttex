@@ -283,7 +283,7 @@ export default function TraderDashboardPage() {
       case "device_stopped":
         return { color: "bg-orange-500", title: "Устройство остановлено" };
       case "device_started":
-        return { color: "bg-green-500", title: "Устройство запущено" };
+        return { color: "bg-purple-500", title: "Устройство запущено" };
       case "deal_failed":
         return { color: "bg-red-500", title: "Сделка не завершена" };
       case "dispute_opened":
@@ -297,7 +297,7 @@ export default function TraderDashboardPage() {
     const statusConfig: Record<string, { label: string; className: string }> = {
       READY: {
         label: "Готово",
-        className: "bg-green-100 text-green-700 border-green-200",
+        className: "bg-purple-100 text-purple-700 border-purple-200",
       },
       IN_PROGRESS: {
         label: "В работе",
@@ -746,8 +746,8 @@ export default function TraderDashboardPage() {
                     switch (deal.status) {
                       case "READY":
                         return (
-                          <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                            <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+                          <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                            <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                           </div>
                         );
                       case "CREATED":
@@ -810,7 +810,7 @@ export default function TraderDashboardPage() {
                   const getStatusBadgeColor = () => {
                     switch (deal.status) {
                       case "READY":
-                        return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800";
+                        return "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800";
                       case "CREATED":
                       case "IN_PROGRESS":
                         return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800";

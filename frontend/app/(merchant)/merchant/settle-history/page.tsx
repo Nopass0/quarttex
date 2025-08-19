@@ -127,7 +127,7 @@ export default function MerchantSettleHistoryPage() {
             <CardTitle className="text-sm font-medium">Выведено RUB</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-purple-600">
               {formatAmount(totalWithdrawn)} ₽
             </div>
           </CardContent>
@@ -138,7 +138,7 @@ export default function MerchantSettleHistoryPage() {
             <CardTitle className="text-sm font-medium">Выведено USDT</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-purple-600">
               {totalWithdrawnUsdt.toFixed(2)} USDT
             </div>
           </CardContent>
@@ -179,7 +179,7 @@ export default function MerchantSettleHistoryPage() {
                       <TableCell className="font-medium">
                         {formatAmount(request.amount)} ₽
                       </TableCell>
-                      <TableCell className="font-medium text-green-600">
+                      <TableCell className="font-medium text-purple-600">
                         {(request.amountUsdt || 0).toFixed(2)} USDT
                       </TableCell>
                       <TableCell>

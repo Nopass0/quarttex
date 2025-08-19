@@ -180,8 +180,8 @@ const dealStatusConfig = {
     label: "Готово",
     description: "Сделка выполнена",
     color:
-      "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
-    badgeColor: "bg-green-50 text-green-700 border-green-200",
+      "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
+    badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
     icon: CheckCircle,
   },
   EXPIRED: {
@@ -498,8 +498,8 @@ export function BtEntranceDeals() {
                     );
                   case "READY":
                     return (
-                      <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                        <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+                      <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                        <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                       </div>
                     );
                   case "EXPIRED":
@@ -554,7 +554,7 @@ export function BtEntranceDeals() {
               const getStatusBadgeColor = () => {
                 switch (deal.status) {
                   case "READY":
-                    return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800";
+                    return "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800";
                   case "PENDING":
                   case "ACCEPTED":
                   case "IN_PROGRESS":
@@ -640,7 +640,7 @@ export function BtEntranceDeals() {
                       </div>
                       {/* Profit - показываем только для статуса READY */}
                       {deal.status === "READY" && deal.traderProfit != null && (
-                        <div className="text-xs text-green-600 dark:text-green-400 mt-0.5">
+                        <div className="text-xs text-purple-600 dark:text-purple-400 mt-0.5">
                           +{deal.traderProfit.toFixed(2)}
                         </div>
                       )}
@@ -782,8 +782,8 @@ export function BtEntranceDeals() {
                     {/* Status Icon */}
                     <div className="mb-4 flex justify-center">
                       {selectedDeal.status === "READY" ? (
-                        <div className="w-20 h-20 rounded-3xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                          <CheckCircle2 className="h-10 w-10 text-green-600 dark:text-green-400" />
+                        <div className="w-20 h-20 rounded-3xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                          <CheckCircle2 className="h-10 w-10 text-purple-600 dark:text-purple-400" />
                         </div>
                       ) : selectedDeal.status === "PENDING" ||
                         selectedDeal.status === "ACCEPTED" ||
@@ -832,7 +832,7 @@ export function BtEntranceDeals() {
 
                     {/* Amount */}
                     <div className="mb-1">
-                      <span className="text-3xl font-bold text-green-600 dark:text-green-400">
+                      <span className="text-3xl font-bold text-purple-600 dark:text-purple-400">
                         {(selectedDeal.amount / selectedDeal.rate).toFixed(2)}{" "}
                         USDT
                       </span>
@@ -850,8 +850,8 @@ export function BtEntranceDeals() {
                       onClick={() => setShowRequisiteDetails(true)}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-[92px] h-[62px] rounded-md bg-gradient-to-tr from-green-800 via-green-400 to-green-400 relative overflow-hidden">
-                          <div className="absolute inset-0 bg-gradient-to-r from-green-800  to-transparent"></div>
+                        <div className="w-[92px] h-[62px] rounded-md bg-gradient-to-tr from-purple-800 via-purple-400 to-purple-400 relative overflow-hidden">
+                          <div className="absolute inset-0 bg-gradient-to-r from-purple-800  to-transparent"></div>
                           <div className="absolute top-2 right-4">
                             <svg
                               viewBox="0 0 30 18"
@@ -913,7 +913,7 @@ export function BtEntranceDeals() {
                             <span className="text-sm text-gray-500 dark:text-gray-400">
                               Прибыль
                             </span>
-                            <span className="text-lg font-semibold text-green-600 dark:text-green-400">
+                            <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
                               + {selectedDeal.traderProfit.toFixed(2)} USDT
                             </span>
                           </div>

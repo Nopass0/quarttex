@@ -180,7 +180,7 @@ export default function AgentEarningsPage() {
               <span className="text-sm text-gray-600">Изменение</span>
               <span className={`font-semibold ${
                 earnings.thisMonthEarnings >= earnings.lastMonthEarnings 
-                  ? 'text-green-600' 
+                  ? 'text-purple-600' 
                   : 'text-red-600'
               }`}>
                 {earnings.thisMonthEarnings >= earnings.lastMonthEarnings ? '+' : ''}

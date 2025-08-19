@@ -592,7 +592,7 @@ export function MobileMenuDrawer({
                         window.location.href = "/api/app/download-apk";
                       }}
                     >
-                      <Download className="h-4 w-4 text-green-600" />
+                      <Download className="h-4 w-4 text-purple-600" />
                       <span>Скачать APK</span>
                     </Button>
                   </div>

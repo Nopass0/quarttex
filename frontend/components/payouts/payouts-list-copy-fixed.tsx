@@ -167,7 +167,7 @@ export function PayoutsList() {
     const expiresAt = new Date(payout.expire_at).getTime();
 
     if (payout.status === "completed" || payout.confirmed_at) {
-      return "bg-green-100 text-green-700";
+      return "bg-purple-100 text-purple-700";
     } else if (payout.status === "cancelled") {
       return "bg-red-100 text-red-700";
     } else if (payout.status === "checking") {
@@ -535,7 +535,7 @@ export function PayoutsList() {
                 })}
               </div>
               {payout.accepted_at && (
-                <div className="text-xs text-green-600">
+                <div className="text-xs text-purple-600">
                   {format(new Date(payout.accepted_at), "HH:mm", {
                     locale: ru,
                   })}
@@ -652,14 +652,14 @@ export function PayoutsList() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-8 w-8 p-0 hover:bg-green-50"
+                  className="h-8 w-8 p-0 hover:bg-purple-50"
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedPayoutForAction(payout.id);
                     setConfirmDialogOpen(true);
                   }}
                 >
-                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <CheckCircle className="h-5 w-5 text-purple-600" />
                 </Button>
                 <Button
                   size="sm"
@@ -974,7 +974,7 @@ export function PayoutsList() {
                 placeholder="0.00"
                 value={balanceInput}
                 onChange={(e) => setBalanceInput(e.target.value)}
-                className="h-12 w-32 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="h-12 w-32 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               />
               <Button 
                 variant="outline" 
@@ -1141,7 +1141,7 @@ export function PayoutsList() {
               <Label htmlFor="cancel-reason">Причина отмены</Label>
               <textarea
                 id="cancel-reason"
-                className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
                 placeholder="Опишите причину отмены..."
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
@@ -1232,7 +1232,7 @@ export function PayoutsList() {
                 >
                   {proofFile ? (
                     <>
-                      <CheckCircle className="h-8 w-8 text-green-600 mb-2" />
+                      <CheckCircle className="h-8 w-8 text-purple-600 mb-2" />
                       <p className="text-sm font-medium">{proofFile.name}</p>
                       <p className="text-xs text-gray-500">
                         {(proofFile.size / 1024 / 1024).toFixed(2)} MB
@@ -1266,7 +1266,7 @@ export function PayoutsList() {
               <Button
                 onClick={() => handleConfirmPayout(selectedPayoutForAction!)}
                 disabled={!proofFile}
-                className="bg-green-600 hover:bg-green-700"
+                className="bg-purple-600 hover:bg-purple-700"
               >
                 Подтвердить выплату
               </Button>

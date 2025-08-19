@@ -545,7 +545,7 @@ export default function AdminAggregatorsPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            <DollarSign className="h-4 w-4 text-green-600" />
+                            <DollarSign className="h-4 w-4 text-purple-600" />
                             {formatAmount(aggregator.balanceUsdt)}
                           </div>
                         </TableCell>
@@ -558,7 +558,7 @@ export default function AdminAggregatorsPage() {
                           {aggregator.twoFactorEnabled ? (
                             <Badge
                               variant="default"
-                              className="bg-green-100 text-green-800"
+                              className="bg-purple-100 text-purple-800"
                             >
                               <Shield className="h-3 w-3 mr-1" />
                               Включена
@@ -579,7 +579,7 @@ export default function AdminAggregatorsPage() {
                               }
                             />
                             {aggregator.isActive ? (
-                              <Badge className="bg-green-100 text-green-800">
+                              <Badge className="bg-purple-100 text-purple-800">
                                 <CheckCircle className="h-3 w-3 mr-1" />
                                 Активен
                               </Badge>

@@ -113,7 +113,7 @@ export default function AggregatorApiDocs() {
   const getMethodBadge = (method: string) => {
     const colors: Record<string, string> = {
       GET: "bg-blue-100 text-blue-800",
-      POST: "bg-green-100 text-green-800",
+      POST: "bg-purple-100 text-purple-800",
       PUT: "bg-yellow-100 text-yellow-800",
       PATCH: "bg-orange-100 text-orange-800",
       DELETE: "bg-red-100 text-red-800",
@@ -358,7 +358,7 @@ export default function AggregatorApiDocs() {
 
               <div>
                 <h4 className="font-semibold mb-2">Метод:</h4>
-                <Badge className="bg-green-100 text-green-800">
+                <Badge className="bg-purple-100 text-purple-800">
                   {callbackFormat?.method}
                 </Badge>
               </div>
@@ -392,7 +392,7 @@ export default function AggregatorApiDocs() {
                 <div className="space-y-2">
                   {callbackFormat?.notes.map((note, index) => (
                     <div key={index} className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                      <CheckCircle className="h-4 w-4 text-purple-600 mt-0.5" />
                       <span className="text-sm">{note}</span>
                     </div>
                   ))}
@@ -450,7 +450,7 @@ export default function AggregatorApiDocs() {
                 <div className="space-y-2">
                   {integrationFlow?.bestPractices.map((practice, index) => (
                     <div key={index} className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                      <CheckCircle className="h-4 w-4 text-purple-600 mt-0.5" />
                       <span className="text-sm">{practice}</span>
                     </div>
                   ))}
