@@ -136,7 +136,7 @@ export function AggregatorDepositModal() {
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Wallet className="h-5 w-5 text-[#006039]" />
+            <Wallet className="h-5 w-5 text-[purple-600]" />
             Пополнение баланса USDT
           </DialogTitle>
           <DialogDescription>
@@ -152,7 +152,7 @@ export function AggregatorDepositModal() {
                 <CardTitle className="text-sm">Текущий баланс</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-[#006039]">
+                <div className="text-2xl font-bold text-[purple-600]">
                   {aggregator.balanceUsdt?.toFixed(2) || "0.00"} USDT
                 </div>
               </CardContent>
@@ -243,7 +243,7 @@ export function AggregatorDepositModal() {
                 disabled={
                   loading || !amount || !txHash || parseFloat(amount) <= 0
                 }
-                className="bg-[#006039] hover:bg-[#004d2e]"
+                className="bg-[purple-600] hover:bg-[purple-700]"
               >
                 {loading ? (
                   <>

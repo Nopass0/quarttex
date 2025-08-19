@@ -646,7 +646,7 @@ export function MobileMenuDrawer({
                                     className={cn(
                                       "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors",
                                       isChildActive
-                                        ? "bg-[#006039]/10 text-[#006039] dark:text-[#2d6a42]"
+                                        ? "bg-[purple-600]/10 text-[purple-600] dark:text-[purple-600]"
                                         : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                                     )}
                                   >
@@ -669,7 +669,7 @@ export function MobileMenuDrawer({
                         className={cn(
                           "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors",
                           isActive
-                            ? "bg-[#006039]/10 text-[#006039] dark:text-[#2d6a42]"
+                            ? "bg-[purple-600]/10 text-[purple-600] dark:text-[purple-600]"
                             : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                         )}
                       >

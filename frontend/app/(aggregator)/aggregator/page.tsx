@@ -135,7 +135,7 @@ export default function AggregatorDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Globe className="h-8 w-8 text-[#006039]" />
+            <Globe className="h-8 w-8 text-[purple-600]" />
             Панель агрегатора
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -158,10 +158,10 @@ export default function AggregatorDashboard() {
       </div>
 
       {/* API Token Card */}
-      <Card className="border-[#006039]/20 bg-gradient-to-r from-[#006039]/5 to-transparent">
+      <Card className="border-[purple-600]/20 bg-gradient-to-r from-[purple-600]/5 to-transparent">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Globe className="h-5 w-5 text-[#006039]" />
+            <Globe className="h-5 w-5 text-[purple-600]" />
             API интеграция
           </CardTitle>
         </CardHeader>

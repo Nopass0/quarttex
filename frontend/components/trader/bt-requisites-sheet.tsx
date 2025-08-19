@@ -813,7 +813,7 @@ export function BtRequisitesSheet({
                   <Button
                     type="submit"
                     disabled={loading || !form.formState.isValid || hasEmptyRequiredNumbers}
-                    className="bg-[#006039] hover:bg-[#006039]/90"
+                    className="bg-[purple-600] hover:bg-[purple-600]/90"
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {editingRequisite ? "Сохранить" : "Добавить"}

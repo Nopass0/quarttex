@@ -118,7 +118,7 @@ export function RequisitesListDialog({
             <div className="flex justify-end mt-4">
               <Button
                 onClick={() => setAddDialogOpen(true)}
-                className="bg-[#006039] hover:bg-[#006039]/90"
+                className="bg-[purple-600] hover:bg-[purple-600]/90"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Добавить реквизит
@@ -128,7 +128,7 @@ export function RequisitesListDialog({
 
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
+                <Loader2 className="h-8 w-8 animate-spin text-[purple-600]" />
               </div>
             ) : (
               <>
@@ -160,7 +160,7 @@ export function RequisitesListDialog({
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                         <div className="flex items-start gap-3 flex-1">
                           <div className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800">
-                            <CreditCard className="h-5 w-5 text-[#006039]" />
+                            <CreditCard className="h-5 w-5 text-[purple-600]" />
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
@@ -230,7 +230,7 @@ export function RequisitesListDialog({
                           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                             <div className="flex items-start gap-3 flex-1">
                               <div className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800">
-                                <CreditCard className="h-5 w-5 text-[#006039]" />
+                                <CreditCard className="h-5 w-5 text-[purple-600]" />
                               </div>
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">

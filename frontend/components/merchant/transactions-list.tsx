@@ -202,7 +202,7 @@ export function TransactionsList({ filters }: TransactionsListProps) {
           onClick={fetchTransactions}
           disabled={isLoading}
         >
-          <RefreshCw className={`h-4 w-4 mr-2 text-[#006039] ${isLoading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 mr-2 text-[purple-600] ${isLoading ? 'animate-spin' : ''}`} />
           Обновить
         </Button>
       </div>
@@ -289,7 +289,7 @@ export function TransactionsList({ filters }: TransactionsListProps) {
                       <TableCell className="text-right">
                         {transaction.effectiveRate ? formatAmount(transaction.effectiveRate) : '-'}
                       </TableCell>
-                      <TableCell className="text-right font-medium text-[#006039] dark:text-purple-400">
+                      <TableCell className="text-right font-medium text-[purple-600] dark:text-purple-400">
                         {usdtAmount ? formatAmount(usdtAmount) : '-'}
                       </TableCell>
                     </>
@@ -304,7 +304,7 @@ export function TransactionsList({ filters }: TransactionsListProps) {
                         onClick={() => handleOpenDispute(transaction)}
                         title="Открыть спор по транзакции"
                       >
-                        <AlertCircle className="h-4 w-4 mr-1 text-[#006039]" />
+                        <AlertCircle className="h-4 w-4 mr-1 text-[purple-600]" />
                         Спор
                       </Button>
                     )}
@@ -326,7 +326,7 @@ export function TransactionsList({ filters }: TransactionsListProps) {
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1 || isLoading}
                 >
-                  <ChevronLeft className="h-4 w-4 text-[#006039]" />
+                  <ChevronLeft className="h-4 w-4 text-[purple-600]" />
                   Назад
                 </Button>
                 <span className="text-sm">Страница {page}</span>
@@ -337,7 +337,7 @@ export function TransactionsList({ filters }: TransactionsListProps) {
                   disabled={!hasMore || isLoading}
                 >
                   Вперед
-                  <ChevronRight className="h-4 w-4 text-[#006039]" />
+                  <ChevronRight className="h-4 w-4 text-[purple-600]" />
                 </Button>
               </div>
             </div>

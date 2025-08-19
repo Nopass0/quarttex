@@ -461,7 +461,7 @@ export default function DevicesPage() {
       <ProtectedRoute variant="trader">
         <AuthLayout variant="trader">
           <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
+            <Loader2 className="h-8 w-8 animate-spin text-[purple-600]" />
           </div>
         </AuthLayout>
       </ProtectedRoute>
@@ -477,7 +477,7 @@ export default function DevicesPage() {
             <h1 className="text-xl md:text-3xl font-bold">Устройства ({devices.length})</h1>
             <Button
               onClick={() => setDeviceDialogOpen(true)}
-              style={{ backgroundColor: "#006039", color: "white" }}
+              style={{ backgroundColor: "purple-600", color: "white" }}
               className="hover:opacity-90 transition-opacity text-sm md:text-base"
             >
               <Wifi className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5" />
@@ -503,7 +503,7 @@ export default function DevicesPage() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="gap-1 md:gap-2 h-10 md:h-12 px-3 md:px-6 text-sm md:text-base">
-                    <ArrowUpDown className="h-4 w-4 text-[#006039]" />
+                    <ArrowUpDown className="h-4 w-4 text-[purple-600]" />
                     <span className="hidden sm:inline">{sortBy === "newest" ? "Сначала новые" : "Сначала старые"}</span>
                     <span className="sm:hidden">{sortBy === "newest" ? "Новые" : "Старые"}</span>
                     <ChevronDown className="h-4 w-4 text-gray-500" />
@@ -523,7 +523,7 @@ export default function DevicesPage() {
 
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
-                <Wifi className="h-4 w-4 text-[#006039]" />
+                <Wifi className="h-4 w-4 text-[purple-600]" />
                 <Label>Статус устройств:</Label>
               </div>
               <Select
@@ -755,7 +755,7 @@ export default function DevicesPage() {
                           className={cn(
                             "text-sm font-medium mt-1",
                             device.isOnline
-                              ? "text-[#006039]"
+                              ? "text-[purple-600]"
                               : "text-gray-600",
                           )}
                         >
@@ -823,7 +823,7 @@ export default function DevicesPage() {
               </Button>
               <Button
                 onClick={createDevice}
-                style={{ backgroundColor: "#006039", color: "white" }}
+                style={{ backgroundColor: "purple-600", color: "white" }}
                 className="hover:opacity-90 transition-opacity w-full sm:w-auto"
                 disabled={!deviceForm.name}
               >

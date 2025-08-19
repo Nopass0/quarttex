@@ -570,7 +570,7 @@ export function MessagesListNew() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[purple-600]" />
       </div>
     );
   }
@@ -590,7 +590,7 @@ export function MessagesListNew() {
       <div className="flex flex-col sm:flex-row gap-2">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#006039] h-4 w-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[purple-600] h-4 w-4" />
           <Input
             placeholder="Поиск..."
             value={searchQuery}
@@ -608,7 +608,7 @@ export function MessagesListNew() {
               size="default"
               className="gap-1 md:gap-2 h-10 md:h-12 px-3 md:px-6 text-sm md:text-base flex-1 sm:flex-initial"
             >
-              <SlidersHorizontal className="h-3.5 w-3.5 md:h-4 md:w-4 text-[#006039]" />
+              <SlidersHorizontal className="h-3.5 w-3.5 md:h-4 md:w-4 text-[purple-600]" />
               <span className="hidden sm:inline">Не выбраны</span>
               {(filterStatus !== "all" ||
                 filterDevice !== "all" ||
@@ -616,7 +616,7 @@ export function MessagesListNew() {
                 filterAmountType !== "all" ||
                 filterDateFrom ||
                 filterDateTo) && (
-                <Badge className="ml-1 bg-[#006039] text-white">
+                <Badge className="ml-1 bg-[purple-600] text-white">
                   {
                     [
                       filterStatus !== "all",
@@ -631,7 +631,7 @@ export function MessagesListNew() {
               <ChevronDown
                 className={cn(
                   "h-4 w-4 transition-colors",
-                  filtersOpen ? "text-[#006039]" : "text-gray-400",
+                  filtersOpen ? "text-[purple-600]" : "text-gray-400",
                 )}
               />
             </Button>
@@ -643,7 +643,7 @@ export function MessagesListNew() {
               {/* Status Filter */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-[#006039]" />
+                  <CheckCircle className="h-4 w-4 text-[purple-600]" />
                   <Label className="text-sm">Статус сообщения</Label>
                 </div>
                 <Popover>
@@ -653,7 +653,7 @@ export function MessagesListNew() {
                       size="default"
                       className="w-full justify-between h-12"
                     >
-                      <span className="text-[#006039]">
+                      <span className="text-[purple-600]">
                         {filterStatus === "all"
                           ? "Все сообщения"
                           : filterStatus === "processed"
@@ -664,7 +664,7 @@ export function MessagesListNew() {
                                 ? "Без сделки"
                                 : "Новые"}
                       </span>
-                      <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
+                      <ChevronDown className="h-4 w-4 opacity-50 text-[purple-600]" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent
@@ -741,7 +741,7 @@ export function MessagesListNew() {
               {/* Device Filter */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Smartphone className="h-4 w-4 text-[#006039]" />
+                  <Smartphone className="h-4 w-4 text-[purple-600]" />
                   <Label className="text-sm">Устройства</Label>
                 </div>
                 <Popover>
@@ -751,8 +751,8 @@ export function MessagesListNew() {
                       size="default"
                       className="w-full justify-between h-12"
                     >
-                      <span className="text-[#006039]">Все устройства</span>
-                      <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
+                      <span className="text-[purple-600]">Все устройства</span>
+                      <ChevronDown className="h-4 w-4 opacity-50 text-[purple-600]" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent
@@ -832,7 +832,7 @@ export function MessagesListNew() {
               {/* Date Range */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-[#006039]" />
+                  <Calendar className="h-4 w-4 text-[purple-600]" />
                   <Label className="text-sm">Дата получения</Label>
                 </div>
                 <div className="flex gap-2">
@@ -857,7 +857,7 @@ export function MessagesListNew() {
               {/* Bank Filter */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <CreditCard className="h-4 w-4 text-[#006039]" />
+                  <CreditCard className="h-4 w-4 text-[purple-600]" />
                   <Label className="text-sm">Банк</Label>
                 </div>
                 <Popover>
@@ -867,10 +867,10 @@ export function MessagesListNew() {
                       size="default"
                       className="w-full justify-between h-12"
                     >
-                      <span className="text-[#006039]">
+                      <span className="text-[purple-600]">
                         {filterBank === "all" ? "Все банки" : AVAILABLE_BANKS.find(b => b.code === filterBank)?.name || filterBank}
                       </span>
-                      <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
+                      <ChevronDown className="h-4 w-4 opacity-50 text-[purple-600]" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent
@@ -945,7 +945,7 @@ export function MessagesListNew() {
               {/* Amount Filter */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-[#006039]" />
+                  <DollarSign className="h-4 w-4 text-[purple-600]" />
                   <Label className="text-sm">Сумма</Label>
                 </div>
                 <Popover>
@@ -955,14 +955,14 @@ export function MessagesListNew() {
                       size="default"
                       className="w-full justify-between h-12"
                     >
-                      <span className="text-[#006039]">
+                      <span className="text-[purple-600]">
                         {filterAmountType === "all"
                           ? "Любая сумма"
                           : filterAmountType === "exact"
                             ? `Точно ${filterAmount.exact || "..."} ₽`
                             : `От ${filterAmount.min || "..."} до ${filterAmount.max || "..."} ₽`}
                       </span>
-                      <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
+                      <ChevronDown className="h-4 w-4 opacity-50 text-[purple-600]" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent
@@ -977,7 +977,7 @@ export function MessagesListNew() {
                           size="sm"
                           onClick={() => setFilterAmountType("all")}
                           className={cn(
-                            filterAmountType === "all" && "bg-[#006039] hover:bg-[#005030]"
+                            filterAmountType === "all" && "bg-[purple-600] hover:bg-[#005030]"
                           )}
                         >
                           Любая
@@ -987,7 +987,7 @@ export function MessagesListNew() {
                           size="sm"
                           onClick={() => setFilterAmountType("exact")}
                           className={cn(
-                            filterAmountType === "exact" && "bg-[#006039] hover:bg-[#005030]"
+                            filterAmountType === "exact" && "bg-[purple-600] hover:bg-[#005030]"
                           )}
                         >
                           Точная
@@ -997,7 +997,7 @@ export function MessagesListNew() {
                           size="sm"
                           onClick={() => setFilterAmountType("range")}
                           className={cn(
-                            filterAmountType === "range" && "bg-[#006039] hover:bg-[#005030]"
+                            filterAmountType === "range" && "bg-[purple-600] hover:bg-[#005030]"
                           )}
                         >
                           Диапазон
@@ -1090,7 +1090,7 @@ export function MessagesListNew() {
               size="default"
               className="gap-1 md:gap-2 h-10 md:h-12 px-3 md:px-6 text-sm md:text-base flex-1 sm:flex-initial"
             >
-              <ArrowUpDown className="h-3.5 w-3.5 md:h-4 md:w-4 text-[#006039]" />
+              <ArrowUpDown className="h-3.5 w-3.5 md:h-4 md:w-4 text-[purple-600]" />
               <span className="hidden sm:inline">Сортировка</span>
               <span className="sm:hidden">Сорт.</span>
               <ChevronDown className="h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400" />
@@ -1363,7 +1363,7 @@ export function MessagesListNew() {
                   onClick={() => setSelectedMessage(null)}
                   className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
                 >
-                  <X className="h-4 w-4 text-[#006039]" />
+                  <X className="h-4 w-4 text-[purple-600]" />
                 </Button>
               </div>
 
@@ -1424,7 +1424,7 @@ export function MessagesListNew() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center">
-                          <Smartphone className="h-5 w-5 text-[#006039]" />
+                          <Smartphone className="h-5 w-5 text-[purple-600]" />
                         </div>
                         <div className="text-left">
                           <p className="text-sm font-medium">
@@ -1436,7 +1436,7 @@ export function MessagesListNew() {
                           </p>
                         </div>
                       </div>
-                      <ChevronDown className="h-5 w-5 text-[#006039] -rotate-90" />
+                      <ChevronDown className="h-5 w-5 text-[purple-600] -rotate-90" />
                     </Button>
 
                     {/* Amount */}
@@ -1461,7 +1461,7 @@ export function MessagesListNew() {
                   {/* Action Button */}
                   <div className="px-6 pb-6">
                     <Button
-                      className="w-full bg-[#006039] hover:bg-[#006039]/90"
+                      className="w-full bg-[purple-600] hover:bg-[purple-600]/90"
                       onClick={() => setSelectedMessage(null)}
                     >
                       Закрыть

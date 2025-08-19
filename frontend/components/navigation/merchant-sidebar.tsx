@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Logo } from "@/components/ui/logo"
+import QuatrexLogo from "@/components/ui/quattrex-logo"
 import { Button } from "@/components/ui/button"
 import { useMerchantAuth } from "@/stores/merchant-auth"
 import {
@@ -126,12 +126,12 @@ export function MerchantSidebar() {
               level > 0 && "pl-9"
             )}
           >
-            <Icon className="h-4 w-4 text-[#006039]" />
+            <Icon className="h-4 w-4 text-[purple-600]" />
             <span className="flex-1 text-left">{item.title}</span>
             {isExpanded ? (
-              <ChevronDown className="h-4 w-4 text-[#006039]" />
+              <ChevronDown className="h-4 w-4 text-[purple-600]" />
             ) : (
-              <ChevronRight className="h-4 w-4 text-[#006039]" />
+              <ChevronRight className="h-4 w-4 text-[purple-600]" />
             )}
           </button>
           {isExpanded && (
@@ -150,7 +150,7 @@ export function MerchantSidebar() {
         className={cn(
           "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
           isActive
-            ? "bg-[#006039] text-white"
+            ? "bg-[purple-600] text-white"
             : "text-gray-700 hover:bg-gray-100",
           level > 0 && "pl-9"
         )}
@@ -166,7 +166,7 @@ export function MerchantSidebar() {
     <>
       <div className="px-3 py-5">
         <Link href="/merchant/transactions" className="flex items-center gap-2">
-          <Logo size="sm" />
+          <QuatrexLogo size="sm" />
           <span className="text-lg font-semibold">Мерчант</span>
         </Link>
         {merchantName && (
@@ -183,7 +183,7 @@ export function MerchantSidebar() {
           className="w-full justify-start"
           onClick={handleLogout}
         >
-          <LogOut className="mr-2 h-4 w-4 text-[#006039]" />
+          <LogOut className="mr-2 h-4 w-4 text-[purple-600]" />
           Выйти
         </Button>
       </div>
@@ -203,7 +203,7 @@ export function MerchantSidebar() {
       <div className="md:hidden fixed bottom-4 right-4 z-50">
         <Button
           size="icon"
-          className="rounded-full shadow-lg bg-[#006039] hover:bg-[#006039]/90"
+          className="rounded-full shadow-lg bg-[purple-600] hover:bg-[purple-600]/90"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? (

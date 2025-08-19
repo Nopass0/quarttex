@@ -137,7 +137,7 @@ export default function AggregatorApiDocs() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <BookOpen className="h-8 w-8 text-[#006039]" />
+          <BookOpen className="h-8 w-8 text-[purple-600]" />
           API Документация
         </h1>
         <p className="text-muted-foreground">
@@ -146,10 +146,10 @@ export default function AggregatorApiDocs() {
       </div>
 
       {/* Base URL Card */}
-      <Card className="border-[#006039]/20 bg-gradient-to-r from-[#006039]/5 to-transparent">
+      <Card className="border-[purple-600]/20 bg-gradient-to-r from-[purple-600]/5 to-transparent">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Globe className="h-5 w-5 text-[#006039]" />
+            <Globe className="h-5 w-5 text-[purple-600]" />
             Конфигурация интеграции
           </CardTitle>
         </CardHeader>
@@ -417,7 +417,7 @@ export default function AggregatorApiDocs() {
                   {integrationFlow?.steps.map((step) => (
                     <div key={step.step} className="flex gap-4">
                       <div className="flex-shrink-0">
-                        <div className="w-8 h-8 rounded-full bg-[#006039] text-white flex items-center justify-center text-sm font-semibold">
+                        <div className="w-8 h-8 rounded-full bg-[purple-600] text-white flex items-center justify-center text-sm font-semibold">
                           {step.step}
                         </div>
                       </div>

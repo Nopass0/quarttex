@@ -274,12 +274,12 @@ export function RequisiteInfoModal({
         <div className="flex items-center justify-between p-4 border-b md:hidden flex-shrink-0">
           <button
             onClick={() => onOpenChange(false)}
-            className="flex items-center gap-1 text-[#006039] font-medium"
+            className="flex items-center gap-1 text-[purple-600] font-medium"
           >
             <ChevronLeft className="h-4 w-4" />
             Назад
           </button>
-          <button className="flex items-center gap-1 text-[#006039] font-medium">
+          <button className="flex items-center gap-1 text-[purple-600] font-medium">
             Поделиться
             <Share2 className="h-4 w-4" />
           </button>
@@ -468,8 +468,8 @@ export function RequisiteInfoModal({
               >
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#006039]/10 rounded-lg flex items-center justify-center">
-                      <Smartphone className="h-5 w-5 text-[#006039]" />
+                    <div className="w-10 h-10 bg-[purple-600]/10 rounded-lg flex items-center justify-center">
+                      <Smartphone className="h-5 w-5 text-[purple-600]" />
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">
@@ -493,10 +493,10 @@ export function RequisiteInfoModal({
             <div className="space-y-2">
               <Button
                 variant="outline"
-                className="w-full justify-start h-12 text-[#006039] hover:text-[#006039] hover:bg-purple-50"
+                className="w-full justify-start h-12 text-[purple-600] hover:text-[purple-600] hover:bg-purple-50"
                 onClick={() => setShowEditDialog(true)}
               >
-                <Edit className="h-4 w-4 mr-2 text-[#006039]" />
+                <Edit className="h-4 w-4 mr-2 text-[purple-600]" />
                 Редактировать
               </Button>
               

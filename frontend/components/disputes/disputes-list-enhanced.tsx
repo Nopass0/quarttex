@@ -267,7 +267,7 @@ export function DisputesListEnhanced({ userType }: DisputesListEnhancedProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[purple-600]" />
       </div>
     )
   }
@@ -431,7 +431,7 @@ export function DisputesListEnhanced({ userType }: DisputesListEnhancedProps) {
                     </Button>
                     <Button
                       onClick={() => handleOpenMessages(dispute)}
-                      className="bg-[#006039] hover:bg-[#006039]/90"
+                      className="bg-[purple-600] hover:bg-[purple-600]/90"
                       size="sm"
                     >
                       <MessageSquare className="h-4 w-4 mr-1" />

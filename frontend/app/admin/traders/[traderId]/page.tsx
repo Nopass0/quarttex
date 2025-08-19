@@ -376,7 +376,7 @@ function TraderProfileContent() {
           size="icon"
           onClick={() => router.push("/admin/traders")}
         >
-          <ArrowLeft className="h-4 w-4 text-[#006039]" />
+          <ArrowLeft className="h-4 w-4 text-[purple-600]" />
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-semibold text-gray-900">
@@ -631,7 +631,7 @@ function TraderProfileContent() {
             >
               <DialogTrigger asChild>
                 <Button className="w-full mt-3" variant="outline" size="sm">
-                  <DollarSign className="mr-2 h-4 w-4 text-[#006039]" />
+                  <DollarSign className="mr-2 h-4 w-4 text-[purple-600]" />
                   Изменить баланс
                 </Button>
               </DialogTrigger>
@@ -754,7 +754,7 @@ function TraderProfileContent() {
               >
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start">
-                    <Filter className="mr-2 h-4 w-4 text-[#006039]" />
+                    <Filter className="mr-2 h-4 w-4 text-[purple-600]" />
                     Фильтры
                     {(dateFilter.startDate || dateFilter.endDate) && (
                       <span className="ml-auto text-xs text-gray-500">
@@ -787,7 +787,7 @@ function TraderProfileContent() {
                                   "text-muted-foreground",
                               )}
                             >
-                              <CalendarIcon className="mr-2 h-4 w-4 text-[#006039]" />
+                              <CalendarIcon className="mr-2 h-4 w-4 text-[purple-600]" />
                               {dateFilter.startDate
                                 ? format(dateFilter.startDate, "dd MMMM yyyy", {
                                     locale: ru,
@@ -833,7 +833,7 @@ function TraderProfileContent() {
                                 !dateFilter.endDate && "text-muted-foreground",
                               )}
                             >
-                              <CalendarIcon className="mr-2 h-4 w-4 text-[#006039]" />
+                              <CalendarIcon className="mr-2 h-4 w-4 text-[purple-600]" />
                               {dateFilter.endDate
                                 ? format(dateFilter.endDate, "dd MMMM yyyy", {
                                     locale: ru,
@@ -924,7 +924,7 @@ function TraderProfileContent() {
                   setIsWithdrawalDialogOpen(true);
                 }}
               >
-                <History className="mr-2 h-4 w-4 text-[#006039]" />
+                <History className="mr-2 h-4 w-4 text-[purple-600]" />
                 История выводов
               </Button>
             </div>
@@ -1322,7 +1322,7 @@ function TraderProfileContent() {
                 <Button
                   onClick={handleSaveSettings}
                   disabled={isSavingSettings}
-                  className="bg-[#006039] hover:bg-[#006039]/90"
+                  className="bg-[purple-600] hover:bg-[purple-600]/90"
                 >
                   {isSavingSettings ? (
                     <>

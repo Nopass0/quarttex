@@ -1,6 +1,6 @@
 import React from "react"
 import { AlertCircle, X } from "lucide-react"
-import { Logo } from "@/components/ui/logo"
+import QuatrexLogo from "@/components/ui/quattrex-logo"
 import { Button } from "@/components/ui/button"
 
 interface ConnectionErrorProps {
@@ -23,7 +23,7 @@ export function ConnectionError({ onClose, onRetry }: ConnectionErrorProps) {
 
       {/* Logo */}
       <div className="mb-8">
-        <Logo className="h-16 w-auto" />
+        <QuatrexLogo className="h-16 w-auto" />
       </div>
 
       {/* Error Icon */}

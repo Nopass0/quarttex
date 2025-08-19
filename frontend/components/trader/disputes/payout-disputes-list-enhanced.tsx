@@ -260,7 +260,7 @@ export function PayoutDisputesListEnhanced() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[purple-600]" />
       </div>
     );
   }
@@ -322,7 +322,7 @@ export function PayoutDisputesListEnhanced() {
                 className="h-12 justify-between min-w-[200px] max-xl:w-full"
               >
                 <span className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-[#006039]" />
+                  <Filter className="h-4 w-4 text-[purple-600]" />
                   {filterStatus === "all" ? "Все статусы" : disputeStatusConfig[filterStatus as keyof typeof disputeStatusConfig]?.label || filterStatus}
                 </span>
                 <ChevronDown className="h-4 w-4 opacity-50" />
@@ -408,7 +408,7 @@ export function PayoutDisputesListEnhanced() {
                   key={dispute.id}
                   className={cn(
                     "p-4 cursor-pointer hover:shadow-md transition-all duration-200",
-                    "dark:bg-[#29382f] dark:hover:bg-[#29382f]/80"
+                    "dark:bg-purple-900/30 dark:hover:bg-[purple-900/30]/80"
                   )}
                   onClick={() => handleViewDetails(dispute)}
                 >

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/ui/logo";
+import QuatrexLogo from "@/components/ui/quattrex-logo";
 import {
   ChevronDown,
   CreditCard,
@@ -501,7 +501,7 @@ export function Sidebar({ variant }: SidebarProps) {
             "text-gray-800 hover:text-gray-950 font-semibold dark:text-[#eeeeee] dark:hover:text-[#eeeeee]",
             isActive
               ? "bg-purple-600/10 text-purple-600 font-medium border-l-4 border-purple-600 -ml-[1px] dark:bg-purple-600/10 dark:text-purple-400 dark:border-purple-400"
-              : "hover:bg-gray-50 dark:hover:bg-[#29382f]/20",
+              : "hover:bg-gray-50 dark:hover:bg-[purple-900/30]/20",
             level > 0 && "pl-12"
           )}
         >
@@ -537,10 +537,10 @@ export function Sidebar({ variant }: SidebarProps) {
   return (
     <>
       {/* Desktop Sidebar - Hidden on mobile */}
-      <div className="hidden md:flex h-screen w-64 sticky top-0 bg-white dark:bg-[#0f0f0f] border-r border-gray-100 dark:border-[#29382f] flex-col">
-        <div className="p-6 border-b border-gray-100 dark:border-[#29382f]">
+      <div className="hidden md:flex h-screen w-64 sticky top-0 bg-white dark:bg-[#0f0f0f] border-r border-gray-100 dark:border-purple-900/30 flex-col">
+        <div className="p-6 border-b border-gray-100 dark:border-purple-900/30">
           <div className="flex flex-col items-start">
-            <Logo size="md" />
+            <QuatrexLogo size="md" />
             {variant === "admin" && (
               <span className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                 Админ-панель
@@ -565,7 +565,7 @@ export function Sidebar({ variant }: SidebarProps) {
         </div>
 
         {variant === "agent" && agent && (
-          <div className="p-4 border-b border-gray-100 dark:border-[#29382f]">
+          <div className="p-4 border-b border-gray-100 dark:border-purple-900/30">
             <div className="space-y-1">
               <div className="text-sm font-medium dark:text-[#eeeeee]">
                 {agent.name}
@@ -581,7 +581,7 @@ export function Sidebar({ variant }: SidebarProps) {
         )}
 
         {variant === "merchant" && merchant.merchantName && (
-          <div className="p-4 border-b border-gray-100 dark:border-[#29382f]">
+          <div className="p-4 border-b border-gray-100 dark:border-purple-900/30">
             <div className="space-y-1">
               <div className="text-sm font-medium dark:text-[#eeeeee]">
                 {merchant.merchantName}
@@ -594,7 +594,7 @@ export function Sidebar({ variant }: SidebarProps) {
         )}
 
         {variant === "aggregator" && aggregator.aggregatorName && (
-          <div className="p-4 border-b border-gray-100 dark:border-[#29382f]">
+          <div className="p-4 border-b border-gray-100 dark:border-purple-900/30">
             <div className="space-y-2">
               <div className="text-sm font-medium dark:text-[#eeeeee]">
                 {aggregator.aggregatorName}
@@ -635,7 +635,7 @@ export function Sidebar({ variant }: SidebarProps) {
           {variant === "trader" && financials && (
             <div className="mt-6 space-y-3 px-3">
               {/* Баланс */}
-              <div className="p-4 bg-gray-50 dark:bg-[#29382f]/30 rounded-lg">
+              <div className="p-4 bg-gray-50 dark:bg-purple-900/30/30 rounded-lg">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     Баланс
@@ -669,7 +669,7 @@ export function Sidebar({ variant }: SidebarProps) {
               </div>
 
               {/* Депозит */}
-              <div className="p-4 bg-gray-50 dark:bg-[#29382f]/30 rounded-lg">
+              <div className="p-4 bg-gray-50 dark:bg-purple-900/30/30 rounded-lg">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     Депозит
@@ -686,7 +686,7 @@ export function Sidebar({ variant }: SidebarProps) {
               </div>
 
               {/* Общая прибыль */}
-              <div className="p-4 bg-gray-50 dark:bg-[#29382f]/30 rounded-lg">
+              <div className="p-4 bg-gray-50 dark:bg-purple-900/30/30 rounded-lg">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     Прибыль
@@ -790,7 +790,7 @@ export function Sidebar({ variant }: SidebarProps) {
         </nav>
 
         {/* Theme Switcher and Logout Button */}
-        <div className="p-4 border-t border-gray-100 dark:border-[#29382f] space-y-2">
+        <div className="p-4 border-t border-gray-100 dark:border-purple-900/30 space-y-2">
           <ThemeSwitcher />
           <Button
             variant="ghost"
@@ -804,7 +804,7 @@ export function Sidebar({ variant }: SidebarProps) {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-white dark:bg-[#0f0f0f] dark:border-[#29382f]">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-white dark:bg-[#0f0f0f] dark:border-purple-900/30">
         <div className="flex items-center justify-around p-2">
           {navItems.slice(0, 4).map((item) => (
             <button
@@ -839,7 +839,7 @@ export function Sidebar({ variant }: SidebarProps) {
         <div className="md:hidden fixed inset-0 z-50 bg-white dark:bg-[#0f0f0f]">
           <div className="flex flex-col h-full">
             <div className="flex items-center justify-between p-4 border-b">
-              <Logo size="md" />
+              <QuatrexLogo size="md" />
               <Button
                 variant="ghost"
                 size="icon"

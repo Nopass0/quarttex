@@ -802,7 +802,7 @@ export function ServiceDetail({ serviceName }: ServiceDetailProps) {
           <DialogFooter>
             <Button
               onClick={handleUpdateSettings}
-              className="bg-[#006039] hover:bg-[#005030]"
+              className="bg-[purple-600] hover:bg-[#005030]"
             >
               Сохранить
             </Button>

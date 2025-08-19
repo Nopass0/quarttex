@@ -414,18 +414,18 @@ export default function MerchantDetailPage() {
           {/* Balance Formula Display */}
           {balanceFormula && (
             <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-6">
-              <h2 className="text-lg font-semibold mb-4 text-[#006039] dark:text-purple-400">
+              <h2 className="text-lg font-semibold mb-4 text-[purple-600] dark:text-purple-400">
                 Баланс {merchant?.countInRubEquivalent ? '₽' : 'USDT'}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   {merchant?.countInRubEquivalent ? (
-                    <div className="text-3xl font-bold text-[#006039] dark:text-purple-400">
+                    <div className="text-3xl font-bold text-[purple-600] dark:text-purple-400">
                       {formatAmount(balanceFormula.currentBalanceRub)} ₽
                     </div>
                   ) : (
                     <>
-                      <div className="text-3xl font-bold text-[#006039] dark:text-purple-400">
+                      <div className="text-3xl font-bold text-[purple-600] dark:text-purple-400">
                         {formatAmount(balanceFormula.currentBalance)} USDT
                       </div>
                       <div className="text-lg text-gray-600 dark:text-gray-400 mt-1">
@@ -457,7 +457,7 @@ export default function MerchantDetailPage() {
                       <div className="border-t dark:border-gray-700 pt-1 mt-2">
                         <div className="flex justify-between font-medium">
                           <span className="text-gray-700 dark:text-gray-300">Итоговый баланс:</span>
-                          <span className="text-[#006039] dark:text-purple-400">{formatAmount(balanceFormula.currentBalanceRub)} ₽</span>
+                          <span className="text-[purple-600] dark:text-purple-400">{formatAmount(balanceFormula.currentBalanceRub)} ₽</span>
                         </div>
                       </div>
                     </div>
@@ -482,7 +482,7 @@ export default function MerchantDetailPage() {
                       <div className="border-t dark:border-gray-700 pt-1 mt-2">
                         <div className="flex justify-between font-medium">
                           <span className="text-gray-700 dark:text-gray-300">Итоговый баланс:</span>
-                          <span className="text-[#006039] dark:text-purple-400">{formatAmount(balanceFormula.currentBalance)} USDT</span>
+                          <span className="text-[purple-600] dark:text-purple-400">{formatAmount(balanceFormula.currentBalance)} USDT</span>
                         </div>
                       </div>
                     </div>
@@ -498,7 +498,7 @@ export default function MerchantDetailPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Баланс (рубли)</p>
-                  <p className="text-2xl font-bold text-[#006039] dark:text-purple-400 mt-1">
+                  <p className="text-2xl font-bold text-[purple-600] dark:text-purple-400 mt-1">
                     {formatAmount(merchant.balanceRub || 0)} ₽
                   </p>
                 </div>

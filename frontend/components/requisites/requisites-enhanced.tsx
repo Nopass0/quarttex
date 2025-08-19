@@ -334,7 +334,7 @@ export function RequisitesEnhanced() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[purple-600]" />
       </div>
     )
   }
@@ -379,14 +379,14 @@ export function RequisitesEnhanced() {
             </div>
             
             {activeTab !== "devices" && (
-              <Button onClick={() => setRequisiteDialogOpen(true)} className="bg-[#006039] hover:bg-[#006039]/90">
+              <Button onClick={() => setRequisiteDialogOpen(true)} className="bg-[purple-600] hover:bg-[purple-600]/90">
                 <Plus className="mr-2 h-4 w-4" />
                 Добавить реквизит
               </Button>
             )}
             
             {activeTab === "devices" && (
-              <Button onClick={() => setDeviceDialogOpen(true)} className="bg-[#006039] hover:bg-[#006039]/90">
+              <Button onClick={() => setDeviceDialogOpen(true)} className="bg-[purple-600] hover:bg-[purple-600]/90">
                 <Plus className="mr-2 h-4 w-4" />
                 Добавить устройство
               </Button>
@@ -416,21 +416,21 @@ export function RequisitesEnhanced() {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm">
-                          <MoreVertical className="h-4 w-4 text-[#006039]" />
+                          <MoreVertical className="h-4 w-4 text-[purple-600]" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => openEditDialog(requisite)}>
-                          <Edit className="mr-2 h-4 w-4 text-[#006039]" />
+                          <Edit className="mr-2 h-4 w-4 text-[purple-600]" />
                           Редактировать
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => archiveRequisite(requisite.id)}>
-                          <Archive className="mr-2 h-4 w-4 text-[#006039]" />
+                          <Archive className="mr-2 h-4 w-4 text-[purple-600]" />
                           Архивировать
                         </DropdownMenuItem>
                         {requisite.device && (
                           <DropdownMenuItem>
-                            <Link className="mr-2 h-4 w-4 text-[#006039]" />
+                            <Link className="mr-2 h-4 w-4 text-[purple-600]" />
                             Отвязать устройство
                           </DropdownMenuItem>
                         )}
@@ -507,7 +507,7 @@ export function RequisitesEnhanced() {
           
           {filteredRequisites.length === 0 && (
             <Card className="p-12 text-center">
-              <CreditCard className="h-12 w-12 mx-auto text-[#006039] mb-4" />
+              <CreditCard className="h-12 w-12 mx-auto text-[purple-600] mb-4" />
               <p className="text-gray-500">Нет активных реквизитов</p>
             </Card>
           )}
@@ -519,7 +519,7 @@ export function RequisitesEnhanced() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-3">
-                    <CreditCard className="h-5 w-5 text-[#006039]" />
+                    <CreditCard className="h-5 w-5 text-[purple-600]" />
                     <div>
                       <div className="font-medium">{requisite.recipientName}</div>
                       <div className="text-sm text-gray-500">**** {requisite.cardNumber.slice(-4)}</div>
@@ -539,7 +539,7 @@ export function RequisitesEnhanced() {
                     size="sm"
                     onClick={() => restoreRequisite(requisite.id)}
                   >
-                    <RotateCcw className="h-4 w-4 mr-2 text-[#006039]" />
+                    <RotateCcw className="h-4 w-4 mr-2 text-[purple-600]" />
                     Восстановить
                   </Button>
                 </div>
@@ -549,7 +549,7 @@ export function RequisitesEnhanced() {
           
           {filteredRequisites.length === 0 && (
             <Card className="p-12 text-center">
-              <Archive className="h-12 w-12 mx-auto text-[#006039] mb-4" />
+              <Archive className="h-12 w-12 mx-auto text-[purple-600] mb-4" />
               <p className="text-gray-500">Нет архивных реквизитов</p>
             </Card>
           )}
@@ -590,7 +590,7 @@ export function RequisitesEnhanced() {
                       deleteDevice(device.id)
                     }}
                   >
-                    <Trash2 className="h-4 w-4 text-[#006039]" />
+                    <Trash2 className="h-4 w-4 text-[purple-600]" />
                   </Button>
                 </div>
               </div>
@@ -599,7 +599,7 @@ export function RequisitesEnhanced() {
           
           {devices.length === 0 && (
             <Card className="p-12 text-center">
-              <Smartphone className="h-12 w-12 mx-auto text-[#006039] mb-4" />
+              <Smartphone className="h-12 w-12 mx-auto text-[purple-600] mb-4" />
               <p className="text-gray-500">Нет подключенных устройств</p>
             </Card>
           )}
@@ -705,7 +705,7 @@ export function RequisitesEnhanced() {
             </Button>
             <Button 
               onClick={selectedRequisite ? handleUpdateRequisite : handleCreateRequisite}
-              className="bg-[#006039] hover:bg-[#006039]/90"
+              className="bg-[purple-600] hover:bg-[purple-600]/90"
             >
               {selectedRequisite ? "Сохранить" : "Добавить"}
             </Button>
@@ -742,7 +742,7 @@ export function RequisitesEnhanced() {
             </Button>
             <Button 
               onClick={createDevice}
-              className="bg-[#006039] hover:bg-[#006039]/90"
+              className="bg-[purple-600] hover:bg-[purple-600]/90"
               disabled={!deviceForm.name}
             >
               Создать
@@ -781,7 +781,7 @@ export function RequisitesEnhanced() {
                   Скопировать
                 </Button>
                 <Button
-                  className="flex-1 bg-[#006039] hover:bg-[#006039]/90"
+                  className="flex-1 bg-[purple-600] hover:bg-[purple-600]/90"
                   onClick={() => router.push(`/trader/devices/${selectedDevice.id}`)}
                 >
                   Перейти к устройству
