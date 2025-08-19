@@ -5,6 +5,7 @@ import { HttpClient } from "@/utils/httpClient";
 import { BankRegexFactory } from "@/bank-parsers";
 import type { ProcessorConfig, ProcessorStats } from "@/types/processor";
 import { ProcessorConfigSchema } from "@/types/processor";
+import { truncate2 } from "@/utils/rounding";
 
 interface CallbackPayload {
   transactionId: string;
@@ -32,7 +33,8 @@ export class NotificationAutoProcessorService extends BaseService {
   constructor() {
     super({
       displayName: "Notification Auto-Processor Service",
-      description: "Automatically processes bank notifications and matches them with transactions",
+      description:
+        "Automatically processes bank notifications and matches them with transactions",
       enabled: true, // Always enabled
       autoStart: true,
       tags: ["notifications", "automation", "critical"],
@@ -94,22 +96,27 @@ export class NotificationAutoProcessorService extends BaseService {
     try {
       // Process notifications
       const notifications = await this.fetchUnprocessedNotifications();
-      
+
       if (notifications.length > 0) {
         await this.logDebug(`Processing ${notifications.length} notifications`);
-        
+
         // Обрабатываем до 5 уведомлений параллельно для ускорения
         const chunks = [];
         for (let i = 0; i < notifications.length; i += 5) {
           chunks.push(notifications.slice(i, i + 5));
         }
-        
+
         for (const chunk of chunks) {
-          await Promise.all(chunk.map(notification => 
-            this.processNotification(notification).catch(error => 
-              this.logError("Error processing notification", { notificationId: notification.id, error })
+          await Promise.all(
+            chunk.map((notification) =>
+              this.processNotification(notification).catch((error) =>
+                this.logError("Error processing notification", {
+                  notificationId: notification.id,
+                  error,
+                })
+              )
             )
-          ));
+          );
         }
       }
 
@@ -118,9 +125,8 @@ export class NotificationAutoProcessorService extends BaseService {
 
       // Update average processing time
       const processingTime = Date.now() - startTime;
-      this.stats.averageProcessingTime = 
-        (this.stats.averageProcessingTime * 0.9) + (processingTime * 0.1);
-
+      this.stats.averageProcessingTime =
+        this.stats.averageProcessingTime * 0.9 + processingTime * 0.1;
     } catch (error) {
       await this.logError("Error in notification processing tick", { error });
     }
@@ -144,7 +150,7 @@ export class NotificationAutoProcessorService extends BaseService {
   private async fetchUnprocessedNotifications(): Promise<any[]> {
     return db.notification.findMany({
       where: {
-        type: NotificationType.AppNotification,
+        type: { in: [NotificationType.AppNotification, NotificationType.SMS] },
         isProcessed: false,
         deviceId: { not: null },
       },
@@ -154,6 +160,27 @@ export class NotificationAutoProcessorService extends BaseService {
             bankDetails: {
               where: {
                 isArchived: false,
+              },
+              select: {
+                id: true,
+                methodType: true,
+                bankType: true,
+                cardNumber: true,
+                recipientName: true,
+                phoneNumber: true,
+                minAmount: true,
+                maxAmount: true,
+                totalAmountLimit: true,
+                currentTotalAmount: true,
+                operationLimit: true,
+                sumLimit: true,
+                intervalMinutes: true,
+                isArchived: true,
+                isActive: true,
+                createdAt: true,
+                updatedAt: true,
+                deviceId: true,
+                userId: true,
               },
             },
             user: true,
@@ -174,17 +201,28 @@ export class NotificationAutoProcessorService extends BaseService {
       this.stats.totalProcessed++;
 
       // Check if device has bank details
-      if (!notification.Device?.bankDetails || notification.Device.bankDetails.length === 0) {
-        await this.markNotificationProcessed(notification.id, "NO_BANK_DETAILS");
+      if (
+        !notification.Device?.bankDetails ||
+        notification.Device.bankDetails.length === 0
+      ) {
+        await this.markNotificationProcessed(
+          notification.id,
+          "NO_BANK_DETAILS"
+        );
         return;
       }
 
       const metadata = notification.metadata as any;
       const packageName = metadata?.packageName;
+      const senderCode = notification.senderCode || notification.application; // Some notifications may have sender code as application
 
       // Parse notification message
-      const parseResult = this.bankFactory.parseMessage(notification.message, packageName);
-      
+      const parseResult = this.bankFactory.parseMessage(
+        notification.message,
+        packageName,
+        senderCode
+      );
+
       if (!parseResult) {
         await this.markNotificationProcessed(notification.id, "PARSE_FAILED");
         this.stats.failedMatches++;
@@ -208,13 +246,21 @@ export class NotificationAutoProcessorService extends BaseService {
       );
 
       if (!matchedTransaction) {
-        await this.markNotificationProcessed(notification.id, "NO_MATCHING_TXN");
+        await this.markNotificationProcessed(
+          notification.id,
+          "NO_MATCHING_TXN",
+          parsedTx
+        );
         this.stats.failedMatches++;
         return;
       }
 
-      // Update transaction status
-      await this.updateTransactionStatus(matchedTransaction, notification.id);
+      // Update transaction status and notification metadata with parsed amount
+      await this.updateTransactionStatus(
+        matchedTransaction,
+        notification.id,
+        parsedTx
+      );
       this.stats.successfulMatches++;
 
       // Queue callback
@@ -227,7 +273,6 @@ export class NotificationAutoProcessorService extends BaseService {
         amount: parsedTx.amount,
         processingTimeMs: processingTime,
       });
-
     } catch (error) {
       await this.logError("Error processing notification", {
         notificationId: notification.id,
@@ -247,11 +292,15 @@ export class NotificationAutoProcessorService extends BaseService {
     const notificationTime = new Date(notification.createdAt);
 
     // Get all eligible bank details for this device
-    const eligibleBankDetails = notification.Device.bankDetails.filter((bd: any) => {
-      // Match bank type
-      const bankType = this.mapBankNameToType(bankName);
-      return bd.bankType === bankType;
-    });
+    const bankType = this.mapBankNameToType(bankName);
+    const eligibleBankDetails = notification.Device.bankDetails.filter(
+      (bd: any) => {
+        if (bankType) {
+          return bd.bankType === bankType;
+        }
+        return true;
+      }
+    );
 
     if (eligibleBankDetails.length === 0) {
       return null;
@@ -271,7 +320,7 @@ export class NotificationAutoProcessorService extends BaseService {
         },
         traderId: notification.Device.userId,
         createdAt: {
-          gte: new Date(notificationTime.getTime() - 600000), // 10 минут вместо 5
+          gte: new Date(notificationTime.getTime() - 14400000), // 4 часа (240 минут) для поиска старых транзакций
           lte: notificationTime,
         },
       },
@@ -292,27 +341,42 @@ export class NotificationAutoProcessorService extends BaseService {
     return transactions[0];
   }
 
-  private mapBankNameToType(bankName: string): string {
+  private mapBankNameToType(bankName: string): string | undefined {
     const mapping: Record<string, string> = {
-      "Тинькофф": "TBANK",
-      "Сбербанк": "SBERBANK",
-      "ВТБ": "VTB",
+      Тинькофф: "TBANK",
+      Сбербанк: "SBERBANK",
+      ВТБ: "VTB",
       "Альфа-Банк": "ALFABANK",
-      "Газпромбанк": "GAZPROMBANK",
+      Газпромбанк: "GAZPROMBANK",
       "Озон Банк": "OZONBANK",
-      "Открытие": "OTKRITIE",
-      "Совкомбанк": "SOVCOMBANK",
-      "Росбанк": "ROSBANK",
-      "ЮниКредит": "UNICREDIT",
-      "Ситибанк": "CITIBANK",
+      Открытие: "OTKRITIE",
+      Совкомбанк: "SOVCOMBANK",
+      Росбанк: "ROSBANK",
+      ЮниКредит: "UNICREDIT",
+      Ситибанк: "CITIBANK",
       "Русский Стандарт": "RUSSIANSTANDARD",
+      ПСБ: "PSB",
+      "ДОМ.РФ": "DOMRF",
+      "МТС Банк": "MTSBANK",
+      УралСиб: "URALSIB",
+      Райффайзенбанк: "RAIFFEISEN",
+      "Почта Банк": "POCHTABANK",
+      "Банк Санкт-Петербург": "SPBBANK",
+      РНКБ: "RNKB",
+      Россельхозбанк: "ROSSELKHOZBANK",
+      "ОТП Банк": "OTPBANK",
+      "Хоум Кредит": "HOMECREDIT",
       // Add more mappings as needed
     };
 
-    return mapping[bankName] || bankName.toUpperCase().replace(/[\s-]/g, "");
+    return mapping[bankName];
   }
 
-  private async updateTransactionStatus(transaction: any, notificationId: string): Promise<void> {
+  private async updateTransactionStatus(
+    transaction: any,
+    notificationId: string,
+    parsedTx?: any
+  ): Promise<void> {
     await db.$transaction(async (prisma) => {
       // Get full transaction details with trader merchant settings
       const fullTransaction = await prisma.transaction.findUnique({
@@ -321,7 +385,7 @@ export class NotificationAutoProcessorService extends BaseService {
           trader: true,
           merchant: true,
           method: true,
-        }
+        },
       });
 
       if (!fullTransaction || !fullTransaction.traderId) {
@@ -335,22 +399,44 @@ export class NotificationAutoProcessorService extends BaseService {
             traderId: fullTransaction.traderId,
             merchantId: fullTransaction.merchantId,
             methodId: fullTransaction.methodId,
-          }
-        }
+          },
+        },
       });
 
       // Calculate trader profit using the rate field (Rapira rate with KKK)
       // This is the amount the trader spent in USDT to buy RUB
-      const spentUsdt = fullTransaction.rate ? fullTransaction.amount / fullTransaction.rate : 0;
-      
-      // Calculate commission
-      const commissionPercent = traderMerchant?.feeIn || 0;
+      const spentUsdt = fullTransaction.rate
+        ? fullTransaction.amount / fullTransaction.rate
+        : 0;
+
+      // Calculate commission using flexible rates
+      const {
+        getFlexibleFeePercent,
+      } = require("../utils/flexible-fee-calculator");
+      const commissionPercent = await getFlexibleFeePercent(
+        fullTransaction.traderId!,
+        fullTransaction.merchantId,
+        fullTransaction.methodId,
+        fullTransaction.amount,
+        "IN"
+      );
       const commissionUsdt = spentUsdt * (commissionPercent / 100);
-      
+
       // Trader profit = commission earned (truncated to 2 decimal places)
-      const traderProfit = Math.trunc(commissionUsdt * 100) / 100;
-      
-      console.log(`Profit calculation: amount=${fullTransaction.amount}, rate=${fullTransaction.rate}, spentUsdt=${spentUsdt}, commissionPercent=${commissionPercent}, profit=${traderProfit}`);
+      const traderProfit = truncate2(commissionUsdt);
+
+      console.log(
+        `Profit calculation: amount=${fullTransaction.amount}, rate=${fullTransaction.rate}, spentUsdt=${spentUsdt}, commissionPercent=${commissionPercent}, profit=${traderProfit}`
+      );
+
+      // Calculate merchant credit amount (after merchant commission)
+      const merchantCommission = fullTransaction.method.commissionPayin || 0;
+      const netAmount =
+        fullTransaction.amount -
+        (fullTransaction.amount * merchantCommission) / 100;
+      const merchantCreditUsdt = fullTransaction.rate
+        ? netAmount / fullTransaction.rate
+        : 0;
 
       // Update transaction status and profit, and link to notification
       await prisma.transaction.update({
@@ -369,27 +455,52 @@ export class NotificationAutoProcessorService extends BaseService {
         data: {
           // Decrease frozen balance by the amount that was frozen
           frozenUsdt: {
-            decrement: fullTransaction.frozenUsdtAmount || 0
+            decrement: fullTransaction.frozenUsdtAmount || 0,
           },
           // НЕ уменьшаем trustBalance - он уже был уменьшен при заморозке!
           // trustBalance уже был уменьшен в transaction-freezing.ts при создании сделки
           // Increase profit from deals
           profitFromDeals: {
-            increment: traderProfit
+            increment: traderProfit,
           },
-          // Increase deposit (available balance) by the profit
-          deposit: {
-            increment: traderProfit
-          }
-        }
+          // НЕ увеличиваем deposit - прибыль учитывается только в profitFromDeals!
+        },
       });
 
-      // Mark notification as processed
+      // Update merchant balance (credit the merchant with the transaction amount minus commission)
+      if (merchantCreditUsdt > 0) {
+        await prisma.merchant.update({
+          where: { id: fullTransaction.merchantId },
+          data: {
+            balanceUsdt: { increment: merchantCreditUsdt },
+          },
+        });
+
+        console.log(
+          `Merchant ${fullTransaction.merchantId} credited with ${merchantCreditUsdt} USDT`
+        );
+      }
+
+      // Get current notification metadata
+      const notification = await prisma.notification.findUnique({
+        where: { id: notificationId },
+      });
+
+      const currentMetadata = (notification?.metadata as any) || {};
+
+      // Mark notification as processed and update metadata with parsed amount
       await prisma.notification.update({
         where: { id: notificationId },
         data: {
           isProcessed: true,
           updatedAt: new Date(),
+          metadata: {
+            ...currentMetadata,
+            extractedAmount: parsedTx?.amount || 0,
+            bankName: parsedTx?.bankName,
+            senderName: parsedTx?.senderName,
+            processedAt: new Date().toISOString(),
+          },
         },
       });
 
@@ -402,18 +513,187 @@ export class NotificationAutoProcessorService extends BaseService {
         traderId: fullTransaction.traderId,
       });
     });
+
+    // Send callbacks after successful transaction update
+    // Send callback to callbackUri
+    if (
+      transaction.callbackUri &&
+      transaction.callbackUri !== "none" &&
+      transaction.callbackUri !== ""
+    ) {
+      try {
+        const callbackPayload = {
+          id: transaction.orderId,
+          amount: transaction.amount,
+          status: Status.READY,
+        };
+
+        console.log(
+          `[NotificationAutoProcessor] Sending callback to ${transaction.callbackUri}`
+        );
+        const response = await fetch(transaction.callbackUri, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "User-Agent": "Chase/1.0",
+          },
+          body: JSON.stringify(callbackPayload),
+        });
+
+        const responseText = await response.text();
+
+        // Save callback history
+        await db.callbackHistory
+          .create({
+            data: {
+              transactionId: transaction.id,
+              url: transaction.callbackUri,
+              payload: callbackPayload as any,
+              response: responseText,
+              statusCode: response.status,
+              error: response.ok ? null : `HTTP ${response.status}`,
+            },
+          })
+          .catch((err) =>
+            console.error(
+              "[NotificationAutoProcessor] Error saving callback history:",
+              err
+            )
+          );
+
+        if (!response.ok) {
+          console.error(
+            `[NotificationAutoProcessor] Callback failed with status ${response.status}`
+          );
+        } else {
+          console.log(`[NotificationAutoProcessor] Callback sent successfully`);
+        }
+      } catch (error) {
+        console.error(
+          `[NotificationAutoProcessor] Error sending callback:`,
+          error
+        );
+        // Save error to callback history
+        await db.callbackHistory
+          .create({
+            data: {
+              transactionId: transaction.id,
+              url: transaction.callbackUri,
+              payload: {
+                id: transaction.orderId,
+                amount: transaction.amount,
+                status: Status.READY,
+              } as any,
+              error: error instanceof Error ? error.message : String(error),
+            },
+          })
+          .catch((err) =>
+            console.error(
+              "[NotificationAutoProcessor] Error saving callback error history:",
+              err
+            )
+          );
+      }
+    }
+
+    // Send callback to successUri
+    if (
+      transaction.successUri &&
+      transaction.successUri !== "none" &&
+      transaction.successUri !== ""
+    ) {
+      try {
+        const successPayload = {
+          id: transaction.orderId,
+          amount: transaction.amount,
+          status: Status.READY,
+        };
+
+        console.log(
+          `[NotificationAutoProcessor] Sending success callback to ${transaction.successUri}`
+        );
+        const response = await fetch(transaction.successUri, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "User-Agent": "Chase/1.0",
+          },
+          body: JSON.stringify(successPayload),
+        });
+
+        const responseText = await response.text();
+
+        // Save callback history
+        await db.callbackHistory
+          .create({
+            data: {
+              transactionId: transaction.id,
+              url: transaction.successUri,
+              payload: successPayload as any,
+              response: responseText,
+              statusCode: response.status,
+              error: response.ok ? null : `HTTP ${response.status}`,
+            },
+          })
+          .catch((err) =>
+            console.error(
+              "[NotificationAutoProcessor] Error saving success callback history:",
+              err
+            )
+          );
+
+        if (!response.ok) {
+          console.error(
+            `[NotificationAutoProcessor] Success callback failed with status ${response.status}`
+          );
+        } else {
+          console.log(
+            `[NotificationAutoProcessor] Success callback sent successfully`
+          );
+        }
+      } catch (error) {
+        console.error(
+          `[NotificationAutoProcessor] Error sending success callback:`,
+          error
+        );
+        // Save error to callback history
+        await db.callbackHistory
+          .create({
+            data: {
+              transactionId: transaction.id,
+              url: transaction.successUri,
+              payload: {
+                id: transaction.orderId,
+                amount: transaction.amount,
+                status: Status.READY,
+              } as any,
+              error: error instanceof Error ? error.message : String(error),
+            },
+          })
+          .catch((err) =>
+            console.error(
+              "[NotificationAutoProcessor] Error saving success callback error history:",
+              err
+            )
+          );
+      }
+    }
   }
 
-  private async markNotificationProcessed(notificationId: string, reason: string): Promise<void> {
+  private async markNotificationProcessed(
+    notificationId: string,
+    reason: string,
+    parsedTx?: any
+  ): Promise<void> {
     // Get current notification to preserve existing metadata
     const notification = await db.notification.findUnique({
       where: { id: notificationId },
     });
-    
+
     if (!notification) return;
-    
+
     const currentMetadata = (notification.metadata as any) || {};
-    
+
     await db.notification.update({
       where: { id: notificationId },
       data: {
@@ -422,6 +702,9 @@ export class NotificationAutoProcessorService extends BaseService {
           ...currentMetadata,
           processedReason: reason,
           processedAt: new Date().toISOString(),
+          extractedAmount: parsedTx?.amount || 0,
+          bankName: parsedTx?.bankName,
+          senderName: parsedTx?.senderName,
         },
       },
     });
@@ -445,7 +728,7 @@ export class NotificationAutoProcessorService extends BaseService {
 
   private async processCallbackQueue(): Promise<void> {
     while (
-      this.callbackQueue.length > 0 && 
+      this.callbackQueue.length > 0 &&
       this.activeCallbacks < this.config.callbackConcurrency
     ) {
       const task = this.callbackQueue.shift();
@@ -482,7 +765,6 @@ export class NotificationAutoProcessorService extends BaseService {
         callbackUri: transaction.callbackUri,
         attempts: task.attempts,
       });
-
     } catch (error) {
       this.stats.callbacksFailed++;
 
@@ -529,7 +811,7 @@ export class NotificationAutoProcessorService extends BaseService {
 
       if (result.count > 0) {
         this.stats.devicesMarkedOffline += result.count;
-        
+
         await this.logInfo("Devices marked offline", {
           count: result.count,
           threshold: threshold.toISOString(),
@@ -551,11 +833,13 @@ export class NotificationAutoProcessorService extends BaseService {
     };
   }
 
-  protected async updatePublicFields(fields: Record<string, any>): Promise<void> {
+  protected async updatePublicFields(
+    fields: Record<string, any>
+  ): Promise<void> {
     if (fields.config) {
       this.config = ProcessorConfigSchema.parse(fields.config);
       this.interval = this.config.pollIntervalSec * 1000;
-      
+
       // Save to database
       await db.serviceConfig.upsert({
         where: { serviceKey: "notification_auto_processor" },

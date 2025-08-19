@@ -9,9 +9,55 @@ async function verifyEmulationSetup() {
       where: { email: "trader@example.com" },
       include: {
         devices: {
-          include: { bankDetails: true }
+          include: { 
+            bankDetails: {
+              select: {
+                id: true,
+                methodType: true,
+                bankType: true,
+                cardNumber: true,
+                recipientName: true,
+                phoneNumber: true,
+                minAmount: true,
+                maxAmount: true,
+                totalAmountLimit: true,
+                currentTotalAmount: true,
+                operationLimit: true,
+                sumLimit: true,
+                intervalMinutes: true,
+                isArchived: true,
+                isActive: true,
+                createdAt: true,
+                updatedAt: true,
+                deviceId: true,
+                userId: true,
+              },
+            }
+          }
         },
-        bankDetails: true
+        bankDetails: {
+          select: {
+            id: true,
+            methodType: true,
+            bankType: true,
+            cardNumber: true,
+            recipientName: true,
+            phoneNumber: true,
+            minAmount: true,
+            maxAmount: true,
+            totalAmountLimit: true,
+            currentTotalAmount: true,
+            operationLimit: true,
+            sumLimit: true,
+            intervalMinutes: true,
+            isArchived: true,
+            isActive: true,
+            createdAt: true,
+            updatedAt: true,
+            deviceId: true,
+            userId: true,
+          },
+        }
       }
     })
     

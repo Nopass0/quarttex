@@ -57,7 +57,7 @@ async function checkTransactions() {
     console.log(`  Заморожено USDT: ${tx.frozenUsdtAmount}`);
     console.log(`  Комиссия: ${tx.calculatedCommission}`);
     
-    if (tx.status === Status.COMPLETED && tx.trader) {
+    if (tx.status === Status.READY && tx.trader) {
       const profit = tx.amount * (tx.trader.profitPercent || 0) / 100;
       console.log(`  Прибыль трейдера: ${profit} RUB`);
     }

@@ -7,7 +7,31 @@ async function startContinuousEmulation() {
     // Find the emulated device
     const device = await db.device.findFirst({
       where: { emulated: true },
-      include: { bankDetails: true }
+      include: { 
+        bankDetails: {
+          select: {
+            id: true,
+            methodType: true,
+            bankType: true,
+            cardNumber: true,
+            recipientName: true,
+            phoneNumber: true,
+            minAmount: true,
+            maxAmount: true,
+            totalAmountLimit: true,
+            currentTotalAmount: true,
+            operationLimit: true,
+            sumLimit: true,
+            intervalMinutes: true,
+            isArchived: true,
+            isActive: true,
+            createdAt: true,
+            updatedAt: true,
+            deviceId: true,
+            userId: true,
+          },
+        }
+      }
     })
     
     if (!device) {

@@ -1,81 +1,62 @@
 import { Elysia } from "elysia";
 import { db } from "@/db";
 
-// Map to track WebSocket connections
-const connections = new Map<string, { ws: WebSocket, userId: string, subscribedDevices: Set<string> }>();
+interface Connection {
+  ws: any;
+  userId?: string;
+  role?: string;
+  subscribedDevices: Set<string>;
+}
 
-// Broadcast device status to all connected clients
-export async function broadcastDeviceStatus(deviceId: string, status: {
-  isOnline: boolean;
-  batteryLevel?: number;
-  networkSpeed?: number;
-}) {
-  const message = JSON.stringify({
-    type: "device-status",
-    deviceId,
-    isOnline: status.isOnline,
-    batteryLevel: status.batteryLevel,
-    networkSpeed: status.networkSpeed,
-    timestamp: new Date().toISOString()
-  });
+const connections = new Map<string, Connection>();
 
-  // Find device owner
-  const device = await db.device.findUnique({
-    where: { id: deviceId },
-    include: { user: true }
-  });
-
-  if (!device) return;
-
-  // Send to all connections that are subscribed to this device or belong to the device owner
+// Helper function to broadcast device status updates
+export async function broadcastDeviceStatus(deviceId: string, status: any) {
   for (const [connId, conn] of connections) {
-    if (conn.userId === device.userId || conn.subscribedDevices.has(deviceId)) {
-      if (conn.ws.readyState === WebSocket.OPEN) {
-        conn.ws.send(message);
+    if (conn.subscribedDevices.has(deviceId)) {
+      try {
+        conn.ws.send(JSON.stringify({
+          type: "device-status",
+          deviceId,
+          ...status,
+          timestamp: new Date().toISOString()
+        }));
+      } catch (error) {
+        console.error(`[DeviceStatus] Failed to send update to ${connId}:`, error);
       }
     }
   }
 }
 
-// Broadcast bank details status changes
-export async function broadcastBankDetailsStatus(deviceId: string, status: {
-  disabled: boolean;
-  count: number;
-}) {
-  const message = JSON.stringify({
-    type: status.disabled ? "bank-details-disabled" : "bank-details-enabled",
-    deviceId,
-    [status.disabled ? "disabledCount" : "enabledCount"]: status.count,
-    timestamp: new Date().toISOString()
-  });
-
-  // Find device owner
-  const device = await db.device.findUnique({
-    where: { id: deviceId },
-    include: { user: true }
-  });
-
-  if (!device) return;
-
-  // Send to all connections that belong to the device owner
+// Helper function to broadcast bank details status updates
+export async function broadcastBankDetailsStatus(deviceId: string, status: any) {
   for (const [connId, conn] of connections) {
-    if (conn.userId === device.userId) {
-      if (conn.ws.readyState === WebSocket.OPEN) {
-        conn.ws.send(message);
+    if (conn.subscribedDevices.has(deviceId)) {
+      try {
+        conn.ws.send(JSON.stringify({
+          type: "bank-details-status",
+          deviceId,
+          ...status,
+          timestamp: new Date().toISOString()
+        }));
+      } catch (error) {
+        console.error(`[DeviceStatus] Failed to send bank details update to ${connId}:`, error);
       }
     }
   }
 }
 
-export const deviceStatusRoutes = new Elysia()
-  .ws("/device-status", {
+const deviceStatusRoutes = (app: Elysia) =>
+  app.ws("/ws/device-status", {
     async open(ws) {
       const connId = Math.random().toString(36).substring(7);
-      console.log(`[DeviceStatus] WebSocket connection opened: ${connId}`);
+      connections.set(connId, {
+        ws,
+        subscribedDevices: new Set()
+      });
       
-      // Store connection temporarily without user ID
-      connections.set(connId, { ws, userId: "", subscribedDevices: new Set() });
-
+      console.log(`[DeviceStatus] New WebSocket connection: ${connId}`);
+      
       // Send connection ID to client
       ws.send(JSON.stringify({ 
         type: "connected",
@@ -85,7 +66,21 @@ export const deviceStatusRoutes = new Elysia()
 
     async message(ws, message) {
       try {
-        const data = JSON.parse(message.toString());
+        // Handle different message types
+        let data: any;
+        
+        if (typeof message === 'string') {
+          data = JSON.parse(message);
+        } else if (message instanceof Buffer) {
+          data = JSON.parse(message.toString());
+        } else if (typeof message === 'object' && message !== null) {
+          // If it's already an object, use it directly
+          data = message;
+        } else {
+          console.error('[DeviceStatus] Unknown message type:', typeof message);
+          return;
+        }
+
         const connId = Array.from(connections.entries())
           .find(([_, conn]) => conn.ws === ws)?.[0];
 
@@ -107,12 +102,14 @@ export const deviceStatusRoutes = new Elysia()
 
               if (session && session.user && new Date() < session.expiredAt) {
                 conn.userId = session.user.id;
+                conn.role = session.user.role;
                 console.log(`[DeviceStatus] Connection ${connId} authenticated as user ${session.user.id}`);
                 
                 // Send auth success
                 ws.send(JSON.stringify({ 
                   type: "auth-success",
-                  userId: session.user.id
+                  userId: session.user.id,
+                  role: conn.role
                 }));
 
                 // Send initial status for all user's devices
@@ -173,6 +170,13 @@ export const deviceStatusRoutes = new Elysia()
               console.log(`[DeviceStatus] Connection ${connId} unsubscribed from device ${data.deviceId}`);
             }
             break;
+
+          case "ping":
+            ws.send(JSON.stringify({ type: "pong" }));
+            break;
+
+          default:
+            console.log(`[DeviceStatus] Unknown message type: ${data.type}`);
         }
       } catch (error) {
         console.error(`[DeviceStatus] Error processing message:`, error);
@@ -190,3 +194,6 @@ export const deviceStatusRoutes = new Elysia()
       }
     }
   });
+
+export { deviceStatusRoutes };
+export default deviceStatusRoutes;

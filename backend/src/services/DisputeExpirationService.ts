@@ -4,13 +4,13 @@ import { db } from '../db';
 export default class DisputeExpirationService extends BaseService {
   protected interval = 60_000; // Check every minute
   protected displayName = 'Dispute Expiration Service';
-  protected description = 'Automatically closes expired disputes in favor of merchants';
+  protected description = 'Notifies about expired disputes without auto-closing';
   protected tags = ['disputes', 'automation'];
 
   constructor() {
     super({
       displayName: 'Dispute Expiration Service',
-      description: 'Monitors and automatically resolves expired disputes based on timeout settings',
+      description: 'Monitors dispute timeouts and posts system messages when time expires',
       interval: 60_000, // 1 minute
       enabled: true,
       autoStart: true,
@@ -55,9 +55,9 @@ export default class DisputeExpirationService extends BaseService {
 
       if (expiredDealDisputes.length > 0) {
         await this.logInfo(`Found ${expiredDealDisputes.length} expired deal disputes`);
-        
+
         for (const dispute of expiredDealDisputes) {
-          await this.resolveDealDispute(dispute);
+          await this.notifyDealDispute(dispute);
         }
       }
 
@@ -71,18 +71,18 @@ export default class DisputeExpirationService extends BaseService {
 
       if (expiredWithdrawalDisputes.length > 0) {
         await this.logInfo(`Found ${expiredWithdrawalDisputes.length} expired withdrawal disputes`);
-        
+
         for (const dispute of expiredWithdrawalDisputes) {
-          await this.resolveWithdrawalDispute(dispute);
+          await this.notifyWithdrawalDispute(dispute);
         }
       }
 
       // Update public fields with statistics
       await this.updatePublicFieldsInDb({
         lastCheck: new Date().toISOString(),
-        dealDisputesProcessed: expiredDealDisputes.length,
-        withdrawalDisputesProcessed: expiredWithdrawalDisputes.length,
-        totalProcessed: expiredDealDisputes.length + expiredWithdrawalDisputes.length
+        dealDisputesNotified: expiredDealDisputes.length,
+        withdrawalDisputesNotified: expiredWithdrawalDisputes.length,
+        totalNotified: expiredDealDisputes.length + expiredWithdrawalDisputes.length
       });
 
     } catch (error) {
@@ -175,109 +175,86 @@ export default class DisputeExpirationService extends BaseService {
     return expiredDisputes;
   }
 
-  private async resolveDealDispute(dispute: any) {
+  private async notifyDealDispute(dispute: any) {
     try {
-      await this.logInfo(`Resolving expired deal dispute ${dispute.id}`, {
+      await this.logInfo(`Notifying expired deal dispute ${dispute.id}`, {
         dealId: dispute.dealId,
         traderId: dispute.traderId,
         merchantId: dispute.merchantId
       });
 
-      // Start transaction
-      await db.$transaction(async (tx) => {
-        // Update dispute status to resolved in merchant's favor
-        await tx.dealDispute.update({
-          where: { id: dispute.id },
-          data: {
-            status: 'RESOLVED_SUCCESS', // Success means merchant wins
-            resolvedAt: new Date(),
-            resolution: 'Автоматически закрыт в пользу мерчанта из-за истечения времени ответа'
+      const exists = await db.dealDisputeMessage.findFirst({
+        where: {
+          disputeId: dispute.id,
+          senderId: 'system',
+          message: {
+            contains: 'Время на ответ истекло'
           }
-        });
-
-        // Add system message
-        await tx.dealDisputeMessage.create({
-          data: {
-            disputeId: dispute.id,
-            senderId: 'system',
-            senderType: 'ADMIN',
-            message: 'Спор автоматически закрыт в пользу мерчанта из-за истечения времени ответа трейдера.'
-          }
-        });
-
-        // Update transaction status if needed
-        if (dispute.deal.status === 'DISPUTED') {
-          await tx.transaction.update({
-            where: { id: dispute.dealId },
-            data: {
-              status: 'COMPLETED', // Transaction is considered completed for merchant
-              completedAt: new Date()
-            }
-          });
         }
       });
 
-      await this.logInfo(`Successfully resolved deal dispute ${dispute.id} in merchant's favor`);
+      if (exists) {
+        return;
+      }
+
+      await db.dealDisputeMessage.create({
+        data: {
+          disputeId: dispute.id,
+          senderId: 'system',
+          senderType: 'ADMIN',
+          message: 'Время на ответ истекло, спор будет рассмотрен администратором. Переписка может быть продолжена.'
+        }
+      });
+
+      await this.logInfo(`Expiration notice added to deal dispute ${dispute.id}`);
     } catch (error) {
-      await this.logError(`Failed to resolve deal dispute ${dispute.id}`, { error: error.message });
+      await this.logError(`Failed to notify deal dispute ${dispute.id}`, { error: error.message });
     }
   }
 
-  private async resolveWithdrawalDispute(dispute: any) {
+  private async notifyWithdrawalDispute(dispute: any) {
     try {
-      await this.logInfo(`Resolving expired withdrawal dispute ${dispute.id}`, {
+      await this.logInfo(`Notifying expired withdrawal dispute ${dispute.id}`, {
         payoutId: dispute.payoutId,
         traderId: dispute.traderId,
         merchantId: dispute.merchantId
       });
 
-      // Start transaction
-      await db.$transaction(async (tx) => {
-        // Update dispute status to resolved in merchant's favor
-        await tx.withdrawalDispute.update({
-          where: { id: dispute.id },
-          data: {
-            status: 'RESOLVED_SUCCESS', // Success means merchant wins
-            resolvedAt: new Date(),
-            resolution: 'Автоматически закрыт в пользу мерчанта из-за истечения времени ответа'
+      const exists = await db.withdrawalDisputeMessage.findFirst({
+        where: {
+          disputeId: dispute.id,
+          senderId: 'system',
+          message: {
+            contains: 'Время на ответ истекло'
           }
-        });
-
-        // Add system message
-        await tx.withdrawalDisputeMessage.create({
-          data: {
-            disputeId: dispute.id,
-            senderId: 'system',
-            senderType: 'ADMIN',
-            message: 'Спор автоматически закрыт в пользу мерчанта из-за истечения времени ответа трейдера.'
-          }
-        });
-
-        // Update payout status if needed
-        if (dispute.payout.status === 'DISPUTED') {
-          await tx.payout.update({
-            where: { id: dispute.payoutId },
-            data: {
-              status: 'REJECTED', // Payout is rejected
-              rejectedAt: new Date(),
-              rejectionReason: 'Спор закрыт в пользу мерчанта из-за истечения времени ответа'
-            }
-          });
         }
       });
 
-      await this.logInfo(`Successfully resolved withdrawal dispute ${dispute.id} in merchant's favor`);
+      if (exists) {
+        return;
+      }
+
+      await db.withdrawalDisputeMessage.create({
+        data: {
+          disputeId: dispute.id,
+          senderId: 'system',
+          senderType: 'ADMIN',
+          message: 'Время на ответ истекло, спор будет рассмотрен администратором. Переписка может быть продолжена.'
+        }
+      });
+
+      await this.logInfo(`Expiration notice added to withdrawal dispute ${dispute.id}`);
     } catch (error) {
-      await this.logError(`Failed to resolve withdrawal dispute ${dispute.id}`, { error: error.message });
+      await this.logError(`Failed to notify withdrawal dispute ${dispute.id}`, { error: error.message });
     }
   }
 
   protected getPublicFields(): Record<string, any> {
     return {
       lastCheck: this.getSetting('lastCheck', 'Never'),
-      dealDisputesProcessed: this.getSetting('dealDisputesProcessed', 0),
-      withdrawalDisputesProcessed: this.getSetting('withdrawalDisputesProcessed', 0),
-      totalProcessed: this.getSetting('totalProcessed', 0)
+      dealDisputesNotified: this.getSetting('dealDisputesNotified', 0),
+      withdrawalDisputesNotified: this.getSetting('withdrawalDisputesNotified', 0),
+      totalNotified: this.getSetting('totalNotified', 0)
     };
   }
 }

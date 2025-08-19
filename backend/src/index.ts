@@ -15,6 +15,7 @@ import infoRoutes from "@/routes/info";
 import adminRoutes from "@/routes/admin";
 import merchantRoutes from "@/routes/merchant";
 import traderRoutes from "@/routes/trader";
+import aggregatorRoutes from "@/routes/aggregator";
 import deviceRoutes from "@/routes/trader/device";
 import { deviceHealthRoutes } from "@/routes/device-health";
 import { deviceLongPollRoutes } from "@/routes/device-long-poll";
@@ -30,6 +31,9 @@ import { dealDisputeWebSocketRoutes } from "@/routes/websocket/deal-disputes";
 import { devicePingRoutes } from "@/routes/websocket/device-ping";
 import { deviceStatusRoutes } from "@/routes/websocket/device-status";
 import wellbitRoutes from "@/routes/wellbit";
+import wellbitBankMappingRoutes from "@/routes/admin/wellbit-bank-mapping";
+import { callbackTestRoute } from "@/routes/test/callback-test";
+import { callbackProxyRoutes } from "@/routes/callback-proxy";
 
 import { Glob } from "bun";
 import { pathToFileURL } from "node:url";
@@ -159,14 +163,7 @@ for await (const file of glob.scan({ cwd: scanRoot, absolute: true })) {
 
 // Create root app for health endpoint
 const rootApp = new Elysia()
-  .get("/health", () => ({ status: "healthy", timestamp: new Date().toISOString() }));
-
-// Main application instance
-const app = new Elysia({ prefix: "/api" })
-  .derive(() => ({
-    serviceRegistry,
-  }))
-  .use(ip())
+  .get("/health", () => ({ status: "healthy", timestamp: new Date().toISOString() }))
   // Custom static file serving for uploads
   .get("/uploads/*", async ({ params, set }) => {
     const filepath = decodeURIComponent(params["*"]);
@@ -190,6 +187,7 @@ const app = new Elysia({ prefix: "/api" })
       else if (ext === 'png') set.headers['content-type'] = 'image/png';
       else if (ext === 'pdf') set.headers['content-type'] = 'application/pdf';
       else if (ext === 'zip') set.headers['content-type'] = 'application/zip';
+      else if (ext === 'apk') set.headers['content-type'] = 'application/vnd.android.package-archive';
       else set.headers['content-type'] = 'application/octet-stream';
       
       return file;
@@ -198,14 +196,91 @@ const app = new Elysia({ prefix: "/api" })
       return "Error reading file";
     }
   })
+  // Also handle /api/uploads/* requests
+  .get("/api/uploads/*", async ({ params, set }) => {
+    const filepath = decodeURIComponent(params["*"]);
+    const fullPath = join(process.cwd(), "uploads", filepath);
+    
+    console.log(`[API Upload] Requested file: ${filepath}`);
+    console.log(`[API Upload] Full path: ${fullPath}`);
+    console.log(`[API Upload] File exists: ${existsSync(fullPath)}`);
+    
+    if (!existsSync(fullPath)) {
+      set.status = 404;
+      return "File not found";
+    }
+    
+    try {
+      const file = await readFile(fullPath);
+      
+      // Set appropriate content type based on extension
+      const ext = fullPath.split('.').pop()?.toLowerCase();
+      if (ext === 'jpg' || ext === 'jpeg') set.headers['content-type'] = 'image/jpeg';
+      else if (ext === 'png') set.headers['content-type'] = 'image/png';
+      else if (ext === 'pdf') set.headers['content-type'] = 'application/pdf';
+      else if (ext === 'zip') set.headers['content-type'] = 'application/zip';
+      else if (ext === 'apk') set.headers['content-type'] = 'application/vnd.android.package-archive';
+      else set.headers['content-type'] = 'application/octet-stream';
+      
+      return file;
+    } catch (error) {
+      set.status = 500;
+      return "Error reading file";
+    }
+  });
+
+// Main application instance
+const app = new Elysia({ prefix: "/api" })
+  .derive(() => ({
+    serviceRegistry,
+  }))
+  .use(ip())
   .use(cors({
-    origin: true, // Разрешаем все origins в dev режиме
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-trader-token", "x-admin-key", "x-device-token", "x-agent-token", "x-merchant-api-key", "x-api-key", "x-api-token"],
-    exposedHeaders: ["x-trader-token", "x-admin-key", "x-device-token", "x-agent-token", "x-merchant-api-key", "x-api-key", "x-api-token"],
+    origin: (origin) => {
+      // Always allow requests without origin (like Postman, curl, etc.)
+      if (!origin) return true;
+      
+      // Convert to string if needed
+      const originStr = String(origin);
+      
+      // Always allow local development
+      if (originStr.startsWith('http://localhost') || originStr.startsWith('https://localhost')) {
+        return true;
+      }
+      
+      // Allow any origin for callbacks (production domains can be restricted here)
+      return true;
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
+    allowedHeaders: [
+      "Content-Type", 
+      "Authorization", 
+      "authorization",
+      "x-trader-token", 
+      "x-admin-key", 
+      "x-device-token", 
+      "x-agent-token", 
+      "x-merchant-api-key", 
+      "x-api-key", 
+      "x-api-token",
+      "x-aggregator-session-token",
+      "Access-Control-Allow-Origin",
+      "Access-Control-Allow-Methods",
+      "Access-Control-Allow-Headers"
+    ],
+    exposedHeaders: [
+      "x-trader-token", 
+      "x-admin-key", 
+      "x-device-token", 
+      "x-agent-token", 
+      "x-merchant-api-key", 
+      "x-api-key", 
+      "x-api-token",
+      "x-aggregator-session-token"
+    ],
     credentials: true,
     preflight: true,
-    maxAge: 3600
+    maxAge: 86400 // 24 hours
   }))
   
   // Register all service endpoints
@@ -288,6 +363,7 @@ const app = new Elysia({ prefix: "/api" })
     (g) => g.use(adminGuard(MASTER_KEY, ADMIN_IP_WHITELIST)).use(adminRoutes),
   )
   .group("/merchant", (app) => app.use(merchantRoutes))
+  .group("/aggregator", (app) => app.use(aggregatorRoutes))
   .group("/device", (app) => app.use(deviceRoutes))
   .group("/trader", (app) => app.use(traderRoutes))
   .group("/wellbit", (app) => app.use(wellbitRoutes))
@@ -301,7 +377,9 @@ const app = new Elysia({ prefix: "/api" })
   .use(disputeWebSocketRoutes)
   .use(dealDisputeWebSocketRoutes)
   .use(devicePingRoutes)
-  .use(deviceStatusRoutes);
+  .use(deviceStatusRoutes)
+  .use(callbackTestRoute)
+  .use(callbackProxyRoutes);
 
 // Register all service endpoints
 for (const serviceApp of serviceApps) {

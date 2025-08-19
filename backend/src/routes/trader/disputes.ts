@@ -180,7 +180,7 @@ export default new Elysia({ prefix: "/disputes" })
 
           uploadedFiles.push({
             filename: file.name,
-            url: `/uploads/disputes/${filename}`,
+            url: `/api/uploads/disputes/${filename}`,
             size: file.size,
             mimeType: file.type
           });
@@ -266,21 +266,53 @@ export default new Elysia({ prefix: "/disputes" })
         }
       });
 
-      // Update payout status based on resolution
-      if (status === "RESOLVED_SUCCESS") {
-        await db.payout.update({
-          where: { id: dispute.payoutId },
-          data: { status: "CONFIRMED" }
-        });
-      } else if (status === "RESOLVED_FAIL") {
-        await db.payout.update({
-          where: { id: dispute.payoutId },
-          data: { 
-            status: "CANCELLED",
-            cancelReason: resolution
+      // Update payout status based on resolution and handle frozen funds
+      await db.$transaction(async (tx) => {
+        const frozenAmountRub = dispute.payout.amount || 0;
+
+        if (status === "RESOLVED_SUCCESS") {
+          // In favor of merchant - payout is confirmed, remove frozen funds
+          await tx.payout.update({
+            where: { id: dispute.payoutId },
+            data: { status: "CONFIRMED" }
+          });
+
+          // Remove frozen funds without returning to balance (payout goes through)
+          if (frozenAmountRub > 0 && dispute.payout.traderId) {
+            await tx.user.update({
+              where: { id: dispute.payout.traderId },
+              data: {
+                frozenRub: { decrement: frozenAmountRub },
+                frozenPayoutBalance: { decrement: frozenAmountRub }
+              }
+            });
+            console.log(`[WithdrawalDisputeResolution] Merchant won: completed payout of ${frozenAmountRub} RUB for trader ${dispute.payout.traderId}`);
           }
-        });
-      }
+        } else if (status === "RESOLVED_FAIL") {
+          // In favor of trader - payout is cancelled, return frozen funds
+          await tx.payout.update({
+            where: { id: dispute.payoutId },
+            data: { 
+              status: "CANCELLED",
+              cancelReason: resolution
+            }
+          });
+
+          // Return frozen funds to trader's balances
+          if (frozenAmountRub > 0 && dispute.payout.traderId) {
+            await tx.user.update({
+              where: { id: dispute.payout.traderId },
+              data: {
+                frozenRub: { decrement: frozenAmountRub },
+                balanceRub: { increment: frozenAmountRub },
+                frozenPayoutBalance: { decrement: frozenAmountRub },
+                payoutBalance: { increment: frozenAmountRub }
+              }
+            });
+            console.log(`[WithdrawalDisputeResolution] Trader won: returned ${frozenAmountRub} RUB to trader ${dispute.payout.traderId}`);
+          }
+        }
+      });
 
       // Send WebSocket event dispute:resolved
       disputeEvents.notifyResolution(dispute.id, {

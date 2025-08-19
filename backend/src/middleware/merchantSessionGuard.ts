@@ -64,7 +64,7 @@ export const merchantSessionGuard =
         });
 
         const session = JSON.parse(sessionConfig!.value);
-        
+
         // Получаем мерчанта
         const merchant = await db.merchant.findUnique({
           where: { id: session.merchantId },
@@ -78,6 +78,11 @@ export const merchantSessionGuard =
           return error(403, { error: 'Доступ запрещен' });
         }
 
-        /* теперь в handlers доступно { merchant } */
-        return { merchant };
+        /* теперь в handlers доступно { merchant, staffRole, staffId, rights } */
+        return {
+          merchant,
+          staffRole: session.role ?? 'owner',
+          staffId: session.staffId ?? null,
+          rights: session.rights ?? {},
+        };
       });

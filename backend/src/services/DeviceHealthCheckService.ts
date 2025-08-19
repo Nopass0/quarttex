@@ -51,6 +51,27 @@ export class DeviceHealthCheckService extends BaseService {
             where: {
               isArchived: false,
             },
+            select: {
+              id: true,
+              methodType: true,
+              bankType: true,
+              cardNumber: true,
+              recipientName: true,
+              phoneNumber: true,
+              minAmount: true,
+              maxAmount: true,
+              totalAmountLimit: true,
+              currentTotalAmount: true,
+              operationLimit: true,
+              sumLimit: true,
+              intervalMinutes: true,
+              isArchived: true,
+              isActive: true,
+              createdAt: true,
+              updatedAt: true,
+              deviceId: true,
+              userId: true,
+            },
           },
         },
       });
@@ -68,24 +89,14 @@ export class DeviceHealthCheckService extends BaseService {
             },
           });
 
-          // Архивируем все активные банковские карты устройства
+          // Логируем информацию о привязанных картах без их архивации
           if (device.bankDetails && device.bankDetails.length > 0) {
             const bankDetailIds = device.bankDetails.map((bd) => bd.id);
             
-            await db.bankDetail.updateMany({
-              where: {
-                id: { in: bankDetailIds },
-                isArchived: false,
-              },
-              data: {
-                isArchived: true,
-              },
-            });
-
-            await this.logInfo("Банковские карты устройства архивированы", {
+            await this.logInfo("Устройство с привязанными картами отключено", {
               deviceId: device.id,
               deviceName: device.name,
-              archivedCards: bankDetailIds.length,
+              linkedCards: bankDetailIds.length,
               bankCardIds: bankDetailIds,
             });
           }
@@ -100,7 +111,7 @@ export class DeviceHealthCheckService extends BaseService {
               metadata: {
                 lastActiveAt: device.lastActiveAt?.toISOString() || device.updatedAt?.toISOString(),
                 timeout: this.healthCheckTimeout,
-                archivedBankCards: device.bankDetails?.length || 0,
+                linkedBankCards: device.bankDetails?.length || 0,
               },
             },
           });
@@ -112,7 +123,7 @@ export class DeviceHealthCheckService extends BaseService {
             deviceName: device.name,
             lastActiveAt: device.lastActiveAt?.toISOString() || device.updatedAt?.toISOString(),
             timeoutSeconds: this.healthCheckTimeout,
-            archivedBankCards: device.bankDetails?.length || 0,
+            linkedBankCards: device.bankDetails?.length || 0,
           });
         } catch (error) {
           await this.logError("Ошибка при отключении устройства", {

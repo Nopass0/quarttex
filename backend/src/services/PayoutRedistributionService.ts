@@ -54,6 +54,8 @@ const bankNameToEnum: Record<string, BankType> = {
 interface TraderCandidate {
   id: string;
   email: string;
+  payoutBalance: number;
+  frozenPayoutBalance: number;
   balanceRub: number;
   frozenRub: number;
   maxSimultaneousPayouts: number;
@@ -66,6 +68,7 @@ interface TraderCandidate {
 }
 
 export default class PayoutRedistributionService extends BaseService {
+  private static instance: PayoutRedistributionService;
   private readonly BATCH_SIZE = 100; // Process payouts in batches
   private isProcessing = false;
   public readonly autoStart = true; // Enable auto-start
@@ -73,10 +76,17 @@ export default class PayoutRedistributionService extends BaseService {
   private readonly RUN_INTERVAL_MS = 1000; // Run every 1 second
   private traderQueuePosition: Map<string, number> = new Map(); // For round-robin distribution
 
-  constructor() {
+  private constructor() {
     super();
     // Set the tick interval to 1 second for checking
     this.interval = 1000;
+  }
+
+  static getInstance(): PayoutRedistributionService {
+    if (!PayoutRedistributionService.instance) {
+      PayoutRedistributionService.instance = new PayoutRedistributionService();
+    }
+    return PayoutRedistributionService.instance;
   }
 
   protected async onStart(): Promise<void> {
@@ -177,21 +187,21 @@ export default class PayoutRedistributionService extends BaseService {
 
   private async processBatch(payouts: any[]): Promise<number> {
     let assigned = 0;
-    
-    // Get all potential traders with their current payout counts
-    const allTraders = await this.getEligibleTraders();
-    
+
+    // Get all potential traders with their current payout counts and queue positions
+    let allTraders = await this.getEligibleTraders();
+
     // Create a working copy of traders list for round-robin
     let availableTraders = [...allTraders];
-    
+
     for (const payout of payouts) {
-      // Filter traders for this specific payout
-      const suitableTraders = await this.filterSuitableTradersForPayout(payout, availableTraders);
-      
+      // Filter traders for this specific payout while preserving queue order
+      let suitableTraders = await this.filterSuitableTradersForPayout(payout, availableTraders);
+
       if (suitableTraders.length === 0) {
         // No suitable traders from current queue, try with full list
-        const allSuitableTraders = await this.filterSuitableTradersForPayout(payout, allTraders);
-        if (allSuitableTraders.length === 0) {
+        suitableTraders = await this.filterSuitableTradersForPayout(payout, allTraders);
+        if (suitableTraders.length === 0) {
           await this.logInfo(`[PayoutRedistribution] No suitable traders found for payout ${payout.id}`, {
             payoutId: payout.id,
             amount: payout.amount,
@@ -202,33 +212,32 @@ export default class PayoutRedistributionService extends BaseService {
           });
           continue;
         }
-        // Reset available traders for this payout
-        availableTraders = [...allSuitableTraders];
       }
-      
-      // Take the first trader from the queue
-      const trader = availableTraders.shift()!;
-      
+
+      // Take the first suitable trader from the queue
+      const trader = suitableTraders[0];
+
       try {
         await this.assignPayoutToTrader(payout, trader);
         assigned++;
-        
+
         // Update trader's active payout count
         trader.activePayouts++;
-        
-        // Add trader to the end of queue for round-robin
+
+        // Move trader to end of queues for round-robin
+        availableTraders = availableTraders.filter(t => t.id !== trader.id);
         availableTraders.push(trader);
-        
-        // Also update in the main list
-        const traderInMainList = allTraders.find(t => t.id === trader.id);
-        if (traderInMainList) {
-          traderInMainList.activePayouts++;
-        }
+        allTraders = allTraders.filter(t => t.id !== trader.id);
+        allTraders.push(trader);
+
+        // Update persistent queue position
+        const maxPosition = Math.max(0, ...this.traderQueuePosition.values());
+        this.traderQueuePosition.set(trader.id, maxPosition + 1);
       } catch (error) {
         await this.logError(`Failed to assign payout ${payout.id}`, { error });
       }
     }
-    
+
     return assigned;
   }
 
@@ -237,9 +246,6 @@ export default class PayoutRedistributionService extends BaseService {
       where: {
         banned: false,
         trafficEnabled: true,
-        balanceRub: {
-          gt: 0 // Has RUB balance for payouts
-        },
         deposit: {
           gte: 1000 // Minimum deposit requirement
         }
@@ -247,6 +253,8 @@ export default class PayoutRedistributionService extends BaseService {
       select: {
         id: true,
         email: true,
+        payoutBalance: true,
+        frozenPayoutBalance: true,
         balanceRub: true,
         frozenRub: true,
         maxSimultaneousPayouts: true,
@@ -258,7 +266,7 @@ export default class PayoutRedistributionService extends BaseService {
                 OR: [
                   { status: PayoutStatus.ACTIVE },
                   { status: PayoutStatus.CHECKING },
-                  { 
+                  {
                     status: PayoutStatus.CREATED,
                     traderId: { not: null }
                   }
@@ -271,9 +279,24 @@ export default class PayoutRedistributionService extends BaseService {
       }
     });
 
-    await this.logInfo(`[PayoutRedistribution] Found ${traders.length} eligible traders`, {
-      traders: traders.map(t => ({
+    // Initialize queue positions for new traders and sort by position
+    let maxPosition = Math.max(0, ...this.traderQueuePosition.values());
+    for (const trader of traders) {
+      if (!this.traderQueuePosition.has(trader.id)) {
+        this.traderQueuePosition.set(trader.id, ++maxPosition);
+      }
+    }
+
+    const sortedTraders = traders.sort(
+      (a, b) =>
+        (this.traderQueuePosition.get(a.id) || 0) -
+        (this.traderQueuePosition.get(b.id) || 0)
+    );
+
+    await this.logInfo(`[PayoutRedistribution] Found ${sortedTraders.length} eligible traders`, {
+      traders: sortedTraders.map(t => ({
         email: t.email,
+        payoutBalance: t.payoutBalance,
         balanceRub: t.balanceRub,
         activePayouts: t._count.payouts,
         maxSimultaneous: t.maxSimultaneousPayouts,
@@ -281,9 +304,11 @@ export default class PayoutRedistributionService extends BaseService {
       }))
     });
 
-    return traders.map(trader => ({
+    return sortedTraders.map(trader => ({
       id: trader.id,
       email: trader.email,
+      payoutBalance: trader.payoutBalance,
+      frozenPayoutBalance: trader.frozenPayoutBalance,
       balanceRub: trader.balanceRub,
       frozenRub: trader.frozenRub,
       maxSimultaneousPayouts: trader.maxSimultaneousPayouts,
@@ -303,37 +328,56 @@ export default class PayoutRedistributionService extends BaseService {
       });
     }
     
-    // Filter traders based on criteria
-    const eligibleTraders = traders.filter(trader => {
+    const eligibleTraders: TraderCandidate[] = [];
+
+    for (const trader of traders) {
       // Skip if trader has reached simultaneous payout limit
       if (trader.activePayouts >= trader.maxSimultaneousPayouts) {
-        return false;
+        continue;
       }
 
-      // Skip if trader doesn't have enough RUB balance
-      if (trader.balanceRub < payout.amount) {
-        return false;
+      // Check payout balance considering assigned payouts
+      const pendingAmount = await db.payout.aggregate({
+        where: { traderId: trader.id, status: "CREATED" },
+        _sum: { amount: true }
+      });
+      const assignedTotal = pendingAmount._sum.amount || 0;
+      const availableFromPayout =
+        trader.payoutBalance - trader.frozenPayoutBalance;
+      const availableFromRub = trader.balanceRub - trader.frozenRub;
+      const availableBalance = Math.max(
+        availableFromPayout,
+        availableFromRub
+      );
+      if (availableBalance < assignedTotal + payout.amount) {
+        continue;
       }
 
       // Skip if this trader is in the blacklist (previously cancelled this payout)
       if (payout.previousTraderIds && payout.previousTraderIds.includes(trader.id)) {
-        return false;
+        continue;
       }
 
       // Check PayoutBlacklist table
-      const isBlacklisted = payout.blacklistEntries?.some(entry => entry.traderId === trader.id);
+      const isBlacklisted = payout.blacklistEntries?.some(
+        (entry: any) => entry.traderId === trader.id
+      );
       if (isBlacklisted) {
-        return false;
+        continue;
       }
 
-      // Check merchant-trader relationship
+      // Check merchant-trader relationship for specific method
       const merchantRelation = payout.merchant.traderMerchants.find(
-        (tm: any) => tm.traderId === trader.id
+        (tm: any) =>
+          tm.traderId === trader.id &&
+          tm.methodId === payout.methodId &&
+          tm.isMerchantEnabled &&
+          tm.isFeeOutEnabled
       );
 
-      // Skip if trader is not enabled for this merchant
-      if (!merchantRelation?.isMerchantEnabled) {
-        return false;
+      // Skip if no matching relation or payouts disabled
+      if (!merchantRelation) {
+        continue;
       }
 
       // Check trader filters if they exist
@@ -343,7 +387,7 @@ export default class PayoutRedistributionService extends BaseService {
         if (trafficTypes.length > 0) {
           const payoutTrafficType = payout.isCard ? "card" : "sbp";
           if (!trafficTypes.includes(payoutTrafficType)) {
-            return false;
+            continue;
           }
         }
 
@@ -353,19 +397,19 @@ export default class PayoutRedistributionService extends BaseService {
           // Convert payout bank name to enum value for comparison
           const payoutBankEnum = bankNameToEnum[payout.bank];
           if (!payoutBankEnum || !bankTypes.includes(payoutBankEnum)) {
-            return false;
+            continue;
           }
         }
 
         // Check max payout amount
         const maxAmount = trader.filters.maxPayoutAmount || 0;
         if (maxAmount > 0 && payout.amount > maxAmount) {
-          return false;
+          continue;
         }
       }
 
-      return true;
-    });
+      eligibleTraders.push(trader);
+    }
 
     return eligibleTraders;
   }
@@ -420,7 +464,8 @@ export default class PayoutRedistributionService extends BaseService {
         where: { serviceKey: "payout_redistribution_metrics" },
         create: {
           serviceKey: "payout_redistribution_metrics",
-          config: metrics
+          config: metrics,
+          isEnabled: true
         },
         update: {
           config: metrics
@@ -483,5 +528,8 @@ export default class PayoutRedistributionService extends BaseService {
   }
 }
 
-// Register service
-ServiceRegistry.register("PayoutRedistributionService", PayoutRedistributionService);
+// Register service instance for dependency injection
+ServiceRegistry.register(
+  "PayoutRedistributionService",
+  PayoutRedistributionService.getInstance()
+);

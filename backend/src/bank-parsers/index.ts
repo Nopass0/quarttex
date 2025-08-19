@@ -6,3 +6,6 @@ export { VTBParser } from "./VTBParser";
 export { AlfabankParser } from "./AlfabankParser";
 export { GazprombankParser } from "./GazprombankParser";
 export { OzonbankParser } from "./OzonbankParser";
+export { HomeCreditParser } from "./HomeCreditParser";
+export { OTPBankParser } from "./OTPBankParser";
+export { GenericSmsParser } from "./GenericSmsParser";

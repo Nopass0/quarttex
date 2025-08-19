@@ -96,17 +96,18 @@ export default (app: Elysia) =>
           // Save file
           const fileName = `app-${version}-${Date.now()}.apk`;
           const filePath = join(process.cwd(), 'uploads', 'apk', fileName);
-          const fileUrl = `/uploads/apk/${fileName}`;
+          const fileUrl = `/api/uploads/apk/${fileName}`;
           
           // Create uploads directory if it doesn't exist
           const { mkdir } = await import('node:fs/promises');
           await mkdir(join(process.cwd(), 'uploads', 'apk'), { recursive: true });
           
           // Save file to disk
-          await Bun.write(filePath, file);
-          
+          const arrayBuffer = await file.arrayBuffer();
+          await Bun.write(filePath, Buffer.from(arrayBuffer));
+
           // Get file size
-          const fileSize = file.size;
+          const fileSize = arrayBuffer.byteLength;
           
           // Set all versions to non-primary
           await db.appVersion.updateMany({

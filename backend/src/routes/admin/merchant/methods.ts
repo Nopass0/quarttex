@@ -84,7 +84,7 @@ export default (app: Elysia) =>
           chancePayin: t.Number({ description: "Вероятность успеха для входящего платежа" }),
           chancePayout: t.Number({ description: "Вероятность успеха для исходящего платежа" }),
           isEnabled: t.Optional(t.Boolean({ description: "Активен ли метод, по умолчанию true" })),
-          rateSource: t.Optional(t.Enum(RateSource), { description: "Источник курса валют, по умолчанию bybit" }),
+          rateSource: t.Optional(t.Enum(RateSource), { description: "Источник курса валют, по умолчанию bybit (также доступен rapira)" }),
         }),
         response: {
           201: t.Object({

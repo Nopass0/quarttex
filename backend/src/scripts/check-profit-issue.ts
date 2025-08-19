@@ -8,8 +8,7 @@ async function main() {
       type: 'IN',
       OR: [
         { status: Status.IN_PROGRESS },
-        { status: Status.READY },
-        { status: Status.COMPLETED }
+        { status: Status.READY }
       ]
     },
     orderBy: { createdAt: 'desc' },
@@ -29,8 +28,7 @@ async function main() {
   
   const byStatus = {
     IN_PROGRESS: [] as any[],
-    READY: [] as any[],
-    COMPLETED: [] as any[]
+    READY: [] as any[]
   }
   
   transactions.forEach(tx => {
@@ -48,7 +46,6 @@ Trader: ${tx.trader?.name || 'Unknown'}`)
   console.log('\n\nSummary by status:')
   console.log(`IN_PROGRESS: ${byStatus.IN_PROGRESS.length} transactions`)
   console.log(`READY: ${byStatus.READY.length} transactions`)
-  console.log(`COMPLETED: ${byStatus.COMPLETED.length} transactions`)
 
   // Проверяем прибыль трейдера
   const trader = await db.user.findUnique({
@@ -67,9 +64,9 @@ Trader: ${tx.trader?.name || 'Unknown'}`)
   console.log(`Trust balance: ${trader?.trustBalance || 0} USDT`)
   console.log(`Frozen USDT: ${trader?.frozenUsdt || 0} USDT`)
 
-  // Считаем сколько должно быть прибыли от READY/COMPLETED транзакций
+  // Считаем сколько должно быть прибыли от READY транзакций
   const expectedProfit = transactions
-    .filter(tx => tx.status === 'READY' || tx.status === 'COMPLETED')
+    .filter(tx => tx.status === 'READY')
     .filter(tx => tx.traderId === trader?.id)
     .reduce((sum, tx) => sum + (tx.calculatedCommission || 0), 0)
 

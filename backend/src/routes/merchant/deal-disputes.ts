@@ -28,22 +28,24 @@ export const dealDisputesRoutes = new Elysia()
   // Create a new dispute for a deal
   .post("/deal/:dealId", async ({ merchant, params, body, set }) => {
     try {
-      const { message, files } = body;
+      const { message, files: rawFiles } = body;
+      const files = rawFiles
+        ? Array.isArray(rawFiles)
+          ? rawFiles
+          : [rawFiles]
+        : [];
       
       // Check if deal exists and belongs to merchant
       const deal = await db.transaction.findFirst({
         where: {
           id: params.dealId,
-          merchantId: merchant.id,
-          status: {
-            in: [Status.IN_PROGRESS, Status.READY]
-          }
+          merchantId: merchant.id
         }
       });
 
       if (!deal) {
         set.status = 404;
-        return { error: "Deal not found or not eligible for dispute" };
+        return { error: "Deal not found" };
       }
 
       if (!deal.traderId) {
@@ -68,7 +70,7 @@ export const dealDisputesRoutes = new Elysia()
 
       // Process uploaded files
       const uploadedFiles = [];
-      if (files && files.length > 0) {
+      if (files.length > 0) {
         if (files.length > MAX_FILES) {
           set.status = 400;
           return { error: `Maximum ${MAX_FILES} files allowed` };
@@ -90,7 +92,7 @@ export const dealDisputesRoutes = new Elysia()
 
           uploadedFiles.push({
             filename: file.name,
-            url: `/uploads/deal-disputes/${filename}`,
+            url: `/api/uploads/deal-disputes/${filename}`,
             size: file.size,
             mimeType: file.type
           });
@@ -128,11 +130,13 @@ export const dealDisputesRoutes = new Elysia()
         }
       });
 
-      // Update transaction status
-      await db.transaction.update({
-        where: { id: deal.id },
-        data: { status: Status.DISPUTE }
-      });
+      // Update transaction status only if it's in progress
+      if (deal.status === Status.IN_PROGRESS) {
+        await db.transaction.update({
+          where: { id: deal.id },
+          data: { status: Status.DISPUTE }
+        });
+      }
 
       // Send WebSocket event
       dealDisputeEvents.notifyNewDispute(deal.traderId, dispute);
@@ -270,7 +274,12 @@ export const dealDisputesRoutes = new Elysia()
   // Send message in dispute
   .post("/:disputeId/messages", async ({ merchant, params, body, set }) => {
     try {
-      const { message, files } = body;
+      const { message, files: rawFiles } = body;
+      const files = rawFiles
+        ? Array.isArray(rawFiles)
+          ? rawFiles
+          : [rawFiles]
+        : [];
       
       // Check if dispute exists and merchant can send messages
       const dispute = await db.dealDispute.findFirst({
@@ -290,7 +299,7 @@ export const dealDisputesRoutes = new Elysia()
 
       // Process uploaded files
       const uploadedFiles = [];
-      if (files && files.length > 0) {
+      if (files.length > 0) {
         if (files.length > MAX_FILES) {
           set.status = 400;
           return { error: `Maximum ${MAX_FILES} files allowed` };
@@ -312,7 +321,7 @@ export const dealDisputesRoutes = new Elysia()
 
           uploadedFiles.push({
             filename: file.name,
-            url: `/uploads/deal-disputes/${filename}`,
+            url: `/api/uploads/deal-disputes/${filename}`,
             size: file.size,
             mimeType: file.type
           });

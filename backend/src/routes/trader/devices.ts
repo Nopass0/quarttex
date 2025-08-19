@@ -25,7 +25,27 @@ export const devicesRoutes = new Elysia({ prefix: "/devices" })
         where: { userId: trader.id },
         include: {
           bankDetails: {
-            where: { isArchived: false }
+            select: {
+              id: true,
+              methodType: true,
+              bankType: true,
+              cardNumber: true,
+              recipientName: true,
+              phoneNumber: true,
+              minAmount: true,
+              maxAmount: true,
+              totalAmountLimit: true,
+              currentTotalAmount: true,
+              operationLimit: true,
+              sumLimit: true,
+              intervalMinutes: true,
+              isArchived: true,
+              isActive: true,
+              createdAt: true,
+              updatedAt: true,
+              deviceId: true,
+              userId: true
+            }
           },
           notifications: {
             where: { isRead: false }
@@ -108,7 +128,27 @@ export const devicesRoutes = new Elysia({ prefix: "/devices" })
         },
         include: {
           bankDetails: {
-            where: { isArchived: false }
+            select: {
+              id: true,
+              methodType: true,
+              bankType: true,
+              cardNumber: true,
+              recipientName: true,
+              phoneNumber: true,
+              minAmount: true,
+              maxAmount: true,
+              totalAmountLimit: true,
+              currentTotalAmount: true,
+              operationLimit: true,
+              sumLimit: true,
+              intervalMinutes: true,
+              isArchived: true,
+              isActive: true,
+              createdAt: true,
+              updatedAt: true,
+              deviceId: true,
+              userId: true
+            }
           },
           notifications: {
             take: 10,
@@ -174,10 +214,45 @@ export const devicesRoutes = new Elysia({ prefix: "/devices" })
             _sum: { amount: true },
           });
 
+          // Count transactions in progress (CREATED, IN_PROGRESS)
+          const transactionsInProgress = await db.transaction.count({
+            where: {
+              bankDetailId: bd.id,
+              status: { in: ["CREATED", "IN_PROGRESS"] },
+            },
+          });
+
+          // Count ready transactions
+          const transactionsReady = await db.transaction.count({
+            where: {
+              bankDetailId: bd.id,
+              status: "READY",
+            },
+          });
+
+          // Calculate current total amount for sumLimit
+          const currentTotalResult = await db.transaction.aggregate({
+            where: {
+              bankDetailId: bd.id,
+              status: { in: ["CREATED", "IN_PROGRESS", "READY"] },
+            },
+            _sum: { amount: true },
+          });
+
           return {
             ...bd,
             turnoverDay: daySum ?? 0,
             turnoverTotal: totalSum ?? 0,
+            transactionsInProgress,
+            transactionsReady,
+            activeDeals: transactionsInProgress, // Active deals are in progress transactions
+            currentTotalAmount: currentTotalResult._sum.amount || 0,
+            sumLimit: bd.sumLimit || 0,
+            operationLimit: bd.operationLimit || 0,
+            methodType: bd.methodType,
+            method: {
+              type: bd.methodType
+            },
             createdAt: bd.createdAt.toISOString(),
             updatedAt: bd.updatedAt.toISOString(),
           };
@@ -202,7 +277,7 @@ export const devicesRoutes = new Elysia({ prefix: "/devices" })
         isTrusted: false,
         notifications: device.notifications.length,
         linkedBankDetails: linkedBankDetailsWithTurnover,
-        recentNotifications: device.notifications.map(n => ({
+        recentNotifications: device.notifications.slice(0, 50).map(n => ({
           ...n,
           createdAt: n.createdAt.toISOString()
         }))
@@ -293,6 +368,83 @@ export const devicesRoutes = new Elysia({ prefix: "/devices" })
     }
   )
   
+  // Get device notifications with pagination
+  .get(
+    "/:id/notifications",
+    async ({ trader, params, query }) => {
+      const page = parseInt(query.page || '1')
+      const limit = parseInt(query.limit || '50')
+      const offset = (page - 1) * limit
+      
+      const device = await db.device.findFirst({
+        where: { 
+          id: params.id,
+          userId: trader.id
+        }
+      })
+
+      if (!device) {
+        return new Response(JSON.stringify({ error: "Device not found" }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        })
+      }
+
+      const [total, notifications] = await Promise.all([
+        db.notification.count({
+          where: { deviceId: device.id }
+        }),
+        db.notification.findMany({
+          where: { deviceId: device.id },
+          orderBy: { createdAt: 'desc' },
+          skip: offset,
+          take: limit,
+          include: {
+            matchedTransactions: {
+              select: {
+                id: true,
+                amount: true,
+                status: true
+              }
+            }
+          }
+        })
+      ])
+
+      return {
+        notifications: notifications.map(n => ({
+          id: n.id,
+          type: n.type,
+          title: n.title,
+          message: n.message,
+          application: n.application,
+          sender: n.metadata?.sender || null,
+          amount: n.metadata?.amount || null,
+          isRead: n.isRead,
+          isProcessed: n.isProcessed,
+          createdAt: n.createdAt.toISOString(),
+          matchedTransactions: n.matchedTransactions
+        })),
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
+      }
+    },
+    {
+      params: t.Object({ id: t.String() }),
+      query: t.Object({
+        page: t.Optional(t.String()),
+        limit: t.Optional(t.String())
+      }),
+      detail: {
+        tags: ["trader", "devices"],
+        summary: "Get device notifications with pagination"
+      }
+    }
+  )
   
   // Link device to bank detail
   .post(

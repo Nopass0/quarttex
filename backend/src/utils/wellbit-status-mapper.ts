@@ -5,10 +5,10 @@ import { PayoutStatus, Status } from '@prisma/client'
  * Supports both PayoutStatus and Status (Transaction) enums
  * 
  * Internal -> Wellbit mapping:
- * - CREATED, ACTIVE, IN_PROGRESS -> new (платеж создан и в процессе)
- * - CHECKING, COMPLETED, READY -> complete (платеж выполнен)
- * - CANCELLED, EXPIRED, FAILED -> cancel (платеж отменен)
- * - DISPUTED, MILK -> chargeback (возврат средств)
+ * - CREATED, IN_PROGRESS -> new (платеж создан и в процессе)
+ * - READY -> complete (платеж выполнен)
+ * - CANCELED, EXPIRED -> cancel (платеж отменен)
+ * - DISPUTE, MILK -> chargeback (возврат средств)
  */
 export function mapToWellbitStatus(internalStatus: PayoutStatus | Status): string {
   // Handle PayoutStatus enum
@@ -37,20 +37,17 @@ export function mapToWellbitStatus(internalStatus: PayoutStatus | Status): strin
   // Handle Status enum (Transaction)
   switch (internalStatus as Status) {
     case Status.CREATED:
-    case Status.ACTIVE:
     case Status.IN_PROGRESS:
       return 'new'
-    
+
     case Status.READY:
-    case Status.CHECKING:
-    case Status.COMPLETED:
       return 'complete'
-    
-    case Status.FAILED:
+
+    case Status.CANCELED:
     case Status.EXPIRED:
-    case Status.CANCELLED:
       return 'cancel'
-    
+
+    case Status.DISPUTE:
     case Status.MILK:
       return 'chargeback'
     
@@ -105,7 +102,7 @@ export function mapFromWellbitStatusToTransaction(wellbitStatus: string): Status
       return Status.READY
     
     case 'cancel':
-      return Status.CANCELLED
+      return Status.CANCELED
     
     case 'chargeback':
       return Status.MILK

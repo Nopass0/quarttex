@@ -10,10 +10,12 @@ describe("Dispute Expiration Service", () => {
   let testPayout: any;
 
   beforeAll(async () => {
+    const unique = Date.now().toString();
+
     // Create test data
     testTrader = await db.user.create({
       data: {
-        email: "test-dispute-trader@test.com",
+        email: `test-dispute-trader-${unique}@test.com`,
         name: "Test Dispute Trader",
         password: "test123",
         balanceUsdt: 1000,
@@ -27,7 +29,7 @@ describe("Dispute Expiration Service", () => {
     testMerchant = await db.merchant.create({
       data: {
         name: "Test Dispute Merchant",
-        token: "test-dispute-merchant-token",
+        token: `test-dispute-merchant-token-${unique}`,
         balanceUsdt: 5000,
         disabled: false,
         banned: false
@@ -35,27 +37,42 @@ describe("Dispute Expiration Service", () => {
     });
 
     // Create test method
-    const testMethod = await db.paymentMethod.create({
+    const testMethod = await db.method.create({
       data: {
+        code: `test-method-${unique}`,
         name: "Test Method",
-        type: "SBP",
-        currency: "RUB",
-        minAmount: 100,
-        maxAmount: 100000,
-        isActive: true
+        type: "sbp",
+        currency: "rub",
+        commissionPayin: 0,
+        commissionPayout: 0,
+        maxPayin: 100000,
+        minPayin: 100,
+        maxPayout: 100000,
+        minPayout: 100,
+        chancePayin: 1,
+        chancePayout: 1,
+        isEnabled: true
       }
     });
 
     // Create test deal
     testDeal = await db.transaction.create({
       data: {
-        amount: 1000,
-        currency: "RUB",
         merchantId: testMerchant.id,
+        amount: 1000,
+        assetOrBank: "SBERBANK",
+        orderId: `order-${unique}`,
+        userId: testTrader.id,
+        callbackUri: "http://example.com/cb",
+        successUri: "http://example.com/success",
+        failUri: "http://example.com/fail",
+        expired_at: new Date(Date.now() + 60 * 60 * 1000),
+        commission: 0,
+        clientName: "Test Client",
+        status: "DISPUTE",
+        currency: "RUB",
         traderId: testTrader.id,
-        methodId: testMethod.id,
-        methodName: testMethod.name,
-        status: "DISPUTED"
+        methodId: testMethod.id
       }
     });
 
@@ -66,8 +83,15 @@ describe("Dispute Expiration Service", () => {
         traderId: testTrader.id,
         methodId: testMethod.id,
         amount: 500,
-        currency: "RUB",
-        status: "DISPUTED"
+        amountUsdt: 5,
+        total: 500,
+        totalUsdt: 5,
+        rate: 100,
+        wallet: "test-wallet",
+        bank: "SBERBANK",
+        isCard: true,
+        expireAt: new Date(Date.now() + 60 * 60 * 1000),
+        status: "DISPUTE"
       }
     });
 
@@ -95,7 +119,7 @@ describe("Dispute Expiration Service", () => {
     await db.user.delete({ where: { id: testTrader.id } });
   });
 
-  test("should expire deal disputes after timeout", async () => {
+  test("should notify about expired deal disputes", async () => {
     // Set dispute timeout to 1 minute for testing
     await db.systemConfig.upsert({
       where: { key: "disputeDayShiftTimeoutMinutes" },
@@ -105,6 +129,7 @@ describe("Dispute Expiration Service", () => {
 
     // Create an expired dispute (created 2 minutes ago)
     const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+    twoMinutesAgo.setHours(12);
     const expiredDispute = await db.dealDispute.create({
       data: {
         dealId: testDeal.id,
@@ -115,34 +140,35 @@ describe("Dispute Expiration Service", () => {
       }
     });
 
-    // Run the service tick
-    await (service as any).tick();
+    try {
+      // Run the service tick
+      await (service as any).tick();
 
-    // Check that the dispute was resolved
-    const updatedDispute = await db.dealDispute.findUnique({
-      where: { id: expiredDispute.id }
-    });
+      // Check that the dispute was NOT closed
+      const updatedDispute = await db.dealDispute.findUnique({
+        where: { id: expiredDispute.id }
+      });
 
-    expect(updatedDispute?.status).toBe("RESOLVED_SUCCESS");
-    expect(updatedDispute?.resolution).toContain("автоматически закрыт");
-    expect(updatedDispute?.resolvedAt).toBeTruthy();
+      expect(updatedDispute?.status).toBe("OPEN");
+      expect(updatedDispute?.resolvedAt).toBeFalsy();
 
-    // Check that a system message was added
-    const messages = await db.dealDisputeMessage.findMany({
-      where: { disputeId: expiredDispute.id }
-    });
-    
-    expect(messages.length).toBeGreaterThan(0);
-    expect(messages[0].senderType).toBe("ADMIN");
-    expect(messages[0].message).toContain("автоматически закрыт");
+      // Check that a system message was added
+      const messages = await db.dealDisputeMessage.findMany({
+        where: { disputeId: expiredDispute.id }
+      });
 
-    // Clean up
-    await db.dealDisputeMessage.deleteMany({
-      where: { disputeId: expiredDispute.id }
-    });
-    await db.dealDispute.delete({
-      where: { id: expiredDispute.id }
-    });
+      expect(messages.length).toBeGreaterThan(0);
+      expect(messages[0].senderType).toBe("ADMIN");
+      expect(messages[0].message).toContain("Время на ответ истекло");
+    } finally {
+      // Clean up
+      await db.dealDisputeMessage.deleteMany({
+        where: { disputeId: expiredDispute.id }
+      });
+      await db.dealDispute.delete({
+        where: { id: expiredDispute.id }
+      });
+    }
   });
 
   test("should not expire disputes within timeout period", async () => {
@@ -155,6 +181,7 @@ describe("Dispute Expiration Service", () => {
 
     // Create a recent dispute (created 5 minutes ago)
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    fiveMinutesAgo.setHours(12);
     const recentDispute = await db.dealDispute.create({
       data: {
         dealId: testDeal.id,
@@ -165,24 +192,26 @@ describe("Dispute Expiration Service", () => {
       }
     });
 
-    // Run the service tick
-    await (service as any).tick();
+    try {
+      // Run the service tick
+      await (service as any).tick();
 
-    // Check that the dispute was NOT resolved
-    const updatedDispute = await db.dealDispute.findUnique({
-      where: { id: recentDispute.id }
-    });
+      // Check that the dispute was NOT resolved
+      const updatedDispute = await db.dealDispute.findUnique({
+        where: { id: recentDispute.id }
+      });
 
-    expect(updatedDispute?.status).toBe("OPEN");
-    expect(updatedDispute?.resolvedAt).toBeFalsy();
-
-    // Clean up
-    await db.dealDispute.delete({
-      where: { id: recentDispute.id }
-    });
+      expect(updatedDispute?.status).toBe("OPEN");
+      expect(updatedDispute?.resolvedAt).toBeFalsy();
+    } finally {
+      // Clean up
+      await db.dealDispute.delete({
+        where: { id: recentDispute.id }
+      });
+    }
   });
 
-  test("should expire withdrawal disputes after timeout", async () => {
+  test("should notify about expired withdrawal disputes", async () => {
     // Set dispute timeout to 1 minute for testing
     await db.systemConfig.upsert({
       where: { key: "disputeNightShiftTimeoutMinutes" },
@@ -204,23 +233,34 @@ describe("Dispute Expiration Service", () => {
       }
     });
 
-    // Run the service tick
-    await (service as any).tick();
+    try {
+      // Run the service tick
+      await (service as any).tick();
 
-    // Check that the dispute was resolved
-    const updatedDispute = await db.withdrawalDispute.findUnique({
-      where: { id: expiredDispute.id }
-    });
+      // Check that the dispute was NOT closed
+      const updatedDispute = await db.withdrawalDispute.findUnique({
+        where: { id: expiredDispute.id }
+      });
 
-    expect(updatedDispute?.status).toBe("RESOLVED_SUCCESS");
-    expect(updatedDispute?.resolution).toContain("автоматически закрыт");
+      expect(updatedDispute?.status).toBe("OPEN");
+      expect(updatedDispute?.resolvedAt).toBeFalsy();
 
-    // Clean up
-    await db.withdrawalDisputeMessage.deleteMany({
-      where: { disputeId: expiredDispute.id }
-    });
-    await db.withdrawalDispute.delete({
-      where: { id: expiredDispute.id }
-    });
+      // Ensure a system message exists
+      const messages = await db.withdrawalDisputeMessage.findMany({
+        where: { disputeId: expiredDispute.id }
+      });
+
+      expect(messages.length).toBeGreaterThan(0);
+      expect(messages[0].senderType).toBe("ADMIN");
+      expect(messages[0].message).toContain("Время на ответ истекло");
+    } finally {
+      // Clean up
+      await db.withdrawalDisputeMessage.deleteMany({
+        where: { disputeId: expiredDispute.id }
+      });
+      await db.withdrawalDispute.delete({
+        where: { id: expiredDispute.id }
+      });
+    }
   });
 });

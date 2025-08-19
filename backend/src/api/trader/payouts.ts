@@ -377,8 +377,8 @@ export const traderPayoutsApi = new Elysia({ prefix: "/payouts" })
       const user = await db.user.findUnique({
         where: { id: trader.id },
         select: {
-          balanceRub: true,
-          frozenRub: true,
+          payoutBalance: true,
+          frozenPayoutBalance: true,
         },
       });
 
@@ -390,9 +390,9 @@ export const traderPayoutsApi = new Elysia({ prefix: "/payouts" })
       return {
         success: true,
         balance: {
-          available: user.balanceRub,
-          frozen: user.frozenRub,
-          total: user.balanceRub + user.frozenRub,
+          available: user.payoutBalance,
+          frozen: user.frozenPayoutBalance,
+          total: user.payoutBalance + user.frozenPayoutBalance,
         },
       };
     } catch (error: any) {
@@ -400,27 +400,29 @@ export const traderPayoutsApi = new Elysia({ prefix: "/payouts" })
       return { error: error.message };
     }
   })
-  
+
   // Update payout balance
   .put(
     "/balance",
     async ({ body, trader, set }) => {
-
       const user = await db.user.update({
         where: { id: trader.id },
-        data: { balanceRub: body.balance },
+        data: {
+          payoutBalance: body.balance,
+          balanceRub: body.balance,
+        },
         select: {
-          balanceRub: true,
-          frozenRub: true,
+          payoutBalance: true,
+          frozenPayoutBalance: true,
         },
       });
 
       return {
         success: true,
         balance: {
-          available: user.balanceRub,
-          frozen: user.frozenRub,
-          total: user.balanceRub + user.frozenRub,
+          available: user.payoutBalance,
+          frozen: user.frozenPayoutBalance,
+          total: user.payoutBalance + user.frozenPayoutBalance,
         },
       };
     },

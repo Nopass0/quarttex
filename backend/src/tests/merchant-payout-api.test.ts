@@ -12,12 +12,16 @@ describe("Merchant Payout API Tests", () => {
   let merchant: any;
   let trader: any;
   let apiKey: string;
+  let method: any;
   
   beforeAll(async () => {
     await cleanupTestData();
     merchant = await createTestMerchant();
     trader = await createTestTrader();
     apiKey = merchant.token;
+    method = await db.method.findFirst({
+      where: { merchantMethods: { some: { merchantId: merchant.id } } },
+    });
     
     // Create test app with the API
     app = new Elysia()
@@ -42,6 +46,7 @@ describe("Merchant Payout API Tests", () => {
             wallet: "41001234567890",
             bank: "SBER",
             isCard: true,
+            methodId: method.id,
             merchantRate: 100,
             externalReference: "API-TEST-001",
             webhookUrl: "https://example.com/webhook",
@@ -72,6 +77,7 @@ describe("Merchant Payout API Tests", () => {
             wallet: "41001234567890",
             bank: "SBER",
             isCard: true,
+            methodId: method.id,
             merchantRate: 100,
           }),
         })
@@ -95,6 +101,7 @@ describe("Merchant Payout API Tests", () => {
             wallet: "41001234567890",
             bank: "SBER",
             isCard: true,
+            methodId: method.id,
             merchantRate: 100,
           }),
         })
@@ -112,6 +119,7 @@ describe("Merchant Payout API Tests", () => {
         wallet: "41001234567890",
         bank: "SBER",
         isCard: true,
+        methodId: method.id,
         merchantRate: 100,
       });
       
@@ -139,6 +147,7 @@ describe("Merchant Payout API Tests", () => {
         wallet: "41001234567890",
         bank: "SBER",
         isCard: true,
+        methodId: method.id,
         merchantRate: 100,
       });
       

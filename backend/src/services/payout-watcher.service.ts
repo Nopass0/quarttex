@@ -57,51 +57,52 @@ export default class PayoutWatcherService extends BaseService {
     for (const payout of expiredPayouts) {
       try {
         if (payout.status === "ACTIVE" && payout.traderId) {
-          // Active payout with trader - return to pool and unfreeze balance
-          const amountRUB = payout.amount;
-          
-          // Return to pool with transaction
-          await db.$transaction([
-            // Return payout to pool
-            db.payout.update({
-              where: { id: payout.id },
-              data: { 
-                status: "CREATED",
-                trader: { disconnect: true },
-                acceptedAt: null,
-                confirmedAt: null,
-                sumToWriteOffUSDT: null,
-                // Add trader to previousTraderIds to prevent reassignment
-                previousTraderIds: {
-                  push: payout.traderId,
-                },
-                // Keep disputeFiles and disputeMessage to show history
-                // Reset expiration to original timeout
-                expireAt: new Date(Date.now() + payout.acceptanceTime * 60 * 1000),
-              },
-            }),
-            // Unfreeze RUB balance
-            db.user.update({
-              where: { id: payout.traderId },
-              data: {
-                frozenRub: { decrement: amountRUB },
-                balanceRub: { increment: amountRUB },
-              },
-            }),
-          ]);
-          
-          this.log("INFO", `Expired ACTIVE payout ${payout.numericId} returned to pool from trader ${payout.trader?.numericId}`);
-          
+          // Active payout with trader - mark as expired but keep funds frozen
+          await db.payout.update({
+            where: { id: payout.id },
+            data: {
+              status: "EXPIRED",
+              expireAt: new Date(),
+            },
+          });
+
+          this.log(
+            "INFO",
+            `Expired ACTIVE payout ${payout.numericId} for trader ${payout.trader?.numericId}`
+          );
+
           // TODO: Send WebSocket notification to remove from trader UI
           // broadcastPayoutUpdate(payout.id, "RETURNED_TO_POOL", payout, payout.merchantId, payout.traderId);
         } else if (payout.status === "CREATED") {
-          // Created payout that nobody claimed - mark as EXPIRED
-          await db.payout.update({
-            where: { id: payout.id },
-            data: { status: "EXPIRED" },
-          });
-          
-          this.log("INFO", `Expired unclaimed payout ${payout.numericId}`);
+          const newExpireAt = new Date(
+            Date.now() + payout.acceptanceTime * 60 * 1000
+          );
+          if (payout.traderId) {
+            // Return to pool and remember previous trader
+            await db.payout.update({
+              where: { id: payout.id },
+              data: {
+                traderId: null,
+                acceptedAt: null,
+                expireAt: newExpireAt,
+                status: "CREATED",
+                previousTraderIds: {
+                  push: payout.traderId,
+                },
+              },
+            });
+            this.log(
+              "INFO",
+              `Returned unaccepted payout ${payout.numericId} to pool`
+            );
+          } else {
+            // Extend expiration for unassigned payout
+            await db.payout.update({
+              where: { id: payout.id },
+              data: { expireAt: newExpireAt },
+            });
+            this.log("INFO", `Extended expiration for payout ${payout.numericId}`);
+          }
         }
       } catch (error) {
         this.log("ERROR", `Failed to expire payout ${payout.id}`, { error });

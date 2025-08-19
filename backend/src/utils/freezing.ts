@@ -24,13 +24,14 @@ export function floorDown2(value: number): number {
  * @returns скорректированный курс, округленный вниз до сотых
  */
 export function calculateAdjustedRate(
-  rateMerchant: number, 
+  rateMerchant: number,
   kkkPercent: number,
-  kkkOperation: 'PLUS' | 'MINUS' = 'MINUS'
+  kkkOperation: "PLUS" | "MINUS" = "MINUS"
 ): number {
-  const adjusted = kkkOperation === 'PLUS' 
-    ? rateMerchant * (1 + kkkPercent / 100)
-    : rateMerchant * (1 - kkkPercent / 100);
+  const adjusted =
+    kkkOperation === "PLUS"
+      ? rateMerchant * (1 + kkkPercent / 100)
+      : rateMerchant * (1 - kkkPercent / 100);
   return floorDown2(adjusted);
 }
 
@@ -38,9 +39,14 @@ export function calculateAdjustedRate(
  * Расчет количества USDT для заморозки
  * @param amountRub - сумма в рублях
  * @param adjustedRate - скорректированный курс
- * @returns количество USDT для заморозки
+ * @returns количество USDT для заморозки (обрезано до 2 знаков)
  */
-export function calculateFrozenUsdt(amountRub: number, adjustedRate: number): number {
+export function calculateFrozenUsdt(
+  amountRub: number,
+  adjustedRate: number
+): number {
+  // Используем ceilUp2 для округления вверх до 2 знаков после запятой
+  // Например: 0.0098 -> 0.01
   return ceilUp2(amountRub / adjustedRate);
 }
 
@@ -48,10 +54,14 @@ export function calculateFrozenUsdt(amountRub: number, adjustedRate: number): nu
  * Расчет комиссии в USDT
  * @param frozenUsdt - количество замороженных USDT
  * @param feeInPercent - процент комиссии на ввод
- * @returns комиссия в USDT
+ * @returns комиссия в USDT (обрезано до 2 знаков)
  */
-export function calculateCommissionUsdt(frozenUsdt: number, feeInPercent: number): number {
-  return ceilUp2(frozenUsdt * feeInPercent / 100);
+export function calculateCommissionUsdt(
+  frozenUsdt: number,
+  feeInPercent: number
+): number {
+  // Используем ceilUp2 для округления вверх до 2 знаков после запятой
+  return ceilUp2((frozenUsdt * feeInPercent) / 100);
 }
 
 /**
@@ -68,23 +78,31 @@ export function calculateFreezingParams(
   rateMerchant: number,
   kkkPercent: number,
   feeInPercent: number,
-  kkkOperation: 'PLUS' | 'MINUS' = 'MINUS'
+  kkkOperation: "PLUS" | "MINUS" = "MINUS"
 ): {
   adjustedRate: number;
   frozenUsdtAmount: number;
   calculatedCommission: number;
   totalRequired: number;
 } {
-  const adjustedRate = calculateAdjustedRate(rateMerchant, kkkPercent, kkkOperation);
+  const adjustedRate = calculateAdjustedRate(
+    rateMerchant,
+    kkkPercent,
+    kkkOperation
+  );
   const frozenUsdtAmount = calculateFrozenUsdt(amountRub, adjustedRate);
-  const calculatedCommission = calculateCommissionUsdt(frozenUsdtAmount, feeInPercent);
-  const totalRequired = frozenUsdtAmount + calculatedCommission;
+  const calculatedCommission = calculateCommissionUsdt(
+    frozenUsdtAmount,
+    feeInPercent
+  );
+  // Округляем totalRequired вверх до 2 знаков после запятой
+  const totalRequired = ceilUp2(frozenUsdtAmount + calculatedCommission);
 
   return {
     adjustedRate,
     frozenUsdtAmount,
     calculatedCommission,
-    totalRequired
+    totalRequired,
   };
 }
 
@@ -94,7 +112,7 @@ export function calculateFreezingParams(
  * @param calculatedCommission - рассчитанная комиссия
  * @param amountRub - сумма в рублях
  * @param actualRate - фактический курс выполнения
- * @returns прибыль трейдера в USDT
+ * @returns прибыль трейдера в USDT (обрезано до 2 знаков)
  */
 export function calculateTraderProfit(
   frozenUsdtAmount: number,
@@ -102,11 +120,7 @@ export function calculateTraderProfit(
   amountRub: number,
   actualRate: number
 ): number {
-  // Фактически потраченная сумма USDT
-  const actualSpent = ceilUp2(amountRub / actualRate);
-  
-  // Прибыль = (замороженная сумма - фактически потраченная) + комиссия
-  const profit = (frozenUsdtAmount - actualSpent) + calculatedCommission;
-  
-  return Math.max(0, profit); // Прибыль не может быть отрицательной
+  // Прибыль трейдера = комиссия от сделки
+  // Комиссия уже рассчитана как процент от замороженной суммы
+  return floorDown2(Math.max(0, calculatedCommission)); // Прибыль не может быть отрицательной
 }

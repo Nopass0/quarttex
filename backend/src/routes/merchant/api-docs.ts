@@ -833,6 +833,333 @@ export default (app: Elysia) =>
                 },
               },
             },
+            {
+              id: "create-deal-dispute",
+              method: "POST",
+              path: "/merchant/deal-disputes/deal/:dealId",
+              description: "Создание спора по сделке (транзакции)",
+              category: "Споры по сделкам",
+              parameters: [
+                {
+                  name: "dealId",
+                  type: "string",
+                  required: true,
+                  description: "ID сделки (транзакции)",
+                  example: "tx123",
+                  in: "path",
+                },
+                {
+                  name: "message",
+                  type: "string",
+                  required: true,
+                  description: "Сообщение спора",
+                  example: "Не получил платеж от клиента",
+                },
+                {
+                  name: "files",
+                  type: "array",
+                  required: false,
+                  description: "Массив файлов (до 10 файлов, максимум 20MB каждый)",
+                  example: "Файлы в формате multipart/form-data",
+                },
+              ],
+              response: {
+                example: {
+                  success: true,
+                  dispute: {
+                    id: "dispute123",
+                    dealId: "tx123",
+                    merchantId: "merchant123",
+                    traderId: "trader123",
+                    status: "OPEN",
+                    createdAt: "2024-01-01T10:00:00.000Z",
+                    messages: [
+                      {
+                        id: "msg123",
+                        message: "Не получил платеж от клиента",
+                        senderType: "MERCHANT",
+                        attachments: []
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              id: "get-deal-disputes",
+              method: "GET",
+              path: "/merchant/deal-disputes",
+              description: "Получение списка споров по сделкам",
+              category: "Споры по сделкам",
+              parameters: [
+                {
+                  name: "page",
+                  type: "string",
+                  required: false,
+                  description: "Номер страницы",
+                  example: "1",
+                  in: "query",
+                },
+                {
+                  name: "limit",
+                  type: "string",
+                  required: false,
+                  description: "Количество на странице",
+                  example: "20",
+                  in: "query",
+                },
+                {
+                  name: "status",
+                  type: "string",
+                  required: false,
+                  description: "Фильтр по статусу",
+                  example: "OPEN",
+                  in: "query",
+                },
+              ],
+              response: {
+                example: {
+                  success: true,
+                  data: [],
+                  pagination: {
+                    page: 1,
+                    limit: 20,
+                    total: 0,
+                    totalPages: 0
+                  }
+                }
+              }
+            },
+            {
+              id: "get-deal-dispute",
+              method: "GET",
+              path: "/merchant/deal-disputes/:disputeId",
+              description: "Получение деталей спора по сделке",
+              category: "Споры по сделкам",
+              parameters: [
+                {
+                  name: "disputeId",
+                  type: "string",
+                  required: true,
+                  description: "ID спора",
+                  example: "dispute123",
+                  in: "path",
+                },
+              ],
+              response: {
+                example: {
+                  success: true,
+                  data: {
+                    id: "dispute123",
+                    dealId: "tx123",
+                    status: "OPEN",
+                    messages: []
+                  }
+                }
+              }
+            },
+            {
+              id: "send-deal-dispute-message",
+              method: "POST",
+              path: "/merchant/deal-disputes/:disputeId/messages",
+              description: "Отправка сообщения в споре по сделке",
+              category: "Споры по сделкам",
+              parameters: [
+                {
+                  name: "disputeId",
+                  type: "string",
+                  required: true,
+                  description: "ID спора",
+                  example: "dispute123",
+                  in: "path",
+                },
+                {
+                  name: "message",
+                  type: "string",
+                  required: true,
+                  description: "Текст сообщения",
+                  example: "Вот дополнительные доказательства",
+                },
+                {
+                  name: "files",
+                  type: "array",
+                  required: false,
+                  description: "Массив файлов (до 10 файлов, максимум 20MB каждый)",
+                  example: "Файлы в формате multipart/form-data",
+                },
+              ],
+              response: {
+                example: {
+                  success: true,
+                  message: {
+                    id: "msg124",
+                    message: "Вот дополнительные доказательства",
+                    senderType: "MERCHANT",
+                    attachments: []
+                  }
+                }
+              }
+            },
+            {
+              id: "create-payout-dispute-api",
+              method: "POST",
+              path: "/merchant/payout-disputes/payout/:payoutId",
+              description: "Создание спора по выплате через API",
+              category: "Споры по выплатам",
+              parameters: [
+                {
+                  name: "payoutId",
+                  type: "string",
+                  required: true,
+                  description: "ID выплаты",
+                  example: "payout123",
+                  in: "path",
+                },
+                {
+                  name: "message",
+                  type: "string",
+                  required: true,
+                  description: "Сообщение спора",
+                  example: "Не получил средства на карту",
+                },
+                {
+                  name: "files",
+                  type: "array",
+                  required: false,
+                  description: "Массив файлов (до 10 файлов, максимум 20MB каждый)",
+                  example: "Файлы в формате multipart/form-data",
+                },
+              ],
+              response: {
+                example: {
+                  success: true,
+                  dispute: {
+                    id: "dispute456",
+                    payoutId: "payout123",
+                    merchantId: "merchant123",
+                    traderId: "trader123",
+                    status: "OPEN",
+                    createdAt: "2024-01-01T10:00:00.000Z",
+                    messages: []
+                  }
+                }
+              }
+            },
+            {
+              id: "get-payout-disputes",
+              method: "GET",
+              path: "/merchant/payout-disputes/payouts",
+              description: "Получение списка споров по выплатам",
+              category: "Споры по выплатам",
+              parameters: [
+                {
+                  name: "page",
+                  type: "string",
+                  required: false,
+                  description: "Номер страницы",
+                  example: "1",
+                  in: "query",
+                },
+                {
+                  name: "limit",
+                  type: "string",
+                  required: false,
+                  description: "Количество на странице",
+                  example: "20",
+                  in: "query",
+                },
+                {
+                  name: "status",
+                  type: "string",
+                  required: false,
+                  description: "Фильтр по статусу",
+                  example: "OPEN",
+                  in: "query",
+                },
+              ],
+              response: {
+                example: {
+                  success: true,
+                  data: [],
+                  pagination: {
+                    page: 1,
+                    limit: 20,
+                    total: 0,
+                    totalPages: 0
+                  }
+                }
+              }
+            },
+            {
+              id: "get-payout-dispute",
+              method: "GET",
+              path: "/merchant/payout-disputes/dispute/:disputeId",
+              description: "Получение деталей спора по выплате",
+              category: "Споры по выплатам",
+              parameters: [
+                {
+                  name: "disputeId",
+                  type: "string",
+                  required: true,
+                  description: "ID спора",
+                  example: "dispute456",
+                  in: "path",
+                },
+              ],
+              response: {
+                example: {
+                  success: true,
+                  data: {
+                    id: "dispute456",
+                    payoutId: "payout123",
+                    status: "OPEN",
+                    messages: []
+                  }
+                }
+              }
+            },
+            {
+              id: "send-payout-dispute-message",
+              method: "POST",
+              path: "/merchant/payout-disputes/dispute/:disputeId/messages",
+              description: "Отправка сообщения в споре по выплате",
+              category: "Споры по выплатам",
+              parameters: [
+                {
+                  name: "disputeId",
+                  type: "string",
+                  required: true,
+                  description: "ID спора",
+                  example: "dispute456",
+                  in: "path",
+                },
+                {
+                  name: "message",
+                  type: "string",
+                  required: true,
+                  description: "Текст сообщения",
+                  example: "Прикладываю скриншот транзакции",
+                },
+                {
+                  name: "files",
+                  type: "array",
+                  required: false,
+                  description: "Массив файлов (до 10 файлов, максимум 20MB каждый)",
+                  example: "Файлы в формате multipart/form-data",
+                },
+              ],
+              response: {
+                example: {
+                  success: true,
+                  message: {
+                    id: "msg125",
+                    message: "Прикладываю скриншот транзакции",
+                    senderType: "MERCHANT",
+                    attachments: []
+                  }
+                }
+              }
+            },
           ],
           webhooks: {
             description: "Система автоматически отправляет уведомления при изменении статуса транзакций и выплат",

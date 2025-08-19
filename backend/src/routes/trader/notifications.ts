@@ -2,6 +2,7 @@ import { Elysia, t } from "elysia";
 import { db } from "@/db";
 import ErrorSchema from "@/types/error";
 import { NotificationType } from "@prisma/client";
+import { truncate2 } from "@/utils/rounding";
 
 /* ---------- DTOs ---------- */
 const NotificationDTO = t.Object({
@@ -31,7 +32,7 @@ const NotificationDTO = t.Object({
 
 /* ---------- Routes ---------- */
 export const notificationRoutes = new Elysia({ prefix: "/notifications" })
-  
+
   /* ---------- GET /trader/notifications - список уведомлений ---------- */
   .get(
     "/",
@@ -46,7 +47,7 @@ export const notificationRoutes = new Elysia({ prefix: "/notifications" })
         select: { id: true },
       });
 
-      const deviceIds = traderDevices.map(d => d.id);
+      const deviceIds = traderDevices.map((d) => d.id);
 
       const where: any = {
         deviceId: { in: deviceIds },
@@ -100,7 +101,7 @@ export const notificationRoutes = new Elysia({ prefix: "/notifications" })
       ]);
 
       // Форматируем ответ
-      const formattedNotifications = notifications.map(n => ({
+      const formattedNotifications = notifications.map((n) => ({
         id: n.id,
         type: n.type,
         application: n.application,
@@ -113,13 +114,15 @@ export const notificationRoutes = new Elysia({ prefix: "/notifications" })
         createdAt: n.createdAt.toISOString(),
         deviceId: n.deviceId,
         deviceName: n.Device?.name || null,
-        matchedTransaction: n.matchedTransactions[0] ? {
-          id: n.matchedTransactions[0].id,
-          numericId: n.matchedTransactions[0].numericId,
-          amount: n.matchedTransactions[0].amount,
-          status: n.matchedTransactions[0].status,
-          merchantName: n.matchedTransactions[0].merchant.name,
-        } : null,
+        matchedTransaction: n.matchedTransactions[0]
+          ? {
+              id: n.matchedTransactions[0].id,
+              numericId: n.matchedTransactions[0].numericId,
+              amount: n.matchedTransactions[0].amount,
+              status: n.matchedTransactions[0].status,
+              merchantName: n.matchedTransactions[0].merchant.name,
+            }
+          : null,
       }));
 
       return {
@@ -168,7 +171,7 @@ export const notificationRoutes = new Elysia({ prefix: "/notifications" })
         select: { id: true },
       });
 
-      const deviceIds = traderDevices.map(d => d.id);
+      const deviceIds = traderDevices.map((d) => d.id);
 
       const notification = await db.notification.findFirst({
         where: {
@@ -225,7 +228,7 @@ export const notificationRoutes = new Elysia({ prefix: "/notifications" })
         updatedAt: notification.updatedAt.toISOString(),
         deviceId: notification.deviceId,
         deviceName: notification.Device?.name || null,
-        matchedTransactions: notification.matchedTransactions.map(tx => ({
+        matchedTransactions: notification.matchedTransactions.map((tx) => ({
           id: tx.id,
           numericId: tx.numericId,
           amount: tx.amount,
@@ -240,12 +243,14 @@ export const notificationRoutes = new Elysia({ prefix: "/notifications" })
             name: tx.method.name,
             type: tx.method.type,
           },
-          requisites: tx.requisites ? {
-            id: tx.requisites.id,
-            cardNumber: tx.requisites.cardNumber,
-            bankType: tx.requisites.bankType,
-            recipientName: tx.requisites.recipientName,
-          } : null,
+          requisites: tx.requisites
+            ? {
+                id: tx.requisites.id,
+                cardNumber: tx.requisites.cardNumber,
+                bankType: tx.requisites.bankType,
+                recipientName: tx.requisites.recipientName,
+              }
+            : null,
         })),
       };
     },
@@ -313,7 +318,7 @@ export const notificationRoutes = new Elysia({ prefix: "/notifications" })
         select: { id: true },
       });
 
-      const deviceIds = traderDevices.map(d => d.id);
+      const deviceIds = traderDevices.map((d) => d.id);
 
       const notification = await db.notification.findFirst({
         where: {
@@ -339,6 +344,153 @@ export const notificationRoutes = new Elysia({ prefix: "/notifications" })
       params: t.Object({ id: t.String() }),
       response: {
         200: t.Object({ success: t.Boolean() }),
+        401: ErrorSchema,
+        403: ErrorSchema,
+        404: ErrorSchema,
+      },
+    }
+  )
+
+  /* ---------- POST /trader/notifications/:id/link-transaction - привязать уведомление к транзакции ---------- */
+  .post(
+    "/:id/link-transaction",
+    async ({ trader, params, body, error }) => {
+      // Получаем все устройства трейдера
+      const traderDevices = await db.device.findMany({
+        where: { userId: trader.id },
+        select: { id: true },
+      });
+
+      const deviceIds = traderDevices.map((d) => d.id);
+
+      // Проверяем, что уведомление принадлежит трейдеру
+      const notification = await db.notification.findFirst({
+        where: {
+          id: params.id,
+          deviceId: { in: deviceIds },
+        },
+      });
+
+      if (!notification) {
+        return error(404, { error: "Уведомление не найдено" });
+      }
+
+      // Проверяем, что транзакция принадлежит трейдеру
+      const transaction = await db.transaction.findFirst({
+        where: {
+          id: body.transactionId,
+          traderId: trader.id,
+        },
+      });
+
+      if (!transaction) {
+        return error(404, { error: "Транзакция не найдена" });
+      }
+
+      // Привязываем уведомление к транзакции
+      await db.notification.update({
+        where: { id: notification.id },
+        data: {
+          matchedTransactions: {
+            connect: { id: transaction.id },
+          },
+          isProcessed: true,
+        },
+      });
+
+      // Обновляем статус транзакции на READY если она была CREATED или IN_PROGRESS (но НЕ DISPUTE - споры обрабатываются отдельно)
+      if (
+        transaction.status === "CREATED" ||
+        transaction.status === "IN_PROGRESS"
+      ) {
+        await db.transaction.update({
+          where: { id: transaction.id },
+          data: {
+            status: "READY",
+            acceptedAt: new Date(),
+          },
+        });
+
+        // Выполняем финансовые операции
+        await db.$transaction(async (prisma) => {
+          // Начисляем мерчанту
+          const method = await prisma.method.findUnique({
+            where: { id: transaction.methodId },
+          });
+
+          if (method && transaction.rate) {
+            const netAmount =
+              transaction.amount -
+              (transaction.amount * method.commissionPayin) / 100;
+            const increment = netAmount / transaction.rate;
+            await prisma.merchant.update({
+              where: { id: transaction.merchantId },
+              data: { balanceUsdt: { increment } },
+            });
+          }
+
+          // Обрабатываем заморозку трейдера
+          if (transaction.frozenUsdtAmount) {
+            await prisma.user.update({
+              where: { id: trader.id },
+              data: {
+                frozenUsdt: {
+                  decrement: truncate2(transaction.frozenUsdtAmount),
+                },
+              },
+            });
+          }
+
+          // Начисляем прибыль трейдеру
+          if (transaction.traderProfit && transaction.traderProfit > 0) {
+            await prisma.user.update({
+              where: { id: trader.id },
+              data: {
+                profitFromDeals: {
+                  increment: truncate2(transaction.traderProfit),
+                },
+              },
+            });
+          }
+        });
+
+        // Отправляем webhook
+        const { notifyByStatus } = await import("@/utils/notify");
+        await notifyByStatus({
+          id: transaction.orderId, // Pass orderId instead of id
+          status: "READY",
+          successUri: transaction.successUri,
+          failUri: transaction.failUri,
+          callbackUri: transaction.callbackUri,
+          amount: transaction.amount,
+        });
+      }
+
+      return {
+        success: true,
+        transaction: {
+          id: transaction.id,
+          status: "READY",
+        },
+      };
+    },
+    {
+      tags: ["trader"],
+      detail: {
+        summary: "Привязать уведомление к транзакции и обновить статус",
+      },
+      params: t.Object({ id: t.String() }),
+      body: t.Object({
+        transactionId: t.String(),
+      }),
+      response: {
+        200: t.Object({
+          success: t.Boolean(),
+          transaction: t.Object({
+            id: t.String(),
+            status: t.String(),
+          }),
+        }),
         401: ErrorSchema,
         403: ErrorSchema,
         404: ErrorSchema,

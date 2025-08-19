@@ -5,10 +5,23 @@ import { VTBParser } from "./VTBParser";
 import { AlfabankParser } from "./AlfabankParser";
 import { GazprombankParser } from "./GazprombankParser";
 import { OzonbankParser } from "./OzonbankParser";
+import { HomeCreditParser } from "./HomeCreditParser";
+import { OTPBankParser } from "./OTPBankParser";
+import { GenericSmsParser } from "./GenericSmsParser";
+import { PSBParser } from "./PSBParser";
+import { DOMRFParser } from "./DOMRFParser";
+import { MTSBankParser } from "./MTSBankParser";
+import { UralSibParser } from "./UralSibParser";
+import { RaiffeisenParser } from "./RaiffeisenParser";
+import { PochtaBankParser } from "./PochtaBankParser";
+import { BankSPBParser } from "./BankSPBParser";
+import { RNKBParser } from "./RNKBParser";
+import { RSHBParser } from "./RSHBParser";
 
 export class BankRegexFactory {
   private parsers: Map<string, IBankParser> = new Map();
   private packageToBankMap: Map<string, string> = new Map();
+  private senderToBankMap: Map<string, string> = new Map();
 
   constructor() {
     this.registerDefaultParsers();
@@ -22,6 +35,18 @@ export class BankRegexFactory {
       new AlfabankParser(),
       new GazprombankParser(),
       new OzonbankParser(),
+      new HomeCreditParser(),
+      new OTPBankParser(),
+      new PSBParser(),
+      new DOMRFParser(),
+      new MTSBankParser(),
+      new UralSibParser(),
+      new RaiffeisenParser(),
+      new PochtaBankParser(),
+      new BankSPBParser(),
+      new RNKBParser(),
+      new RSHBParser(),
+      new GenericSmsParser(),
     ];
 
     for (const parser of parsers) {
@@ -30,6 +55,13 @@ export class BankRegexFactory {
       // Map package names to bank names
       for (const packageName of parser.packageNames) {
         this.packageToBankMap.set(packageName, parser.bankName);
+      }
+      
+      // Map sender codes to bank names
+      if (parser.senderCodes) {
+        for (const senderCode of parser.senderCodes) {
+          this.senderToBankMap.set(senderCode, parser.bankName);
+        }
       }
     }
   }
@@ -50,12 +82,31 @@ export class BankRegexFactory {
   }
 
   /**
+   * Get parser by sender code
+   */
+  getParserBySender(senderCode: string): IBankParser | undefined {
+    const bankName = this.senderToBankMap.get(senderCode);
+    return bankName ? this.parsers.get(bankName) : undefined;
+  }
+
+  /**
    * Detect and parse message
    */
-  parseMessage(message: string, packageName?: string): {
+  parseMessage(message: string, packageName?: string, senderCode?: string): {
     parser: IBankParser;
     transaction: any;
   } | null {
+    // If sender code is provided, try specific parser first
+    if (senderCode) {
+      const parser = this.getParserBySender(senderCode);
+      if (parser && parser.detect(message)) {
+        const transaction = parser.parse(message);
+        if (transaction) {
+          return { parser, transaction };
+        }
+      }
+    }
+
     // If package name is provided, try specific parser first
     if (packageName) {
       const parser = this.getParserByPackage(packageName);

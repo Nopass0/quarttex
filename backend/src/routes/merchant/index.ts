@@ -12,6 +12,7 @@ import {
 import ErrorSchema from "@/types/error";
 import { merchantGuard } from "@/middleware/merchantGuard";
 import { endOfDay, endOfMonth, startOfDay, startOfMonth } from "date-fns";
+import { truncate2 } from "@/utils/rounding";
 import authRoutes from "./auth";
 import dashboardRoutes from "./dashboard";
 import apiDocsRoutes from "./api-docs";
@@ -19,37 +20,53 @@ import tradersRoutes from "./traders";
 import payoutsRoutes from "./payouts";
 import { disputesRoutes } from "./disputes";
 import { dealDisputesRoutes } from "./deal-disputes";
-import { calculateFreezingParams } from "@/utils/freezing";
+import { dealDisputesApiRoutes } from "./deal-disputes-api";
+import { payoutDisputesApiRoutes } from "./payout-disputes-api";
+import staffRoutes from "./staff";
 import { rapiraService } from "@/services/rapira.service";
+import { bybitService } from "@/services/bybit.service";
+import { ceilUp2 } from "@/utils/freezing";
 import { merchantPayoutsApi } from "@/api/merchant/payouts";
 import { validateFileUpload } from "@/middleware/fileUploadValidation";
+import { MerchantRequestLogService } from "@/services/merchant-request-log.service";
+import { MerchantRequestType } from "@prisma/client";
+import { calculateMerchantBalance } from "@/services/merchant-balance.service";
 
 export default (app: Elysia) =>
   app
     // Публичные маршруты аутентификации (без merchantGuard)
     .group("/auth", (app) => app.use(authRoutes))
-    
+
     // Защищенные маршруты дашборда (с merchantSessionGuard)
     .group("/dashboard", (app) => app.use(dashboardRoutes))
-    
+
     // Защищенные маршруты API документации (с merchantSessionGuard)
     .group("/api-docs", (app) => app.use(apiDocsRoutes))
-    
+
     // Payouts routes (с merchantSessionGuard)
     .group("/payouts", (app) => app.use(payoutsRoutes))
-    
+
     // Deal dispute routes (с merchantSessionGuard)
     .group("/deal-disputes", (app) => app.use(dealDisputesRoutes))
-    
+
+    // Staff routes (с merchantSessionGuard, только для owner)
+    .group("/staff", (app) => app.use(staffRoutes))
+
     // Основные API маршруты (с merchantGuard для API ключа)
     .use(merchantGuard())
-    
+
+    // Deal disputes API routes (с merchantGuard для API ключа)
+    .group("/deal-disputes", (app) => app.use(dealDisputesApiRoutes))
+
+    // Payout disputes API routes (с merchantGuard для API ключа)
+    .group("/payout-disputes", (app) => app.use(payoutDisputesApiRoutes))
+
     // Traders routes
     .group("/traders", (app) => app.use(tradersRoutes))
-    
+
     // Payout API routes
     .use(merchantPayoutsApi)
-    
+
     // Dispute routes
     .use(disputesRoutes)
 
@@ -88,13 +105,21 @@ export default (app: Elysia) =>
           }),
           401: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ──────── GET /merchant/balance ──────── */
     .get(
       "/balance",
-      async ({ merchant }) => ({ balance: merchant.balanceUsdt }),
+      async ({ merchant }) => {
+        const { total, totalUsdt } = await calculateMerchantBalance({
+          id: merchant.id,
+          countInRubEquivalent: merchant.countInRubEquivalent,
+        });
+        return {
+          balance: merchant.countInRubEquivalent ? total : totalUsdt || 0,
+        };
+      },
       {
         tags: ["merchant"],
         detail: { summary: "Получение текущего баланса мерчанта" },
@@ -103,7 +128,7 @@ export default (app: Elysia) =>
           200: t.Object({ balance: t.Number() }),
           401: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ──────── PATCH /merchant/transactions/by-order-id/:orderId/cancel ──────── */
@@ -136,18 +161,24 @@ export default (app: Elysia) =>
             data: { status: Status.CANCELED },
             include: {
               trader: true,
-            }
+            },
           });
 
           // Размораживаем средства для IN транзакций при отмене
-          if (tx.type === 'IN' && tx.traderId && tx.frozenUsdtAmount && tx.calculatedCommission) {
-            const totalToUnfreeze = tx.frozenUsdtAmount + tx.calculatedCommission;
-            
+          if (
+            tx.type === "IN" &&
+            tx.traderId &&
+            tx.frozenUsdtAmount &&
+            tx.calculatedCommission
+          ) {
+            const totalToUnfreeze =
+              tx.frozenUsdtAmount + tx.calculatedCommission;
+
             await prisma.user.update({
               where: { id: tx.traderId },
               data: {
-                frozenUsdt: { decrement: totalToUnfreeze }
-              }
+                frozenUsdt: { decrement: truncate2(totalToUnfreeze) },
+              },
             });
           }
 
@@ -201,9 +232,9 @@ export default (app: Elysia) =>
               assetOrBank: t.String(),
               orderId: t.String(),
               methodId: t.String(),
-              currency: t.Union([t.String(), t.Null()]),
+              currency: t.Nullable(t.String()),
               userId: t.String(),
-              userIp: t.Union([t.String(), t.Null()]),
+              userIp: t.Nullable(t.String()),
               callbackUri: t.String(),
               successUri: t.String(),
               failUri: t.String(),
@@ -212,8 +243,8 @@ export default (app: Elysia) =>
               commission: t.Number(),
               clientName: t.String(),
               status: t.String(),
-              rate: t.Union([t.Number(), t.Null()]),
-              traderId: t.Union([t.String(), t.Null()]),
+              rate: t.Nullable(t.Number()),
+              traderId: t.Nullable(t.String()),
               isMock: t.Boolean(),
               createdAt: t.String(),
               updatedAt: t.String(),
@@ -223,7 +254,7 @@ export default (app: Elysia) =>
           404: ErrorSchema,
           401: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ──────── GET /merchant/transactions/status/:id ──────── */
@@ -293,7 +324,7 @@ export default (app: Elysia) =>
           404: ErrorSchema,
           401: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ──────── GET /merchant/transactions/list ──────── */
@@ -391,7 +422,7 @@ export default (app: Elysia) =>
                   type: t.Enum(MethodType),
                   currency: t.Enum(Currency),
                 }),
-              }),
+              })
             ),
             pagination: t.Object({
               total: t.Number(),
@@ -402,656 +433,7 @@ export default (app: Elysia) =>
           }),
           401: ErrorSchema,
         },
-      },
-    )
-
-    /* ──────────────────────────────────────────────────────────────────────────
-     *  POST /merchant/transactions/create
-     *  ─ Создание транзакции (IN/OUT) с автоматическим подбором реквизита для IN.
-     * ------------------------------------------------------------------------*/
-    .post(
-      "/transactions/create",
-      async ({ body, merchant, set, error }) => {
-        // Проверяем, не отключен ли мерчант
-        if (merchant.disabled) {
-          return error(403, { error: "Ваш трафик временно отключен. Обратитесь к администратору." });
-        }
-        
-        // По умолчанию тип транзакции IN
-        const type = body.type || TransactionType.IN;
-        
-        // Функция для записи попытки создания транзакции
-        const recordAttempt = async (success: boolean, errorCode?: string) => {
-          try {
-            await db.transactionAttempt.create({
-              data: {
-                merchantId: merchant.id,
-                methodId: body.methodId,
-                amount: body.amount,
-                success,
-                errorCode,
-              },
-            });
-          } catch (e) {
-            console.error("Failed to record transaction attempt", e);
-          }
-        };
-        
-        // Always get the current rate from Rapira for calculations
-        let rapiraBaseRate: number;
-        try {
-          rapiraBaseRate = await rapiraService.getUsdtRubRate();
-        } catch (error) {
-          console.error("Failed to get rate from Rapira:", error);
-          rapiraBaseRate = 95; // Default fallback rate
-        }
-        
-        // Get Rapira rate with KKK for calculations
-        let rapiraRateWithKkk: number;
-        try {
-          const rateSettingRecord = await db.rateSetting.findFirst({ where: { id: 1 } });
-          const rapiraKkk = rateSettingRecord?.rapiraKkk || 0;
-          rapiraRateWithKkk = await rapiraService.getRateWithKkk(rapiraKkk);
-        } catch (error) {
-          console.error("Failed to get rate with KKK:", error);
-          rapiraRateWithKkk = rapiraBaseRate; // Fallback to base rate
-        }
-        
-        // Determine merchant rate based on countInRubEquivalent setting
-        let merchantRate: number;
-        
-        if (merchant.countInRubEquivalent) {
-          // If merchant has RUB calculations enabled, we provide the rate from Rapira
-          if (body.rate !== undefined) {
-            return error(400, { error: "Курс не должен передаваться при включенных расчетах в рублях. Курс автоматически получается от системы." });
-          }
-          merchantRate = rapiraBaseRate; // Merchant sees Rapira rate without KKK
-        } else {
-          // If RUB calculations are disabled, merchant must provide the rate
-          if (body.rate === undefined) {
-            return error(400, { error: "Курс обязателен при выключенных расчетах в рублях. Укажите параметр rate." });
-          }
-          merchantRate = body.rate; // Merchant's custom rate
-        }
-        
-        // Генерируем значения по умолчанию для необязательных полей
-        const userId = body.userId || `user_${Date.now()}`;
-        const expired_at = body.expired_at ? new Date(body.expired_at) : new Date(Date.now() + 86_400_000);
-        
-        const recordMilk = async (msg: string) => {
-          try {
-            await db.transaction.create({
-              data: {
-                merchantId: merchant.id,
-                amount: body.amount,
-                assetOrBank: "", // Будет заполнено позже
-                orderId: body.orderId,
-                methodId: body.methodId,
-                currency: "RUB", // По умолчанию RUB
-                userId: userId,
-                userIp: body.userIp || null,
-                callbackUri: body.callbackUri || "",
-                successUri: body.successUri || "",
-                failUri: body.failUri || "",
-                type: type,
-                expired_at: expired_at,
-                commission: 0, // По умолчанию 0
-                clientName: userId, // Используем userId как имя клиента
-                status: Status.MILK,
-                rate: rapiraRateWithKkk, // Always Rapira rate with KKK for calculations
-                merchantRate: merchantRate, // Merchant's rate or Rapira rate
-                adjustedRate: rapiraRateWithKkk, // Deprecated, kept for compatibility
-                isMock: body.isMock || false,
-                error: msg,
-              },
-            });
-          } catch (e) {
-            console.error("Failed to record milk transaction", e);
-          }
-        };
-
-        /* ---------- 1. Метод и доступ мерчанта ---------- */
-        console.log(`[Merchant] Поиск метода с ID: ${body.methodId}`);
-        const method = await db.method.findUnique({
-          where: { id: body.methodId },
-        });
-        if (!method) {
-          console.log(`[Merchant] ❌ Метод не найден: methodId=${body.methodId}`);
-          await recordMilk("Метод не найден");
-          await recordAttempt(false, "METHOD_NOT_FOUND");
-          return error(404, { error: "Метод не найден" });
-        }
-        if (!method.isEnabled) {
-          console.log(`[Merchant] ❌ Метод неактивен: methodId=${body.methodId}`);
-          await recordMilk("Метод неактивен");
-          await recordAttempt(false, "METHOD_DISABLED");
-          return error(400, { error: "Метод неактивен" });
-        }
-        
-        console.log(`[Merchant] ✓ Метод найден: id=${method.id}, code=${method.code}, type=${method.type}, enabled=${method.isEnabled}`);
-
-        const mm = await db.merchantMethod.findUnique({
-          where: {
-            merchantId_methodId: {
-              merchantId: merchant.id,
-              methodId: method.id,
-            },
-          },
-        });
-        if (!mm || !mm.isEnabled) {
-          await recordMilk("Метод недоступен мерчанту");
-          await recordAttempt(false, "METHOD_NOT_AVAILABLE");
-          return error(404, { error: "Метод недоступен мерчанту" });
-        }
-
-        /* ---------- 2. Сумма в допустимом диапазоне ---------- */
-        const amount = body.amount;
-        console.log(`[Merchant] Создание транзакции: метод=${method.code}, сумма=${amount}, лимиты метода=${method.minPayin}-${method.maxPayin}`);
-        
-        if (amount < method.minPayin || amount > method.maxPayin) {
-          console.log(`[Merchant] ❌ Сумма ${amount} вне диапазона метода ${method.minPayin}-${method.maxPayin}`);
-          await recordMilk("Сумма вне допустимого диапазона");
-          await recordAttempt(false, "AMOUNT_OUT_OF_RANGE");
-          return error(400, { error: "Сумма вне допустимого диапазона" });
-        }
-
-        /* ---------- 3. orderId уникален ---------- */
-        const duplicate = await db.transaction.findFirst({
-          where: { merchantId: merchant.id, orderId: body.orderId },
-        });
-        if (duplicate) {
-          await recordMilk("Дубликат orderId");
-          await recordAttempt(false, "DUPLICATE_ORDER_ID");
-          return error(409, {
-            error: "Транзакция с таким orderId уже существует",
-          });
-        }
-
-        /* ---------- 4. Для OUT транзакций создаем сразу без подбора реквизита ---------- */
-        if (type === TransactionType.OUT) {
-          const tx = await db.transaction.create({
-            data: {
-              merchantId: merchant.id,
-              amount: body.amount,
-              assetOrBank: "", // Для OUT транзакций реквизит заполняется позже
-              orderId: body.orderId,
-              methodId: method.id,
-              currency: "RUB",
-              userId: userId,
-              userIp: body.userIp || null,
-              callbackUri: "",
-              successUri: "",
-              failUri: "",
-              type: type,
-              expired_at: expired_at,
-              commission: 0,
-              clientName: userId,
-              status: Status.IN_PROGRESS,
-              rate: rapiraRateWithKkk, // Always Rapira rate with KKK for calculations
-              merchantRate: merchantRate, // Merchant's rate or Rapira rate
-              adjustedRate: rapiraRateWithKkk, // Deprecated, kept for compatibility
-              isMock: body.isMock || false,
-            },
-            include: {
-              method: {
-                select: {
-                  id: true,
-                  code: true,
-                  name: true,
-                  type: true,
-                  currency: true,
-                },
-              },
-            },
-          });
-
-          // Записываем успешную попытку для OUT транзакции
-          await recordAttempt(true);
-
-          set.status = 201;
-          return {
-            id: tx.id,
-            numericId: tx.numericId,
-            amount: tx.amount,
-            crypto: null,
-            status: tx.status,
-            traderId: null,
-            requisites: null, // OUT транзакции не имеют реквизитов сразу
-            createdAt: tx.createdAt.toISOString(),
-            updatedAt: tx.updatedAt.toISOString(),
-            expired_at: tx.expired_at.toISOString(),
-            method: tx.method,
-          };
-        }
-
-        /* ---------- 4. Подбираем BankDetail ---------- */
-        const now = new Date();
-        const todayStart = startOfDay(now);
-        const todayEnd = endOfDay(now);
-        const monthStart = startOfMonth(now);
-        const monthEnd = endOfMonth(now);
-
-        const pool = await db.bankDetail.findMany({
-          where: {
-            isArchived: false,
-            methodType: method.type,
-            user: { 
-              banned: false,
-              // Проверяем, что депозит больше или равен 1000
-              deposit: { gte: 1000 },
-              // Проверяем, что трейдер активно работает (trafficEnabled true)
-              trafficEnabled: true
-            },
-            // Проверяем, что устройство банковской карты работает
-            OR: [
-              { deviceId: null }, // Карта без устройства
-              { device: { isWorking: true, isOnline: true } } // Или устройство активно
-            ]
-          },
-          orderBy: { updatedAt: "asc" }, // LRU-очередь
-          include: { user: true, device: true },
-        });
-
-        console.log(`[Merchant] Поиск реквизитов: methodType=${method.type}, isArchived=false, user.banned=false, deposit>=1000, trafficEnabled=true`);
-        console.log(`[Merchant] Найдено реквизитов в базе: ${pool.length}`);
-        
-        // Логируем все найденные реквизиты
-        pool.forEach((bd, index) => {
-          console.log(`[Merchant] Реквизит ${index + 1}: id=${bd.id}, archived=${bd.isArchived}, methodType=${bd.methodType}, user.banned=${bd.user.banned}, deposit=${bd.user.deposit}, minAmount=${bd.minAmount}, maxAmount=${bd.maxAmount}, trustBalance=${bd.user.trustBalance}, device=${bd.device ? `${bd.device.name} (working:${bd.device.isWorking}, online:${bd.device.isOnline})` : 'NO_DEVICE'}`);
-        });
-
-        let chosen: (typeof pool)[number] | null = null;
-
-        console.log(`[Merchant] Подбираем реквизит для суммы ${amount}, доступно реквизитов: ${pool.length}`);
-        
-        for (const bd of pool) {
-          console.log(`[Merchant] Проверяем реквизит ${bd.id}, депозит: ${bd.user.deposit}, лимиты: ${bd.minAmount}-${bd.maxAmount}, дневной: ${bd.dailyLimit}, месячный: ${bd.monthlyLimit}, траст баланс: ${bd.user.trustBalance}`);
-          
-          if (amount < bd.minAmount || amount > bd.maxAmount) {
-            console.log(`[Merchant] Реквизит ${bd.id} отклонен: сумма ${amount} вне диапазона ${bd.minAmount}-${bd.maxAmount}`);
-            continue;
-          }
-
-          // Проверяем лимиты трейдера на минимальную и максимальную сумму на реквизит
-          if (amount < bd.user.minAmountPerRequisite || amount > bd.user.maxAmountPerRequisite) {
-            console.log(`[Merchant] Реквизит ${bd.id} отклонен: сумма ${amount} вне диапазона трейдера ${bd.user.minAmountPerRequisite}-${bd.user.maxAmountPerRequisite}`);
-            continue;
-          }
-
-          // Проверяем лимит споров трейдера
-          const disputeCount = await db.transaction.count({
-            where: {
-              traderId: bd.userId,
-              status: Status.DISPUTE,
-            }
-          });
-          
-          if (disputeCount >= bd.user.disputeLimit) {
-            console.log(`[Merchant] Реквизит ${bd.id} отклонен: достигнут лимит споров трейдера. Текущие споры: ${disputeCount}, лимит: ${bd.user.disputeLimit}`);
-            continue;
-          }
-
-          // Проверяем наличие транзакции с той же суммой в активных статусах на этом реквизите
-          const existingTransaction = await db.transaction.findFirst({
-            where: {
-              bankDetailId: bd.id,
-              amount: amount,
-              status: {
-                in: [Status.CREATED, Status.IN_PROGRESS]
-              },
-              type: TransactionType.IN,
-            }
-          });
-
-          if (existingTransaction) {
-            console.log(`[Merchant] Реквизит ${bd.id} отклонен: уже есть транзакция на сумму ${amount} в статусе ${existingTransaction.status}`);
-            continue;
-          }
-
-          const [
-            {
-              _sum: { amount: daySum },
-            },
-            {
-              _sum: { amount: monSum },
-            },
-            {
-              _count: { _all: dayCnt },
-            },
-            lastTx,
-          ] = await Promise.all([
-            db.transaction.aggregate({
-              where: {
-                bankDetailId: bd.id,
-                createdAt: { gte: todayStart, lte: todayEnd },
-                status: { not: Status.CANCELED },
-              },
-              _sum: { amount: true },
-            }),
-            db.transaction.aggregate({
-              where: {
-                bankDetailId: bd.id,
-                createdAt: { gte: monthStart, lte: monthEnd },
-                status: { not: Status.CANCELED },
-              },
-              _sum: { amount: true },
-            }),
-            db.transaction.aggregate({
-              where: {
-                bankDetailId: bd.id,
-                createdAt: { gte: todayStart, lte: todayEnd },
-                status: { not: Status.CANCELED },
-              },
-              _count: { _all: true },
-            }),
-            db.transaction.findFirst({
-              where: { bankDetailId: bd.id },
-              orderBy: { createdAt: "desc" },
-              select: { createdAt: true },
-            }),
-          ]);
-
-          const newDay = (daySum ?? 0) + amount;
-          const newMon = (monSum ?? 0) + amount;
-
-          if (bd.dailyLimit > 0 && newDay > bd.dailyLimit) {
-            console.log(`[Merchant] Реквизит ${bd.id} отклонен: превышение дневного лимита. Текущий: ${daySum ?? 0}, новый: ${newDay}, лимит: ${bd.dailyLimit}`);
-            continue;
-          }
-          if (bd.monthlyLimit > 0 && newMon > bd.monthlyLimit) {
-            console.log(`[Merchant] Реквизит ${bd.id} отклонен: превышение месячного лимита. Текущий: ${monSum ?? 0}, новый: ${newMon}, лимит: ${bd.monthlyLimit}`);
-            continue;
-          }
-          if (bd.maxCountTransactions && bd.maxCountTransactions > 0 && dayCnt + 1 > bd.maxCountTransactions) {
-            console.log(`[Merchant] Реквизит ${bd.id} отклонен: превышение лимита транзакций. Текущий: ${dayCnt}, лимит: ${bd.maxCountTransactions}`);
-            continue;
-          }
-
-          if (bd.intervalMinutes && lastTx) {
-            const diff = (now.getTime() - lastTx.createdAt.getTime()) / 60_000;
-            if (diff < bd.intervalMinutes) {
-              console.log(`[Merchant] Реквизит ${bd.id} отклонен: интервал между транзакциями. Прошло: ${diff} мин, требуется: ${bd.intervalMinutes} мин`);
-              continue;
-            }
-          }
-
-          // Получаем настройки для расчета заморозки
-          const [tempKkkSetting, tempTraderMerchantSettings] = await Promise.all([
-            db.systemConfig.findUnique({
-              where: { key: "kkk_percent" }
-            }),
-            db.traderMerchant.findUnique({
-              where: {
-                traderId_merchantId_methodId: {
-                  traderId: bd.userId,
-                  merchantId: merchant.id,
-                  methodId: method.id
-                }
-              }
-            })
-          ]);
-
-          const tempKkkPercent = tempKkkSetting ? parseFloat(tempKkkSetting.value) : 0;
-          const tempFeeInPercent = tempTraderMerchantSettings?.feeIn ?? 0;
-
-          // Рассчитываем необходимую сумму - просто amount / rate
-          // Всегда используем Rapira rate с KKK для расчетов заморозки
-          const tempFrozenUsdtAmount = Math.ceil((amount / rapiraRateWithKkk) * 100) / 100;
-          const tempCalculatedCommission = Math.ceil((tempFrozenUsdtAmount * tempFeeInPercent / 100) * 100) / 100;
-          const tempTotalRequired = tempFrozenUsdtAmount; // Замораживаем только основную сумму
-          
-          const tempFreezingParams = {
-            totalRequired: tempTotalRequired
-          };
-
-          // Проверяем доступный баланс (trustBalance - frozenUsdt)
-          const availableBalance = bd.user.trustBalance - bd.user.frozenUsdt;
-          if (tempFreezingParams.totalRequired > availableBalance) {
-            console.log(`[Merchant] Реквизит ${bd.id} отклонен: недостаточно доступного баланса. Нужно: ${tempFreezingParams.totalRequired}, доступно: ${availableBalance}`);
-            continue;
-          }
-          
-          console.log(`[Merchant] ✓ Реквизит ${bd.id} выбран для транзакции суммой ${amount}`);
-          chosen = bd;
-          break;
-        }
-
-        if (!chosen) {
-          console.log(`[Merchant] ❌ Подходящий реквизит не найден для суммы ${amount}. Всего проверено: ${pool.length}`);
-          await recordMilk("NO_REQUISITE");
-          await recordAttempt(false, "NO_REQUISITE");
-          return error(409, {
-            error: "NO_REQUISITE: подходящий реквизит не найден",
-          });
-        }
-
-        // Получаем настройки KKK и трейдера
-        const [kkkSetting, traderMerchantSettings] = await Promise.all([
-          db.systemConfig.findUnique({
-            where: { key: "kkk_percent" }
-          }),
-          db.traderMerchant.findUnique({
-            where: {
-              traderId_merchantId_methodId: {
-                traderId: chosen.userId,
-                merchantId: merchant.id,
-                methodId: method.id
-              }
-            }
-          })
-        ]);
-
-        const kkkPercent = kkkSetting ? parseFloat(kkkSetting.value) : 0;
-        const feeInPercent = traderMerchantSettings?.feeIn ?? 0;
-
-        // Рассчитываем параметры заморозки
-        // Всегда используем Rapira rate с KKK для расчетов заморозки
-        let freezingParams = null;
-        if (chosen.user) {
-          // Рассчитываем заморозку - просто amount / rate
-          const frozenUsdtAmount = Math.ceil((amount / rapiraRateWithKkk) * 100) / 100;
-          const calculatedCommission = Math.ceil((frozenUsdtAmount * feeInPercent / 100) * 100) / 100;
-          const totalRequired = frozenUsdtAmount; // Замораживаем только основную сумму, без комиссии
-          
-          console.log(`[Merchant] Freezing calculation: amount=${amount}, rate=${rapiraRateWithKkk}, frozenUsdt=${frozenUsdtAmount}, feePercent=${feeInPercent}, commission=${calculatedCommission}, total=${totalRequired}`);
-          
-          freezingParams = {
-            adjustedRate: rapiraRateWithKkk,
-            frozenUsdtAmount,
-            calculatedCommission,
-            totalRequired
-          };
-
-          // Проверяем достаточность доступного баланса (trustBalance - frozenUsdt)
-          const availableBalance = chosen.user.trustBalance - chosen.user.frozenUsdt;
-          if (availableBalance < freezingParams.totalRequired) {
-            console.log(`[Merchant] Реквизит ${chosen.id} - недостаточно баланса. Нужно: ${freezingParams.totalRequired}, доступно: ${availableBalance}`);
-            return error(400, { error: "Недостаточно баланса трейдера" });
-          }
-        }
-
-        /* ---------- 5. Создаём транзакцию и замораживаем средства ---------- */
-        const tx = await db.$transaction(async (prisma) => {
-          // Обновляем updatedAt реквизита внутри транзакции для корректной ротации
-          await prisma.bankDetail.update({
-            where: { id: chosen.id },
-            data: { updatedAt: now },
-          });
-          console.log(`[Merchant] Обновлен updatedAt для реквизита ${chosen.id} для обеспечения ротации`);
-          console.log(`[Merchant] Starting transaction creation for amount ${body.amount}, trader ${chosen.userId}`);
-          // Создаем транзакцию с параметрами заморозки
-          const transaction = await prisma.transaction.create({
-            data: {
-              merchantId: merchant.id,
-              amount: body.amount,
-              assetOrBank: chosen.cardNumber,
-              orderId: body.orderId,
-              methodId: method.id,
-              currency: "RUB", // По умолчанию RUB
-              userId: userId,
-              userIp: body.userIp || null,
-              callbackUri: "", // Пустые URI по умолчанию
-              successUri: "",
-              failUri: "",
-              type: type,
-              expired_at: expired_at,
-              commission: 0, // По умолчанию 0
-              clientName: userId, // Используем userId как имя клиента
-              status: Status.IN_PROGRESS,
-              rate: rapiraRateWithKkk, // Always Rapira rate with KKK for calculations
-              merchantRate: merchantRate, // Merchant's rate or Rapira rate
-              adjustedRate: freezingParams?.adjustedRate || rapiraRateWithKkk, // Deprecated, kept for compatibility
-              isMock: body.isMock || false,
-              bankDetailId: chosen.id, // FK на BankDetail
-              traderId: chosen.userId,
-              // Новые поля для заморозки
-              frozenUsdtAmount: freezingParams?.frozenUsdtAmount,
-              kkkPercent: kkkPercent,
-              feeInPercent: feeInPercent,
-              calculatedCommission: freezingParams?.calculatedCommission,
-              // НЕ устанавливаем traderProfit при создании - только при подтверждении!
-            },
-            include: {
-              method: {
-                select: {
-                  id: true,
-                  code: true,
-                  name: true,
-                  type: true,
-                  currency: true,
-                },
-              },
-            },
-          });
-
-          // Замораживаем средства трейдера для IN транзакции
-          if (freezingParams && chosen.user) {
-            console.log(`[Merchant] Freezing funds for trader ${chosen.userId}: ${freezingParams.totalRequired} USDT`);
-            try {
-              const beforeUser = await prisma.user.findUnique({ where: { id: chosen.userId } });
-              console.log(`[Merchant] Before update - frozenUsdt: ${beforeUser?.frozenUsdt}`);
-              
-              const updatedUser = await prisma.user.update({
-                where: { id: chosen.userId },
-                data: {
-                  frozenUsdt: { increment: freezingParams.totalRequired },
-                  trustBalance: { decrement: freezingParams.totalRequired } // Списываем с баланса при заморозке
-                }
-              });
-              console.log(`[Merchant] After update - frozenUsdt: ${updatedUser.frozenUsdt}`);
-              console.log(`[Merchant] Successfully froze ${freezingParams.totalRequired} USDT`);
-            } catch (freezeError) {
-              console.error(`[Merchant] Error freezing funds:`, freezeError);
-              throw freezeError;
-            }
-          } else {
-            console.log(`[Merchant] Freezing skipped - freezingParams: ${!!freezingParams}, chosen.user: ${!!chosen.user}`);
-            if (freezingParams) {
-              console.log(`[Merchant] freezingParams exists:`, freezingParams);
-            }
-            if (!chosen.user) {
-              console.log(`[Merchant] chosen.user is missing! chosen:`, { id: chosen.id, userId: chosen.userId });
-            }
-          }
-
-          console.log(`[Merchant] Transaction created successfully, returning from $transaction block`);
-          return transaction;
-        }).catch(error => {
-          console.error(`[Merchant] Transaction failed:`, error);
-          throw error;
-        });
-
-        /* ---------- 6. Ответ ---------- */
-        // Рассчитываем crypto для отображения мерчанту: сумма в рублях / merchantRate - комиссия метода IN
-        const crypto = merchantRate && tx.method 
-          ? (tx.amount / merchantRate) * (1 - tx.method.commissionPayin / 100)
-          : null;
-        
-        // Записываем успешную попытку
-        await recordAttempt(true);
-        
-        set.status = 201;
-        return {
-          id: tx.id,
-          numericId: tx.numericId,
-          amount: tx.amount,
-          crypto,
-          status: tx.status,
-          traderId: tx.traderId,
-          requisites: {
-            id: chosen.id,
-            bankType: chosen.bankType,
-            cardNumber: chosen.cardNumber,
-            recipientName: chosen.recipientName,
-            traderName: chosen.user.name,
-          },
-          createdAt: tx.createdAt.toISOString(),
-          updatedAt: tx.updatedAt.toISOString(),
-          expired_at: tx.expired_at.toISOString(),
-          method: tx.method,
-        };
-      },
-
-      /* ------------------- OpenAPI / JSON-schema ------------------- */
-      {
-        headers: t.Object({ "x-merchant-api-key": t.String() }),
-
-        body: t.Object({
-          amount: t.Number({ description: "Сумма транзакции в рублях" }),
-          orderId: t.String({ description: "Уникальный ID заказа от мерчанта" }),
-          methodId: t.String({ description: "ID метода платежа" }),
-          rate: t.Number({ description: "Курс USDT/RUB" }),
-          expired_at: t.String({ description: "ISO дата истечения транзакции" }),
-          userIp: t.Optional(t.String({ description: "IP адрес пользователя" })),
-          userId: t.Optional(t.String({ description: "ID пользователя (по умолчанию генерируется)" })),
-          type: t.Optional(t.Enum(TransactionType, { description: "Тип транзакции (по умолчанию IN)" })),
-          callbackUri: t.Optional(t.String({ description: "URL для callback уведомлений" })),
-          successUri: t.Optional(t.String({ description: "URL для уведомления об успешной оплате" })),
-          failUri: t.Optional(t.String({ description: "URL для уведомления о неудачной оплате" })),
-          isMock: t.Optional(t.Boolean({ description: "Флаг для создания тестовой транзакции" })),
-        }),
-
-        response: {
-          /* Успех */
-          201: t.Object({
-            id: t.String(),
-            numericId: t.Number(),
-            amount: t.Number(),
-            crypto: t.Union([t.Number(), t.Null()]),
-            status: t.Enum(Status),
-            traderId: t.Union([t.String(), t.Null()]),
-            requisites: t.Union([
-              t.Object({
-                id: t.String(),
-                bankType: t.Enum(BankType),
-                cardNumber: t.String(),
-                recipientName: t.String(),
-                traderName: t.String(),
-              }),
-              t.Null()
-            ]),
-            createdAt: t.String(),
-            updatedAt: t.String(),
-            expired_at: t.String(),
-            method: t.Object({
-              id: t.String(),
-              code: t.String(),
-              name: t.String(),
-              type: t.Enum(MethodType),
-              currency: t.Enum(Currency),
-            }),
-          }),
-
-          /* Ошибки (единый формат) */
-          400: t.Object({ error: t.String() }), // сумма вне диапазона / метод неактивен
-          404: t.Object({ error: t.String() }), // метод недоступен мерчанту
-          409: t.Object({ error: t.String() }), // дубликат orderId либо NO_REQUISITE
-          401: t.Object({ error: t.String() }), // невалидный API-ключ
-        },
-
-        tags: ["merchant"],
-        detail: { summary: "Создание транзакции (IN/OUT) с авто-подбором реквизита для IN" },
-      },
+      }
     )
 
     /* ──────── POST /merchant/transactions/in ──────── */
@@ -1060,7 +442,9 @@ export default (app: Elysia) =>
       async ({ body, merchant, set, error }) => {
         // Проверяем, не отключен ли мерчант
         if (merchant.disabled) {
-          return error(403, { error: "Ваш трафик временно отключен. Обратитесь к администратору." });
+          return error(403, {
+            error: "Ваш трафик временно отключен. Обратитесь к администратору.",
+          });
         }
 
         // Always get the current rate from Rapira for trader calculations
@@ -1071,27 +455,35 @@ export default (app: Elysia) =>
           console.error("Failed to get rate from Rapira:", error);
           rapiraRate = 95; // Default fallback rate
         }
-        
+
         // Validate rate based on merchant's countInRubEquivalent setting
         let rate: number;
-        
+
         if (merchant.countInRubEquivalent) {
           // If merchant has RUB calculations enabled, we provide the rate from Rapira
           if (body.rate !== undefined) {
-            return error(400, { error: "Курс не должен передаваться при включенных расчетах в рублях. Курс автоматически получается от системы." });
+            return error(400, {
+              error:
+                "Курс не должен передаваться при включенных расчетах в рублях. Курс автоматически получается от системы.",
+            });
           }
           rate = rapiraRate;
         } else {
           // If RUB calculations are disabled, merchant must provide the rate
           if (body.rate === undefined) {
-            return error(400, { error: "Курс обязателен при выключенных расчетах в рублях. Укажите параметр rate." });
+            return error(400, {
+              error:
+                "Курс обязателен при выключенных расчетах в рублях. Укажите параметр rate.",
+            });
           }
           rate = body.rate;
         }
 
         // Генерируем значения по умолчанию
-        const expired_at = body.expired_at ? new Date(body.expired_at) : new Date(Date.now() + 86_400_000);
-        
+        const expired_at = body.expired_at
+          ? new Date(body.expired_at)
+          : new Date(Date.now() + 86_400_000);
+
         // Проверяем метод и доступ мерчанта к нему
         const mm = await db.merchantMethod.findUnique({
           where: {
@@ -1101,19 +493,23 @@ export default (app: Elysia) =>
             },
           },
           include: {
-            method: true
-          }
+            method: true,
+          },
         });
-        
+
         if (!mm || !mm.isEnabled || !mm.method) {
-          return error(404, { error: "Метод не найден или недоступен мерчанту" });
+          return error(404, {
+            error: "Метод не найден или недоступен мерчанту",
+          });
         }
-        
+
         const method = mm.method;
 
-        // Проверяем сумму
+        // Мягкое предупреждение о лимитах метода
         if (body.amount < method.minPayin || body.amount > method.maxPayin) {
-          return error(400, { error: "Сумма вне допустимого диапазона" });
+          console.log(
+            `[Merchant] ⚠️ Предупреждение: сумма ${body.amount} вне стандартного диапазона метода ${method.minPayin}-${method.maxPayin}, но продолжаем обработку`
+          );
         }
 
         // Проверяем уникальность orderId
@@ -1121,69 +517,323 @@ export default (app: Elysia) =>
           where: { merchantId: merchant.id, orderId: body.orderId },
         });
         if (duplicate) {
-          return error(409, { error: "Транзакция с таким orderId уже существует" });
+          return error(409, {
+            error: "Транзакция с таким orderId уже существует",
+          });
         }
+
+        // Получаем список трейдеров, подключенных к данному мерчанту с включенными входами
+        const connectedTraders = await db.traderMerchant.findMany({
+          where: {
+            merchantId: merchant.id,
+            methodId: method.id,
+            isMerchantEnabled: true,
+            isFeeInEnabled: true, // Проверяем, что вход включен
+          },
+          select: { traderId: true },
+        });
+
+        const traderIds = connectedTraders.map((ct) => ct.traderId);
 
         // Подбираем реквизит (упрощенная логика из старого эндпоинта)
         const pool = await db.bankDetail.findMany({
           where: {
             isArchived: false,
+            isActive: true, // Проверяем, что реквизит активен
             methodType: method.type,
-            user: { banned: false },
+            userId: { in: traderIds }, // Только трейдеры, подключенные к мерчанту
+            user: {
+              banned: false,
+              deposit: { gte: 1000 },
+              trafficEnabled: true,
+            },
+            // Проверяем, что устройство банковской карты работает
+            OR: [
+              { deviceId: null }, // Карта без устройства
+              { device: { isWorking: true, isOnline: true } }, // Или устройство активно
+            ],
           },
           orderBy: { updatedAt: "asc" },
-          include: { user: true },
+          include: { user: true, device: true },
         });
 
         let chosen = null;
         for (const bd of pool) {
-          if (body.amount < bd.minAmount || body.amount > bd.maxAmount) continue;
-          if (body.amount < bd.user.minAmountPerRequisite || body.amount > bd.user.maxAmountPerRequisite) continue;
-          
+          if (body.amount < bd.minAmount || body.amount > bd.maxAmount)
+            continue;
+          if (
+            body.amount < bd.user.minAmountPerRequisite ||
+            body.amount > bd.user.maxAmountPerRequisite
+          )
+            continue;
+
           // Проверяем наличие активной транзакции с той же суммой на этом реквизите
           const existingTransaction = await db.transaction.findFirst({
             where: {
               bankDetailId: bd.id,
               amount: body.amount,
               status: {
-                in: [Status.CREATED, Status.IN_PROGRESS]
+                in: [Status.CREATED, Status.IN_PROGRESS],
               },
               type: TransactionType.IN,
-            }
+            },
           });
 
           if (existingTransaction) {
-            console.log(`[Merchant] Реквизит ${bd.id} отклонен: уже есть транзакция на сумму ${body.amount} в статусе ${existingTransaction.status}`);
+            console.log(
+              `[Merchant] Реквизит ${bd.id} отклонен: уже есть транзакция на сумму ${body.amount} в статусе ${existingTransaction.status}`
+            );
             continue;
           }
-          
-          // Проверяем дневной лимит транзакций
-          if (bd.maxCountTransactions && bd.maxCountTransactions > 0) {
-            const todayStart = new Date();
-            todayStart.setHours(0, 0, 0, 0);
-            const todayEnd = new Date();
-            todayEnd.setHours(23, 59, 59, 999);
-            
-            const todayCount = await db.transaction.count({
+
+          // Проверка лимита по количеству операций без срока давности
+          if (bd.operationLimit > 0) {
+            const totalOperations = await db.transaction.count({
               where: {
                 bankDetailId: bd.id,
-                createdAt: { gte: todayStart, lte: todayEnd },
-                status: { not: Status.CANCELED },
-              }
+                status: {
+                  in: [Status.IN_PROGRESS, Status.READY],
+                },
+              },
             });
-            
-            if (todayCount + 1 > bd.maxCountTransactions) {
-              console.log(`[Merchant] Реквизит ${bd.id} отклонен: превышение лимита транзакций. Текущий: ${todayCount}, лимит: ${bd.maxCountTransactions}`);
+            console.log(
+              `[Merchant] - Общее количество операций (IN_PROGRESS + READY): ${totalOperations}/${bd.operationLimit}`
+            );
+            if (totalOperations >= bd.operationLimit) {
+              console.log(
+                `[Merchant] Реквизит ${bd.id} отклонен: достигнут лимит количества операций. Текущее количество: ${totalOperations}, лимит: ${bd.operationLimit}`
+              );
               continue;
             }
           }
-          
+
+          // Проверка лимита на общую сумму сделок
+          if (bd.sumLimit > 0) {
+            const totalSumResult = await db.transaction.aggregate({
+              where: {
+                bankDetailId: bd.id,
+                status: {
+                  in: [Status.IN_PROGRESS, Status.READY],
+                },
+              },
+              _sum: { amount: true },
+            });
+            const totalSum = (totalSumResult._sum.amount ?? 0) + body.amount;
+            console.log(
+              `[Merchant] - Общая сумма операций (IN_PROGRESS + READY): ${
+                totalSumResult._sum.amount ?? 0
+              } + ${body.amount} = ${totalSum}/${bd.sumLimit}`
+            );
+            if (totalSum > bd.sumLimit) {
+              console.log(
+                `[Merchant] Реквизит ${
+                  bd.id
+                } отклонен: превышение лимита общей суммы. Текущая сумма: ${
+                  totalSumResult._sum.amount ?? 0
+                }, новая сумма: ${totalSum}, лимит: ${bd.sumLimit}`
+              );
+              continue;
+            }
+          }
+
           chosen = bd;
           break;
         }
 
         if (!chosen) {
-          return error(409, { error: "NO_REQUISITE" });
+          // Если не найден трейдер, пробуем агрегаторов
+          console.log("[Merchant IN] No trader found, trying aggregators...");
+
+          try {
+            const { aggregatorService } = await import(
+              "@/services/aggregator.service"
+            );
+            const availableAggregators =
+              await aggregatorService.findAvailableAggregators(
+                method.id,
+                body.amount
+              );
+
+            if (availableAggregators.length === 0) {
+              console.log("[Merchant IN] No aggregators available");
+              await db.transactionAttempt.create({
+                data: {
+                  merchantId: merchant.id,
+                  methodId: method.id,
+                  amount: body.amount,
+                  success: false,
+                  status: "NO_REQUISITE",
+                  errorCode: "NO_REQUISITE",
+                  message: "Не найден подходящий реквизит",
+                },
+              });
+              return error(409, { error: "NO_REQUISITE" });
+            }
+
+            // Пробуем первого доступного агрегатора
+            const aggregator = availableAggregators[0];
+            console.log(`[Merchant IN] Trying aggregator: ${aggregator.name}`);
+
+            // Создаем транзакцию для агрегатора
+            const transaction = await db.transaction.create({
+              data: {
+                merchantId: merchant.id,
+                amount: body.amount,
+                assetOrBank: `Aggregator: ${aggregator.name}`,
+                orderId: body.orderId,
+                methodId: method.id,
+                currency: "RUB",
+                userId: `user_${Date.now()}`,
+                userIp: body.userIp || null,
+                callbackUri: body.callbackUri || "",
+                successUri: "",
+                failUri: "",
+                type: TransactionType.IN,
+                expired_at: expired_at,
+                commission: 0,
+                clientName: `user_${Date.now()}`,
+                status: Status.CREATED,
+                rate: 100, // Временный курс
+                merchantRate: body.rate || 100,
+                isMock: body.isMock || false,
+                aggregatorId: aggregator.id,
+              },
+              include: {
+                method: {
+                  select: {
+                    id: true,
+                    code: true,
+                    name: true,
+                    type: true,
+                    currency: true,
+                    commissionPayin: true,
+                  },
+                },
+              },
+            });
+
+            // Отправляем запрос на создание транзакции к агрегатору
+            const aggregatorResult = await aggregatorService.createTransaction(
+              aggregator,
+              {
+                ...transaction,
+                method,
+              }
+            );
+
+            await db.transactionAttempt.create({
+              data: {
+                transactionId: transaction.id,
+                merchantId: merchant.id,
+                methodId: method.id,
+                amount: transaction.amount,
+                success: aggregatorResult.success,
+                status: aggregatorResult.success ? "CREATED" : "FAILED",
+                errorCode: aggregatorResult.success ? null : "AGGREGATOR_ERROR",
+                message: aggregatorResult.success
+                  ? "Создана через агрегатора"
+                  : aggregatorResult.error,
+              },
+            });
+
+            if (aggregatorResult.success) {
+              console.log(
+                `[Merchant IN] Transaction created via aggregator ${aggregator.name}`
+              );
+
+              // Обновляем статус транзакции
+              const updatedTx = await db.transaction.update({
+                where: { id: transaction.id },
+                data: {
+                  status: Status.IN_PROGRESS,
+                  // Сохраняем дополнительные данные от агрегатора если есть
+                  ...(aggregatorResult.paymentData?.instructions && {
+                    assetOrBank: aggregatorResult.paymentData.instructions,
+                  }),
+                },
+              });
+
+              set.status = 201;
+
+              // Проверяем, является ли мерчант Wellbit
+              const isWellbit = merchant.name.toLowerCase() === "wellbit";
+
+              if (isWellbit) {
+                // Для Wellbit возвращаем специальный формат
+                const wellbitResponse: any = {
+                  payment_id: updatedTx.id,
+                  payment_amount: updatedTx.amount,
+                  payment_amount_usdt: updatedTx.amount / updatedTx.rate,
+                  payment_amount_profit: updatedTx.amount * 0.935,
+                  payment_amount_profit_usdt:
+                    (updatedTx.amount / updatedTx.rate) * 0.935,
+                  payment_fee_percent_profit: 6.5,
+                  payment_type: method.type === MethodType.sbp ? "sbp" : "card",
+                  payment_bank: "AGGREGATOR",
+                  payment_course: updatedTx.rate,
+                  payment_lifetime: Math.floor(
+                    (updatedTx.expired_at.getTime() - Date.now()) / 1000
+                  ),
+                  payment_status: "new",
+                  payment_credential:
+                    aggregatorResult.paymentData?.requisites ||
+                    "Через агрегатора",
+                };
+
+                return wellbitResponse;
+              }
+
+              // Для остальных мерчантов возвращаем стандартный формат
+              return {
+                id: updatedTx.id,
+                numericId: updatedTx.numericId,
+                amount: updatedTx.amount,
+                status: updatedTx.status,
+                aggregator: aggregator.name,
+                paymentData: aggregatorResult.paymentData,
+                expiresAt: updatedTx.expired_at.toISOString(),
+              };
+            } else {
+              console.log(
+                `[Merchant IN] Aggregator ${aggregator.name} rejected transaction:`,
+                aggregatorResult.error
+              );
+
+              // Удаляем неуспешную транзакцию
+              await db.transaction.delete({ where: { id: transaction.id } });
+
+              await db.transactionAttempt.create({
+                data: {
+                  merchantId: merchant.id,
+                  methodId: method.id,
+                  amount: body.amount,
+                  success: false,
+                  status: "NO_REQUISITE",
+                  errorCode: "NO_REQUISITE",
+                  message:
+                    "Ни трейдеры, ни агрегаторы не могут обработать транзакцию",
+                },
+              });
+              return error(409, { error: "NO_REQUISITE" });
+            }
+          } catch (aggregatorError) {
+            console.error(
+              "[Merchant IN] Error processing aggregator:",
+              aggregatorError
+            );
+            await db.transactionAttempt.create({
+              data: {
+                merchantId: merchant.id,
+                methodId: method.id,
+                amount: body.amount,
+                success: false,
+                status: "NO_REQUISITE",
+                errorCode: "NO_REQUISITE",
+                message: "Не найден подходящий реквизит",
+              },
+            });
+            return error(409, { error: "NO_REQUISITE" });
+          }
         }
 
         // Получаем параметры трейдера для расчета заморозки
@@ -1192,125 +842,263 @@ export default (app: Elysia) =>
             traderId_merchantId_methodId: {
               traderId: chosen.userId,
               merchantId: merchant.id,
-              methodId: method.id
-            }
-          }
+              methodId: method.id,
+            },
+          },
         });
 
         // Рассчитываем параметры заморозки
         // Получаем KKK настройки для метода
         const rateSetting = await db.rateSettings.findUnique({
-          where: { methodId: method.id }
+          where: { methodId: method.id },
         });
-        
+
         // Если нет настроек для метода, используем глобальные
         let kkkPercent = 0;
-        let kkkOperation: 'PLUS' | 'MINUS' = 'MINUS';
-        
+        let kkkOperation: "PLUS" | "MINUS" = "MINUS";
+
         if (rateSetting) {
           kkkPercent = rateSetting.kkkPercent;
-          kkkOperation = rateSetting.kkkOperation as 'PLUS' | 'MINUS';
+          kkkOperation = rateSetting.kkkOperation as "PLUS" | "MINUS";
         } else {
           const globalKkkSetting = await db.systemConfig.findUnique({
-            where: { key: "kkk_percent" }
+            where: { key: "kkk_percent" },
           });
-          kkkPercent = globalKkkSetting ? parseFloat(globalKkkSetting.value) : 0;
-        }
-        
-        const feeInPercent = traderMerchant?.feeIn || 0;
-        
-        let currentRate = body.rate;
-        if (currentRate === undefined) {
-          const rateSettingRecord = await db.rateSetting.findFirst({ where: { id: 1 } });
-          const rapiraKkk = rateSettingRecord?.rapiraKkk || 0;
-          currentRate = await rapiraService.getRateWithKkk(rapiraKkk);
+          kkkPercent = globalKkkSetting
+            ? parseFloat(globalKkkSetting.value)
+            : 0;
         }
 
-        // Рассчитываем заморозку напрямую с курсом, который уже содержит KKK
-        const frozenUsdtAmount = Math.ceil((body.amount / currentRate) * 100) / 100;
-        const calculatedCommission = Math.ceil((frozenUsdtAmount * feeInPercent / 100) * 100) / 100;
-        const totalRequired = frozenUsdtAmount + calculatedCommission;
-        
+        const feeInPercent = traderMerchant?.feeIn || 0;
+
+        // Get KKK per source
+        const rateSettingRecord = await db.rateSetting.findFirst({
+          where: { id: 1 },
+        });
+        const rapiraKkk = rateSettingRecord?.rapiraKkk || 0;
+        const bybitKkk = (rateSettingRecord as any)?.bybitKkk || 0;
+
+        // Determine final rate source (relation -> user -> default bybit)
+        const userPref = await db.user
+          .findUnique({ where: { id: chosen.userId } })
+          .catch(() => null);
+        const resolvedSource =
+          traderMerchant?.rateSource || userPref?.rateSource || "rapira";
+        let selectedRate = 0;
+        if (resolvedSource === "rapira") {
+          selectedRate = await rapiraService.getRateWithKkk(rapiraKkk);
+        } else {
+          selectedRate = await bybitService.getRateWithKkk(bybitKkk);
+        }
+        console.log(
+          `[Merchant IN] Selected rate with KKK (${resolvedSource}): ${selectedRate}`
+        );
+
+        // merchantRate: merchant provided rate or Rapira rate if not provided
+        let merchantRate = body.rate;
+        if (merchantRate === undefined) {
+          merchantRate = selectedRate;
+        }
+
+        // rate field uses selected source with KKK
+        const transactionRate = selectedRate;
+        console.log(
+          `[Merchant IN] Merchant rate (saved for reference): ${merchantRate}`
+        );
+
+        // ВСЕГДА рассчитываем заморозку с курсом Рапиры с ККК
+
+        // Используем ceilUp2 для округления вверх до 2 знаков
+        const frozenUsdtAmount = ceilUp2(body.amount / transactionRate);
+
+        // Комиссию и прибыль не замораживаем при создании сделки
+        const calculatedCommission = 0;
+        const totalRequired = frozenUsdtAmount; // Замораживаем только основную сумму
+
         const freezingParams = {
-          adjustedRate: currentRate,
+          adjustedRate: transactionRate, // Use Rapira rate with KKK for freezing
           frozenUsdtAmount,
           calculatedCommission,
-          totalRequired
+          totalRequired,
         };
 
         // Проверяем достаточность баланса трейдера
         if (freezingParams && chosen.user) {
-          const availableBalance = chosen.user.trustBalance - chosen.user.frozenUsdt;
+          const availableBalance = chosen.user.trustBalance;
           if (availableBalance < freezingParams.totalRequired) {
-            console.log(`[Merchant IN] Недостаточно баланса. Нужно: ${freezingParams.totalRequired}, доступно: ${availableBalance}`);
-            return error(400, { error: "Недостаточно баланса трейдера" });
+            console.log(
+              `[Merchant IN] Недостаточно баланса. Нужно: ${freezingParams.totalRequired}, доступно: ${availableBalance}`
+            );
+            await db.transactionAttempt.create({
+              data: {
+                merchantId: merchant.id,
+                methodId: method.id,
+                amount: body.amount,
+                success: false,
+                status: "NO_REQUISITE",
+                errorCode: "INSUFFICIENT_BALANCE",
+                message: "Недостаточно баланса трейдера",
+              },
+            });
+            return error(409, { error: "NO_REQUISITE" });
           }
         }
 
-        // Создаем транзакцию с параметрами заморозки и замораживаем средства
-        const tx = await db.$transaction(async (prisma) => {
-          const transaction = await prisma.transaction.create({
+        await db.bankDetail.update({
+          where: { id: chosen.id },
           data: {
-            merchantId: merchant.id,
-            amount: body.amount,
-            assetOrBank: `${chosen.bankType}: ${chosen.cardNumber}`,
-            orderId: body.orderId,
-            methodId: method.id,
-            currency: "RUB",
-            userId: `user_${Date.now()}`,
-            userIp: body.userIp || null,
-            callbackUri: body.callbackUri || "",
-            successUri: "",
-            failUri: "",
-            type: TransactionType.IN,
-            expired_at: expired_at,
-            commission: 0,
-            clientName: `user_${Date.now()}`,
-            status: Status.IN_PROGRESS,
-            rate: currentRate,
-            adjustedRate: freezingParams.adjustedRate,
-            kkkPercent: kkkPercent,
-            kkkOperation: kkkOperation,
-            feeInPercent: feeInPercent,
-            frozenUsdtAmount: freezingParams.frozenUsdtAmount,
-            calculatedCommission: freezingParams.calculatedCommission,
-            isMock: body.isMock || false,
-            bankDetailId: chosen.id,
-            traderId: chosen.userId,
-          },
-          include: {
-            method: {
-              select: {
-                id: true,
-                code: true,
-                name: true,
-                type: true,
-                currency: true,
-                commissionPayin: true,
-              },
-            },
+            currentTotalAmount: body.amount,
           },
         });
 
+        // Создаем транзакцию с параметрами заморозки и замораживаем средства
+        console.log(
+          `[Merchant IN] Creating transaction with rate=${transactionRate}, merchantRate=${merchantRate}`
+        );
+        const tx = await db.$transaction(async (prisma) => {
+          const transaction = await prisma.transaction.create({
+            data: {
+              merchantId: merchant.id,
+              amount: body.amount,
+              assetOrBank:
+                method.type === MethodType.sbp
+                  ? chosen.cardNumber
+                  : `${chosen.bankType}: ${chosen.cardNumber}`, // Для СБП только номер телефона
+              orderId: body.orderId,
+              methodId: method.id,
+              currency: "RUB",
+              userId: `user_${Date.now()}`,
+              userIp: body.userIp || null,
+              callbackUri: body.callbackUri || "",
+              successUri: "",
+              failUri: "",
+              type: TransactionType.IN,
+              expired_at: expired_at,
+              commission: 0,
+              clientName: `user_${Date.now()}`,
+              status: Status.IN_PROGRESS,
+              rate: transactionRate, // Always Rapira rate with KKK
+              merchantRate: merchantRate, // Merchant provided rate or Rapira if not provided
+              adjustedRate: freezingParams.adjustedRate,
+              kkkPercent: kkkPercent,
+              kkkOperation: kkkOperation,
+              feeInPercent: feeInPercent,
+              frozenUsdtAmount: freezingParams.frozenUsdtAmount,
+              calculatedCommission: freezingParams.calculatedCommission,
+              isMock: body.isMock || false,
+              bankDetailId: chosen.id,
+              traderId: chosen.userId,
+            },
+            include: {
+              method: {
+                select: {
+                  id: true,
+                  code: true,
+                  name: true,
+                  type: true,
+                  currency: true,
+                  commissionPayin: true,
+                },
+              },
+            },
+          });
+
           // Замораживаем средства трейдера
           if (freezingParams && chosen.user) {
-            console.log(`[Merchant IN] Freezing funds for trader ${chosen.userId}: ${freezingParams.totalRequired} USDT`);
-            await prisma.user.update({
+            console.log(
+              `[Merchant IN] Freezing funds for trader ${chosen.userId}: ${freezingParams.totalRequired} USDT`
+            );
+            console.log(
+              `[Merchant IN] Trader balance before freezing - trustBalance: ${chosen.user.trustBalance}, frozenUsdt: ${chosen.user.frozenUsdt}`
+            );
+
+            const updatedUser = await prisma.user.update({
               where: { id: chosen.userId },
               data: {
-                frozenUsdt: { increment: freezingParams.totalRequired }
-              }
+                frozenUsdt: { increment: freezingParams.totalRequired },
+                trustBalance: { decrement: freezingParams.totalRequired }, // Списываем с баланса при заморозке
+              },
             });
+
+            console.log(
+              `[Merchant IN] Trader balance after freezing - trustBalance: ${updatedUser.trustBalance}, frozenUsdt: ${updatedUser.frozenUsdt}`
+            );
+          } else {
+            console.log(
+              `[Merchant IN] NOT freezing funds. freezingParams: ${!!freezingParams}, chosen.user: ${!!chosen.user}`
+            );
           }
 
           return transaction;
         });
+        await db.transactionAttempt.create({
+          data: {
+            transactionId: tx.id,
+            merchantId: merchant.id,
+            methodId: method.id,
+            amount: tx.amount,
+            success: true,
+            status: tx.status,
+          },
+        });
 
-        const crypto = tx.rate && tx.method && typeof tx.method.commissionPayin === 'number'
-          ? (tx.amount / tx.rate) * (1 - tx.method.commissionPayin / 100)
-          : null;
+        const crypto =
+          tx.rate && tx.method && typeof tx.method.commissionPayin === "number"
+            ? (tx.amount / tx.rate) * (1 - tx.method.commissionPayin / 100)
+            : null;
 
         set.status = 201;
+
+        // Проверяем, является ли мерчант Wellbit
+        const isWellbit = merchant.name.toLowerCase() === "wellbit";
+
+        if (isWellbit) {
+          // Для Wellbit возвращаем специальный формат
+          const wellbitResponse: any = {
+            payment_id: tx.id,
+            payment_amount: tx.amount,
+            payment_amount_usdt: crypto || tx.amount / tx.rate,
+            payment_amount_profit: tx.amount * 0.935, // С учетом комиссии 6.5%
+            payment_amount_profit_usdt: (crypto || tx.amount / tx.rate) * 0.935,
+            payment_fee_percent_profit: 6.5,
+            payment_type: tx.method?.type === MethodType.sbp ? "sbp" : "card",
+            payment_bank: chosen.bankType,
+            payment_course: tx.rate,
+            payment_lifetime: Math.floor(
+              (tx.expired_at.getTime() - Date.now()) / 1000
+            ),
+            payment_status: "new",
+            payment_credential: chosen.cardNumber,
+          };
+
+          // Если есть приватный ключ, добавляем HMAC подпись в заголовки
+          if (merchant.apiKeyPrivate) {
+            const crypto = await import("crypto");
+            // Сортируем ключи и генерируем подпись
+            const sortedPayload = Object.keys(wellbitResponse)
+              .sort()
+              .reduce((obj: any, key) => {
+                obj[key] = wellbitResponse[key];
+                return obj;
+              }, {});
+
+            const jsonString = JSON.stringify(sortedPayload);
+            const signature = crypto
+              .createHmac("sha256", merchant.apiKeyPrivate)
+              .update(jsonString)
+              .digest("hex");
+
+            // Добавляем заголовок с подписью
+            set.headers = {
+              ...set.headers,
+              "x-api-token": signature,
+            };
+          }
+
+          return wellbitResponse;
+        }
+
+        // Для остальных мерчантов возвращаем стандартный формат
         return {
           id: tx.id,
           numericId: tx.numericId,
@@ -1335,13 +1123,23 @@ export default (app: Elysia) =>
         headers: t.Object({ "x-merchant-api-key": t.String() }),
         body: t.Object({
           amount: t.Number({ description: "Сумма транзакции в рублях" }),
-          orderId: t.String({ description: "Уникальный ID заказа от мерчанта" }),
+          orderId: t.String({
+            description: "Уникальный ID заказа от мерчанта",
+          }),
           methodId: t.String({ description: "ID метода платежа" }),
           rate: t.Optional(t.Number({ description: "Курс USDT/RUB" })),
-          expired_at: t.String({ description: "ISO дата истечения транзакции" }),
-          userIp: t.Optional(t.String({ description: "IP адрес пользователя" })),
-          callbackUri: t.Optional(t.String({ description: "URL для callback уведомлений" })),
-          isMock: t.Optional(t.Boolean({ description: "Флаг для создания тестовой транзакции" })),
+          expired_at: t.String({
+            description: "ISO дата истечения транзакции",
+          }),
+          userIp: t.Optional(
+            t.String({ description: "IP адрес пользователя" })
+          ),
+          callbackUri: t.Optional(
+            t.String({ description: "URL для callback уведомлений" })
+          ),
+          isMock: t.Optional(
+            t.Boolean({ description: "Флаг для создания тестовой транзакции" })
+          ),
         }),
         response: {
           201: t.Object({
@@ -1375,7 +1173,7 @@ export default (app: Elysia) =>
         },
         tags: ["merchant"],
         detail: { summary: "Создание входящей транзакции (IN)" },
-      },
+      }
     )
 
     /* ──────── POST /merchant/transactions/out ──────── */
@@ -1384,9 +1182,11 @@ export default (app: Elysia) =>
       async ({ body, merchant, set, error }) => {
         // Проверяем, не отключен ли мерчант
         if (merchant.disabled) {
-          return error(403, { error: "Ваш трафик временно отключен. Обратитесь к администратору." });
+          return error(403, {
+            error: "Ваш трафик временно отключен. Обратитесь к администратору.",
+          });
         }
-        
+
         // Always get the current rate from Rapira for trader calculations
         let rapiraRate: number;
         try {
@@ -1395,27 +1195,35 @@ export default (app: Elysia) =>
           console.error("Failed to get rate from Rapira:", error);
           rapiraRate = 95; // Default fallback rate
         }
-        
+
         // Validate rate based on merchant's countInRubEquivalent setting
         let rate: number;
-        
+
         if (merchant.countInRubEquivalent) {
           // If merchant has RUB calculations enabled, we provide the rate from Rapira
           if (body.rate !== undefined) {
-            return error(400, { error: "Курс не должен передаваться при включенных расчетах в рублях. Курс автоматически получается от системы." });
+            return error(400, {
+              error:
+                "Курс не должен передаваться при включенных расчетах в рублях. Курс автоматически получается от системы.",
+            });
           }
           rate = rapiraRate;
         } else {
           // If RUB calculations are disabled, merchant must provide the rate
           if (body.rate === undefined) {
-            return error(400, { error: "Курс обязателен при выключенных расчетах в рублях. Укажите параметр rate." });
+            return error(400, {
+              error:
+                "Курс обязателен при выключенных расчетах в рублях. Укажите параметр rate.",
+            });
           }
           rate = body.rate;
         }
-        
+
         // Генерируем значения по умолчанию
-        const expired_at = body.expired_at ? new Date(body.expired_at) : new Date(Date.now() + 86_400_000);
-        
+        const expired_at = body.expired_at
+          ? new Date(body.expired_at)
+          : new Date(Date.now() + 86_400_000);
+
         // Проверяем метод
         const method = await db.method.findUnique({
           where: { id: body.methodId },
@@ -1437,9 +1245,11 @@ export default (app: Elysia) =>
           return error(404, { error: "Метод недоступен мерчанту" });
         }
 
-        // Проверяем сумму для OUT транзакций
+        // Мягкое предупреждение о лимитах метода для OUT транзакций
         if (body.amount < method.minPayout || body.amount > method.maxPayout) {
-          return error(400, { error: "Сумма вне допустимого диапазона" });
+          console.log(
+            `[Merchant] ⚠️ Предупреждение: сумма ${body.amount} вне стандартного диапазона метода для выплат ${method.minPayout}-${method.maxPayout}, но продолжаем обработку`
+          );
         }
 
         // Проверяем уникальность orderId
@@ -1447,7 +1257,9 @@ export default (app: Elysia) =>
           where: { merchantId: merchant.id, orderId: body.orderId },
         });
         if (duplicate) {
-          return error(409, { error: "Транзакция с таким orderId уже существует" });
+          return error(409, {
+            error: "Транзакция с таким orderId уже существует",
+          });
         }
 
         // Создаем OUT транзакцию
@@ -1504,13 +1316,23 @@ export default (app: Elysia) =>
         headers: t.Object({ "x-merchant-api-key": t.String() }),
         body: t.Object({
           amount: t.Number({ description: "Сумма транзакции в рублях" }),
-          orderId: t.String({ description: "Уникальный ID заказа от мерчанта" }),
+          orderId: t.String({
+            description: "Уникальный ID заказа от мерчанта",
+          }),
           methodId: t.String({ description: "ID метода платежа" }),
           rate: t.Number({ description: "Курс USDT/RUB" }),
-          expired_at: t.String({ description: "ISO дата истечения транзакции" }),
-          userIp: t.Optional(t.String({ description: "IP адрес пользователя" })),
-          callbackUri: t.Optional(t.String({ description: "URL для callback уведомлений" })),
-          isMock: t.Optional(t.Boolean({ description: "Флаг для создания тестовой транзакции" })),
+          expired_at: t.String({
+            description: "ISO дата истечения транзакции",
+          }),
+          userIp: t.Optional(
+            t.String({ description: "IP адрес пользователя" })
+          ),
+          callbackUri: t.Optional(
+            t.String({ description: "URL для callback уведомлений" })
+          ),
+          isMock: t.Optional(
+            t.Boolean({ description: "Флаг для создания тестовой транзакции" })
+          ),
         }),
         response: {
           201: t.Object({
@@ -1538,7 +1360,7 @@ export default (app: Elysia) =>
         },
         tags: ["merchant"],
         detail: { summary: "Создание исходящей транзакции (OUT)" },
-      },
+      }
     )
 
     /* ──────── GET /merchant/enums ──────── */
@@ -1550,6 +1372,7 @@ export default (app: Elysia) =>
           transactionType: Object.values(TransactionType),
           methodType: Object.values(MethodType),
           currency: Object.values(Currency),
+          bankType: Object.values(BankType),
         };
       },
       {
@@ -1562,10 +1385,11 @@ export default (app: Elysia) =>
             transactionType: t.Array(t.Enum(TransactionType)),
             methodType: t.Array(t.Enum(MethodType)),
             currency: t.Array(t.Enum(Currency)),
+            bankType: t.Array(t.Enum(BankType)),
           }),
           401: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ──────── GET /merchant/methods ──────── */
@@ -1621,11 +1445,11 @@ export default (app: Elysia) =>
               maxPayout: t.Number(),
               minPayout: t.Number(),
               isEnabled: t.Boolean(),
-            }),
+            })
           ),
           401: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ──────── GET /merchant/transactions/by-order-id/:orderId ──────── */
@@ -1717,13 +1541,13 @@ export default (app: Elysia) =>
                 recipientName: t.String(),
                 traderId: t.String(),
                 traderName: t.String(),
-              }),
+              })
             ),
           }),
           404: ErrorSchema,
           401: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ──────── POST /merchant/transactions/:id/receipt ──────── */
@@ -1789,7 +1613,7 @@ export default (app: Elysia) =>
           fileData: t.String({ description: "Файл в формате base64" }),
           fileName: t.String({ description: "Имя файла" }),
           updateStatus: t.Optional(
-            t.Enum(Status, { description: "Обновить статус транзакции" }),
+            t.Enum(Status, { description: "Обновить статус транзакции" })
           ),
         }),
         response: {
@@ -1804,7 +1628,7 @@ export default (app: Elysia) =>
           404: ErrorSchema,
           401: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ──────── GET /merchant/transactions/:id/receipts ──────── */
@@ -1857,10 +1681,10 @@ export default (app: Elysia) =>
               isAuto: t.Boolean(),
               createdAt: t.String(),
               updatedAt: t.String(),
-            }),
+            })
           ),
           404: ErrorSchema,
           401: ErrorSchema,
         },
-      },
+      }
     );

@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
 import { db } from "@/db";
-import { Prisma } from "@prisma/client";
+import { Prisma, RateSource } from "@prisma/client";
 import ErrorSchema from "@/types/error";
 
 const authHeader = t.Object({ "x-admin-key": t.String() });
@@ -29,6 +29,10 @@ export default (app: Elysia) =>
                   name: true,
                   type: true,
                 },
+              },
+              feeRanges: {
+                where: { isActive: true },
+                orderBy: { minAmount: 'asc' }
               },
             },
             orderBy: { createdAt: 'desc' },
@@ -97,6 +101,9 @@ export default (app: Elysia) =>
               isFeeInEnabled: tm.isFeeInEnabled,
               isFeeOutEnabled: tm.isFeeOutEnabled,
               isMerchantEnabled: tm.isMerchantEnabled,
+              rateSource: tm.rateSource || null,
+              useFlexibleRates: tm.useFlexibleRates,
+              feeRangesCount: tm.feeRanges.length,
               profitIn: profitByMerchant[tm.merchantId]?.profitIn || 0,
               profitOut: profitByMerchant[tm.merchantId]?.profitOut || 0,
             })),
@@ -133,6 +140,9 @@ export default (app: Elysia) =>
                 isFeeInEnabled: t.Boolean(),
                 isFeeOutEnabled: t.Boolean(),
                 isMerchantEnabled: t.Boolean(),
+                rateSource: t.Union([t.Enum(RateSource), t.Null()]),
+                useFlexibleRates: t.Boolean(),
+                feeRangesCount: t.Number(),
                 profitIn: t.Number(),
                 profitOut: t.Number(),
               })
@@ -194,6 +204,8 @@ export default (app: Elysia) =>
               methodId: body.methodId,
               feeIn: body.feeIn || 0,
               feeOut: body.feeOut || 0,
+              rateSource: body.rateSource ?? null,
+              useFlexibleRates: false, // По умолчанию отключено
             },
             include: {
               merchant: true,
@@ -212,6 +224,7 @@ export default (app: Elysia) =>
             isFeeInEnabled: traderMerchant.isFeeInEnabled,
             isFeeOutEnabled: traderMerchant.isFeeOutEnabled,
             isMerchantEnabled: traderMerchant.isMerchantEnabled,
+            rateSource: traderMerchant.rateSource || null,
           };
         } catch (e) {
           if (
@@ -231,6 +244,7 @@ export default (app: Elysia) =>
           methodId: t.String(),
           feeIn: t.Optional(t.Number()),
           feeOut: t.Optional(t.Number()),
+          rateSource: t.Optional(t.Enum(RateSource)),
         }),
         response: {
           200: t.Object({
@@ -244,6 +258,7 @@ export default (app: Elysia) =>
             isFeeInEnabled: t.Boolean(),
             isFeeOutEnabled: t.Boolean(),
             isMerchantEnabled: t.Boolean(),
+            rateSource: t.Union([t.Enum(RateSource), t.Null()]),
           }),
           404: ErrorSchema,
           409: ErrorSchema,
@@ -266,6 +281,8 @@ export default (app: Elysia) =>
               isFeeInEnabled: body.isFeeInEnabled !== undefined ? body.isFeeInEnabled : undefined,
               isFeeOutEnabled: body.isFeeOutEnabled !== undefined ? body.isFeeOutEnabled : undefined,
               isMerchantEnabled: body.isMerchantEnabled !== undefined ? body.isMerchantEnabled : undefined,
+              rateSource: body.rateSource !== undefined ? body.rateSource : undefined,
+              useFlexibleRates: body.useFlexibleRates !== undefined ? body.useFlexibleRates : undefined,
             },
           });
 
@@ -276,6 +293,8 @@ export default (app: Elysia) =>
             isFeeInEnabled: updatedRelation.isFeeInEnabled,
             isFeeOutEnabled: updatedRelation.isFeeOutEnabled,
             isMerchantEnabled: updatedRelation.isMerchantEnabled,
+            rateSource: updatedRelation.rateSource || null,
+            useFlexibleRates: updatedRelation.useFlexibleRates,
           };
         } catch (e) {
           if (
@@ -296,6 +315,8 @@ export default (app: Elysia) =>
           isFeeInEnabled: t.Optional(t.Boolean()),
           isFeeOutEnabled: t.Optional(t.Boolean()),
           isMerchantEnabled: t.Optional(t.Boolean()),
+          rateSource: t.Optional(t.Enum(RateSource)),
+          useFlexibleRates: t.Optional(t.Boolean()),
         }),
         response: {
           200: t.Object({
@@ -305,6 +326,7 @@ export default (app: Elysia) =>
             isFeeInEnabled: t.Boolean(),
             isFeeOutEnabled: t.Boolean(),
             isMerchantEnabled: t.Boolean(),
+            rateSource: t.Union([t.Enum(RateSource), t.Null()]),
           }),
           404: ErrorSchema,
           401: ErrorSchema,

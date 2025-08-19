@@ -1,7 +1,9 @@
 // src/services/ExpiredTransactionWatcher.ts
-import { BaseService } from './BaseService';
-import { db } from '@/db';
-import { Status } from '@prisma/client';
+import { BaseService } from "./BaseService";
+import { db } from "@/db";
+import { Status } from "@prisma/client";
+import { sendTransactionCallbacks } from "@/utils/notify";
+import { truncate2 } from "@/utils/rounding";
 
 /**
  * ExpiredTransactionWatcher
@@ -12,7 +14,7 @@ import { Status } from '@prisma/client';
  */
 export default class ExpiredTransactionWatcher extends BaseService {
   protected interval = 10_000; // 10 секунд для более быстрой обработки
-  
+
   // Публичные поля для мониторинга
   private totalProcessed = 0;
   private lastProcessedCount = 0;
@@ -22,13 +24,14 @@ export default class ExpiredTransactionWatcher extends BaseService {
 
   constructor() {
     super({
-      displayName: 'Наблюдатель просроченных транзакций',
-      description: 'Автоматически отмечает просроченные транзакции и размораживает средства трейдеров',
+      displayName: "Наблюдатель просроченных транзакций",
+      description:
+        "Автоматически отмечает просроченные транзакции и размораживает средства трейдеров",
       enabled: true,
       autoStart: true,
-      tags: ['transactions', 'cleanup', 'critical'],
+      tags: ["transactions", "cleanup", "critical"],
     });
-    
+
     this.customSettings = {
       enabled: true,
       batchSize: 50,
@@ -38,22 +41,22 @@ export default class ExpiredTransactionWatcher extends BaseService {
 
   /** Инициализация сервиса */
   protected async onStart(): Promise<void> {
-    await this.logInfo('Expired Transaction Watcher starting', {
+    await this.logInfo("Expired Transaction Watcher starting", {
       interval: this.interval,
-      checkStatuses: ['IN_PROGRESS']
+      checkStatuses: ["IN_PROGRESS"],
     });
   }
 
   /** Периодическая проверка просроченных транзакций */
   protected async tick(): Promise<void> {
     if (!this.enabled) {
-      await this.logDebug('Service is disabled, skipping tick');
+      await this.logDebug("Service is disabled, skipping tick");
       return;
     }
 
     const startTime = Date.now();
     this.lastRunTime = new Date();
-    
+
     try {
       const now = new Date();
 
@@ -69,26 +72,31 @@ export default class ExpiredTransactionWatcher extends BaseService {
           merchant: true,
         },
         orderBy: {
-          expired_at: 'asc' // Обрабатываем сначала те, что истекли раньше
+          expired_at: "asc", // Обрабатываем сначала те, что истекли раньше
         },
-        take: 100 // Ограничиваем количество для пакетной обработки
+        take: 100, // Ограничиваем количество для пакетной обработки
       });
 
       this.lastProcessedCount = expiredTransactions.length;
 
       if (expiredTransactions.length === 0) {
-        await this.logDebug('No expired transactions found');
+        await this.logDebug("No expired transactions found");
         return;
       }
 
-      await this.logInfo(`Found ${expiredTransactions.length} expired transactions to process`, {
-        transactionIds: expiredTransactions.map(tx => tx.id),
-        expiredSince: expiredTransactions.map(tx => ({
-          id: tx.id,
-          expiredAt: tx.expired_at,
-          expiredFor: Math.floor((now.getTime() - tx.expired_at.getTime()) / 1000 / 60) // минуты
-        }))
-      });
+      await this.logInfo(
+        `Found ${expiredTransactions.length} expired transactions to process`,
+        {
+          transactionIds: expiredTransactions.map((tx) => tx.id),
+          expiredSince: expiredTransactions.map((tx) => ({
+            id: tx.id,
+            expiredAt: tx.expired_at,
+            expiredFor: Math.floor(
+              (now.getTime() - tx.expired_at.getTime()) / 1000 / 60
+            ), // минуты
+          })),
+        }
+      );
 
       let processedCount = 0;
       let unfrozenAmountTotal = 0;
@@ -106,54 +114,82 @@ export default class ExpiredTransactionWatcher extends BaseService {
               data: { status: Status.EXPIRED },
             });
 
+            // Отправляем callback после смены статуса на EXPIRED
+            // Делаем это асинхронно, чтобы не блокировать транзакцию БД
+            setImmediate(async () => {
+              try {
+                await sendTransactionCallbacks(tx, Status.EXPIRED);
+              } catch (callbackError) {
+                await this.logError(
+                  `Failed to send callback for expired transaction ${tx.id}`,
+                  {
+                    transactionId: tx.id,
+                    error:
+                      callbackError instanceof Error
+                        ? callbackError.message
+                        : String(callbackError),
+                  }
+                );
+              }
+            });
+
             // Размораживаем средства для IN транзакций
-            if (tx.type === 'IN' && tx.traderId && tx.frozenUsdtAmount) {
+            if (tx.type === "IN" && tx.traderId && tx.frozenUsdtAmount) {
               // Размораживаем основную сумму + комиссию (если есть)
-              unfrozenAmount = tx.frozenUsdtAmount + (tx.calculatedCommission || 0);
-              
+              unfrozenAmount =
+                tx.frozenUsdtAmount + (tx.calculatedCommission || 0);
+
               // Проверяем текущий замороженный баланс трейдера
               const trader = await prisma.user.findUnique({
                 where: { id: tx.traderId },
-                select: { frozenUsdt: true, trustBalance: true }
+                select: { frozenUsdt: true, trustBalance: true },
               });
-              
-              if (trader && trader.frozenUsdt >= unfrozenAmount) {
-                // Размораживаем средства и возвращаем на баланс
+
+              if (trader) {
+                const currentFrozen = trader.frozenUsdt || 0;
+                const newFrozen = Math.max(currentFrozen - unfrozenAmount, 0);
+
+                // Возвращаем средства на траст баланс и предотвращаем отрицательные значения frozenUsdt
                 await prisma.user.update({
                   where: { id: tx.traderId },
                   data: {
-                    frozenUsdt: { decrement: unfrozenAmount },
-                    trustBalance: { increment: unfrozenAmount }
-                  }
+                    frozenUsdt: { set: truncate2(newFrozen) },
+                    trustBalance: { increment: truncate2(unfrozenAmount) },
+                  },
                 });
-              } else {
-                await this.logError(`Insufficient frozen balance for trader ${tx.traderId}`, {
-                  transactionId: tx.id,
-                  requiredAmount: unfrozenAmount,
-                  currentFrozenBalance: trader?.frozenUsdt || 0
-                });
+
+                if (currentFrozen < unfrozenAmount) {
+                  await this.logError(
+                    `Insufficient frozen balance for trader ${tx.traderId}`,
+                    {
+                      transactionId: tx.id,
+                      requiredAmount: unfrozenAmount,
+                      currentFrozenBalance: currentFrozen,
+                    }
+                  );
+                }
               }
             }
-            
+
             // Обработка OUT транзакций (выплат)
-            if (tx.type === 'OUT' && tx.traderId) {
+            if (tx.type === "OUT" && tx.traderId) {
               // Для выплат возвращаем сумму на баланс трейдера
               const payoutAmount = tx.amount / (tx.rate || 1); // Конвертируем обратно в USDT
-              
+
               await prisma.user.update({
                 where: { id: tx.traderId },
                 data: {
-                  frozenPayoutBalance: { decrement: payoutAmount },
-                  trustBalance: { increment: payoutAmount }
-                }
+                  frozenPayoutBalance: { decrement: truncate2(payoutAmount) },
+                  trustBalance: { increment: truncate2(payoutAmount) },
+                },
               });
-              
+
               unfrozenAmount = payoutAmount;
-              
+
               await this.logInfo(`Payout expired and refunded`, {
                 transactionId: tx.id,
                 traderId: tx.traderId,
-                refundedAmount: payoutAmount
+                refundedAmount: payoutAmount,
               });
             }
           });
@@ -177,15 +213,17 @@ export default class ExpiredTransactionWatcher extends BaseService {
             amount: tx.amount,
             unfrozenAmount,
             traderId: tx.traderId,
-            traderEmail: tx.trader?.email
+            traderEmail: tx.trader?.email,
           });
-
         } catch (error) {
-          await this.logError(`Failed to process expired transaction ${tx.id}`, {
-            transactionId: tx.id,
-            error: error instanceof Error ? error.message : 'Unknown error',
-            stack: error instanceof Error ? error.stack : undefined
-          });
+          await this.logError(
+            `Failed to process expired transaction ${tx.id}`,
+            {
+              transactionId: tx.id,
+              error: error instanceof Error ? error.message : "Unknown error",
+              stack: error instanceof Error ? error.stack : undefined,
+            }
+          );
         }
       }
 
@@ -199,37 +237,36 @@ export default class ExpiredTransactionWatcher extends BaseService {
         successfullyProcessed: processedCount,
         totalUnfrozenAmount: unfrozenAmountTotal,
         processingTimeMs: processingTime,
-        processedTransactions
+        processedTransactions,
       });
 
       // Массовое логирование для аналитики
       await this.logMany([
         {
-          level: 'INFO',
-          message: 'Processing statistics',
+          level: "INFO",
+          message: "Processing statistics",
           data: {
             totalLifetimeProcessed: this.totalProcessed,
             totalLifetimeUnfrozenAmount: this.totalUnfrozenAmount,
             currentRunProcessed: processedCount,
-            currentRunUnfrozenAmount: unfrozenAmountTotal
-          }
+            currentRunUnfrozenAmount: unfrozenAmountTotal,
+          },
         },
         {
-          level: 'DEBUG',
-          message: 'Performance metrics',
+          level: "DEBUG",
+          message: "Performance metrics",
           data: {
             processingTimeMs: processingTime,
             transactionsPerSecond: processedCount / (processingTime / 1000),
-            memoryUsage: process.memoryUsage()
-          }
-        }
+            memoryUsage: process.memoryUsage(),
+          },
+        },
       ]);
-
     } catch (error) {
-      await this.logError('Failed to process expired transactions', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      await this.logError("Failed to process expired transactions", {
+        error: error instanceof Error ? error.message : "Unknown error",
         stack: error instanceof Error ? error.stack : undefined,
-        processingTime: Date.now() - startTime
+        processingTime: Date.now() - startTime,
       });
       throw error;
     }
@@ -244,15 +281,19 @@ export default class ExpiredTransactionWatcher extends BaseService {
       totalUnfrozenAmount: this.totalUnfrozenAmount,
       lastRunTime: this.lastRunTime.toISOString(),
       checkInterval: this.interval,
-      uptime: process.uptime()
+      uptime: process.uptime(),
     };
   }
 
   /** Обновляет публичные поля сервиса */
-  protected async updatePublicFields(fields: Record<string, any>): Promise<void> {
+  protected async updatePublicFields(
+    fields: Record<string, any>
+  ): Promise<void> {
     if (fields.enabled !== undefined) {
       this.enabled = fields.enabled;
-      await this.logInfo('Service enabled status changed', { enabled: this.enabled });
+      await this.logInfo("Service enabled status changed", {
+        enabled: this.enabled,
+      });
     }
 
     // Обновляем в базе данных

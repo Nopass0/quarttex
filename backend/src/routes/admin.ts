@@ -25,6 +25,7 @@ import { databaseRoute } from "@/routes/admin/database";
 import topupSettingsRoutes from "@/routes/admin/topup-settings";
 import { servicesRoutes } from "@/routes/admin/services";
 import traderMerchantsRoutes from "@/routes/admin/trader-merchants";
+import traderMerchantFeeRangesRoutes from "@/routes/admin/trader-merchant-fee-ranges";
 import agentsRoutes from "@/routes/admin/agents";
 import paymentDetailsRoutes from "@/routes/admin/payment-details";
 import devicesRoutes from "@/routes/admin/devices";
@@ -39,11 +40,13 @@ import deviceEmulatorRoutes from "@/routes/admin/device-emulator";
 import metricsRoutes from "@/routes/admin/metrics";
 import payoutEmulatorRoutes from "@/routes/admin/payout-emulator";
 import adminMerchantsRoutes from "@/routes/admin/merchants";
+import wellbitBankMappingRoutes from "@/routes/admin/wellbit-bank-mapping";
 import { adminPayoutsRoutes } from "@/routes/admin/payouts";
 import { telegramSettingsRoutes } from "@/routes/admin/telegram-settings";
 import { adminWithdrawalsRoutes } from "@/routes/admin/withdrawals";
 import { merchantEmulatorApi } from "@/api/admin/merchant-emulator";
 import depositsRoutes from "@/routes/admin/deposits";
+import aggregatorDepositsRoutes from "@/routes/admin/aggregator-deposits";
 import systemConfigRoutes from "@/routes/admin/system-config";
 import messagesRoutes from "@/routes/admin/messages";
 import dealDisputesRoutes from "@/routes/admin/deal-disputes";
@@ -52,6 +55,9 @@ import bulkDeleteRoutes from "@/routes/admin/bulk-delete";
 import ideasRoutes from "@/routes/admin/ideas";
 import testRoutes from "@/routes/admin/test";
 import { settleRequestsRoutes } from "@/routes/admin/settle-requests";
+import { merchantRequestLogsRoutes } from "@/routes/admin/merchant-request-logs";
+import { botDisputesRoutes } from "@/routes/admin/bot-disputes";
+import aggregatorsRoutes from "@/routes/admin/aggregators";
 // import { testToolsRoutes } from "@/routes/admin/test-tools";
 
 const authHeader = t.Object({ "x-admin-key": t.String() });
@@ -59,50 +65,59 @@ const authHeader = t.Object({ "x-admin-key": t.String() });
 export default (app: Elysia) =>
   app
     /* ───────────────── Auth verify ───────────────── */
-    .get("/verify", async ({ request, set }) => {
-      // Ensure proper UTF-8 encoding for response
-      set.headers['Content-Type'] = 'application/json; charset=utf-8';
-      
-      // Get admin details including role
-      const adminToken = request.headers.get("x-admin-key");
-      const admin = await db.admin.findUnique({
-        where: { token: adminToken || "" },
-        select: {
-          id: true,
-          role: true,
-        },
-      });
-      
-      // If we reach this point, it means adminGuard has already validated the token
-      return { 
-        success: true, 
-        message: "Admin token is valid",
-        admin: admin ? {
-          id: admin.id,
-          role: admin.role,
-        } : null,
-      };
-    }, {
-      tags: ["admin"],
-      headers: authHeader,
-      response: {
-        200: t.Object({ 
-          success: t.Boolean(), 
-          message: t.String(),
-          admin: t.Nullable(t.Object({
-            id: t.String(),
-            role: t.Enum(AdminRole),
-          })),
-        }),
-        401: ErrorSchema,
-        403: ErrorSchema,
+    .get(
+      "/verify",
+      async ({ request, set }) => {
+        // Ensure proper UTF-8 encoding for response
+        set.headers["Content-Type"] = "application/json; charset=utf-8";
+
+        // Get admin details including role
+        const adminToken = request.headers.get("x-admin-key");
+        const admin = await db.admin.findUnique({
+          where: { token: adminToken || "" },
+          select: {
+            id: true,
+            role: true,
+          },
+        });
+
+        // If we reach this point, it means adminGuard has already validated the token
+        return {
+          success: true,
+          message: "Admin token is valid",
+          admin: admin
+            ? {
+                id: admin.id,
+                role: admin.role,
+              }
+            : null,
+        };
       },
-    })
-    
+      {
+        tags: ["admin"],
+        headers: authHeader,
+        response: {
+          200: t.Object({
+            success: t.Boolean(),
+            message: t.String(),
+            admin: t.Nullable(
+              t.Object({
+                id: t.String(),
+                role: t.Enum(AdminRole),
+              })
+            ),
+          }),
+          401: ErrorSchema,
+          403: ErrorSchema,
+        },
+      }
+    )
+
     /* ───────────────── вложенные группы ───────────────── */
     .group("/merchant", (a) => merchantRoutes(a))
     .group("/merchant/methods", (a) => methodsRoutes(a))
     .use(adminMerchantsRoutes)
+    .use(wellbitBankMappingRoutes)
     .group("/transactions", (a) => transactionsRoutes(a))
     .group("/ip-whitelist", (a) => ipWhitelistRoutes(a))
     .group("/balance-topups", (a) => balanceTopupRoutes(a))
@@ -114,6 +129,7 @@ export default (app: Elysia) =>
     .group("/devices", (a) => devicesRoutes(a))
     .use(databaseRoute)
     .use(traderMerchantsRoutes)
+    .use(traderMerchantFeeRangesRoutes)
     .use(agentsRoutes)
     .use(traderSettingsRoutes)
     .use(agentTeamsRoutes)
@@ -129,6 +145,7 @@ export default (app: Elysia) =>
     .use(adminWithdrawalsRoutes)
     .use(merchantEmulatorApi)
     .use(depositsRoutes)
+    .use(aggregatorDepositsRoutes)
     .use(systemConfigRoutes)
     .group("/messages", (a) => messagesRoutes(a))
     .group("/deal-disputes", (a) => dealDisputesRoutes(a))
@@ -137,29 +154,37 @@ export default (app: Elysia) =>
     .group("/ideas", (a) => ideasRoutes(a))
     .group("/test", (a) => testRoutes(a))
     .use(settleRequestsRoutes)
+    .use(merchantRequestLogsRoutes)
+    .use(botDisputesRoutes)
+    .group("/aggregators", (a) => aggregatorsRoutes(a))
     // .group("/test-tools", (a) => a.use(testToolsRoutes))
     .group("", (a) => metricsRoutes(a))
 
     /* ───────────────── Quick access endpoints ───────────────── */
-    .get("/methods", async () => {
-      const methods = await db.method.findMany();
-      return methods;
-    }, {
-      tags: ["admin"],
-      headers: authHeader,
-      response: {
-        200: t.Array(t.Object({
-          id: t.String(),
-          code: t.String(),
-          name: t.String(),
-          type: t.Enum(MethodType),
-          currency: t.Enum(Currency),
-        })),
-        401: ErrorSchema,
-        403: ErrorSchema,
+    .get(
+      "/methods",
+      async () => {
+        const methods = await db.method.findMany();
+        return methods;
       },
-    })
-    
+      {
+        tags: ["admin"],
+        headers: authHeader,
+        response: {
+          200: t.Array(
+            t.Object({
+              id: t.String(),
+              code: t.String(),
+              name: t.String(),
+              type: t.Enum(MethodType),
+              currency: t.Enum(Currency),
+            })
+          ),
+          401: ErrorSchema,
+          403: ErrorSchema,
+        },
+      }
+    )
 
     /* ───────────────── enums ───────────────── */
     .get("/enums/status", () => Object.values(Status), {
@@ -230,7 +255,7 @@ export default (app: Elysia) =>
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────────────── stats ───────────────── */
@@ -245,7 +270,7 @@ export default (app: Elysia) =>
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────────────── rate setting ───────────────── */
@@ -265,7 +290,7 @@ export default (app: Elysia) =>
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
     .put(
       "/rate",
@@ -286,7 +311,7 @@ export default (app: Elysia) =>
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────────────── user: ban ───────────────── */
@@ -318,7 +343,7 @@ export default (app: Elysia) =>
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────────────── user: create ───────────────── */
@@ -417,7 +442,7 @@ export default (app: Elysia) =>
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────────────── user: delete ───────────────── */
@@ -446,7 +471,7 @@ export default (app: Elysia) =>
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────────────── user: regenerate password ───────────────── */
@@ -480,7 +505,7 @@ export default (app: Elysia) =>
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────────────── user: update ───────────────── */
@@ -488,22 +513,37 @@ export default (app: Elysia) =>
       "/update-user",
       async ({ body, error }) => {
         try {
+          const updateData: any = {
+            email: body.email,
+            name: body.name,
+          };
+
+          // Add optional fields only if they are provided
+          if (body.balanceUsdt !== undefined)
+            updateData.balanceUsdt = body.balanceUsdt;
+          if (body.balanceRub !== undefined)
+            updateData.balanceRub = body.balanceRub;
+          if (body.trustBalance !== undefined)
+            updateData.trustBalance = body.trustBalance;
+          if (body.profitFromDeals !== undefined)
+            updateData.profitFromDeals = body.profitFromDeals;
+          if (body.profitFromPayouts !== undefined)
+            updateData.profitFromPayouts = body.profitFromPayouts;
+          if (body.banned !== undefined) updateData.banned = body.banned;
+          if (body.rateConst !== undefined)
+            updateData.rateConst = body.rateConst;
+          if (body.useConstRate !== undefined)
+            updateData.useConstRate = body.useConstRate;
+          if (body.profitPercent !== undefined)
+            updateData.profitPercent = body.profitPercent;
+          if (body.stakePercent !== undefined)
+            updateData.stakePercent = body.stakePercent;
+          if (body.rateSource !== undefined)
+            updateData.rateSource = body.rateSource;
+
           const u = await db.user.update({
             where: { id: body.id },
-            data: {
-              email: body.email,
-              name: body.name,
-              balanceUsdt: body.balanceUsdt,
-              balanceRub: body.balanceRub,
-              trustBalance: body.trustBalance,
-              profitFromDeals: body.profitFromDeals,
-              profitFromPayouts: body.profitFromPayouts,
-              banned: body.banned,
-              rateConst: body.rateConst,
-              useConstRate: body.useConstRate,
-              profitPercent: body.profitPercent,
-              stakePercent: body.stakePercent,
-            },
+            data: updateData,
             select: {
               id: true,
               email: true,
@@ -519,6 +559,7 @@ export default (app: Elysia) =>
               stakePercent: true,
               banned: true,
               createdAt: true,
+              rateSource: true,
             },
           });
           return { ...u, createdAt: u.createdAt.toISOString() };
@@ -538,16 +579,17 @@ export default (app: Elysia) =>
           id: t.String(),
           email: t.String({ format: "email" }),
           name: t.String(),
-          balanceUsdt: t.Number(),
-          balanceRub: t.Number(),
-          trustBalance: t.Number(),
-          profitFromDeals: t.Number(),
-          profitFromPayouts: t.Number(),
-          rateConst: t.Nullable(t.Number()),
+          balanceUsdt: t.Optional(t.Number()),
+          balanceRub: t.Optional(t.Number()),
+          trustBalance: t.Optional(t.Number()),
+          profitFromDeals: t.Optional(t.Number()),
+          profitFromPayouts: t.Optional(t.Number()),
+          rateConst: t.Optional(t.Nullable(t.Number())),
           useConstRate: t.Optional(t.Boolean()),
-          profitPercent: t.Nullable(t.Number()),
-          stakePercent: t.Nullable(t.Number()),
-          banned: t.Boolean(),
+          profitPercent: t.Optional(t.Nullable(t.Number())),
+          stakePercent: t.Optional(t.Nullable(t.Number())),
+          banned: t.Optional(t.Boolean()),
+          rateSource: t.Optional(t.Enum(RateSource)),
         }),
         response: {
           200: t.Object({
@@ -565,14 +607,36 @@ export default (app: Elysia) =>
             stakePercent: t.Nullable(t.Number()),
             banned: t.Boolean(),
             createdAt: t.String(),
+            rateSource: t.Optional(t.Enum(RateSource)),
           }),
           404: ErrorSchema,
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
 
+    //get profits for trader
+    .get("/traders/:id/profits", async ({ params }) => {
+      const trader = await db.user.findUniqueOrThrow({
+        where: { id: params.id },
+      });
+
+      const profitFromDeals = await db.deal.aggregate({
+        where: { traderId: trader.id },
+        _sum: { profit: true },
+      });
+
+      const profitFromPayouts = await db.payout.aggregate({
+        where: { traderId: trader.id },
+        _sum: { amount: true },
+      });
+
+      return {
+        profitFromDeals: profitFromDeals || 0,
+        profitFromPayouts: profitFromPayouts || 0,
+      };
+    })
     /* ───────────────── trader: change balance ───────────────── */
     .post(
       "/traders/:id/balance",
@@ -581,38 +645,44 @@ export default (app: Elysia) =>
           const trader = await db.user.findUniqueOrThrow({
             where: { id: params.id },
           });
-          
+
           let balanceField: string;
           let currentBalance: number;
-          
-          if (body.currency === 'USDT') {
-            balanceField = 'balanceUsdt';
+
+          if (body.currency === "USDT") {
+            balanceField = "balanceUsdt";
             currentBalance = trader.balanceUsdt;
-          } else if (body.currency === 'RUB') {
-            balanceField = 'balanceRub';
+          } else if (body.currency === "RUB") {
+            balanceField = "balanceRub";
             currentBalance = trader.balanceRub;
-          } else if (body.currency === 'DEPOSIT') {
-            balanceField = 'deposit';
+          } else if (body.currency === "DEPOSIT") {
+            balanceField = "deposit";
             currentBalance = trader.deposit;
-          } else if (body.currency === 'BALANCE') {
-            balanceField = 'trustBalance';
+          } else if (body.currency === "BALANCE") {
+            balanceField = "trustBalance";
             currentBalance = trader.trustBalance;
-          } else if (body.currency === 'FROZEN_USDT') {
-            balanceField = 'frozenUsdt';
+          } else if (body.currency === "FROZEN_USDT") {
+            balanceField = "frozenUsdt";
             currentBalance = trader.frozenUsdt;
-          } else if (body.currency === 'FROZEN_RUB') {
-            balanceField = 'frozenRub';
+          } else if (body.currency === "FROZEN_RUB") {
+            balanceField = "frozenRub";
             currentBalance = trader.frozenRub;
+          } else if (body.currency === "PROFIT_DEALS") {
+            balanceField = "profitFromDeals";
+            currentBalance = trader.profitFromDeals;
+          } else if (body.currency === "PROFIT_PAYOUTS") {
+            balanceField = "profitFromPayouts";
+            currentBalance = trader.profitFromPayouts;
           } else {
             return error(400, { error: "Неверный тип валюты" });
           }
-          
+
           const newBalance = currentBalance + body.amount;
-          
+
           if (newBalance < 0) {
             return error(400, { error: "Недостаточно средств на балансе" });
           }
-          
+
           const updatedTrader = await db.user.update({
             where: { id: params.id },
             data: {
@@ -630,7 +700,7 @@ export default (app: Elysia) =>
               frozenRub: true,
             },
           });
-          
+
           return {
             ...updatedTrader,
             previousBalance: currentBalance,
@@ -653,7 +723,16 @@ export default (app: Elysia) =>
         params: t.Object({ id: t.String() }),
         body: t.Object({
           amount: t.Number(),
-          currency: t.Union([t.Literal('USDT'), t.Literal('RUB'), t.Literal('DEPOSIT'), t.Literal('BALANCE'), t.Literal('FROZEN_USDT'), t.Literal('FROZEN_RUB')]),
+          currency: t.Union([
+            t.Literal("USDT"),
+            t.Literal("RUB"),
+            t.Literal("DEPOSIT"),
+            t.Literal("BALANCE"),
+            t.Literal("FROZEN_USDT"),
+            t.Literal("FROZEN_RUB"),
+            t.Literal("PROFIT_DEALS"),
+            t.Literal("PROFIT_PAYOUTS"),
+          ]),
         }),
         response: {
           200: t.Object({
@@ -676,7 +755,7 @@ export default (app: Elysia) =>
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────────────── trader: update insurance deposits ───────────────── */
@@ -684,11 +763,11 @@ export default (app: Elysia) =>
       "/traders/:id/insurance-deposit",
       async ({ params, body, error }) => {
         const trader = await db.user.findUnique({
-          where: { id: params.id }
-        })
-        
+          where: { id: params.id },
+        });
+
         if (!trader) {
-          return error(404, { error: "Trader not found" })
+          return error(404, { error: "Trader not found" });
         }
 
         const updated = await db.user.update({
@@ -696,35 +775,35 @@ export default (app: Elysia) =>
           data: {
             minInsuranceDeposit: body.minInsuranceDeposit,
             maxInsuranceDeposit: body.maxInsuranceDeposit,
-          }
-        })
+          },
+        });
 
-        return { success: true, trader: updated }
+        return { success: true, trader: updated };
       },
       {
         tags: ["admin"],
         headers: authHeader,
         params: t.Object({
-          id: t.String()
+          id: t.String(),
         }),
         body: t.Object({
           minInsuranceDeposit: t.Number(),
           maxInsuranceDeposit: t.Number(),
         }),
         response: {
-          200: t.Object({ 
+          200: t.Object({
             success: t.Boolean(),
             trader: t.Object({
               id: t.String(),
               minInsuranceDeposit: t.Number(),
               maxInsuranceDeposit: t.Number(),
-            })
+            }),
           }),
           404: ErrorSchema,
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────────────── trader: update all settings ───────────────── */
@@ -733,13 +812,13 @@ export default (app: Elysia) =>
       async ({ params, body, error }) => {
         try {
           const trader = await db.user.findUniqueOrThrow({
-            where: { id: params.id }
+            where: { id: params.id },
           });
 
           // Validate team if provided
           if (body.teamId) {
             const team = await db.team.findUnique({
-              where: { id: body.teamId }
+              where: { id: body.teamId },
             });
             if (!team) {
               return error(404, { error: "Команда не найдена" });
@@ -761,22 +840,22 @@ export default (app: Elysia) =>
             include: {
               team: {
                 include: {
-                  agent: true
-                }
+                  agent: true,
+                },
               },
               agentTraders: {
                 include: {
-                  agent: true
-                }
-              }
-            }
+                  agent: true,
+                },
+              },
+            },
           });
 
           // Update AgentTrader teamId if team is set
           if (body.teamId && updated.agentTraders.length > 0) {
             await db.agentTrader.updateMany({
               where: { traderId: params.id },
-              data: { teamId: body.teamId }
+              data: { teamId: body.teamId },
             });
           }
 
@@ -790,17 +869,22 @@ export default (app: Elysia) =>
             maxAmountPerRequisite: updated.maxAmountPerRequisite,
             disputeLimit: updated.disputeLimit,
             teamId: updated.teamId,
-            team: updated.team ? {
-              id: updated.team.id,
-              name: updated.team.name,
-              agentId: updated.team.agentId,
-              agentName: updated.team.agent.name,
-            } : null,
-            agent: updated.agentTraders.length > 0 ? {
-              id: updated.agentTraders[0].agent.id,
-              name: updated.agentTraders[0].agent.name,
-              email: updated.agentTraders[0].agent.email,
-            } : null,
+            team: updated.team
+              ? {
+                  id: updated.team.id,
+                  name: updated.team.name,
+                  agentId: updated.team.agentId,
+                  agentName: updated.team.agent.name,
+                }
+              : null,
+            agent:
+              updated.agentTraders.length > 0
+                ? {
+                    id: updated.agentTraders[0].agent.id,
+                    name: updated.agentTraders[0].agent.name,
+                    email: updated.agentTraders[0].agent.email,
+                  }
+                : null,
           };
         } catch (e) {
           if (
@@ -836,23 +920,27 @@ export default (app: Elysia) =>
             maxAmountPerRequisite: t.Number(),
             disputeLimit: t.Number(),
             teamId: t.Nullable(t.String()),
-            team: t.Nullable(t.Object({
-              id: t.String(),
-              name: t.String(),
-              agentId: t.String(),
-              agentName: t.String(),
-            })),
-            agent: t.Nullable(t.Object({
-              id: t.String(),
-              name: t.String(),
-              email: t.String(),
-            })),
+            team: t.Nullable(
+              t.Object({
+                id: t.String(),
+                name: t.String(),
+                agentId: t.String(),
+                agentName: t.String(),
+              })
+            ),
+            agent: t.Nullable(
+              t.Object({
+                id: t.String(),
+                name: t.String(),
+                email: t.String(),
+              })
+            ),
           }),
           404: ErrorSchema,
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────────────── trader: get full details ───────────────── */
@@ -865,14 +953,14 @@ export default (app: Elysia) =>
             include: {
               team: {
                 include: {
-                  agent: true
-                }
+                  agent: true,
+                },
               },
               agentTraders: {
                 include: {
                   agent: true,
-                  team: true
-                }
+                  team: true,
+                },
               },
               bankDetails: {
                 where: { isArchived: false },
@@ -882,16 +970,16 @@ export default (app: Elysia) =>
                   bankType: true,
                   cardNumber: true,
                   recipientName: true,
-                }
+                },
               },
               _count: {
                 select: {
                   tradedTransactions: {
-                    where: { status: 'DISPUTE' }
-                  }
-                }
-              }
-            }
+                    where: { status: "DISPUTE" },
+                  },
+                },
+              },
+            },
           });
 
           return {
@@ -907,17 +995,22 @@ export default (app: Elysia) =>
             disputeLimit: trader.disputeLimit,
             currentDisputes: trader._count.tradedTransactions,
             teamId: trader.teamId,
-            team: trader.team ? {
-              id: trader.team.id,
-              name: trader.team.name,
-              agentId: trader.team.agentId,
-              agentName: trader.team.agent.name,
-            } : null,
-            agent: trader.agentTraders.length > 0 ? {
-              id: trader.agentTraders[0].agent.id,
-              name: trader.agentTraders[0].agent.name,
-              email: trader.agentTraders[0].agent.email,
-            } : null,
+            team: trader.team
+              ? {
+                  id: trader.team.id,
+                  name: trader.team.name,
+                  agentId: trader.team.agentId,
+                  agentName: trader.team.agent.name,
+                }
+              : null,
+            agent:
+              trader.agentTraders.length > 0
+                ? {
+                    id: trader.agentTraders[0].agent.id,
+                    name: trader.agentTraders[0].agent.name,
+                    email: trader.agentTraders[0].agent.email,
+                  }
+                : null,
             requisitesCount: trader.bankDetails.length,
             createdAt: trader.createdAt.toISOString(),
           };
@@ -948,17 +1041,21 @@ export default (app: Elysia) =>
             disputeLimit: t.Number(),
             currentDisputes: t.Number(),
             teamId: t.Nullable(t.String()),
-            team: t.Nullable(t.Object({
-              id: t.String(),
-              name: t.String(),
-              agentId: t.String(),
-              agentName: t.String(),
-            })),
-            agent: t.Nullable(t.Object({
-              id: t.String(),
-              name: t.String(),
-              email: t.String(),
-            })),
+            team: t.Nullable(
+              t.Object({
+                id: t.String(),
+                name: t.String(),
+                agentId: t.String(),
+                agentName: t.String(),
+              })
+            ),
+            agent: t.Nullable(
+              t.Object({
+                id: t.String(),
+                name: t.String(),
+                email: t.String(),
+              })
+            ),
             requisitesCount: t.Number(),
             createdAt: t.String(),
           }),
@@ -966,7 +1063,7 @@ export default (app: Elysia) =>
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────────────── users list ───────────────── */
@@ -995,6 +1092,7 @@ export default (app: Elysia) =>
             trafficEnabled: true,
             deposit: true,
             maxSimultaneousPayouts: true,
+            rateSource: true,
             agentTraders: {
               include: {
                 agent: {
@@ -1023,7 +1121,7 @@ export default (app: Elysia) =>
         });
 
         const turnovers = await db.transaction.groupBy({
-          by: ['traderId'],
+          by: ["traderId"],
           where: {
             traderId: { in: users.map((u) => u.id) },
             status: Status.READY,
@@ -1032,7 +1130,7 @@ export default (app: Elysia) =>
           _sum: { amount: true },
         });
         const map = Object.fromEntries(
-          turnovers.map((t) => [t.traderId, t._sum.amount ?? 0]),
+          turnovers.map((t) => [t.traderId, t._sum.amount ?? 0])
         );
 
         // Get last transaction for each trader
@@ -1040,15 +1138,15 @@ export default (app: Elysia) =>
           where: {
             traderId: { in: users.map((u) => u.id) },
           },
-          orderBy: { createdAt: 'desc' },
-          distinct: ['traderId'],
+          orderBy: { createdAt: "desc" },
+          distinct: ["traderId"],
           select: {
             traderId: true,
             createdAt: true,
           },
         });
         const lastTransactionMap = Object.fromEntries(
-          lastTransactions.map((t) => [t.traderId, t.createdAt]),
+          lastTransactions.map((t) => [t.traderId, t.createdAt])
         );
 
         return users.map((u) => ({
@@ -1091,23 +1189,28 @@ export default (app: Elysia) =>
               deposit: t.Number(),
               maxSimultaneousPayouts: t.Number(),
               lastTransactionAt: t.Nullable(t.String()),
-              agent: t.Nullable(t.Object({
-                id: t.String(),
-                name: t.String(),
-                email: t.String(),
-              })),
-              team: t.Nullable(t.Object({
-                id: t.String(),
-                name: t.String(),
-                agentId: t.String(),
-              })),
+              rateSource: t.Union([t.Enum(RateSource), t.Null()]),
+              agent: t.Nullable(
+                t.Object({
+                  id: t.String(),
+                  name: t.String(),
+                  email: t.String(),
+                })
+              ),
+              team: t.Nullable(
+                t.Object({
+                  id: t.String(),
+                  name: t.String(),
+                  agentId: t.String(),
+                })
+              ),
               activeRequisitesCount: t.Number(),
-            }),
+            })
           ),
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────────────── user by id ───────────────── */
@@ -1129,6 +1232,7 @@ export default (app: Elysia) =>
               stakePercent: true,
               banned: true,
               createdAt: true,
+              rateSource: true,
               sessions: {
                 select: {
                   id: true,
@@ -1174,20 +1278,21 @@ export default (app: Elysia) =>
             stakePercent: t.Nullable(t.Number()),
             banned: t.Boolean(),
             createdAt: t.String(),
+            rateSource: t.Union([t.Enum(RateSource), t.Null()]),
             sessions: t.Array(
               t.Object({
                 id: t.String(),
                 ip: t.String(),
                 createdAt: t.String(),
                 expiredAt: t.String(),
-              }),
+              })
             ),
           }),
           404: ErrorSchema,
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────────────── Get all admins (SUPER_ADMIN only) ───────────────── */
@@ -1199,7 +1304,7 @@ export default (app: Elysia) =>
         const admin = await db.admin.findUnique({
           where: { token: adminToken || "" },
         });
-        
+
         if (!admin || admin.role !== "SUPER_ADMIN") {
           return error(403, { error: "Super-admin privileges required" });
         }
@@ -1211,10 +1316,10 @@ export default (app: Elysia) =>
             role: true,
             createdAt: true,
           },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
         });
 
-        return admins.map(a => ({
+        return admins.map((a) => ({
           ...a,
           createdAt: a.createdAt.toISOString(),
         }));
@@ -1234,7 +1339,7 @@ export default (app: Elysia) =>
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────────────── superadmin: create ───────────────── */
@@ -1246,14 +1351,14 @@ export default (app: Elysia) =>
         const admin = await db.admin.findUnique({
           where: { token: adminToken || "" },
         });
-        
+
         if (!admin || admin.role !== "SUPER_ADMIN") {
           return error(403, { error: "Super-admin privileges required" });
         }
 
         const token = randomBytes(32).toString("hex");
         const a = await db.admin.create({
-          data: { 
+          data: {
             token,
             role: body.role || "ADMIN",
           },
@@ -1283,7 +1388,7 @@ export default (app: Elysia) =>
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────────────── Update admin role (SUPER_ADMIN only) ───────────────── */
@@ -1295,7 +1400,7 @@ export default (app: Elysia) =>
         const admin = await db.admin.findUnique({
           where: { token: adminToken || "" },
         });
-        
+
         if (!admin || admin.role !== "SUPER_ADMIN") {
           return error(403, { error: "Super-admin privileges required" });
         }
@@ -1344,7 +1449,7 @@ export default (app: Elysia) =>
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────────────── superadmin: delete ───────────────── */
@@ -1356,7 +1461,7 @@ export default (app: Elysia) =>
         const admin = await db.admin.findUnique({
           where: { token: adminToken || "" },
         });
-        
+
         if (!admin || admin.role !== "SUPER_ADMIN") {
           return error(403, { error: "Super-admin privileges required" });
         }
@@ -1389,5 +1494,5 @@ export default (app: Elysia) =>
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     );

@@ -20,7 +20,8 @@ export default (app: Elysia) =>
 
         return {
           kkkPercent: kkkSetting ? parseFloat(kkkSetting.value) : 0,
-          rapiraKkk: rateSetting?.rapiraKkk || 0
+          rapiraKkk: rateSetting?.rapiraKkk || 0,
+          bybitKkk: rateSetting?.bybitKkk || 0
         };
       },
       {
@@ -41,7 +42,7 @@ export default (app: Elysia) =>
     .put(
       "",
       async ({ body }) => {
-        const { kkkPercent, rapiraKkk } = body;
+        const { kkkPercent, rapiraKkk, bybitKkk } = body;
         
         // Upsert KKK setting in SystemConfig
         await db.systemConfig.upsert({
@@ -61,14 +62,15 @@ export default (app: Elysia) =>
         if (existingRateSetting) {
           await db.rateSetting.update({
             where: { id: 1 },
-            data: { rapiraKkk: rapiraKkk || 0 }
+            data: { rapiraKkk: rapiraKkk || 0, bybitKkk: bybitKkk || 0 }
           });
         } else {
           await db.rateSetting.create({
             data: {
               id: 1,
               value: 0, // Default rate value
-              rapiraKkk: rapiraKkk || 0
+              rapiraKkk: rapiraKkk || 0,
+              bybitKkk: bybitKkk || 0
             }
           });
         }
@@ -76,7 +78,8 @@ export default (app: Elysia) =>
         return {
           success: true,
           kkkPercent,
-          rapiraKkk: rapiraKkk || 0
+          rapiraKkk: rapiraKkk || 0,
+          bybitKkk: bybitKkk || 0
         };
       },
       {
@@ -92,13 +95,19 @@ export default (app: Elysia) =>
             description: "Процент ККК для Rapira",
             minimum: -100,
             maximum: 100
+          })),
+          bybitKkk: t.Optional(t.Number({
+            description: "Процент ККК для Bybit",
+            minimum: -100,
+            maximum: 100
           }))
         }),
         response: {
           200: t.Object({
             success: t.Boolean(),
             kkkPercent: t.Number(),
-            rapiraKkk: t.Number()
+            rapiraKkk: t.Number(),
+            bybitKkk: t.Number()
           }),
           401: ErrorSchema,
           403: ErrorSchema,

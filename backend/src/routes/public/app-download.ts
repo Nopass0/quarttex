@@ -3,6 +3,8 @@ import { db } from "@/db";
 import ErrorSchema from "@/types/error";
 import { join } from "node:path";
 import { existsSync, readFileSync } from "fs";
+import { createReadStream } from "fs";
+import { stat } from "fs/promises";
 
 export default (app: Elysia) =>
   app
@@ -10,22 +12,53 @@ export default (app: Elysia) =>
     .get(
       "/download-apk",
       async ({ error, set }) => {
-        // First check if we have a static APK file
-        const apkPath = join(process.cwd(), "uploads", "apk", "chase-mobile.apk");
-        
-        if (existsSync(apkPath)) {
-          // Redirect to static file
-          set.redirect = "/api/app/download";
-          set.status = 302;
-          return;
-        }
-        
-        // Fallback to database version
-        const primaryVersion = await db.appVersion.findFirst({
-          where: { isPrimary: true },
-        });
-        
-        if (!primaryVersion) {
+        try {
+          // First check if we have a static APK file
+          const apkPath = join(process.cwd(), "uploads", "apk", "chase-mobile.apk");
+          
+          if (existsSync(apkPath)) {
+            // Serve file directly instead of redirect
+            const stats = await stat(apkPath);
+            const versionInfoPath = join(process.cwd(), "uploads", "apk", "version-info.json");
+            let filename = "chase-mobile.apk";
+            
+            if (existsSync(versionInfoPath)) {
+              try {
+                const versionInfo = JSON.parse(readFileSync(versionInfoPath, "utf-8"));
+                filename = `chase-mobile-${versionInfo.version}.apk`;
+              } catch (e) {
+                // Use default filename
+              }
+            }
+            
+            set.headers["content-type"] = "application/vnd.android.package-archive";
+            set.headers["content-disposition"] = `attachment; filename="${filename}"`;
+            set.headers["content-length"] = stats.size.toString();
+            
+            return Bun.file(apkPath);
+          }
+          
+          // Fallback to database version
+          const primaryVersion = await db.appVersion.findFirst({
+            where: { isPrimary: true },
+          });
+          
+          if (primaryVersion) {
+            // Check if file path is absolute or relative
+            const filePath = primaryVersion.fileUrl.startsWith('/') 
+              ? join(process.cwd(), primaryVersion.fileUrl.substring(1))
+              : join(process.cwd(), primaryVersion.fileUrl);
+              
+            if (existsSync(filePath)) {
+              const stats = await stat(filePath);
+              set.headers["content-type"] = "application/vnd.android.package-archive";
+              set.headers["content-disposition"] = `attachment; filename="chase-mobile-${primaryVersion.version}.apk"`;
+              set.headers["content-length"] = stats.size.toString();
+              
+              return Bun.file(filePath);
+            }
+          }
+          
           // Check if we have a GitHub release
           const latestReleaseUrl = "https://api.github.com/repos/Nopass0/chase/releases/latest";
           try {
@@ -37,32 +70,36 @@ export default (app: Elysia) =>
               );
               
               if (apkAsset) {
-                // Redirect to GitHub release download
-                set.redirect = apkAsset.browser_download_url;
-                set.status = 302;
-                return;
+                // Fetch and serve the file
+                const apkResponse = await fetch(apkAsset.browser_download_url);
+                if (apkResponse.ok) {
+                  const buffer = await apkResponse.arrayBuffer();
+                  
+                  set.headers["content-type"] = "application/vnd.android.package-archive";
+                  set.headers["content-disposition"] = `attachment; filename="${apkAsset.name}"`;
+                  set.headers["content-length"] = buffer.byteLength.toString();
+                  
+                  return new Uint8Array(buffer);
+                }
               }
             }
           } catch (e) {
             console.error("Failed to fetch GitHub release:", e);
           }
           
-          // If no APK found anywhere, show placeholder page
-          set.redirect = "/api/app/download";
-          set.status = 302;
-          return;
+          return error(404, { error: "APK файл не найден" });
+        } catch (e) {
+          console.error("Error serving APK:", e);
+          return error(500, { error: "Ошибка при загрузке APK" });
         }
-        
-        // Redirect to file URL
-        set.redirect = primaryVersion.fileUrl;
-        set.status = 302;
       },
       {
         tags: ["public"],
         detail: { summary: "Скачать текущую версию приложения" },
         response: {
-          302: t.Void(),
+          200: t.Any(),
           404: ErrorSchema,
+          500: ErrorSchema,
         },
       },
     )

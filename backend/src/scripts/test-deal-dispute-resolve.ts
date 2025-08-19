@@ -7,7 +7,7 @@ async function testDealDisputeResolve() {
     
     // Check if Status enum values are available
     console.log("Status enum values:", {
-      COMPLETED: Status.COMPLETED,
+      READY: Status.READY,
       CANCELED: Status.CANCELED
     });
     
@@ -48,7 +48,7 @@ async function testDealDisputeResolve() {
       const testUpdate = await db.transaction.update({
         where: { id: dispute.dealId },
         data: {
-          status: Status.COMPLETED
+          status: Status.READY
         }
       });
       console.log("✅ Transaction update successful");

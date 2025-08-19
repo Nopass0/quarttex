@@ -35,7 +35,7 @@ export const dashboardRoutes = new Elysia({ prefix: "/dashboard" })
       const traderId = trader.id;
 
       // Get financial stats
-      const [deals, profits] = await Promise.all([
+      const [deals, regularProfits, btProfits] = await Promise.all([
         // Count and sum completed deals
         db.transaction.aggregate({
           where: {
@@ -48,15 +48,36 @@ export const dashboardRoutes = new Elysia({ prefix: "/dashboard" })
             amount: true
           }
         }),
-        // Calculate profits (commission earned)
+        // Calculate profits from regular deals (with devices)
         db.transaction.aggregate({
           where: {
             traderId,
             status: Status.READY,
-            createdAt: { gte: startDate }
+            createdAt: { gte: startDate },
+            // Regular deals have device
+            requisites: {
+              deviceId: { not: null }
+            }
           },
           _sum: {
             calculatedCommission: true
+          }
+        }),
+        // Calculate profits from BT-entrance deals (without devices)
+        db.transaction.aggregate({
+          where: {
+            traderId,
+            status: Status.READY,
+            createdAt: { gte: startDate },
+            OR: [
+              // BT deals have no device
+              { requisites: { deviceId: null } },
+              // Or no requisites at all
+              { requisites: null }
+            ]
+          },
+          _sum: {
+            traderProfit: true
           }
         })
       ]);
@@ -209,12 +230,18 @@ export const dashboardRoutes = new Elysia({ prefix: "/dashboard" })
         orderBy: { createdAt: "desc" },
         include: {
           bankDetails: {
+            where: {
+              isArchived: false
+            }
           }
         }
       });
 
+      // Calculate total profit from both regular and BT deals
+      const totalProfit = (regularProfits._sum.calculatedCommission || 0) + (btProfits._sum.traderProfit || 0);
+      
       // Calculate RUB equivalent for profit
-      const profitRub = (profits._sum.calculatedCommission || 0) * 100; // Assuming 1 USDT = 100 RUB
+      const profitRub = totalProfit * 100; // Assuming 1 USDT = 100 RUB
 
       return {
         success: true,
@@ -226,7 +253,7 @@ export const dashboardRoutes = new Elysia({ prefix: "/dashboard" })
               amountRub: (deals._sum.amount || 0) * 100
             },
             profit: {
-              amount: profits._sum.calculatedCommission || 0,
+              amount: totalProfit,
               amountRub: profitRub
             }
           },
@@ -245,7 +272,6 @@ export const dashboardRoutes = new Elysia({ prefix: "/dashboard" })
           })),
           openDisputes: openDisputes.map(dispute => ({
             id: dispute.id,
-            type: dispute.type === "TRANSACTION" ? "transaction" : "payout",
             entityId: dispute.entityId,
             status: dispute.status,
             reason: dispute.reason,
@@ -260,8 +286,12 @@ export const dashboardRoutes = new Elysia({ prefix: "/dashboard" })
             name: device.name,
             token: device.token,
             isOnline: device.isOnline,
+            isWorking: device.isWorking,
             isActive: device.isOnline || false,
-            activeRequisites: device.bankDetails.length
+            activeRequisites: device.bankDetails.length,
+            linkedBankDetails: device.bankDetails.length,
+            stoppedAt: !device.isOnline && device.updatedAt ? device.updatedAt.toISOString() : null,
+            status: device.isOnline ? 'working' : 'stopped'
           }))
         }
       };
@@ -313,7 +343,6 @@ export const dashboardRoutes = new Elysia({ prefix: "/dashboard" })
           })),
           openDisputes: t.Array(t.Object({
             id: t.String(),
-            type: t.String(),
             entityId: t.String(),
             status: t.String(),
             reason: t.String(),
@@ -330,8 +359,12 @@ export const dashboardRoutes = new Elysia({ prefix: "/dashboard" })
             name: t.String(),
             token: t.String(),
             isOnline: t.Boolean(),
+            isWorking: t.Boolean(),
             isActive: t.Boolean(),
-            activeRequisites: t.Number()
+            activeRequisites: t.Number(),
+            linkedBankDetails: t.Number(),
+            stoppedAt: t.Union([t.String(), t.Null()]),
+            status: t.String()
           }))
         })
       }),

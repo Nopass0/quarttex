@@ -48,7 +48,7 @@ export class PayoutAccountingService {
         throw new Error("Payout has expired");
       }
 
-      // Check trader's RUB balance (not payout balance)
+      // Check trader's payout balance
       const trader = await tx.user.findUnique({
         where: { id: traderId },
       });
@@ -57,12 +57,20 @@ export class PayoutAccountingService {
         throw new Error("Trader not found");
       }
 
-      // Calculate sumToWriteOffUSDT: (amount + commission) × rate
-      // For payouts, amount is in RUB, we need to check RUB balance
-      const amountRUB = payout.amount; // This is already in RUB for payouts
-      
+      const amountRUB = payout.amount; // Already in RUB for payouts
+
+      const availablePayoutBalance =
+        trader.payoutBalance - trader.frozenPayoutBalance;
+      if (availablePayoutBalance < amountRUB) {
+        throw new Error(
+          `Insufficient payout balance. Required: ${amountRUB}, Available: ${availablePayoutBalance}`
+        );
+      }
+
       if (trader.balanceRub < amountRUB) {
-        throw new Error(`Insufficient RUB balance. Required: ${amountRUB}, Available: ${trader.balanceRub}`);
+        throw new Error(
+          `Insufficient RUB balance. Required: ${amountRUB}, Available: ${trader.balanceRub}`
+        );
       }
 
       // Count current payouts for the trader
@@ -99,14 +107,16 @@ export class PayoutAccountingService {
         data: {
           balanceRub: { decrement: amountRUB },
           frozenRub: { increment: amountRUB },
+          payoutBalance: { decrement: amountRUB },
+          frozenPayoutBalance: { increment: amountRUB },
         },
       });
 
       // Use original service methods for notifications (outside of transaction)
-      await this.payoutService.sendMerchantWebhook(updatedPayout, "ACTIVE");
-      
-      // Send webhook notification
-      await webhookService.sendPayoutStatusWebhook(updatedPayout, "ACTIVE");
+      await Promise.all([
+        this.payoutService.sendMerchantWebhook(updatedPayout, "ACTIVE"),
+        webhookService.sendPayoutStatusWebhook(updatedPayout, "ACTIVE"),
+      ]);
 
       return updatedPayout;
     });
@@ -183,6 +193,8 @@ export class PayoutAccountingService {
         data: {
           frozenRub: { decrement: amountRUB },
           balanceRub: { increment: amountRUB }, // Return RUB to balance
+          frozenPayoutBalance: { decrement: amountRUB },
+          payoutBalance: { increment: amountRUB },
         },
       }),
     ];
@@ -190,10 +202,10 @@ export class PayoutAccountingService {
     const [updatedPayout] = await db.$transaction(updates);
 
     // Use original service methods for notifications
-    await this.payoutService.sendMerchantWebhook(updatedPayout, "returned_to_pool");
-    
-    // Send webhook notification
-    await webhookService.sendPayoutStatusWebhook(updatedPayout, "CANCELLED");
+    await Promise.all([
+      this.payoutService.sendMerchantWebhook(updatedPayout, "returned_to_pool"),
+      webhookService.sendPayoutStatusWebhook(updatedPayout, "CANCELLED"),
+    ]);
 
     return updatedPayout;
   }
@@ -233,16 +245,17 @@ export class PayoutAccountingService {
         data: {
           frozenRub: { decrement: amountRUB }, // Remove from frozen (consume RUB)
           balanceUsdt: { increment: sumToWriteOffUSDT }, // Add USDT to main balance
+          frozenPayoutBalance: { decrement: amountRUB },
           // Profit already added when payout went to CHECKING status
         },
       }),
     ]);
 
     // Use original service methods for notifications
-    await this.payoutService.sendMerchantWebhook(updatedPayout, "COMPLETED");
-    
-    // Send webhook notification
-    await webhookService.sendPayoutStatusWebhook(updatedPayout, "COMPLETED");
+    await Promise.all([
+      this.payoutService.sendMerchantWebhook(updatedPayout, "COMPLETED"),
+      webhookService.sendPayoutStatusWebhook(updatedPayout, "COMPLETED"),
+    ]);
 
     return updatedPayout;
   }
@@ -306,7 +319,7 @@ export class PayoutAccountingService {
 
   /**
    * Assign payout to trader WITHOUT accepting it (for distribution)
-   */
+  */
   async assignPayoutToTrader(payoutId: string, traderId: string) {
     const payout = await db.payout.findUnique({
       where: { id: payoutId },
@@ -320,12 +333,22 @@ export class PayoutAccountingService {
       throw new Error("Payout cannot be assigned in current state");
     }
 
-    // Just assign the trader, don't change status or freeze balance
+    // Get trader's acceptance time (in minutes), defaulting to 5
+    const trader = await db.user.findUnique({
+      where: { id: traderId },
+      select: { payoutAcceptanceTime: true },
+    });
+
+    const acceptanceTime = trader?.payoutAcceptanceTime ?? 5;
+    const newExpireAt = new Date(Date.now() + acceptanceTime * 60 * 1000);
+
+    // Assign trader and update expiration/acceptance time without changing status
     const updatedPayout = await db.payout.update({
       where: { id: payoutId },
       data: {
         trader: { connect: { id: traderId } },
-        // Don't set acceptedAt, don't change status, don't freeze balance
+        expireAt: newExpireAt,
+        acceptanceTime,
       },
     });
 

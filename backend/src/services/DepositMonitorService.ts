@@ -1,6 +1,7 @@
 import { BaseService } from "./BaseService";
 import { db } from "@/db";
 import { DepositStatus, DepositType } from "@prisma/client";
+import { truncate2 } from "@/utils/rounding";
 
 export default class DepositMonitorService extends BaseService {
   private readonly INTERVAL_MS = 60000; // Check every minute
@@ -14,11 +15,13 @@ export default class DepositMonitorService extends BaseService {
   }
 
   protected async onStart(): Promise<void> {
-    await this.logInfo("Deposit Monitor Service starting", { interval: this.INTERVAL_MS });
-    
+    await this.logInfo("Deposit Monitor Service starting", {
+      interval: this.INTERVAL_MS,
+    });
+
     // Run initial check
     await this.checkPendingDeposits();
-    
+
     await this.logInfo("Deposit Monitor Service started successfully");
   }
 
@@ -36,29 +39,40 @@ export default class DepositMonitorService extends BaseService {
       const pendingDeposits = await db.depositRequest.findMany({
         where: {
           status: {
-            in: [DepositStatus.PENDING, DepositStatus.CHECKING]
-          }
+            in: [DepositStatus.PENDING, DepositStatus.CHECKING],
+          },
         },
         include: {
-          trader: true
-        }
+          trader: true,
+        },
       });
 
-      await this.logDebug(`Checking ${pendingDeposits.length} pending deposits`);
+      await this.logDebug(
+        `Checking ${pendingDeposits.length} pending deposits`
+      );
 
       // Get deposit settings
-      const [walletAddress, confirmationsRequired, expiryMinutes] = await Promise.all([
-        db.systemConfig.findUnique({ where: { key: "deposit_wallet_address" } }),
-        db.systemConfig.findUnique({ where: { key: "deposit_confirmations_required" } }),
-        db.systemConfig.findUnique({ where: { key: "deposit_expiry_minutes" } })
-      ]);
+      const [walletAddress, confirmationsRequired, expiryMinutes] =
+        await Promise.all([
+          db.systemConfig.findUnique({
+            where: { key: "deposit_wallet_address" },
+          }),
+          db.systemConfig.findUnique({
+            where: { key: "deposit_confirmations_required" },
+          }),
+          db.systemConfig.findUnique({
+            where: { key: "deposit_expiry_minutes" },
+          }),
+        ]);
 
       if (!walletAddress) {
         await this.logError("Deposit wallet address not configured");
         return;
       }
 
-      const requiredConfirmations = parseInt(confirmationsRequired?.value || "3");
+      const requiredConfirmations = parseInt(
+        confirmationsRequired?.value || "3"
+      );
       const expiryMs = parseInt(expiryMinutes?.value || "60") * 60 * 1000;
 
       for (const deposit of pendingDeposits) {
@@ -66,7 +80,7 @@ export default class DepositMonitorService extends BaseService {
           // Check if deposit expired
           const now = new Date();
           const expiryTime = new Date(deposit.createdAt.getTime() + expiryMs);
-          
+
           if (now > expiryTime) {
             await this.expireDeposit(deposit.id);
             continue;
@@ -75,7 +89,7 @@ export default class DepositMonitorService extends BaseService {
           // Mock transaction check - in production, this would call TRON API
           // For demo purposes, we'll simulate finding a transaction
           const mockTransaction = await this.mockCheckTransaction(deposit);
-          
+
           if (mockTransaction) {
             // Update deposit with transaction info
             await db.depositRequest.update({
@@ -83,8 +97,8 @@ export default class DepositMonitorService extends BaseService {
               data: {
                 status: DepositStatus.CHECKING,
                 txHash: mockTransaction.txHash,
-                confirmations: mockTransaction.confirmations
-              }
+                confirmations: mockTransaction.confirmations,
+              },
             });
 
             // Check if enough confirmations
@@ -94,7 +108,9 @@ export default class DepositMonitorService extends BaseService {
             // }
           }
         } catch (error) {
-          await this.logError(`Error checking deposit ${deposit.id}`, { error });
+          await this.logError(`Error checking deposit ${deposit.id}`, {
+            error,
+          });
         }
       }
     } catch (error) {
@@ -102,26 +118,28 @@ export default class DepositMonitorService extends BaseService {
     }
   }
 
-  private async mockCheckTransaction(deposit: any): Promise<{ txHash: string, confirmations: number } | null> {
+  private async mockCheckTransaction(
+    deposit: any
+  ): Promise<{ txHash: string; confirmations: number } | null> {
     // Only process deposits that already have a txHash (provided by trader)
     if (!deposit.txHash) {
       return null;
     }
-    
+
     // In production, this would call TRON API to verify the transaction
     // For now, we'll simulate confirmations for deposits that have txHash
     const timeSinceCreation = Date.now() - deposit.createdAt.getTime();
-    
+
     // Simulate increasing confirmations over time
     return {
       txHash: deposit.txHash,
-      confirmations: Math.floor(timeSinceCreation / 20000) // 1 confirmation every 20 seconds
+      confirmations: Math.floor(timeSinceCreation / 20000), // 1 confirmation every 20 seconds
     };
   }
 
   private async confirmDeposit(deposit: any): Promise<void> {
     const now = new Date();
-    
+
     // Start transaction
     await db.$transaction(async (tx) => {
       // Update deposit status
@@ -130,18 +148,19 @@ export default class DepositMonitorService extends BaseService {
         data: {
           status: DepositStatus.CONFIRMED,
           confirmedAt: now,
-          processedAt: now
-        }
+          processedAt: now,
+        },
       });
 
       // Update trader balance based on deposit type
-      const updateData = deposit.type === DepositType.INSURANCE 
-        ? { deposit: { increment: deposit.amountUSDT } }
-        : { trustBalance: { increment: deposit.amountUSDT } };
-        
+      const updateData =
+        deposit.type === DepositType.INSURANCE
+          ? { deposit: { increment: truncate2(deposit.amountUSDT) } }
+          : { trustBalance: { increment: truncate2(deposit.amountUSDT) } };
+
       await tx.user.update({
         where: { id: deposit.traderId },
-        data: updateData
+        data: updateData,
       });
 
       // Create admin log
@@ -149,21 +168,29 @@ export default class DepositMonitorService extends BaseService {
         data: {
           adminId: "system",
           action: "DEPOSIT_CONFIRMED",
-          details: `Deposit ${deposit.id} confirmed for ${deposit.amountUSDT} USDT, ${deposit.type === DepositType.INSURANCE ? 'insurance deposit' : 'trader balance'} updated`,
-          ip: "system"
-        }
+          details: `Deposit ${deposit.id} confirmed for ${
+            deposit.amountUSDT
+          } USDT, ${
+            deposit.type === DepositType.INSURANCE
+              ? "insurance deposit"
+              : "trader balance"
+          } updated`,
+          ip: "system",
+        },
       });
     });
 
-    await this.logInfo(`Deposit ${deposit.id} confirmed, added ${deposit.amountUSDT} USDT to trader ${deposit.trader.email}`);
+    await this.logInfo(
+      `Deposit ${deposit.id} confirmed, added ${deposit.amountUSDT} USDT to trader ${deposit.trader.email}`
+    );
   }
 
   private async expireDeposit(depositId: string): Promise<void> {
     await db.depositRequest.update({
       where: { id: depositId },
       data: {
-        status: DepositStatus.EXPIRED
-      }
+        status: DepositStatus.EXPIRED,
+      },
     });
 
     await db.adminLog.create({
@@ -171,8 +198,8 @@ export default class DepositMonitorService extends BaseService {
         adminId: "system",
         action: "DEPOSIT_EXPIRED",
         details: `Deposit ${depositId} expired due to timeout`,
-        ip: "system"
-      }
+        ip: "system",
+      },
     });
 
     await this.logInfo(`Deposit ${depositId} expired`);

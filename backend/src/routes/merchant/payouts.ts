@@ -12,15 +12,15 @@ import { Elysia, t } from "elysia";
 import { db } from "@/db";
 import { PayoutStatus } from "@prisma/client";
 import ErrorSchema from "@/types/error";
-import { merchantSessionGuard } from "@/middleware/merchantSessionGuard";
+import { merchantGuard } from "@/middleware/merchantGuard";
 
 export default (app: Elysia) =>
   app
-    .use(merchantSessionGuard())
+    .use(merchantGuard())
     
     /* ──────── GET /merchant/payouts ──────── */
     .get(
-      "/payouts",
+      "/",
       async ({ merchant, query }) => {
         const page = Number(query.page) || 1;
         const limit = Number(query.limit) || 20;
@@ -239,7 +239,7 @@ export default (app: Elysia) =>
 
     /* ──────── GET /merchant/payouts/:id ──────── */
     .get(
-      "/payouts/:id",
+      "/:id",
       async ({ merchant, params, error }) => {
         const payout = await db.payout.findFirst({
           where: { 

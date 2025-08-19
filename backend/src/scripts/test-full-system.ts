@@ -405,8 +405,8 @@ async function testManualAcceptance(transactionId: string) {
   // Ручное подтверждение транзакции
   await db.transaction.update({
     where: { id: transactionId },
-    data: { 
-      status: Status.COMPLETED,
+    data: {
+      status: Status.READY,
       acceptedAt: new Date()
     }
   });

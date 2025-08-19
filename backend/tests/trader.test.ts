@@ -15,6 +15,7 @@ let app: Elysia;
 
 describe('Маршруты трейдера', () => {
   let testTransactionId: string;
+  let expiredTransactionId: string;
   let testTraderId: string;
   let testMethodId: string;
   let testMerchantId: string;
@@ -90,7 +91,7 @@ describe('Маршруты трейдера', () => {
     });
     testMethodId = method.id;
     
-    // Создаем тестовую транзакцию
+    // Создаем тестовую активную транзакцию
     const transaction = await db.transaction.create({
       data: {
         merchantId: merchant.id,
@@ -112,12 +113,36 @@ describe('Маршруты трейдера', () => {
     });
     
     testTransactionId = transaction.id;
+
+    // Создаем истекшую транзакцию
+    const expiredTx = await db.transaction.create({
+      data: {
+        merchantId: merchant.id,
+        amount: 500,
+        assetOrBank: 'USDT',
+        orderId: 'expired-order-' + randomBytes(4).toString('hex'),
+        methodId: method.id,
+        userId: 'test-user-id',
+        callbackUri: 'https://example.com/callback',
+        successUri: 'https://example.com/success',
+        failUri: 'https://example.com/fail',
+        type: TransactionType.IN,
+        expired_at: new Date(Date.now() - 60 * 1000),
+        commission: 5,
+        clientName: 'Expired Client',
+        status: Status.EXPIRED,
+        traderId: testTraderId,
+        rate: 100,
+      }
+    });
+
+    expiredTransactionId = expiredTx.id;
   });
   
   // Удаляем тестовые данные после завершения тестов
   afterAll(async () => {
     await db.transaction.deleteMany({
-      where: { id: testTransactionId }
+      where: { id: { in: [testTransactionId, expiredTransactionId] } }
     });
     await db.session.deleteMany({
       where: { userId: testTraderId }
@@ -196,6 +221,32 @@ describe('Маршруты трейдера', () => {
     const body = await response.json();
     expect(body).toHaveProperty('success', true);
     expect(body).toHaveProperty('transaction');
+    expect(body.transaction).toHaveProperty('status', Status.READY);
+  });
+
+  it('PATCH /transactions/:id/status должен обновлять истекшую транзакцию', async () => {
+    const response = await app.handle(
+      new Request(`http://localhost/transactions/${expiredTransactionId}/status`, {
+        method: 'PATCH',
+        headers: {
+          ...mockHeaders,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          status: Status.READY
+        })
+      })
+    );
+
+    if (response.status !== 200) {
+      const errorBody = await response.text();
+      console.error('Response error:', errorBody);
+    }
+
+    expect(response.status).toBe(200);
+
+    const body = await response.json();
+    expect(body).toHaveProperty('success', true);
     expect(body.transaction).toHaveProperty('status', Status.READY);
   });
 });

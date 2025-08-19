@@ -138,10 +138,14 @@ export const settleRequestsRoutes = new Elysia({ prefix: "/settle-requests" })
         ])
 
         // Get methods to calculate commissions
-        const methodIds = [...new Set([
-          ...transactions.map(t => t.methodId),
-          ...payouts.map(p => p.methodId)
-        ])];
+        const methodIds = [
+          ...new Set(
+            [
+              ...transactions.map((t) => t.methodId),
+              ...payouts.map((p) => p.methodId),
+            ].filter((id): id is string => Boolean(id))
+          ),
+        ];
 
         const methods = await db.method.findMany({
           where: { id: { in: methodIds } },
@@ -278,7 +282,7 @@ export const settleRequestsRoutes = new Elysia({ prefix: "/settle-requests" })
       const updatedRequest = await db.settleRequest.update({
         where: { id: params.id },
         data: {
-          status: "CANCELLED",
+          status: SettleRequestStatus.CANCELLED,
           processedAt: new Date(),
           processedBy: admin?.id || "SUPER_ADMIN",
           cancelReason: body.reason,
@@ -287,8 +291,8 @@ export const settleRequestsRoutes = new Elysia({ prefix: "/settle-requests" })
 
       return { success: true, request: updatedRequest }
     } catch (e) {
-      console.error("Failed to fetch settle requests:", e)
-      return error(500, { error: "Failed to fetch settle requests" })
+      console.error("Failed to cancel settle request:", e)
+      return error(500, { error: "Failed to cancel settle request" })
     }
   }, {
     params: t.Object({

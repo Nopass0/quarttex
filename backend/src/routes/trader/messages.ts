@@ -71,7 +71,8 @@ export default (app: Elysia) =>
             createdAt: msg.createdAt,
             isProcessed: msg.isProcessed,
             matchedTransactionId: msg.metadata?.matchedTransactionId || null,
-            transaction: msg.metadata?.transaction || null
+            transaction: msg.metadata?.transaction || null,
+            amount: (msg.metadata as any)?.extractedAmount || (msg.metadata as any)?.amount || 0
           })),
           meta: {
             total,

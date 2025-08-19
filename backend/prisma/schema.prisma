@@ -74,24 +74,25 @@ model User {
   balanceTopUps          BalanceTopUp[]
   bankDetails            BankDetail[]
   cryptoWallet           CryptoWallet?
+  dealDisputes           DealDispute[]
+  depositRequests        DepositRequest[]
   devices                Device[]
+  folders                Folder[]
+  ideas                  Idea[]
+  messages               Message[]
   payouts                Payout[]                @relation("TraderPayouts")
+  payoutFilters          PayoutFilters?
   sessions               Session[]
   supportTickets         SupportTicket[]
   traderMerchants        TraderMerchant[]
   tradedTransactions     Transaction[]           @relation("TraderTransactions")
   team                   Team?                   @relation(fields: [teamId], references: [id])
   WalletCreationRequest  WalletCreationRequest[]
-  folders                Folder[]
   withdrawalDisputes     WithdrawalDispute[]
-  dealDisputes           DealDispute[]
-  depositRequests        DepositRequest[]
   withdrawalRequests     WithdrawalRequest[]
-  messages               Message[]
-  ideas                  Idea[]
-  payoutFilters          PayoutFilters?
-  payoutCancellations    PayoutCancellation[]
-  payoutBlacklist        PayoutBlacklist[]
+  payoutCancellations    PayoutCancellationHistory[]
+  /// Предпочитаемый источник курса для трейдера (переопределяет метод, если связь trader-merchant не задана)
+  rateSource             RateSource?
 }
 
 model Session {
@@ -125,7 +126,7 @@ model AdminLog {
   details   String?
   ip        String
   createdAt DateTime @default(now())
-  
+
   @@index([adminId])
   @@index([createdAt])
 }
@@ -134,46 +135,70 @@ model Merchant {
   id                   String               @id @default(cuid())
   name                 String
   token                String               @unique
-  apiKeyPublic         String?              @unique
-  apiKeyPrivate        String?
   disabled             Boolean              @default(false)
   banned               Boolean              @default(false)
   balanceUsdt          Float                @default(0)
-  countInRubEquivalent Boolean              @default(false)
   createdAt            DateTime             @default(now())
+  apiKeyPublic         String?              @unique
+  apiKeyPrivate        String?
+  countInRubEquivalent Boolean              @default(false)
+  wellbitCallbackUrl   String?
+  dealDisputes         DealDispute[]
+  aggregatorDisputes   AggregatorDispute[] @relation("AggregatorDisputes")
   merchantMethods      MerchantMethod[]
   settlements          MerchantSettlement[]
   payouts              Payout[]
+  settleRequests       SettleRequest[]
   supportTickets       SupportTicket[]
   traderMerchants      TraderMerchant[]
   Transaction          Transaction[]
-  withdrawalDisputes   WithdrawalDispute[]
-  dealDisputes         DealDispute[]
   transactionAttempts  TransactionAttempt[]
-  settleRequests       SettleRequest[]
+  withdrawalDisputes   WithdrawalDispute[]
+  merchantRequestLogs  MerchantRequestLog[]
+  merchantStaff        MerchantStaff[]
+  totpEnabled          Boolean              @default(false)
+  totpSecret           String?
+}
+
+enum MerchantStaffRole {
+  owner
+  staff
+}
+
+model MerchantStaff {
+  id         String            @id @default(cuid())
+  merchantId String
+  name       String
+  token      String            @unique
+  role       MerchantStaffRole @default(staff)
+  isActive   Boolean           @default(true)
+  createdAt  DateTime          @default(now())
+  merchant   Merchant          @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId])
 }
 
 model Method {
-  id               String           @id @default(cuid())
-  code             String           @unique
-  name             String
-  type             MethodType
-  currency         Currency         @default(rub)
-  commissionPayin  Float
-  commissionPayout Float
-  maxPayin         Float
-  minPayin         Float
-  maxPayout        Float
-  minPayout        Float
-  chancePayin      Float
-  chancePayout     Float
-  isEnabled        Boolean          @default(true)
-  rateSource       RateSource       @default(bybit)
-  merchantMethods  MerchantMethod[]
-  rateSettings     RateSettings?
-  traderMerchants  TraderMerchant[]
-  Transaction      Transaction[]
-  payouts          Payout[]
+  id                  String               @id @default(cuid())
+  code                String               @unique
+  name                String
+  type                MethodType
+  currency            Currency             @default(rub)
+  commissionPayin     Float
+  commissionPayout    Float
+  maxPayin            Float
+  minPayin            Float
+  maxPayout           Float
+  minPayout           Float
+  chancePayin         Float
+  chancePayout        Float
+  isEnabled           Boolean              @default(true)
+  rateSource          RateSource           @default(bybit)
+  merchantMethods     MerchantMethod[]
+  payouts             Payout[]
+  rateSettings        RateSettings?
+  traderMerchants     TraderMerchant[]
+  Transaction         Transaction[]
   transactionAttempts TransactionAttempt[]
 }
 
@@ -189,51 +214,87 @@ model MerchantMethod {
 }
 
 model Transaction {
-  id                   String              @id @default(cuid())
-  numericId            Int                 @unique @default(autoincrement())
-  merchantId           String
-  amount               Float
-  assetOrBank          String
-  orderId              String
-  currency             String?
-  userId               String
-  userIp               String?
-  callbackUri          String
-  successUri           String
-  failUri              String
-  type                 TransactionType     @default(IN)
-  expired_at           DateTime
-  commission           Float
-  clientName           String
-  status               Status              @default(CREATED)
-  error                String?
-  rate                 Float?              // Rapira rate with KKK (always)
-  merchantRate         Float?              // Merchant's rate (if countInRubEquivalent=false) or Rapira rate (if true)
-  traderId             String?
-  isMock               Boolean             @default(false)
-  createdAt            DateTime            @default(now())
-  updatedAt            DateTime            @updatedAt
-  acceptedAt           DateTime?
-  methodId             String
-  bankDetailId         String?
-  settlementId         String?
-  adjustedRate         Float?
-  calculatedCommission Float?
-  feeInPercent         Float?
-  frozenUsdtAmount     Float?
-  kkkPercent           Float?
-  kkkOperation         KkkOperationType?
-  traderProfit         Float?              // Прибыль трейдера в USDT
-  callbackSent         Boolean             @default(false)
-  matchedNotificationId String?            // ID уведомления, с которым была сматчена транзакция
-  receipts             Receipt[]
-  requisites           BankDetail?         @relation(fields: [bankDetailId], references: [id])
-  merchant             Merchant            @relation(fields: [merchantId], references: [id])
-  method               Method              @relation(fields: [methodId], references: [id])
-  settlement           MerchantSettlement? @relation(fields: [settlementId], references: [id])
-  trader               User?               @relation("TraderTransactions", fields: [traderId], references: [id])
-  matchedNotification  Notification?       @relation(fields: [matchedNotificationId], references: [id])
-  dealDispute          DealDispute?
+  id                    String              @id @default(cuid())
+  numericId             Int                 @unique @default(autoincrement())
+  merchantId            String
+  amount                Float
+  assetOrBank           String
+  orderId               String
+  currency              String?
+  userId                String
+  userIp                String?
+  callbackUri           String
+  successUri            String
+  failUri               String
+  type                  TransactionType     @default(IN)
+  expired_at            DateTime
+  commission            Float
+  clientName            String
+  status                Status              @default(CREATED)
+  error                 String?
+  rate                  Float?
+  traderId              String?
+  aggregatorId          String?
+  isMock                Boolean             @default(false)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  acceptedAt            DateTime?
+  methodId              String
+  bankDetailId          String?
+  settlementId          String?
+  kkkOperation          KkkOperationType?
+  adjustedRate          Float?
+  calculatedCommission  Float?
+  callbackSent          Boolean             @default(false)
+  feeInPercent          Float?
+  frozenUsdtAmount      Float?
+  kkkPercent            Float?
+  matchedNotificationId String?
+  merchantRate          Float?
+  traderProfit          Float?
+  dealDispute           DealDispute?
+  receipts              Receipt[]
+  callbackHistory       CallbackHistory[]
+  requisites            BankDetail?         @relation(fields: [bankDetailId], references: [id])
+  matchedNotification   Notification?       @relation(fields: [matchedNotificationId], references: [id])
+  merchant              Merchant            @relation(fields: [merchantId], references: [id])
+  method                Method              @relation(fields: [methodId], references: [id])
+  settlement            MerchantSettlement? @relation(fields: [settlementId], references: [id])
+  trader                User?               @relation("TraderTransactions", fields: [traderId], references: [id])
+  aggregator            Aggregator?         @relation("AggregatorTransactions", fields: [aggregatorId], references: [id])
+  aggregatorDisputes    AggregatorDispute[] @relation("AggregatorDisputes")
+
+  @@index([bankDetailId, amount])
+}
+
+model CallbackHistory {
+  id            String   @id @default(cuid())
+  transactionId String
+  url           String
+  payload       Json
+  response      String?
+  statusCode    Int?
+  error         String?
+  createdAt     DateTime @default(now())
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  
+  @@index([transactionId])
+  @@index([createdAt(sort: Desc)])
+}
+
+model PayoutCallbackHistory {
+  id         String   @id @default(cuid())
+  payoutId   String
+  url        String
+  payload    Json
+  response   String?
+  statusCode Int?
+  error      String?
+  createdAt  DateTime @default(now())
+  payout     Payout   @relation(fields: [payoutId], references: [id], onDelete: Cascade)
+
+  @@index([payoutId])
+  @@index([createdAt(sort: Desc)])
 }
 
 model Receipt {
@@ -265,7 +326,7 @@ model WalletTransaction {
 }
 
 model BankDetail {
-  id                   String        @id @default(cuid())
+  id                   String              @id @default(cuid())
   userId               String
   methodType           MethodType
   bankType             BankType
@@ -274,20 +335,20 @@ model BankDetail {
   phoneNumber          String?
   minAmount            Float
   maxAmount            Float
-  dailyLimit           Float
-  monthlyLimit         Float
-  maxCountTransactions Int?
-  intervalMinutes      Int           @default(0)
-  isArchived           Boolean       @default(false)
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
-  dailyTraffic         Float         @default(0)
+  totalAmountLimit     Float               @default(0) // Общий лимит суммы (если 0 - без лимита)
+  currentTotalAmount   Float               @default(0) // Текущая использованная сумма
+  intervalMinutes      Int                 @default(0)
+  operationLimit       Int                 @default(0) // Лимит по количеству операций без срока давности (0 - без лимита)
+  sumLimit             Float               @default(0) // Лимит на общую сумму сделок в рублях (0 - без лимита)
+  isArchived           Boolean             @default(false)
+  isActive             Boolean             @default(true)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
   deviceId             String?
-  monthlyTraffic       Float         @default(0)
-  device               Device?       @relation(fields: [deviceId], references: [id])
-  user                 User          @relation(fields: [userId], references: [id])
-  Transaction          Transaction[]
+  device               Device?             @relation(fields: [deviceId], references: [id])
+  user                 User                @relation(fields: [userId], references: [id])
   folders              RequisiteOnFolder[]
+  Transaction          Transaction[]
 }
 
 model MasterWallet {
@@ -321,13 +382,13 @@ model SystemConfig {
 }
 
 model RateSettings {
-  id         String   @id @default(cuid())
-  methodId   String   @unique
-  kkkPercent Float    @default(0)
+  id           String           @id @default(cuid())
+  methodId     String           @unique
+  kkkPercent   Float            @default(0)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
   kkkOperation KkkOperationType @default(MINUS)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  method     Method   @relation(fields: [methodId], references: [id])
+  method       Method           @relation(fields: [methodId], references: [id])
 }
 
 model TopupSettings {
@@ -363,47 +424,46 @@ model WalletCreationRequest {
 }
 
 model Device {
-  id               String         @id @default(cuid())
-  name             String
-  energy           Float?
-  ethernetSpeed    Float?
-  isOnline         Boolean?
-  isWorking        Boolean        @default(false) // Working state controlled by user
-  token            String?        @unique
-  createdAt        DateTime       @default(now()) @map("created_at")
-  updatedAt        DateTime       @updatedAt @map("updated_at")
-  emulated         Boolean        @default(false)
-  lastActiveAt     DateTime?
-  firstConnectionAt DateTime?     // Track first connection via QR code
-  userId           String
-  // Push notification tokens
-  fcmToken         String?        // Firebase Cloud Messaging token
-  webPushEndpoint  String?        // Web Push endpoint
-  webPushP256dh    String?        // Web Push public key
-  webPushAuth      String?        // Web Push auth secret
-  pushEnabled      Boolean        @default(true)
-  bankDetails      BankDetail[]
-  user             User           @relation(fields: [userId], references: [id])
-  notifications    Notification[]
+  id                String         @id @default(cuid())
+  name              String
+  energy            Float?
+  ethernetSpeed     Float?
+  isOnline          Boolean?
+  token             String?        @unique
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+  emulated          Boolean        @default(false)
+  fcmToken          String?
+  firstConnectionAt DateTime?
+  isWorking         Boolean        @default(false)
+  lastActiveAt      DateTime?
+  pushEnabled       Boolean        @default(true)
+  userId            String?
+  webPushAuth       String?
+  webPushEndpoint   String?
+  webPushP256dh     String?
+  bankDetails       BankDetail[]
+  user              User?          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  notifications     Notification[]
 
   @@index([emulated, isOnline])
   @@index([userId, pushEnabled])
 }
 
 model Notification {
-  id          String           @id @default(cuid())
-  type        NotificationType
-  application String?
-  packageName String?
-  title       String?
-  message     String
-  metadata    Json?
-  isRead      Boolean          @default(false)
-  createdAt   DateTime         @default(now()) @map("created_at")
-  updatedAt   DateTime         @updatedAt @map("updated_at")
-  deviceId    String?
-  isProcessed Boolean          @default(false)
-  Device      Device?          @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  id                  String           @id @default(cuid())
+  type                NotificationType
+  application         String?
+  title               String?
+  message             String
+  metadata            Json?
+  isRead              Boolean          @default(false)
+  createdAt           DateTime         @default(now()) @map("created_at")
+  updatedAt           DateTime         @updatedAt @map("updated_at")
+  deviceId            String?
+  isProcessed         Boolean          @default(false)
+  packageName         String?
+  Device              Device?          @relation(fields: [deviceId], references: [id], onDelete: Cascade)
   matchedTransactions Transaction[]
 
   @@index([deviceId, createdAt(sort: Desc)])
@@ -422,19 +482,19 @@ model BalanceTopUp {
 }
 
 model DepositRequest {
-  id            String              @id @default(cuid())
+  id            String        @id @default(cuid())
   traderId      String
   amountUSDT    Float
   address       String
-  status        DepositStatus       @default(PENDING)
+  status        DepositStatus @default(PENDING)
   txHash        String?
-  confirmations Int                 @default(0)
-  type          DepositType         @default(BALANCE)
-  createdAt     DateTime            @default(now())
+  confirmations Int           @default(0)
+  type          DepositType   @default(BALANCE)
+  createdAt     DateTime      @default(now())
   confirmedAt   DateTime?
   processedAt   DateTime?
-  trader        User                @relation(fields: [traderId], references: [id])
-  
+  trader        User          @relation(fields: [traderId], references: [id])
+
   @@index([traderId])
   @@index([status])
   @@index([txHash])
@@ -454,7 +514,7 @@ model WithdrawalRequest {
   processedAt     DateTime?
   createdAt       DateTime              @default(now())
   trader          User                  @relation(fields: [traderId], references: [id])
-  
+
   @@index([traderId])
   @@index([status])
   @@index([balanceType])
@@ -463,8 +523,9 @@ model WithdrawalRequest {
 model RateSetting {
   id        Int      @id @default(1)
   value     Float
-  rapiraKkk Float    @default(0) // KKK для курса Rapira в процентах
   updatedAt DateTime @updatedAt
+  rapiraKkk Float    @default(0)
+  bybitKkk  Float    @default(0)
 }
 
 model MerchantSettlement {
@@ -516,13 +577,39 @@ model TraderMerchant {
   isFeeInEnabled    Boolean  @default(true)
   isFeeOutEnabled   Boolean  @default(true)
   isMerchantEnabled Boolean  @default(true)
+  rateSource        RateSource?
+  /// Использовать ли гибкие ставки по промежуткам сумм вместо фиксированных feeIn/feeOut
+  useFlexibleRates  Boolean  @default(false)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   merchant          Merchant @relation(fields: [merchantId], references: [id])
   method            Method   @relation(fields: [methodId], references: [id])
   trader            User     @relation(fields: [traderId], references: [id])
+  /// Промежутки ставок для данной связки трейдер-мерчант-метод
+  feeRanges         TraderMerchantFeeRange[]
 
   @@unique([traderId, merchantId, methodId])
+}
+
+/// Модель для хранения гибких процентных ставок по промежуткам сумм
+model TraderMerchantFeeRange {
+  id                String         @id @default(cuid())
+  traderMerchantId  String
+  /// Минимальная сумма промежутка (включительно) в рублях
+  minAmount         Float
+  /// Максимальная сумма промежутка (включительно) в рублях
+  maxAmount         Float
+  /// Процентная ставка на вход для данного промежутка
+  feeInPercent      Float          @default(0)
+  /// Процентная ставка на выход для данного промежутка  
+  feeOutPercent     Float          @default(0)
+  isActive          Boolean        @default(true)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  traderMerchant    TraderMerchant @relation(fields: [traderMerchantId], references: [id], onDelete: Cascade)
+
+  @@index([traderMerchantId])
+  @@index([minAmount, maxAmount])
 }
 
 model Agent {
@@ -639,7 +726,7 @@ model SupportMessage {
 }
 
 model ServiceConfig {
-  id         String   @id @default(uuid())
+  id         String   @id @default(dbgenerated("gen_random_uuid()"))
   serviceKey String   @unique
   config     Json
   isEnabled  Boolean  @default(true)
@@ -647,8 +734,8 @@ model ServiceConfig {
 }
 
 model Payout {
-  id                   String            @id @default(cuid())
-  numericId            Int               @unique @default(autoincrement())
+  id                   String              @id @default(cuid())
+  numericId            Int                 @unique @default(autoincrement())
   merchantId           String
   traderId             String?
   amount               Float
@@ -659,8 +746,8 @@ model Payout {
   wallet               String
   bank                 String
   isCard               Boolean
-  status               PayoutStatus      @default(CREATED)
-  createdAt            DateTime          @default(now())
+  status               PayoutStatus        @default(CREATED)
+  createdAt            DateTime            @default(now())
   acceptedAt           DateTime?
   expireAt             DateTime
   confirmedAt          DateTime?
@@ -671,33 +758,35 @@ model Payout {
   cancelReason         String?
   merchantWebhookUrl   String?
   merchantMetadata     Json?
-  acceptanceTime       Int               @default(5)
-  processingTime       Int               @default(15)
+  acceptanceTime       Int                 @default(5)
+  processingTime       Int                 @default(15)
   pushNotificationTime Int?
-  pushSent             Boolean           @default(false)
-  direction            PayoutDirection   @default(OUT)
+  pushSent             Boolean             @default(false)
+  direction            PayoutDirection     @default(OUT)
   merchantRate         Float?
-  rateDelta            Float             @default(0)
-  feePercent           Float             @default(0)
+  rateDelta            Float               @default(0)
+  feePercent           Float               @default(0)
   cancelReasonCode     String?
   externalReference    String?
   sumToWriteOffUSDT    Float?
-  profitAmount         Float?
-  previousTraderIds    String[]          @default([])
+  previousTraderIds    String[]            @default([])
   methodId             String?
-  merchant             Merchant          @relation(fields: [merchantId], references: [id])
-  trader               User?             @relation("TraderPayouts", fields: [traderId], references: [id])
-  method               Method?           @relation(fields: [methodId], references: [id])
+  profitAmount         Float               @default(0)
+  merchant             Merchant            @relation(fields: [merchantId], references: [id])
+  method               Method?             @relation(fields: [methodId], references: [id])
+  trader               User?               @relation("TraderPayouts", fields: [traderId], references: [id])
   rateAudits           PayoutRateAudit[]
   disputes             WithdrawalDispute[]
-  cancellationHistory  PayoutCancellation[]
   blacklistEntries     PayoutBlacklist[]
+  cancellationHistory  PayoutCancellationHistory[]
+  callbackHistory      PayoutCallbackHistory[]
 
   @@index([status, traderId])
   @@index([merchantId, status])
   @@index([createdAt])
   @@index([expireAt])
   @@index([direction, status])
+  @@index([methodId])
 }
 
 model PayoutRateAudit {
@@ -730,44 +819,41 @@ model TelegramLink {
 }
 
 model Folder {
-  id        String   @id @default(uuid())
-  traderId  String   
-  title     String
-  createdAt DateTime @default(now())
-  isActive  Boolean  @default(true)
-  
+  id         String              @id @default(uuid())
+  traderId   String
+  title      String
+  createdAt  DateTime            @default(now())
+  isActive   Boolean             @default(true)
   trader     User                @relation(fields: [traderId], references: [id])
   requisites RequisiteOnFolder[]
-  
+
   @@index([traderId])
 }
 
 model RequisiteOnFolder {
   folderId    String
   requisiteId String
-  
-  folder    Folder     @relation(fields: [folderId], references: [id], onDelete: Cascade)
-  requisite BankDetail @relation(fields: [requisiteId], references: [id], onDelete: Cascade)
-  
+  folder      Folder     @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  requisite   BankDetail @relation(fields: [requisiteId], references: [id], onDelete: Cascade)
+
   @@id([folderId, requisiteId])
 }
 
 model WithdrawalDispute {
-  id           String                    @id @default(uuid())
-  payoutId     String
-  merchantId   String
-  traderId     String
-  status       WithdrawalDisputeStatus   @default(OPEN)
-  createdAt    DateTime                  @default(now())
-  updatedAt    DateTime                  @updatedAt
-  resolvedAt   DateTime?
-  resolution   String?
-  
-  payout       Payout                    @relation(fields: [payoutId], references: [id])
-  merchant     Merchant                  @relation(fields: [merchantId], references: [id])
-  trader       User                      @relation(fields: [traderId], references: [id])
-  messages     WithdrawalDisputeMessage[]
-  
+  id         String                     @id @default(uuid())
+  payoutId   String
+  merchantId String
+  traderId   String
+  status     WithdrawalDisputeStatus    @default(OPEN)
+  createdAt  DateTime                   @default(now())
+  updatedAt  DateTime                   @updatedAt
+  resolvedAt DateTime?
+  resolution String?
+  merchant   Merchant                   @relation(fields: [merchantId], references: [id])
+  payout     Payout                     @relation(fields: [payoutId], references: [id])
+  trader     User                       @relation(fields: [traderId], references: [id])
+  messages   WithdrawalDisputeMessage[]
+
   @@index([payoutId])
   @@index([merchantId])
   @@index([traderId])
@@ -775,32 +861,368 @@ model WithdrawalDispute {
 }
 
 model WithdrawalDisputeMessage {
-  id          String                @id @default(uuid())
+  id          String                  @id @default(uuid())
   disputeId   String
   senderId    String
   senderType  DisputeSenderType
-  message     String                @db.Text
-  createdAt   DateTime              @default(now())
-  
-  dispute     WithdrawalDispute     @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  message     String
+  createdAt   DateTime                @default(now())
   attachments WithdrawalDisputeFile[]
-  
+  dispute     WithdrawalDispute       @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+
   @@index([disputeId])
   @@index([createdAt])
 }
 
 model WithdrawalDisputeFile {
-  id          String                   @id @default(uuid())
-  messageId   String
-  filename    String
-  url         String
-  size        Int
-  mimeType    String
-  createdAt   DateTime                 @default(now())
-  
-  message     WithdrawalDisputeMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  
+  id        String                   @id @default(uuid())
+  messageId String
+  filename  String
+  url       String
+  size      Int
+  mimeType  String
+  createdAt DateTime                 @default(now())
+  message   WithdrawalDisputeMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
   @@index([messageId])
+}
+
+model DealDispute {
+  id         String               @id @default(dbgenerated("gen_random_uuid()"))
+  dealId     String               @unique
+  merchantId String
+  traderId   String
+  status     DealDisputeStatus    @default(OPEN)
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+  resolvedAt DateTime?
+  resolution String?
+  deal       Transaction          @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  merchant   Merchant             @relation(fields: [merchantId], references: [id])
+  trader     User                 @relation(fields: [traderId], references: [id])
+  messages   DealDisputeMessage[]
+
+  @@index([dealId])
+  @@index([merchantId])
+  @@index([traderId])
+  @@index([status])
+}
+
+model DealDisputeMessage {
+  id          String            @id @default(dbgenerated("gen_random_uuid()"))
+  disputeId   String
+  senderId    String
+  senderType  DisputeSenderType
+  message     String
+  createdAt   DateTime          @default(now())
+  attachments DealDisputeFile[]
+  dispute     DealDispute       @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+
+  @@index([disputeId])
+  @@index([senderId])
+}
+
+model DealDisputeFile {
+  id        String             @id @default(dbgenerated("gen_random_uuid()"))
+  messageId String
+  filename  String
+  url       String
+  size      Int
+  mimeType  String
+  createdAt DateTime           @default(now())
+  message   DealDisputeMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+}
+
+model Message {
+  id              String              @id @default(cuid())
+  traderId        String
+  subject         String
+  content         String
+  type            MessageType         @default(SYSTEM)
+  priority        MessagePriority     @default(NORMAL)
+  isRead          Boolean             @default(false)
+  isStarred       Boolean             @default(false)
+  metadata        Json?
+  relatedEntityId String?
+  relatedEntity   String?
+  createdAt       DateTime            @default(now())
+  readAt          DateTime?
+  trader          User                @relation(fields: [traderId], references: [id])
+  attachments     MessageAttachment[]
+
+  @@index([traderId, isRead])
+  @@index([traderId, createdAt(sort: Desc)])
+  @@index([relatedEntityId, relatedEntity])
+}
+
+model MessageAttachment {
+  id        String   @id @default(cuid())
+  messageId String
+  filename  String
+  url       String
+  size      Int
+  mimeType  String
+  createdAt DateTime @default(now())
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+}
+
+model Idea {
+  id         String     @id @default(cuid())
+  userId     String
+  title      String
+  content    String
+  status     IdeaStatus @default(PENDING)
+  adminNotes String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  user       User       @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model PayoutFilters {
+  id              String     @id @default(cuid())
+  userId          String     @unique
+  trafficTypes    String[]   @default([])
+  bankTypes       BankType[] @default([])
+  maxPayoutAmount Float      @default(0)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  user            User       @relation(fields: [userId], references: [id])
+}
+
+model TransactionAttempt {
+  id            String   @id @default(cuid())
+  transactionId String?
+  merchantId    String
+  methodId      String
+  amount        Float
+  status        String?
+  success       Boolean  @default(false)
+  errorCode     String?
+  message       String?
+  timestamp     DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  merchant      Merchant @relation(fields: [merchantId], references: [id])
+  method        Method   @relation(fields: [methodId], references: [id])
+
+  @@index([merchantId])
+  @@index([createdAt])
+}
+
+model SettleRequest {
+  id                   String              @id @default(cuid())
+  merchantId           String
+  amount               Float
+  currency             String              @default("RUB")
+  status               SettleRequestStatus @default(PENDING)
+  comment              String?
+  rejectionReason      String?
+  requestedAt          DateTime            @default(now())
+  processedAt          DateTime?
+  processedBy          String?
+  exchangeRate         Float?
+  usdtAmount           Float?
+  amountUsdt           Float?
+  rate                 Float?
+  tradeId              String?
+  usdtEquivalent       Float?
+  countInRubEquivalent Boolean             @default(false)
+  rateType             String?
+  merchantRate         Float?
+  settlementAddress    String?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime
+  merchant             Merchant            @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model merchant_emulator_logs {
+  id          String   @id
+  timestamp   DateTime @default(now())
+  level       String
+  message     String
+  merchant_id String
+  batch_id    String?
+  details     Json?
+
+  @@index([batch_id])
+  @@index([merchant_id])
+  @@index([timestamp])
+}
+
+model PayoutBlacklist {
+  id        String   @id @default(cuid())
+  payoutId  String
+  traderId  String
+  reason    String?
+  createdAt DateTime @default(now())
+  payout    Payout   @relation(fields: [payoutId], references: [id])
+  
+  @@unique([payoutId, traderId])
+  @@index([payoutId])
+  @@index([traderId])
+}
+
+model PayoutCancellationHistory {
+  id        String   @id @default(cuid())
+  payoutId  String
+  traderId  String
+  reason    String
+  createdAt DateTime @default(now())
+  payout    Payout   @relation(fields: [payoutId], references: [id])
+  trader    User     @relation(fields: [traderId], references: [id])
+
+  @@index([payoutId])
+  @@index([traderId])
+  @@index([createdAt])
+}
+
+model MerchantRequestLog {
+  id         String              @id @default(cuid())
+  merchantId String
+  type       MerchantRequestType
+  data       Json
+  createdAt  DateTime            @default(now())
+  merchant   Merchant            @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId])
+  @@index([createdAt])
+}
+
+model WellbitBankMapping {
+  id              Int      @id @default(autoincrement())
+  wellbitBankCode String   @unique
+  wellbitBankName String
+  ourBankName     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Aggregator {
+  id              String               @id @default(cuid())
+  email           String               @unique
+  password        String
+  name            String
+  apiToken        String               @unique
+  apiBaseUrl      String?              // Базовый URL для API агрегатора
+  balanceUsdt     Float                @default(0)
+  isActive        Boolean              @default(true)
+  twoFactorSecret String?              // Секрет для 2FA
+  twoFactorEnabled Boolean             @default(false)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  
+  // Связи
+  sessions        AggregatorSession[]
+  transactions    Transaction[]        @relation("AggregatorTransactions")
+  disputes        AggregatorDispute[]
+  apiLogs         AggregatorApiLog[]
+  depositRequests AggregatorDepositRequest[]
+  
+  @@index([email])
+  @@index([apiToken])
+}
+
+model AggregatorSession {
+  id           String     @id @default(cuid())
+  aggregatorId String
+  token        String     @unique
+  ip           String
+  userAgent    String?
+  createdAt    DateTime   @default(now())
+  expiresAt    DateTime
+  aggregator   Aggregator @relation(fields: [aggregatorId], references: [id], onDelete: Cascade)
+  
+  @@index([aggregatorId])
+  @@index([token])
+}
+
+model AggregatorDepositRequest {
+  id            String               @id @default(cuid())
+  aggregatorId  String
+  amountUSDT    Float
+  address       String               // адрес кошелька для пополнения
+  status        AggregatorDepositStatus @default(PENDING)
+  txHash        String?              // хеш транзакции от агрегатора
+  confirmations Int                  @default(0)
+  createdAt     DateTime             @default(now())
+  confirmedAt   DateTime?            // когда подтверждено админом
+  processedAt   DateTime?            // когда обработано
+  aggregator    Aggregator           @relation(fields: [aggregatorId], references: [id], onDelete: Cascade)
+  
+  @@index([aggregatorId])
+  @@index([status])
+}
+
+enum AggregatorDepositStatus {
+  PENDING
+  CHECKING
+  CONFIRMED
+  FAILED
+  EXPIRED
+}
+
+model AggregatorDispute {
+  id              String            @id @default(cuid())
+  transactionId   String
+  aggregatorId    String
+  merchantId      String            // ID мерчанта для связи
+  status          DealDisputeStatus @default(OPEN)
+  subject         String
+  description     String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  resolvedAt      DateTime?
+  
+  // Связи
+  transaction     Transaction       @relation("AggregatorDisputes", fields: [transactionId], references: [id])
+  aggregator      Aggregator        @relation(fields: [aggregatorId], references: [id])
+  merchant        Merchant          @relation("AggregatorDisputes", fields: [merchantId], references: [id])
+  messages        AggregatorDisputeMessage[]
+  
+  @@index([transactionId])
+  @@index([aggregatorId])
+  @@index([status])
+}
+
+model AggregatorDisputeMessage {
+  id        String            @id @default(cuid())
+  disputeId String
+  senderId  String           // ID агрегатора или админа
+  senderType DisputeSenderType
+  message   String
+  createdAt DateTime          @default(now())
+  dispute   AggregatorDispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  
+  @@index([disputeId])
+}
+
+model AggregatorApiLog {
+  id           String     @id @default(cuid())
+  aggregatorId String
+  endpoint     String     // Какой эндпоинт агрегатора вызывали
+  method       String     // HTTP метод
+  requestData  Json?      // Отправленные данные
+  responseData Json?      // Полученный ответ
+  statusCode   Int?       // HTTP статус код
+  error        String?    // Текст ошибки, если была
+  duration     Int?       // Время выполнения в мс
+  createdAt    DateTime   @default(now())
+  aggregator   Aggregator @relation(fields: [aggregatorId], references: [id])
+  
+  @@index([aggregatorId])
+  @@index([createdAt])
 }
 
 enum WithdrawalDisputeStatus {
@@ -815,58 +1237,7 @@ enum DisputeSenderType {
   MERCHANT
   TRADER
   ADMIN
-}
-
-// Deal Dispute Models
-model DealDispute {
-  id           String                    @id @default(uuid())
-  dealId       String                    @unique
-  merchantId   String
-  traderId     String
-  status       DealDisputeStatus         @default(OPEN)
-  createdAt    DateTime                  @default(now())
-  updatedAt    DateTime                  @updatedAt
-  resolvedAt   DateTime?
-  resolution   String?
-  
-  deal         Transaction               @relation(fields: [dealId], references: [id], onDelete: Cascade)
-  merchant     Merchant                  @relation(fields: [merchantId], references: [id])
-  trader       User                      @relation(fields: [traderId], references: [id])
-  messages     DealDisputeMessage[]
-  
-  @@index([dealId])
-  @@index([merchantId])
-  @@index([traderId])
-  @@index([status])
-}
-
-model DealDisputeMessage {
-  id           String                    @id @default(uuid())
-  disputeId    String
-  senderId     String
-  senderType   DisputeSenderType
-  message      String
-  createdAt    DateTime                  @default(now())
-  
-  dispute      DealDispute               @relation(fields: [disputeId], references: [id], onDelete: Cascade)
-  attachments  DealDisputeFile[]
-  
-  @@index([disputeId])
-  @@index([senderId])
-}
-
-model DealDisputeFile {
-  id           String                    @id @default(uuid())
-  messageId    String
-  filename     String
-  url          String
-  size         Int
-  mimeType     String
-  createdAt    DateTime                  @default(now())
-  
-  message      DealDisputeMessage        @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  
-  @@index([messageId])
+  AGGREGATOR
 }
 
 enum DealDisputeStatus {
@@ -926,6 +1297,7 @@ enum Currency {
 
 enum RateSource {
   bybit
+  rapira
 }
 
 enum BankType {
@@ -944,7 +1316,6 @@ enum BankType {
   MTSBANK
   PROMSVYAZBANK
   OZONBANK
-  OTKRITIE
   RENAISSANCE
   OTPBANK
   AVANGARD
@@ -970,6 +1341,171 @@ enum BankType {
   UNICREDIT
   CITIBANK
   RUSSIANSTANDARD
+  OTKRITIE
+  OTP
+  RNCB
+  RAIFFEISENBANK
+  URALSIBBANK
+  UBRRBANK
+  CIFRABANK
+  DOMRFBANK
+  VTBBANK
+  AKBARSBANK
+  HOMEBANK
+  RENCREDITBANK
+  ZENITBANK
+  RSHBBANK
+  PSBANK
+  RSBANK
+  AVANGARDBANK
+  SOLIDBANK
+  DVBANK
+  UNICREDITBANK
+  CMRBANK
+  SVOIBANK
+  INGOBANK
+  MKBBANK
+  MODULBANK
+  YANDEXBANK
+  UNISTREAMBANK
+  BSPB
+  KUBANKREDIT
+  NOVIKOM
+  AGROROSBANK
+  KLOOKVABANK
+  TKBBANK
+  SNGBBANK
+  ROSTFINANCEBANK
+  AMRABANK
+  METALLINVESTBANK
+  ABRBANK
+  NORVIKBANK
+  AURORABANK
+  ATBBANK
+  SDMBANK
+  MPBANK
+  NSBANK
+  TOCHKA
+  TATSOTSBANK
+  SEVERGAZBANK
+  YOOMONEY
+  SINARABANK
+  CUPISWALLET
+  FINSB
+  BANKDOLINSK
+  UMBANK
+  PSKB
+  EXPOBANK
+  KOSHELEVBANK
+  BANKOFKAZAN
+  NSKBL
+  IPB
+  LOCKOBANK
+  BANKORANGE
+  ABANK
+  ZHIVAGOBANK
+  POIDEMBANK
+  PRIMBANK
+  VBRR
+  GASENERGO
+  BANKKALUGA
+  TENDERBANK
+  MTSDENGI
+  DTB1
+  CHELINVEST
+  AKCEPT
+  AMOBILE
+  PSBST
+  UNITEDBANK
+  BSDBANK
+  DATABANK
+  HLYNOV
+  LANTA
+  NATIONALSTANDARTBANK
+  CREDITURAL
+  TRANSSTROYBANK
+  BANKVL
+  PRIOVTB
+  NICO_BANK
+  ITURUPBANK
+  REALISTBANK
+  AVITO
+  UNIBANK
+  AVTOTORGBANK
+  BANKRMP
+  BGFBANK
+  ENERGOBANK
+  FINAMBANK
+  TAVRICH
+  WILDBERRIES
+  DCTJ
+  CENTRINVEST
+  FINBANK
+  DRIVECLICKBANK
+  KAMKOMBANK
+  ELPLAT
+  BANCAINTESA
+  ICBRU
+  DALENABANK
+  AKIBANK
+  KBHMB
+  ESKHATA
+  SPITAMENBANK
+  ENERGOTRANSBANK
+  ORIENBANK
+  ECONOMBANK
+  ARVANDBANK
+  SOCIUMBANK
+  VLBB
+  BANKSARATOV
+  FORSHTADT
+  EVROFINANCE
+  ANKB
+  CHELINDBANK
+  AMONATBONK
+  EUROALLIANCE
+  INBANK
+  TAWHIDBANK
+  RUSNARBANK
+  M10
+  PUBANK
+  ORBANK
+  BANKELITA
+  GAZTRANSBANK
+  VASL
+  INVB
+  KUZBANK
+  BKTB
+  TKPB
+  VKPAY
+  SOLID
+  MATIN
+  ALBANK
+  KOMPANION
+  BAKAI
+  IBT
+  TELCELL
+  CHBRR
+  ALFABANKBY
+  ALIF
+  MARITIMEBANK
+  HUMOTJ
+  LIFETJ
+  AZIZIMOLIYA
+  FASTSHIFT
+  GARANTBANK
+  THBANK
+  NOVOBANK
+  VTBAM
+  IBAM
+  MONETA
+  OLABANK
+  METCOM
+  ROCKETBANK
+  SBIBANKLLC
+  IPAKYULIBANK
+  MBANK
+  UZUMBANK
 }
 
 enum RequestStatus {
@@ -1011,12 +1547,11 @@ enum WithdrawalStatus {
 }
 
 enum WithdrawalBalanceType {
-  TRUST           // ТРАСТ баланс
-  COMPENSATION    // Компенсация выплат
-  PROFIT_DEALS    // Прибыль с приема
-  PROFIT_PAYOUTS  // Прибыль с выплат
-  REFERRAL        // Реферальный баланс
-  WORKING         // Рабочий баланс
+  TRUST
+  COMPENSATION
+  PROFIT_DEALS
+  PROFIT_PAYOUTS
+  REFERRAL
 }
 
 enum ServiceStatus {
@@ -1055,11 +1590,16 @@ enum UserType {
 
 enum PayoutStatus {
   CREATED
-  ACTIVE
+  AVAILABLE
+  PROCESSING
   CHECKING
-  COMPLETED
-  CANCELLED
+  SUCCESS
+  FAILED
   EXPIRED
+  CANCELLED
+  DISPUTE
+  ACTIVE
+  COMPLETED
   DISPUTED
 }
 
@@ -1068,55 +1608,17 @@ enum PayoutDirection {
   OUT
 }
 
-// Message models
-model Message {
-  id              String            @id @default(cuid())
-  traderId        String
-  subject         String
-  content         String
-  type            MessageType       @default(SYSTEM)
-  priority        MessagePriority   @default(NORMAL)
-  isRead          Boolean           @default(false)
-  isStarred       Boolean           @default(false)
-  metadata        Json?
-  relatedEntityId String?           // ID of related transaction, payout, etc.
-  relatedEntity   String?           // Type of related entity
-  createdAt       DateTime          @default(now())
-  readAt          DateTime?
-  
-  trader          User              @relation(fields: [traderId], references: [id])
-  attachments     MessageAttachment[]
-  
-  @@index([traderId, isRead])
-  @@index([traderId, createdAt(sort: Desc)])
-  @@index([relatedEntityId, relatedEntity])
-}
-
-model MessageAttachment {
-  id          String   @id @default(cuid())
-  messageId   String
-  filename    String
-  url         String
-  size        Int
-  mimeType    String
-  createdAt   DateTime @default(now())
-  
-  message     Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  
-  @@index([messageId])
-}
-
 enum MessageType {
-  SYSTEM              // System notifications
-  TRANSACTION         // Transaction related
-  PAYOUT             // Payout related  
-  ACCOUNT            // Account updates
-  SECURITY           // Security alerts
-  DISPUTE            // Dispute notifications
-  DEPOSIT            // Deposit notifications
-  WITHDRAWAL         // Withdrawal notifications
-  DEVICE             // Device notifications
-  ANNOUNCEMENT       // General announcements
+  SYSTEM
+  TRANSACTION
+  PAYOUT
+  ACCOUNT
+  SECURITY
+  DISPUTE
+  DEPOSIT
+  WITHDRAWAL
+  DEVICE
+  ANNOUNCEMENT
 }
 
 enum MessagePriority {
@@ -1131,23 +1633,6 @@ enum KkkOperationType {
   MINUS
 }
 
-model Idea {
-  id          String        @id @default(cuid())
-  userId      String
-  title       String
-  content     String        @db.Text
-  status      IdeaStatus    @default(PENDING)
-  adminNotes  String?       @db.Text
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  
-  user        User          @relation(fields: [userId], references: [id])
-  
-  @@index([userId])
-  @@index([status])
-  @@index([createdAt])
-}
-
 enum IdeaStatus {
   PENDING
   REVIEWING
@@ -1156,85 +1641,15 @@ enum IdeaStatus {
   IMPLEMENTED
 }
 
-model PayoutFilters {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  trafficTypes    String[] @default([]) // ["card", "sbp", "both"]
-  bankTypes       BankType[] @default([])
-  maxPayoutAmount Float    @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  user            User     @relation(fields: [userId], references: [id])
-}
-
-model PayoutCancellation {
-  id              String   @id @default(cuid())
-  payoutId        String
-  traderId        String
-  reason          String
-  reasonCode      String?
-  files           String[]
-  createdAt       DateTime @default(now())
-  
-  payout          Payout   @relation(fields: [payoutId], references: [id])
-  trader          User     @relation(fields: [traderId], references: [id])
-  
-  @@index([payoutId])
-  @@index([traderId])
-}
-
-model PayoutBlacklist {
-  id              String   @id @default(cuid())
-  payoutId        String
-  traderId        String
-  createdAt       DateTime @default(now())
-  
-  payout          Payout   @relation(fields: [payoutId], references: [id])
-  trader          User     @relation(fields: [traderId], references: [id])
-  
-  @@unique([payoutId, traderId])
-  @@index([payoutId])
-  @@index([traderId])
-}
-
-model TransactionAttempt {
-  id              String   @id @default(cuid())
-  merchantId      String
-  methodId        String
-  amount          Float
-  success         Boolean
-  errorCode       String?  // 'NO_REQUISITE', 'NO_TRADERS', etc.
-  createdAt       DateTime @default(now())
-  
-  merchant        Merchant @relation(fields: [merchantId], references: [id])
-  method          Method   @relation(fields: [methodId], references: [id])
-  
-  @@index([merchantId])
-  @@index([createdAt])
-}
-
-model SettleRequest {
-  id              String   @id @default(cuid())
-  merchantId      String
-  amount          Float    // Зафиксированный баланс на момент запроса в рублях
-  amountUsdt      Float    @default(0) // Сумма в USDT (amount / rate)
-  rate            Float    // Курс Rapira на момент запроса (без KKK)
-  status          SettleRequestStatus @default(PENDING)
-  createdAt       DateTime @default(now())
-  processedAt     DateTime?
-  processedBy     String?  // ID админа
-  cancelReason    String?
-  
-  merchant        Merchant @relation(fields: [merchantId], references: [id])
-  
-  @@index([merchantId])
-  @@index([status])
-  @@index([createdAt])
-}
-
 enum SettleRequestStatus {
   PENDING
+  APPROVED
+  REJECTED
   COMPLETED
   CANCELLED
+}
+
+enum MerchantRequestType {
+  TRANSACTION_IN
+  PAYOUT_CREATE
 }

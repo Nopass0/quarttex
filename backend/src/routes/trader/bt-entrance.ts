@@ -3,6 +3,9 @@ import { db } from "@/db";
 import { BankType, MethodType } from "@prisma/client";
 import ErrorSchema from "@/types/error";
 import { startOfDay, endOfDay } from "date-fns";
+import { notifyByStatus } from "@/utils/notify";
+import { truncate2 } from "@/utils/rounding";
+import { getFlexibleFeePercent } from "@/utils/flexible-fee-calculator";
 
 /* ---------- DTOs ---------- */
 const BtDealDTO = t.Object({
@@ -26,6 +29,7 @@ const BtDealDTO = t.Object({
   commission: t.Number(),
   rate: t.Number(),
   btOnly: t.Boolean(),
+  traderProfit: t.Union([t.Number(), t.Null()]),
 });
 
 const BtRequisiteDTO = t.Object({
@@ -37,8 +41,6 @@ const BtRequisiteDTO = t.Object({
   phoneNumber: t.Optional(t.String()),
   minAmount: t.Number(),
   maxAmount: t.Number(),
-  dailyLimit: t.Number(),
-  monthlyLimit: t.Number(),
   intervalMinutes: t.Number(),
   isActive: t.Boolean(),
   btOnly: t.Boolean(),
@@ -46,6 +48,12 @@ const BtRequisiteDTO = t.Object({
   turnoverTotal: t.Number(),
   createdAt: t.String(),
   updatedAt: t.String(),
+  sumLimit: t.Number(),
+  operationLimit: t.Number(),
+  currentTotalAmount: t.Number(),
+  activeDeals: t.Number(),
+  transactionsInProgress: t.Number(),
+  transactionsReady: t.Number(),
 });
 
 /* ---------- helpers ---------- */
@@ -66,15 +74,21 @@ const formatBtDeal = (transaction: any) => {
     updatedAt: transaction.updatedAt.toISOString(),
     acceptedAt: transaction.acceptedAt?.toISOString(),
     completedAt: transaction.completedAt?.toISOString(),
-    expiredAt: transaction.expiredAt?.toISOString(),
+    expiredAt: transaction.expired_at?.toISOString(),
     requisiteId: transaction.bankDetailId || "",
     commission: transaction.commission || 0,
     rate: transaction.rate || 0,
     btOnly: true, // All deals in this endpoint are BT-only
+    traderProfit: transaction.traderProfit,
   };
 };
 
-const formatBtRequisite = (requisite: any, turnoverDay = 0, turnoverTotal = 0) => {
+const formatBtRequisite = (
+  requisite: any,
+  turnoverDay = 0,
+  turnoverTotal = 0,
+  additionalData?: any
+) => {
   return {
     id: requisite.id,
     methodType: requisite.methodType,
@@ -84,8 +98,6 @@ const formatBtRequisite = (requisite: any, turnoverDay = 0, turnoverTotal = 0) =
     phoneNumber: requisite.phoneNumber || "",
     minAmount: requisite.minAmount,
     maxAmount: requisite.maxAmount,
-    dailyLimit: requisite.dailyLimit,
-    monthlyLimit: requisite.monthlyLimit,
     intervalMinutes: requisite.intervalMinutes,
     isActive: !requisite.isArchived,
     btOnly: true, // All requisites in this endpoint are BT-only
@@ -93,6 +105,12 @@ const formatBtRequisite = (requisite: any, turnoverDay = 0, turnoverTotal = 0) =
     turnoverTotal,
     createdAt: requisite.createdAt.toISOString(),
     updatedAt: requisite.updatedAt.toISOString(),
+    sumLimit: requisite.sumLimit || 0,
+    operationLimit: requisite.operationLimit || 0,
+    currentTotalAmount: additionalData?.currentTotalAmount || 0,
+    activeDeals: additionalData?.activeDeals || 0,
+    transactionsInProgress: additionalData?.transactionsInProgress || 0,
+    transactionsReady: additionalData?.transactionsReady || 0,
   };
 };
 
@@ -106,11 +124,13 @@ export const btEntranceRoutes = new Elysia({ prefix: "/bt-entrance" })
       const limit = query.limit || 50;
       const offset = (page - 1) * limit;
 
-      // Get transactions that use requisites without devices (BT deals)
+      // Get trader transactions for BT deals (bank methods)
       const where: any = {
         traderId: trader.id,
-        requisites: {
-          deviceId: null, // BT deals use requisites without devices
+        method: {
+          type: {
+            in: [MethodType.c2c, MethodType.sbp],
+          },
         },
       };
 
@@ -124,26 +144,35 @@ export const btEntranceRoutes = new Elysia({ prefix: "/bt-entrance" })
         where.OR = [
           { numericId: { contains: query.search } },
           { amount: { contains: query.search } },
-          { merchant: { name: { contains: query.search, mode: "insensitive" } } },
+          {
+            merchant: { name: { contains: query.search, mode: "insensitive" } },
+          },
         ];
       }
 
-      const [deals, total] = await Promise.all([
-        db.transaction.findMany({
-          where,
-          include: {
-            merchant: true,
-            requisites: true,
-          },
-          orderBy: { createdAt: "desc" },
-          skip: offset,
-          take: limit,
-        }),
-        db.transaction.count({ where }),
-      ]);
+      // First fetch all transactions for this trader with bank methods
+      const allDeals = await db.transaction.findMany({
+        where,
+        include: {
+          merchant: true,
+          requisites: true,
+          method: true,
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      // Filter to include deals with requisites without devices
+      // and deals with deleted requisites
+      const btDeals = allDeals.filter(
+        (deal) => !deal.requisites || deal.requisites.deviceId === null
+      );
+
+      // Apply pagination to filtered results
+      const paginatedDeals = btDeals.slice(offset, offset + limit);
+      const total = btDeals.length;
 
       return {
-        data: deals.map(formatBtDeal),
+        data: paginatedDeals.map(formatBtDeal),
         total,
         page,
         limit,
@@ -179,9 +208,8 @@ export const btEntranceRoutes = new Elysia({ prefix: "/bt-entrance" })
         where: {
           id: params.id,
           traderId: trader.id,
-          requisites: {
-            deviceId: null, // Ensure it's a BT deal
-          },
+          // Проверяем что транзакция связана с реквизитом
+          bankDetailId: { not: null },
         },
         include: {
           requisites: true,
@@ -194,8 +222,25 @@ export const btEntranceRoutes = new Elysia({ prefix: "/bt-entrance" })
         return error(404, { error: "BT сделка не найдена" });
       }
 
-      // Если статус меняется на READY, нужно выполнить финансовые операции
-      if (body.status === "READY" && deal.status !== "READY") {
+      // Ensure it's actually a BT deal (requisite without device)
+      if (deal.requisites?.deviceId !== null) {
+        return error(404, { error: "Это не BT сделка" });
+      }
+
+      // Если статус меняется на READY, нужно выполнить финансовые операции (но НЕ для споров - они обрабатываются отдельно)
+      if (
+        body.status === "READY" &&
+        deal.status !== "READY" &&
+        deal.status !== "DISPUTE"
+      ) {
+        const wasExpired = deal.status === "EXPIRED";
+        console.log("[BT-Entrance] Processing status change to READY:", {
+          transactionId: deal.id,
+          wasExpired,
+          currentStatus: deal.status,
+          frozenUsdtAmount: deal.frozenUsdtAmount,
+        });
+
         const updatedDeal = await db.$transaction(async (prisma) => {
           // Получаем настройки комиссии трейдера
           const traderMerchant = await prisma.traderMerchant.findUnique({
@@ -204,61 +249,135 @@ export const btEntranceRoutes = new Elysia({ prefix: "/bt-entrance" })
                 traderId: deal.traderId,
                 merchantId: deal.merchantId,
                 methodId: deal.method.id,
-              }
-            }
+              },
+            },
           });
 
-          // Рассчитываем прибыль трейдера
+          // Рассчитываем прибыль трейдера с учетом гибких ставок
           const spentUsdt = deal.rate ? deal.amount / deal.rate : 0;
-          const commissionPercent = traderMerchant?.feeIn || 0;
-          const traderProfit = Math.trunc(spentUsdt * (commissionPercent / 100) * 100) / 100;
-
-          console.log(`[BT-Entrance] Manual confirmation: amount=${deal.amount}, rate=${deal.rate}, spentUsdt=${spentUsdt}, commissionPercent=${commissionPercent}, profit=${traderProfit}`);
+          const commissionPercent = await getFlexibleFeePercent(
+            deal.traderId,
+            deal.merchantId,
+            deal.method.id,
+            deal.amount,
+            "IN"
+          );
+          const traderProfit = truncate2(spentUsdt * (commissionPercent / 100));
 
           // Обновляем транзакцию
           const updated = await prisma.transaction.update({
             where: { id: params.id },
             data: {
               status: body.status,
-              completedAt: new Date(),
               acceptedAt: new Date(),
               traderProfit: traderProfit,
             },
           });
 
           // Обновляем балансы трейдера
-          await prisma.user.update({
-            where: { id: deal.traderId },
-            data: {
-              // Уменьшаем замороженный баланс
-              frozenUsdt: {
-                decrement: deal.frozenUsdtAmount || 0
-              },
-              // НЕ уменьшаем trustBalance - он уже был уменьшен при заморозке!
-              // Увеличиваем прибыль от сделок
-              profitFromDeals: {
-                increment: traderProfit
-              },
-              // Увеличиваем доступный баланс на прибыль
-              deposit: {
-                increment: traderProfit
+          if (wasExpired) {
+            // Для истекших транзакций средства уже были разморожены и возвращены на trustBalance
+            // Теперь нужно списать их оттуда при подтверждении
+            const amountToDeduct = deal.frozenUsdtAmount || spentUsdt;
+
+            console.log(
+              "[BT-Entrance] Processing EXPIRED transaction approval:",
+              {
+                amountToDeduct,
+                frozenUsdtAmount: deal.frozenUsdtAmount,
               }
+            );
+
+            const trader = await prisma.user.findUnique({
+              where: { id: deal.traderId },
+              select: { trustBalance: true, deposit: true },
+            });
+
+            if (trader && amountToDeduct > 0) {
+              let remaining = amountToDeduct;
+              const trustDeduct = Math.min(trader.trustBalance || 0, remaining);
+              remaining -= trustDeduct;
+
+              const updateFields: any = {
+                // Всегда добавляем прибыль
+                profitFromDeals: { increment: truncate2(traderProfit) },
+              };
+
+              if (trustDeduct > 0) {
+                updateFields.trustBalance = {
+                  decrement: truncate2(trustDeduct),
+                };
+              }
+
+              // Если trustBalance недостаточно, списываем остаток с deposit
+              if (remaining > 0) {
+                updateFields.deposit = { decrement: truncate2(remaining) };
+              }
+
+              console.log("[BT-Entrance] EXPIRED transaction balance update:", {
+                trustBalance: trader.trustBalance,
+                trustDeduct,
+                depositDeduct: remaining,
+                updateFields,
+              });
+
+              await prisma.user.update({
+                where: { id: deal.traderId },
+                data: updateFields,
+              });
             }
-          });
+
+            // ВАЖНО: Для истекших транзакций НЕ трогаем frozenUsdt
+          } else {
+            // Обычная транзакция (не истекшая)
+            console.log(
+              "[BT-Entrance] Processing NON-EXPIRED transaction approval"
+            );
+
+            await prisma.user.update({
+              where: { id: deal.traderId },
+              data: {
+                // Уменьшаем замороженный баланс
+                frozenUsdt: {
+                  decrement: deal.frozenUsdtAmount || 0,
+                },
+                // НЕ уменьшаем trustBalance - он уже был уменьшен при заморозке!
+                // Увеличиваем прибыль от сделок
+                profitFromDeals: {
+                  increment: traderProfit,
+                },
+                // НЕ увеличиваем депозит - он остается неизменным
+              },
+            });
+          }
 
           return updated;
         });
 
-        return formatBtDeal(await db.transaction.findUnique({
-          where: { id: params.id },
-          include: { merchant: true, requisites: true }
-        }));
+        // Отправляем колбэк после успешного обновления
+        await notifyByStatus({
+          id: deal.orderId, // Use orderId instead of internal transaction ID
+          transactionId: deal.id, // Pass internal ID for history tracking
+          merchantId: deal.merchantId,
+          status: "READY",
+          successUri: deal.successUri,
+          failUri: deal.failUri,
+          callbackUri: deal.callbackUri,
+          amount: deal.amount,
+        });
+
+        return formatBtDeal(
+          await db.transaction.findUnique({
+            where: { id: params.id },
+            include: { merchant: true, requisites: true },
+          })
+        );
       }
 
       // Для других статусов просто обновляем
       const updatedDeal = await db.transaction.update({
         where: { id: params.id },
-        data: { 
+        data: {
           status: body.status,
           ...(body.status === "READY" ? { completedAt: new Date() } : {}),
         },
@@ -266,6 +385,18 @@ export const btEntranceRoutes = new Elysia({ prefix: "/bt-entrance" })
           merchant: true,
           requisites: true,
         },
+      });
+
+      // Отправляем колбэк для любого статуса
+      await notifyByStatus({
+        id: updatedDeal.orderId, // Use orderId instead of internal transaction ID
+        transactionId: updatedDeal.id, // Pass internal ID for history tracking
+        merchantId: updatedDeal.merchantId,
+        status: updatedDeal.status,
+        successUri: updatedDeal.successUri,
+        failUri: updatedDeal.failUri,
+        callbackUri: updatedDeal.callbackUri,
+        amount: updatedDeal.amount,
       });
 
       return formatBtDeal(updatedDeal);
@@ -289,19 +420,21 @@ export const btEntranceRoutes = new Elysia({ prefix: "/bt-entrance" })
 
   // Get BT requisites (additional tab)
   .get(
-    "/requisites", 
+    "/requisites",
     async ({ trader, query }) => {
       const todayStart = startOfDay(new Date());
       const todayEnd = endOfDay(new Date());
 
       // Get bank details that don't have devices (BT-only logic)
       const requisites = await db.bankDetail.findMany({
-        where: { 
+        where: {
           userId: trader.id,
           deviceId: null, // BT requisites don't have devices
-          ...(query.status && query.status !== "all" ? {
-            isArchived: query.status === "INACTIVE"
-          } : {}),
+          ...(query.status && query.status !== "all"
+            ? {
+                isArchived: query.status === "INACTIVE",
+              }
+            : {}),
         },
         orderBy: { createdAt: "desc" },
       });
@@ -331,7 +464,43 @@ export const btEntranceRoutes = new Elysia({ prefix: "/bt-entrance" })
             _sum: { amount: true },
           });
 
-          return formatBtRequisite(requisite, daySum ?? 0, totalSum ?? 0);
+          // Calculate current total amount for sumLimit
+          const currentTotalResult = await db.transaction.aggregate({
+            where: {
+              bankDetailId: requisite.id,
+              status: { in: ["CREATED", "IN_PROGRESS", "READY"] },
+            },
+            _sum: { amount: true },
+          });
+
+          // Count transactions by status
+          const transactionsInProgress = await db.transaction.count({
+            where: {
+              bankDetailId: requisite.id,
+              status: "IN_PROGRESS",
+            },
+          });
+
+          const transactionsReady = await db.transaction.count({
+            where: {
+              bankDetailId: requisite.id,
+              status: "READY",
+            },
+          });
+
+          const activeDeals = await db.transaction.count({
+            where: {
+              bankDetailId: requisite.id,
+              status: { in: ["CREATED", "IN_PROGRESS"] },
+            },
+          });
+
+          return formatBtRequisite(requisite, daySum ?? 0, totalSum ?? 0, {
+            currentTotalAmount: currentTotalResult._sum.amount || 0,
+            activeDeals,
+            transactionsInProgress,
+            transactionsReady,
+          });
         })
       );
 
@@ -359,32 +528,32 @@ export const btEntranceRoutes = new Elysia({ prefix: "/bt-entrance" })
       },
     }
   )
-  
+
   // Create BT requisite
   .post(
     "/requisites",
     async ({ trader, body, error }) => {
       // Validate trader limits
       if (body.minAmount < trader.minAmountPerRequisite) {
-        return error(400, { 
-          error: `Минимальная сумма должна быть не менее ${trader.minAmountPerRequisite}` 
-        });
-      }
-      
-      if (body.maxAmount > trader.maxAmountPerRequisite) {
-        return error(400, { 
-          error: `Максимальная сумма не должна превышать ${trader.maxAmountPerRequisite}` 
-        });
-      }
-      
-      if (body.minAmount > body.maxAmount) {
-        return error(400, { 
-          error: "Минимальная сумма не может быть больше максимальной" 
+        return error(400, {
+          error: `Минимальная сумма должна быть не менее ${trader.minAmountPerRequisite}`,
         });
       }
 
-      // Map TINK to TBANK for consistency
-      const bankType = body.bankType === 'TINK' ? 'TBANK' : body.bankType;
+      if (body.maxAmount > trader.maxAmountPerRequisite) {
+        return error(400, {
+          error: `Максимальная сумма не должна превышать ${trader.maxAmountPerRequisite}`,
+        });
+      }
+
+      if (body.minAmount > body.maxAmount) {
+        return error(400, {
+          error: "Минимальная сумма не может быть больше максимальной",
+        });
+      }
+
+      // Use bankType as is since frontend should send correct values
+      const bankType = body.bankType;
 
       const requisite = await db.bankDetail.create({
         data: {
@@ -395,47 +564,52 @@ export const btEntranceRoutes = new Elysia({ prefix: "/bt-entrance" })
           phoneNumber: body.phoneNumber,
           minAmount: body.minAmount,
           maxAmount: body.maxAmount,
-          dailyLimit: body.dailyLimit ?? 0,
-          monthlyLimit: body.monthlyLimit ?? 0,
           intervalMinutes: body.intervalMinutes,
           userId: trader.id,
           deviceId: null, // BT requisites don't have devices
+          sumLimit: body.sumLimit ?? 0,
+          operationLimit: body.operationLimit ?? 0,
         },
       });
-      
-      return formatBtRequisite(requisite, 0, 0);
+
+      return formatBtRequisite(requisite, 0, 0, {
+        currentTotalAmount: 0,
+        activeDeals: 0,
+        transactionsInProgress: 0,
+        transactionsReady: 0,
+      });
     },
     {
       tags: ["trader"],
       detail: { summary: "Создать BT реквизит" },
       body: t.Object({
         cardNumber: t.String(),
-        bankType: t.String(),
-        methodType: t.String(),
+        bankType: t.Enum(BankType),
+        methodType: t.Enum(MethodType),
         recipientName: t.String(),
         phoneNumber: t.Optional(t.String()),
         minAmount: t.Number(),
         maxAmount: t.Number(),
-        dailyLimit: t.Optional(t.Number()),
-        monthlyLimit: t.Optional(t.Number()),
         intervalMinutes: t.Number(),
+        sumLimit: t.Optional(t.Number()),
+        operationLimit: t.Optional(t.Number()),
       }),
-      response: { 
-        200: BtRequisiteDTO, 
+      response: {
+        200: BtRequisiteDTO,
         400: ErrorSchema,
-        401: ErrorSchema, 
-        403: ErrorSchema 
+        401: ErrorSchema,
+        403: ErrorSchema,
       },
     }
   )
-  
+
   // Update BT requisite
   .put(
     "/requisites/:id",
     async ({ trader, params, body, error }) => {
       const exists = await db.bankDetail.findFirst({
-        where: { 
-          id: params.id, 
+        where: {
+          id: params.id,
           userId: trader.id,
           deviceId: null, // Ensure it's a BT requisite
         },
@@ -448,20 +622,25 @@ export const btEntranceRoutes = new Elysia({ prefix: "/bt-entrance" })
       // Map TINK to TBANK for consistency if bankType is being updated
       const updateData = {
         ...body,
-        dailyLimit: body.dailyLimit ?? 0,
-        monthlyLimit: body.monthlyLimit ?? 0,
+        sumLimit: body.sumLimit ?? 0,
+        operationLimit: body.operationLimit ?? 0,
       };
-      
-      if (updateData.bankType === 'TINK') {
-        updateData.bankType = 'TBANK';
+
+      if (updateData.bankType === "TINK") {
+        updateData.bankType = "TBANK";
       }
 
       const requisite = await db.bankDetail.update({
         where: { id: params.id },
         data: updateData,
       });
-      
-      return formatBtRequisite(requisite, 0, 0);
+
+      return formatBtRequisite(requisite, 0, 0, {
+        currentTotalAmount: 0,
+        activeDeals: 0,
+        transactionsInProgress: 0,
+        transactionsReady: 0,
+      });
     },
     {
       tags: ["trader"],
@@ -470,15 +649,16 @@ export const btEntranceRoutes = new Elysia({ prefix: "/bt-entrance" })
       body: t.Partial(
         t.Object({
           cardNumber: t.String(),
-          bankType: t.String(),
-          methodType: t.String(),
+          bankType: t.Enum(BankType),
+          methodType: t.Enum(MethodType),
           recipientName: t.String(),
           phoneNumber: t.Optional(t.String()),
           minAmount: t.Number(),
           maxAmount: t.Number(),
-          dailyLimit: t.Number(),
-          monthlyLimit: t.Number(),
           intervalMinutes: t.Number(),
+          sumLimit: t.Number(),
+          operationLimit: t.Number(),
+          isArchived: t.Boolean(),
         })
       ),
       response: {
@@ -490,14 +670,14 @@ export const btEntranceRoutes = new Elysia({ prefix: "/bt-entrance" })
       },
     }
   )
-  
+
   // Delete BT requisite
   .delete(
     "/requisites/:id",
     async ({ trader, params, error }) => {
       const exists = await db.bankDetail.findFirst({
-        where: { 
-          id: params.id, 
+        where: {
+          id: params.id,
           userId: trader.id,
           deviceId: null, // Ensure it's a BT requisite
         },
@@ -507,15 +687,16 @@ export const btEntranceRoutes = new Elysia({ prefix: "/bt-entrance" })
         return error(404, { error: "BT реквизит не найден" });
       }
 
-      await db.bankDetail.delete({
+      await db.bankDetail.update({
         where: { id: params.id },
+        data: { isArchived: true },
       });
 
-      return { ok: true, message: "BT реквизит удален" };
+      return { ok: true, message: "BT реквизит архивирован" };
     },
     {
       tags: ["trader"],
-      detail: { summary: "Удалить BT реквизит" },
+      detail: { summary: "Архивировать BT реквизит" },
       params: t.Object({ id: t.String() }),
       response: {
         200: t.Object({ ok: t.Boolean(), message: t.String() }),

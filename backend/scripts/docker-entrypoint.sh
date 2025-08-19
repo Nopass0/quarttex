@@ -69,8 +69,10 @@ if bunx prisma migrate deploy; then
     echo "✓ Migrations applied successfully"
 else
     echo "✗ Migration deploy failed, trying db push with skip-generate..."
-    if bunx prisma db push --skip-generate; then
-        echo "✓ Schema pushed successfully"
+    # In production, we need to accept data loss warnings to proceed
+    if bunx prisma db push --skip-generate --accept-data-loss; then
+        echo "✓ Schema pushed successfully (with data loss acceptance)"
+        echo "⚠️  WARNING: Data loss warnings were accepted. Please verify the database state."
     else
         echo "✗ Both migration and db push failed"
         exit 1

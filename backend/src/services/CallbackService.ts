@@ -1,114 +1,152 @@
-import { BaseService } from "./BaseService";
-import axios from "axios";
-import { Status } from "@prisma/client";
-import { db } from '../db';
+import { Transaction } from "@prisma/client";
+import { db as prisma } from "../db";
+import { WellbitCallbackService } from "./WellbitCallbackService";
 
-export class CallbackService extends BaseService {
-  protected interval = 5000; // 5 seconds
-  protected displayName = 'Callback Service';
-  protected description = 'Sends webhook callbacks to merchants for completed transactions';
-  
-  constructor() {
-    super();
-  }
+export interface CallbackPayload {
+  id: string;
+  amount: number; 
+  status: string;
+}
 
-  protected async tick() {
-    await this.processCallbacks();
-  }
+export class CallbackService {
+  static async sendCallback(transaction: Transaction, status?: string): Promise<void> {
+    const callbackUrl = transaction.callbackUri;
+    
+    if (!callbackUrl || callbackUrl === "none" || callbackUrl === "") {
+      console.log(`[CallbackService] No callback URL for transaction ${transaction.id}`);
+      return;
+    }
 
-  private async processCallbacks() {
+    // Проверяем, является ли мерчант Wellbit
+    if (transaction.merchantId) {
+      const isWellbit = await WellbitCallbackService.isWellbitMerchant(transaction.merchantId);
+      if (isWellbit) {
+        console.log(`[CallbackService] Detected Wellbit merchant, using Wellbit callback format`);
+        return await WellbitCallbackService.sendWellbitCallback(transaction, status);
+      }
+    }
+
+    const payload: CallbackPayload = {
+      id: transaction.orderId,
+      amount: transaction.amount,
+      status: status || transaction.status
+    };
+
+    let responseText: string | null = null;
+    let statusCode: number | null = null;
+    let errorMessage: string | null = null;
+
     try {
-      // Находим завершенные транзакции без отправленного колбэка
-      const transactions = await db.transaction.findMany({
-        where: {
-          status: {
-            in: [Status.READY, Status.EXPIRED, Status.CANCELED]
-          },
-          callbackSent: false,
-          callbackUri: {
-            not: ""
-          }
+      console.log(`[CallbackService] Sending callback to ${callbackUrl} for transaction ${transaction.id}`);
+      console.log(`[CallbackService] Payload:`, payload);
+
+      const response = await fetch(callbackUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "Chase/1.0"
         },
-        include: {
-          merchant: true,
-          method: true
-        },
-        take: 10 // Обрабатываем по 10 транзакций за раз
+        body: JSON.stringify(payload)
       });
 
-      for (const transaction of transactions) {
-        await this.sendCallback(transaction);
+      statusCode = response.status;
+      responseText = await response.text();
+
+      if (!response.ok) {
+        console.error(`[CallbackService] Callback failed with status ${response.status}`);
+        console.error(`[CallbackService] Response:`, responseText);
+      } else {
+        console.log(`[CallbackService] Callback sent successfully to ${callbackUrl}`);
+        if (responseText) {
+          console.log(`[CallbackService] Response:`, responseText);
+        }
       }
     } catch (error) {
-      await this.logError("Error processing callbacks", { error });
+      errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`[CallbackService] Error sending callback:`, error);
+    }
+
+    // Сохраняем историю колбэка в БД
+    try {
+      await prisma.callbackHistory.create({
+        data: {
+          transactionId: transaction.id,
+          url: callbackUrl,
+          payload: payload as any,
+          response: responseText,
+          statusCode: statusCode,
+          error: errorMessage
+        }
+      });
+    } catch (dbError) {
+      console.error(`[CallbackService] Error saving callback history:`, dbError);
     }
   }
 
-  private async sendCallback(transaction: any) {
+  static async sendTestCallback(transactionId: string, amount: number, status: string, callbackUrl: string): Promise<void> {
+    const payload: CallbackPayload = {
+      id: transactionId,
+      amount: amount,
+      status: status
+    };
+
+    let responseText: string | null = null;
+    let statusCode: number | null = null;
+    let errorMessage: string | null = null;
+
     try {
-      const callbackData = {
-        id: transaction.id,
-        orderId: transaction.orderId,
-        amount: transaction.amount,
-        status: transaction.status,
-        type: transaction.type,
-        currency: transaction.currency,
-        rate: transaction.rate,
-        createdAt: transaction.createdAt.toISOString(),
-        updatedAt: transaction.updatedAt.toISOString(),
-        method: {
-          id: transaction.method.id,
-          code: transaction.method.code,
-          name: transaction.method.name,
-          type: transaction.method.type
-        },
-        // Добавляем хеш для проверки подлинности
-        timestamp: Date.now(),
-        merchantId: transaction.merchantId
-      };
+      console.log(`[CallbackService] Sending TEST callback to ${callbackUrl}`);
+      console.log(`[CallbackService] Payload:`, payload);
 
-      await this.logInfo(`Sending callback for transaction ${transaction.id} to ${transaction.callbackUri}`);
-
-      // Отправляем POST запрос
-      const response = await axios.post(transaction.callbackUri, callbackData, {
-        timeout: 10000, // 10 секунд таймаут
+      const response = await fetch(callbackUrl, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-Merchant-Id': transaction.merchantId,
-          'X-Transaction-Id': transaction.id
-        }
+          "Content-Type": "application/json",
+          "User-Agent": "Chase/1.0 (Test)"
+        },
+        body: JSON.stringify(payload)
       });
 
-      if (response.status >= 200 && response.status < 300) {
-        // Помечаем колбэк как отправленный
-        await db.transaction.update({
-          where: { id: transaction.id },
-          data: { callbackSent: true }
+      statusCode = response.status;
+      responseText = await response.text();
+
+      if (!response.ok) {
+        console.error(`[CallbackService] TEST callback failed with status ${response.status}`);
+        console.error(`[CallbackService] Response:`, responseText);
+      } else {
+        console.log(`[CallbackService] TEST callback sent successfully`);
+        if (responseText) {
+          console.log(`[CallbackService] Response:`, responseText);
+        }
+      }
+    } catch (error) {
+      errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`[CallbackService] Error sending TEST callback:`, error);
+    }
+
+    // Сохраняем историю тестового колбэка в БД (если транзакция существует)
+    if (transactionId && transactionId !== 'test-transaction-id') {
+      try {
+        // Проверяем, существует ли транзакция
+        const transaction = await prisma.transaction.findUnique({
+          where: { id: transactionId }
         });
         
-        await this.logInfo(`Callback sent successfully for transaction ${transaction.id}`);
-      } else {
-        await this.logError(`Callback failed for transaction ${transaction.id}. Status: ${response.status}`);
-      }
-    } catch (error: any) {
-      await this.logError(`Error sending callback for transaction ${transaction.id}`, { error: error.message });
-      
-      // Если ошибка связана с недоступностью URL, помечаем как отправленный чтобы не спамить
-      if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT') {
-        await db.transaction.update({
-          where: { id: transaction.id },
-          data: { 
-            callbackSent: true,
-            error: `Callback failed: ${error.message}`
-          }
-        });
+        if (transaction) {
+          await prisma.callbackHistory.create({
+            data: {
+              transactionId: transactionId,
+              url: callbackUrl,
+              payload: payload as any,
+              response: responseText,
+              statusCode: statusCode,
+              error: errorMessage
+            }
+          });
+        }
+      } catch (dbError) {
+        console.error(`[CallbackService] Error saving test callback history:`, dbError);
       }
     }
   }
 }
-
-export default CallbackService;
-
-// Регистрируем сервис
-import { ServiceRegistry } from "./ServiceRegistry";
-ServiceRegistry.register("CallbackService", CallbackService);

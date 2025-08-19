@@ -3,7 +3,17 @@ import { db } from "@/db";
 import { Prisma, Status, TransactionType } from "@prisma/client";
 import ErrorSchema from "@/types/error";
 import { traderGuard } from "@/middleware/traderGuard";
-import { notifyByStatus } from "@/utils/notify";
+import { sendTransactionCallbacks } from "@/utils/notify";
+import { truncate2 } from "@/utils/rounding";
+import { getFlexibleFeePercent } from "@/utils/flexible-fee-calculator";
+import {
+  startOfDay,
+  subDays,
+  startOfWeek,
+  startOfMonth,
+  startOfQuarter,
+  startOfYear,
+} from "date-fns";
 
 /**
  * Маршруты для управления транзакциями трейдера
@@ -24,6 +34,12 @@ export default (app: Elysia) =>
         // Формируем условия фильтрации
         const where: Prisma.TransactionWhereInput = {
           traderId: trader.id,
+          // Проверяем, что транзакция связана с реквизитом
+          bankDetailId: { not: null },
+          // Показываем только транзакции с реквизитами, которые привязаны к устройствам
+          requisites: {
+            deviceId: { not: null },
+          },
         };
 
         // Фильтрация по статусу, если указан
@@ -50,7 +66,7 @@ export default (app: Elysia) =>
         // Получаем транзакции с пагинацией
         console.log(
           `[Trader API] Поиск транзакций для трейдера ${trader.id}, условия:`,
-          where,
+          where
         );
         const transactions = await db.transaction.findMany({
           where,
@@ -118,17 +134,79 @@ export default (app: Elysia) =>
         const total = await db.transaction.count({ where });
 
         console.log(
-          `[Trader API] Найдено ${transactions.length} транзакций из ${total} общих для трейдера ${trader.id}`,
+          `[Trader API] Найдено ${transactions.length} транзакций из ${total} общих для трейдера ${trader.id}`
         );
 
-        // Преобразуем даты в ISO формат и корректируем курс с учетом ККК
+        // Calculate summary statistics for selected period
+        const period = (query.period as string) || "today";
+        const now = new Date();
+        let start: Date;
+        let end: Date | undefined;
+        switch (period) {
+          case "yesterday":
+            start = startOfDay(subDays(now, 1));
+            end = startOfDay(now);
+            break;
+          case "week":
+            start = startOfWeek(now);
+            break;
+          case "month":
+            start = startOfMonth(now);
+            break;
+          case "quarter":
+            start = startOfQuarter(now);
+            break;
+          case "halfyear":
+            const month = now.getMonth();
+            const halfStartMonth = month < 6 ? 0 : 6;
+            start = new Date(now.getFullYear(), halfStartMonth, 1);
+            break;
+          case "year":
+            start = startOfYear(now);
+            break;
+          case "today":
+          default:
+            start = startOfDay(now);
+        }
+
+        const statsWhere: Prisma.TransactionWhereInput = {
+          traderId: trader.id,
+          bankDetailId: { not: null },
+          requisites: { deviceId: { not: null } },
+          status: Status.READY,
+          createdAt: { gte: start, ...(end ? { lt: end } : {}) },
+        };
+
+        const statsTransactions = await db.transaction.findMany({
+          where: statsWhere,
+          select: {
+            amount: true,
+            rate: true,
+            frozenUsdtAmount: true,
+            traderProfit: true,
+          },
+        });
+
+        const stats = statsTransactions.reduce(
+          (acc, tx) => {
+            const usdtAmount =
+              tx.frozenUsdtAmount !== null && tx.frozenUsdtAmount !== undefined
+                ? tx.frozenUsdtAmount
+                : tx.rate
+                ? tx.amount / tx.rate
+                : tx.amount / 95;
+            acc.count += 1;
+            acc.totalAmount += usdtAmount;
+            acc.totalProfit += tx.traderProfit || 0;
+            return acc;
+          },
+          { count: 0, totalAmount: 0, totalProfit: 0 }
+        );
+
+        // Преобразуем даты в ISO формат
         const formattedTransactions = transactions.map((tx) => {
-          // Используем сохраненный adjustedRate, если есть, иначе вычисляем с округлением вниз
-          const traderRate =
-            tx.adjustedRate ||
-            (tx.rate !== null && tx.kkkPercent !== null
-              ? Math.floor(tx.rate * (1 - tx.kkkPercent / 100) * 100) / 100
-              : tx.rate);
+          // ВСЕГДА показываем оригинальный rate (курс Рапиры с ККК)
+          const displayRate = tx.rate;
 
           // Используем сохраненную прибыль из базы данных
           const profit = tx.traderProfit || 0;
@@ -138,7 +216,7 @@ export default (app: Elysia) =>
 
           return {
             ...tx,
-            rate: traderRate,
+            rate: displayRate, // Всегда показываем курс Рапиры с ККК
             profit,
             calculatedCommission: profit, // Добавляем для совместимости с фронтендом
             deviceId: device?.id || tx.requisites?.deviceId || null,
@@ -171,6 +249,7 @@ export default (app: Elysia) =>
             limit,
             pages: Math.ceil(total / limit),
           },
+          stats,
         };
       },
       {
@@ -182,6 +261,7 @@ export default (app: Elysia) =>
           status: t.Optional(t.String()),
           type: t.Optional(t.String()),
           hasDispute: t.Optional(t.String()),
+          period: t.Optional(t.String()),
         }),
         response: {
           200: t.Object({
@@ -229,7 +309,7 @@ export default (app: Elysia) =>
                     fileName: t.String(),
                     isChecked: t.Boolean(),
                     isFake: t.Boolean(),
-                  }),
+                  })
                 ),
                 requisites: t.Union([
                   t.Object({
@@ -261,7 +341,7 @@ export default (app: Elysia) =>
                   }),
                   t.Null(),
                 ]),
-              }),
+              })
             ),
             pagination: t.Object({
               total: t.Number(),
@@ -269,11 +349,16 @@ export default (app: Elysia) =>
               limit: t.Number(),
               pages: t.Number(),
             }),
+            stats: t.Object({
+              count: t.Number(),
+              totalAmount: t.Number(),
+              totalProfit: t.Number(),
+            }),
           }),
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────── GET /trader/transactions/bt-input - получение транзакций без устройств (БТ-Вход) ───────── */
@@ -306,7 +391,7 @@ export default (app: Elysia) =>
         // Получаем транзакции с пагинацией
         console.log(
           `[Trader API] Поиск БТ-Вход транзакций для трейдера ${trader.id}, условия:`,
-          where,
+          where
         );
         const transactions = await db.transaction.findMany({
           where,
@@ -374,17 +459,13 @@ export default (app: Elysia) =>
         const total = await db.transaction.count({ where });
 
         console.log(
-          `[Trader API] Найдено ${transactions.length} БТ-Вход транзакций из ${total} общих для трейдера ${trader.id}`,
+          `[Trader API] Найдено ${transactions.length} БТ-Вход транзакций из ${total} общих для трейдера ${trader.id}`
         );
 
-        // Преобразуем даты в ISO формат и корректируем курс с учетом ККК
+        // Преобразуем даты в ISO формат
         const formattedTransactions = transactions.map((tx) => {
-          // Используем сохраненный adjustedRate, если есть, иначе вычисляем с округлением вниз
-          const traderRate =
-            tx.adjustedRate ||
-            (tx.rate !== null && tx.kkkPercent !== null
-              ? Math.floor(tx.rate * (1 - tx.kkkPercent / 100) * 100) / 100
-              : tx.rate);
+          // ВСЕГДА показываем оригинальный rate (курс Рапиры с ККК)
+          const displayRate = tx.rate;
 
           // Используем сохраненную прибыль из базы данных
           const profit = tx.traderProfit || 0;
@@ -394,7 +475,7 @@ export default (app: Elysia) =>
 
           return {
             ...tx,
-            rate: traderRate,
+            rate: displayRate, // Всегда показываем курс Рапиры с ККК
             profit,
             calculatedCommission: profit, // Добавляем для совместимости с фронтендом
             deviceId: device?.id || tx.requisites?.deviceId || null,
@@ -486,7 +567,7 @@ export default (app: Elysia) =>
                     fileName: t.String(),
                     isChecked: t.Boolean(),
                     isFake: t.Boolean(),
-                  }),
+                  })
                 ),
                 requisites: t.Union([
                   t.Object({
@@ -518,7 +599,7 @@ export default (app: Elysia) =>
                   }),
                   t.Null(),
                 ]),
-              }),
+              })
             ),
             pagination: t.Object({
               total: t.Number(),
@@ -530,7 +611,7 @@ export default (app: Elysia) =>
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────── GET /trader/transactions/:id - получение детальной информации о транзакции ───────── */
@@ -593,7 +674,7 @@ export default (app: Elysia) =>
           transaction.adjustedRate ||
           (transaction.rate !== null && transaction.kkkPercent !== null
             ? Math.floor(
-                transaction.rate * (1 - transaction.kkkPercent / 100) * 100,
+                transaction.rate * (1 - transaction.kkkPercent / 100) * 100
               ) / 100
             : transaction.rate);
 
@@ -717,7 +798,7 @@ export default (app: Elysia) =>
                 isAuto: t.Boolean(),
                 createdAt: t.String(),
                 updatedAt: t.String(),
-              }),
+              })
             ),
             requisites: t.Union([
               t.Object({
@@ -753,216 +834,406 @@ export default (app: Elysia) =>
           403: ErrorSchema,
           404: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────── PATCH /trader/transactions/:id/status - обновление статуса транзакции ───────── */
     .patch(
       "/:id/status",
       async ({ trader, params, body, error }) => {
-        // Проверяем, существует ли транзакция и принадлежит ли она трейдеру
-        const transaction = await db.transaction.findFirst({
-          where: {
-            id: params.id,
-            traderId: trader.id,
-          },
-        });
+        try {
+          console.log(
+            `[Trader Status Update] Starting for transaction ${params.id} by trader ${trader.id}`
+          );
+          console.log(
+            `[Trader Status Update] Requested status: ${body.status}`
+          );
 
-        if (!transaction) {
-          return error(404, { error: "Транзакция не найдена" });
-        }
-
-        // Проверяем, можно ли обновить статус транзакции
-        if (
-          transaction.status === Status.EXPIRED ||
-          transaction.status === Status.CANCELED
-        ) {
-          return error(400, {
-            error: "Невозможно обновить статус завершенной транзакции",
+          // Проверяем, существует ли транзакция и принадлежит ли она трейдеру
+          const transaction = await db.transaction.findFirst({
+            where: {
+              id: params.id,
+              traderId: trader.id,
+            },
           });
-        }
 
-        // Разрешено менять IN_PROGRESS на READY и READY на COMPLETED
-        if (
-          (transaction.status === Status.IN_PROGRESS &&
-            body.status === Status.READY) ||
-          (transaction.status === Status.READY &&
-            body.status === Status.COMPLETED)
-        ) {
-          // Allowed transitions
-        } else {
-          return error(400, {
-            error:
-              "Можно установить статус 'Готово' для транзакций 'В процессе' или 'Завершено' для транзакций 'Готово'",
-          });
-        }
-
-        // Обновляем статус транзакции
-        const updateData: any = { status: body.status };
-
-        if (body.status === Status.READY) {
-          updateData.acceptedAt = new Date();
-
-          // Calculate and set traderProfit if not already set
-          if (transaction.traderProfit === null && transaction.rate !== null) {
-            // Get trader merchant settings for commission percentage
-            const traderMerchant = await db.traderMerchant.findUnique({
-              where: {
-                traderId_merchantId_methodId: {
-                  traderId: transaction.traderId!,
-                  merchantId: transaction.merchantId,
-                  methodId: transaction.methodId,
-                },
-              },
-            });
-
-            const feeInPercent = traderMerchant?.feeIn || 0;
-            if (feeInPercent > 0) {
-              // Calculate profit: (amount / rate) * (feeInPercent / 100)
-              const spentUsdt = transaction.amount / transaction.rate;
-              const profit = spentUsdt * (feeInPercent / 100);
-              // Truncate to 2 decimal places
-              updateData.traderProfit = Math.trunc(profit * 100) / 100;
-            }
-          }
-        } else if (body.status === Status.COMPLETED) {
-          updateData.completedAt = new Date();
-        }
-
-        const updatedTransaction = await db.transaction.update({
-          where: { id: params.id },
-          data: updateData,
-        });
-
-        // If IN transaction moved to READY, handle freezing and merchant balance
-        if (
-          transaction.type === TransactionType.IN &&
-          body.status === Status.READY
-        ) {
-          await db.$transaction(async (prisma) => {
-            // Начисляем мерчанту
-            const method = await prisma.method.findUnique({
-              where: { id: transaction.methodId },
-            });
-            if (method && transaction.rate) {
-              const netAmount =
-                transaction.amount -
-                (transaction.amount * method.commissionPayin) / 100;
-              const increment = netAmount / transaction.rate;
-              await prisma.merchant.update({
-                where: { id: transaction.merchantId },
-                data: { balanceUsdt: { increment } },
-              });
-            }
-
-            // Обрабатываем заморозку трейдера
-            const txWithFreezing = await prisma.transaction.findUnique({
-              where: { id: transaction.id },
-            });
-
-            if (txWithFreezing?.frozenUsdtAmount) {
-              // Размораживаем основную сумму
-              await prisma.user.update({
-                where: { id: trader.id },
-                data: {
-                  frozenUsdt: { decrement: txWithFreezing.frozenUsdtAmount },
-                },
-              });
-            }
-
-            // Начисляем прибыль трейдеру
-            // Используем traderProfit который мы рассчитали выше при установке статуса READY
-            if (updateData.traderProfit && updateData.traderProfit > 0) {
-              await prisma.user.update({
-                where: { id: trader.id },
-                data: {
-                  profitFromDeals: { increment: updateData.traderProfit },
-                },
-              });
-            }
-          });
-        }
-
-        // If OUT transaction moved to READY, deduct from trust balance
-        if (
-          transaction.type === TransactionType.OUT &&
-          body.status === Status.READY
-        ) {
-          const stake = trader.stakePercent ?? 0;
-          const commission = trader.profitPercent ?? 0;
-          const rubAfter = transaction.amount * (1 - commission / 100);
-          const rateAdj = transaction.rate
-            ? transaction.rate * (1 - stake / 100)
-            : undefined;
-          const deduct =
-            !rateAdj || transaction.currency?.toLowerCase() === "usdt"
-              ? rubAfter
-              : rubAfter / rateAdj;
-
-          // Проверяем доступный траст баланс
-          const traderRecord = await db.user.findUnique({
-            where: { id: trader.id },
-          });
-          const availableTrustBalance = traderRecord?.trustBalance ?? 0;
-          if (availableTrustBalance < deduct) {
-            return error(400, { error: "Недостаточно баланса" });
+          if (!transaction) {
+            console.error(
+              `[Trader Status Update] Transaction ${params.id} not found for trader ${trader.id}`
+            );
+            return error(404, { error: "Транзакция не найдена" });
           }
 
-          await db.user.update({
-            where: { id: trader.id },
-            data: { trustBalance: { decrement: deduct } },
+          console.log(
+            `[Trader Status Update] Transaction found: status=${transaction.status}, callbackUri=${transaction.callbackUri}`
+          );
+
+          // Проверяем, можно ли обновить статус транзакции
+          if (transaction.status === Status.CANCELED) {
+            return error(400, {
+              error: "Невозможно обновить статус завершенной транзакции",
+            });
+          }
+
+          const isReadyTransition = body.status === Status.READY;
+          const wasExpired = transaction.status === Status.EXPIRED;
+
+          // Разрешенные переходы статусов (DISPUTE не включен - споры обрабатываются отдельно)
+          if (
+            (transaction.status === Status.IN_PROGRESS &&
+              body.status === Status.READY) ||
+            (transaction.status === Status.EXPIRED &&
+              body.status === Status.READY)
+          ) {
+            // Allowed transitions
+          } else {
+            return error(400, {
+              error:
+                "Можно установить статус 'Готово' только для транзакций 'В процессе' или 'Истекла'. Споры обрабатываются через систему споров.",
+            });
+          }
+
+          // Обновляем статус транзакции
+          const updateData: any = { status: body.status };
+
+          if (isReadyTransition) {
+            updateData.acceptedAt = new Date();
+
+            // Calculate and set traderProfit if not already set
+            console.log("[Trader Profit] Checking conditions:", {
+              traderProfitIsNull: transaction.traderProfit === null,
+              traderProfit: transaction.traderProfit,
+              rateNotNull: transaction.rate !== null,
+              rate: transaction.rate,
+              willCalculate:
+                transaction.traderProfit === null && transaction.rate !== null,
+            });
+
+            if (
+              transaction.traderProfit === null &&
+              transaction.rate !== null
+            ) {
+              // Get trader merchant settings for commission percentage
+              console.log("[Trader Profit] Looking for traderMerchant with:", {
+                traderId: transaction.traderId,
+                merchantId: transaction.merchantId,
+                methodId: transaction.methodId,
+              });
+
+              // Используем гибкие ставки для расчета комиссии
+              const feeInPercent = await getFlexibleFeePercent(
+                transaction.traderId!,
+                transaction.merchantId,
+                transaction.methodId,
+                transaction.amount,
+                "IN"
+              );
+              console.log("[Trader Profit] Using flexible fee result:", {
+                amount: transaction.amount,
+                feeInPercent: feeInPercent,
+              });
+
+              if (
+                feeInPercent > 0 &&
+                transaction.rate &&
+                transaction.rate > 0
+              ) {
+                // Правильная формула прибыли: (amount / rate) * (feeInPercent / 100)
+                const spentUsdt = transaction.amount / transaction.rate;
+                const profit = spentUsdt * (feeInPercent / 100);
+                // Truncate to 2 decimal places
+                updateData.traderProfit = truncate2(profit);
+                console.log("[Trader Profit] Calculation details:", {
+                  amount: transaction.amount,
+                  rate: transaction.rate,
+                  feeInPercent: feeInPercent,
+                  spentUsdt: spentUsdt,
+                  profit: profit,
+                  finalProfit: updateData.traderProfit,
+                });
+              } else {
+                console.log("[Trader Profit] Cannot calculate profit:", {
+                  feeInPercent: feeInPercent,
+                  rate: transaction.rate,
+                  reason:
+                    feeInPercent <= 0 ? "No fee configured" : "Invalid rate",
+                });
+                updateData.traderProfit = 0; // Явно устанавливаем 0, чтобы избежать undefined
+              }
+            }
+          }
+
+          console.log(
+            `[Trader Status Update] Updating transaction with data:`,
+            updateData
+          );
+
+          const updatedTransaction = await db.transaction.update({
+            where: { id: params.id },
+            data: updateData,
           });
-        }
 
-        // If transaction moved to COMPLETED, handle final accounting
-        if (body.status === Status.COMPLETED) {
-          // For IN transactions, profit is already added at READY status
-          // For OUT transactions, we might need additional handling
-          // Currently, no additional accounting needed at COMPLETED status
-        }
+          console.log(
+            `[Trader Status Update] Transaction updated successfully: new status=${updatedTransaction.status}`
+          );
 
-        const hook = await notifyByStatus({
-          id: updatedTransaction.id,
-          status: updatedTransaction.status,
-          successUri: updatedTransaction.successUri,
-          failUri: updatedTransaction.failUri,
-          callbackUri: updatedTransaction.callbackUri,
-        });
+          // If IN transaction moved to READY, handle freezing and merchant balance
+          if (transaction.type === TransactionType.IN && isReadyTransition) {
+            await db.$transaction(async (prisma) => {
+              // Начисляем мерчанту
+              const method = await prisma.method.findUnique({
+                where: { id: transaction.methodId },
+              });
+              if (method && transaction.rate) {
+                const netAmount =
+                  transaction.amount -
+                  (transaction.amount * method.commissionPayin) / 100;
+                const increment = netAmount / transaction.rate;
+                await prisma.merchant.update({
+                  where: { id: transaction.merchantId },
+                  data: { balanceUsdt: { increment } },
+                });
+              }
 
-        return {
-          success: true,
-          transaction: {
-            ...updatedTransaction,
-            rate:
-              updatedTransaction.adjustedRate ||
-              (updatedTransaction.rate !== null &&
-              updatedTransaction.kkkPercent !== null
-                ? Math.floor(
-                    updatedTransaction.rate *
-                      (1 - updatedTransaction.kkkPercent / 100) *
-                      100,
-                  ) / 100
-                : updatedTransaction.rate),
-            profit:
-              updatedTransaction.adjustedRate !== null
-                ? updatedTransaction.amount / updatedTransaction.adjustedRate
-                : updatedTransaction.rate !== null &&
+              // Обрабатываем заморозку трейдера
+              const txWithFreezing = await prisma.transaction.findUnique({
+                where: { id: transaction.id },
+              });
+
+              if (txWithFreezing?.frozenUsdtAmount || wasExpired) {
+                if (wasExpired) {
+                  // Для истекших транзакций средства уже были разморожены и возвращены на trustBalance
+                  // Теперь нужно списать их оттуда при подтверждении
+                  const amountToDeduct =
+                    txWithFreezing?.frozenUsdtAmount ||
+                    (transaction.rate
+                      ? transaction.amount / transaction.rate
+                      : 0);
+
+                  console.log(
+                    "[Trader Deduct After Expiry] Processing EXPIRED transaction approval:",
+                    {
+                      transactionId: transaction.id,
+                      amountToDeduct,
+                      frozenUsdtAmount: txWithFreezing?.frozenUsdtAmount,
+                      wasExpired,
+                    }
+                  );
+
+                  const balances = await prisma.user.findUnique({
+                    where: { id: trader.id },
+                    select: { trustBalance: true, deposit: true },
+                  });
+
+                  if (balances && amountToDeduct > 0) {
+                    let remaining = amountToDeduct;
+                    const trustDeduct = Math.min(
+                      balances.trustBalance || 0,
+                      remaining
+                    );
+                    remaining -= trustDeduct;
+
+                    const updateFields: any = {};
+                    if (trustDeduct > 0) {
+                      updateFields.trustBalance = {
+                        decrement: truncate2(trustDeduct),
+                      };
+                    }
+                    // Если trustBalance недостаточно, списываем остаток с deposit
+                    if (remaining > 0) {
+                      updateFields.deposit = {
+                        decrement: truncate2(remaining),
+                      };
+                    }
+
+                    console.log(
+                      "[Trader Deduct After Expiry] Balance update details:",
+                      {
+                        trustBalance: balances.trustBalance,
+                        trustDeduct,
+                        depositDeduct: remaining,
+                        updateFields,
+                      }
+                    );
+
+                    if (Object.keys(updateFields).length > 0) {
+                      await prisma.user.update({
+                        where: { id: trader.id },
+                        data: updateFields,
+                      });
+                    }
+                  }
+
+                  // ВАЖНО: Для истекших транзакций НЕ трогаем frozenUsdt (он уже был уменьшен при истечении)
+                } else if (txWithFreezing?.frozenUsdtAmount) {
+                  // Размораживаем ПОЛНУЮ сумму (основная + комиссия)
+                  const totalToUnfreeze =
+                    txWithFreezing.frozenUsdtAmount +
+                    (txWithFreezing.calculatedCommission || 0);
+                  console.log("[Trader Unfreeze] Unfreezing total amount:", {
+                    frozenUsdtAmount: txWithFreezing.frozenUsdtAmount,
+                    calculatedCommission: txWithFreezing.calculatedCommission,
+                    totalToUnfreeze: totalToUnfreeze,
+                  });
+                  await prisma.user.update({
+                    where: { id: trader.id },
+                    data: {
+                      frozenUsdt: { decrement: truncate2(totalToUnfreeze) },
+                    },
+                  });
+                }
+              }
+
+              // Начисляем прибыль трейдеру
+              // Используем traderProfit который мы рассчитали выше при установке статуса READY
+              console.log(
+                "[Trader Profit] updateData.traderProfit:",
+                updateData.traderProfit
+              );
+              console.log(
+                "[Trader Profit] Type:",
+                typeof updateData.traderProfit
+              );
+
+              if (
+                typeof updateData.traderProfit === "number" &&
+                updateData.traderProfit > 0
+              ) {
+                console.log(
+                  "[Trader Profit] Adding profit to trader:",
+                  trader.id,
+                  "amount:",
+                  updateData.traderProfit
+                );
+                await prisma.user.update({
+                  where: { id: trader.id },
+                  data: {
+                    profitFromDeals: {
+                      increment: truncate2(updateData.traderProfit),
+                    },
+                  },
+                });
+              } else {
+                console.log(
+                  "[Trader Profit] Skipping profit update - profit is 0 or invalid"
+                );
+              }
+
+              // Обновляем currentTotalAmount для реквизита
+              if (transaction.bankDetailId) {
+                await prisma.bankDetail.update({
+                  where: { id: transaction.bankDetailId },
+                  data: {
+                    currentTotalAmount: { increment: transaction.amount },
+                  },
+                });
+              }
+            });
+          }
+
+          // If OUT transaction moved to READY, deduct from trust balance
+          if (transaction.type === TransactionType.OUT && isReadyTransition) {
+            const stake = trader.stakePercent ?? 0;
+            const commission = trader.profitPercent ?? 0;
+            const rubAfter = transaction.amount * (1 - commission / 100);
+            const rateAdj = transaction.rate
+              ? transaction.rate * (1 - stake / 100)
+              : undefined;
+            const deduct =
+              !rateAdj || transaction.currency?.toLowerCase() === "usdt"
+                ? rubAfter
+                : rubAfter / rateAdj;
+
+            // Проверяем доступный траст баланс
+            const traderRecord = await db.user.findUnique({
+              where: { id: trader.id },
+            });
+            const availableTrustBalance = traderRecord?.trustBalance ?? 0;
+            if (availableTrustBalance < deduct) {
+              return error(400, { error: "Недостаточно баланса" });
+            }
+
+            await db.user.update({
+              where: { id: trader.id },
+              data: { trustBalance: { decrement: truncate2(deduct) } },
+            });
+          }
+
+          // Отправляем колбэк напрямую при изменении статуса (ПОСЛЕ всех финансовых операций)
+          let callbackResult = null;
+
+          console.log(
+            `[Trader Status Update] About to send callback for transaction ${updatedTransaction.id}`
+          );
+          console.log(
+            `[Trader Status Update] Callback URI: ${updatedTransaction.callbackUri}`
+          );
+          console.log(
+            `[Trader Status Update] Success URI: ${updatedTransaction.successUri}`
+          );
+          console.log(
+            `[Trader Status Update] Final status: ${updatedTransaction.status}`
+          );
+
+          // Отправляем callback'и используя универсальную функцию
+          try {
+            callbackResult = await sendTransactionCallbacks(updatedTransaction);
+          } catch (callbackError) {
+            console.error(
+              `[Trader Status Update] Critical error in callback section:`,
+              callbackError
+            );
+            // Не прерываем выполнение, продолжаем
+          }
+
+          const hook = callbackResult;
+
+          console.log(
+            `[Trader Status Update] Success! Returning response with hook:`,
+            hook ? "yes" : "no"
+          );
+
+          return {
+            success: true,
+            transaction: {
+              ...updatedTransaction,
+              rate:
+                updatedTransaction.adjustedRate ||
+                (updatedTransaction.rate !== null &&
+                updatedTransaction.kkkPercent !== null
+                  ? Math.floor(
+                      updatedTransaction.rate *
+                        (1 - updatedTransaction.kkkPercent / 100) *
+                        100
+                    ) / 100
+                  : updatedTransaction.rate),
+              profit:
+                updatedTransaction.adjustedRate !== null
+                  ? updatedTransaction.amount / updatedTransaction.adjustedRate
+                  : updatedTransaction.rate !== null &&
                     updatedTransaction.kkkPercent !== null
                   ? updatedTransaction.amount /
                     (Math.floor(
                       updatedTransaction.rate *
                         (1 - updatedTransaction.kkkPercent / 100) *
-                        100,
+                        100
                     ) /
                       100)
                   : null,
-            createdAt: updatedTransaction.createdAt.toISOString(),
-            updatedAt: updatedTransaction.updatedAt.toISOString(),
-            expired_at: updatedTransaction.expired_at.toISOString(),
-            acceptedAt: updatedTransaction.acceptedAt?.toISOString() ?? null,
-          },
-          hook,
-        };
+              createdAt: updatedTransaction.createdAt.toISOString(),
+              updatedAt: updatedTransaction.updatedAt.toISOString(),
+              expired_at: updatedTransaction.expired_at.toISOString(),
+              acceptedAt: updatedTransaction.acceptedAt?.toISOString() ?? null,
+            },
+            hook,
+          };
+        } catch (err) {
+          console.error(`[Trader Status Update] Error:`, err);
+          return error(500, {
+            error: "Не удалось обновить статус транзакции",
+            details: err instanceof Error ? err.message : String(err),
+          });
+        }
       },
       {
         tags: ["trader"],
@@ -1016,5 +1287,5 @@ export default (app: Elysia) =>
           403: ErrorSchema,
           404: ErrorSchema,
         },
-      },
+      }
     );

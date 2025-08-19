@@ -1,7 +1,7 @@
 // src/server/routes/trader/bank-details.ts
 import { Elysia, t } from "elysia";
 import { db } from "@/db";
-import { BankType, MethodType } from "@prisma/client";
+import { BankType, MethodType, Status } from "@prisma/client";
 import ErrorSchema from "@/types/error";
 import { startOfDay, endOfDay } from "date-fns";
 
@@ -26,12 +26,16 @@ const BankDetailDTO = t.Object({
   phoneNumber: t.Optional(t.String()),
   minAmount: t.Number(),
   maxAmount: t.Number(),
-  dailyLimit: t.Number(),
-  monthlyLimit: t.Number(),
+  totalAmountLimit: t.Number(), // Общий лимит суммы
+  currentTotalAmount: t.Number(), // Текущая использованная сумма
   intervalMinutes: t.Number(),
-  turnoverDay: t.Number(),
-  turnoverTotal: t.Number(),
+  operationLimit: t.Number(), // Лимит по количеству операций без срока давности
+  sumLimit: t.Number(), // Лимит на общую сумму сделок в рублях
+  successfulDeals: t.Number(),
+  totalDeals: t.Number(),
+  activeDeals: t.Number(), // Количество активных транзакций
   isArchived: t.Boolean(),
+  isActive: t.Boolean(),
   hasDevice: t.Boolean(), // Flag indicating if this bank detail has a device
   device: DeviceDTO, // Connected device (empty object if no device)
   createdAt: t.String(),
@@ -61,8 +65,8 @@ const formatDevice = (device) => {
     ethernetSpeed: device.ethernetSpeed, // Can be null
     isOnline: device.isOnline,
     token: device.token || '',
-    createdAt: device.createdAt.toISOString(),
-    updatedAt: device.updatedAt.toISOString(),
+    createdAt: device.createdAt ? device.createdAt.toISOString() : new Date().toISOString(),
+    updatedAt: device.updatedAt ? device.updatedAt.toISOString() : new Date().toISOString(),
   };
 };
 
@@ -71,13 +75,13 @@ const toDTO = (
   turnoverDay = 0,
   turnoverTotal = 0,
   device = null,
+  successfulDeals = 0,
+  totalDeals = 0,
+  activeDeals = 0,
 ) => {
   const { 
     userId, 
     device: deviceFromRelation, 
-    maxCountTransactions,
-    dailyTraffic,
-    monthlyTraffic,
     deviceId,
     ...rest 
   } = bankDetail;
@@ -88,12 +92,18 @@ const toDTO = (
   return {
     ...rest,
     phoneNumber: rest.phoneNumber || "", // Ensure phoneNumber is never null for DTO
-    turnoverDay,
-    turnoverTotal,
+    successfulDeals,
+    totalDeals,
+    activeDeals,
     hasDevice: !!deviceToUse,
     device: formatDevice(deviceToUse),
-    createdAt: bankDetail.createdAt.toISOString(),
-    updatedAt: bankDetail.updatedAt.toISOString(),
+    createdAt: bankDetail.createdAt ? bankDetail.createdAt.toISOString() : new Date().toISOString(),
+    updatedAt: bankDetail.updatedAt ? bankDetail.updatedAt.toISOString() : new Date().toISOString(),
+    // Новые поля лимитов
+    currentTotalAmount: bankDetail.currentTotalAmount || 0,
+    totalAmountLimit: bankDetail.totalAmountLimit || 0,
+    operationLimit: bankDetail.operationLimit || 0,
+    sumLimit: bankDetail.sumLimit || 0,
   };
 };
 
@@ -108,11 +118,18 @@ export default (app: Elysia) =>
         const todayEnd = endOfDay(new Date());
 
         // Get bank details with their devices
+        const whereClause: any = { userId: trader.id };
+        
+        // Only filter by archived status if explicitly requested
+        if (query.archived === "true") {
+          whereClause.isArchived = true;
+        } else if (query.archived === "false") {
+          whereClause.isArchived = false;
+        }
+        // If no archived parameter, return all requisites
+        
         const bankDetails = await db.bankDetail.findMany({
-          where: { 
-            userId: trader.id, 
-            isArchived: query.archived === "true" 
-          },
+          where: whereClause,
           include: {
             device: true
           },
@@ -144,7 +161,31 @@ export default (app: Elysia) =>
               _sum: { amount: true },
             });
 
-            return toDTO(bd, daySum ?? 0, totalSum ?? 0);
+            /* —— transaction counts —— */
+            const successfulDeals = await db.transaction.count({
+              where: {
+                bankDetailId: bd.id,
+                status: "READY",
+              },
+            });
+
+            const totalDeals = await db.transaction.count({
+              where: {
+                bankDetailId: bd.id,
+              },
+            });
+
+            /* —— active deals count —— */
+            const activeDeals = await db.transaction.count({
+              where: {
+                bankDetailId: bd.id,
+                status: {
+                  in: [Status.CREATED, Status.IN_PROGRESS],
+                },
+              },
+            });
+
+            return toDTO(bd, daySum ?? 0, totalSum ?? 0, bd.device, successfulDeals, totalDeals, activeDeals);
           }),
         );
 
@@ -196,10 +237,17 @@ export default (app: Elysia) =>
           "RAIFF": "RAIFFEISEN",
           "POCHTA": "POCHTABANK",
           "RSHB": "ROSSELKHOZBANK",
-          "MTS": "MTSBANK"
+          "MTS": "MTSBANK",
+          "OTP": "OTPBANK"
         };
         
         const mappedBankType = bankTypeMap[body.bankType] || body.bankType;
+
+        console.log('[BankDetails] Creating requisite with data:', {
+          totalAmountLimit: body.totalAmountLimit,
+          operationLimit: body.operationLimit,
+          sumLimit: body.sumLimit,
+        });
 
         const bankDetail = await db.bankDetail.create({
           data: {
@@ -210,16 +258,17 @@ export default (app: Elysia) =>
             phoneNumber: body.phoneNumber,
             minAmount: body.minAmount,
             maxAmount: body.maxAmount,
-            dailyLimit: body.dailyLimit ?? 0,
-            monthlyLimit: body.monthlyLimit ?? 0,
+            totalAmountLimit: body.totalAmountLimit ?? 0,
             intervalMinutes: body.intervalMinutes,
+            operationLimit: body.operationLimit ?? 0,
+            sumLimit: body.sumLimit ?? 0,
             userId: trader.id,
             deviceId: body.deviceId,
           },
         });
         
         // Bank detail was just created, so there are no devices yet
-        return toDTO(bankDetail, 0, 0);
+        return toDTO(bankDetail, 0, 0, null, 0, 0, 0);
       },
       {
         tags: ["trader"],
@@ -233,8 +282,9 @@ export default (app: Elysia) =>
           phoneNumber: t.Optional(t.String()),
           minAmount: t.Number(),
           maxAmount: t.Number(),
-          dailyLimit: t.Optional(t.Number()),
-          monthlyLimit: t.Optional(t.Number()),
+          totalAmountLimit: t.Optional(t.Number()),
+          operationLimit: t.Optional(t.Number()),
+          sumLimit: t.Optional(t.Number()),
           intervalMinutes: t.Number(),
           deviceId: t.Optional(t.String()),
         }),
@@ -256,8 +306,21 @@ export default (app: Elysia) =>
         });
 
         if (!exists) return error(404, { error: "Реквизит не найден" });
-        if (!exists.isArchived)
-          return error(400, { error: "Реквизит нужно сначала архивировать" });
+
+        // Allow редактирование either when requisite archived or when linked
+        // device is not working. Fetch linked device state if needed.
+        if (!exists.isArchived && exists.deviceId) {
+          const linkedDevice = await db.device.findFirst({
+            where: { id: exists.deviceId, userId: trader.id },
+            select: { isOnline: true, isWorking: true },
+          });
+
+          if (linkedDevice && linkedDevice.isWorking) {
+            return error(400, {
+              error: "Реквизит можно редактировать только при остановленном устройстве",
+            });
+          }
+        }
 
         // Проверяем лимиты трейдера если обновляются суммы
         if (body.minAmount !== undefined && body.minAmount < trader.minAmountPerRequisite) {
@@ -297,12 +360,18 @@ export default (app: Elysia) =>
         
         const mappedBankType = body.bankType ? (bankTypeMap[body.bankType] || body.bankType) : exists.bankType;
 
+        console.log('[BankDetails] Updating requisite with data:', {
+          id: params.id,
+          totalAmountLimit: body.totalAmountLimit,
+          operationLimit: body.operationLimit,
+          sumLimit: body.sumLimit,
+          fullBody: body,
+        });
+
         const bankDetail = await db.bankDetail.update({
           where: { id: params.id },
           data: {
             ...body,
-            dailyLimit: body.dailyLimit ?? 0,
-            monthlyLimit: body.monthlyLimit ?? 0,
             bankType: mappedBankType as BankType,
           },
           include: {
@@ -310,7 +379,7 @@ export default (app: Elysia) =>
           }
         });
         
-        return toDTO(bankDetail, 0, 0);
+        return toDTO(bankDetail, 0, 0, bankDetail.device, 0, 0, 0);
       },
       {
         tags: ["trader"],
@@ -325,9 +394,12 @@ export default (app: Elysia) =>
             phoneNumber: t.Optional(t.String()),
             minAmount: t.Number(),
             maxAmount: t.Number(),
-            dailyLimit: t.Number(),
-            monthlyLimit: t.Number(),
+            totalAmountLimit: t.Number(),
+            operationLimit: t.Number(),
+            sumLimit: t.Number(),
             intervalMinutes: t.Number(),
+            isActive: t.Boolean(),
+            isArchived: t.Boolean(),
           })
         ),
         response: {
@@ -540,14 +612,13 @@ export default (app: Elysia) =>
           return error(404, { error: "Реквизит не найден" });
         }
 
-        // Note: status field doesn't exist in current schema
-        // Could add isArchived: false or other status tracking
+        // Update isActive to true to start the requisite
         await db.bankDetail.update({
           where: { id: params.id },
-          data: { isArchived: false }
+          data: { isActive: true }
         });
 
-        return { ok: true, message: "Реквизит запущен" };
+        return { ok: true, message: "Реквизит активирован" };
       },
       {
         tags: ["trader"],
@@ -574,14 +645,13 @@ export default (app: Elysia) =>
           return error(404, { error: "Реквизит не найден" });
         }
 
-        // Note: status field doesn't exist in current schema  
-        // Using isArchived as a proxy for inactive status
+        // Update isActive to false to stop the requisite
         await db.bankDetail.update({
           where: { id: params.id },
-          data: { isArchived: true }
+          data: { isActive: false }
         });
 
-        return { ok: true, message: "Реквизит остановлен" };
+        return { ok: true, message: "Реквизит деактивирован" };
       },
       {
         tags: ["trader"],
@@ -589,6 +659,55 @@ export default (app: Elysia) =>
         params: t.Object({ id: t.String() }),
         response: {
           200: t.Object({ ok: t.Boolean(), message: t.String() }),
+          401: ErrorSchema,
+          403: ErrorSchema,
+          404: ErrorSchema,
+        },
+      },
+    )
+    
+    /* ───────── DELETE /trader/bank-details/:id ───────── */
+    .delete(
+      "/:id",
+      async ({ trader, params, error }) => {
+        const bankDetail = await db.bankDetail.findFirst({
+          where: { id: params.id, userId: trader.id }
+        });
+
+        if (!bankDetail) {
+          return error(404, { error: "Реквизит не найден" });
+        }
+
+        // Check if there are any active transactions
+        const activeTransactions = await db.transaction.count({
+          where: {
+            bankDetailId: params.id,
+            status: {
+              in: [Status.CREATED, Status.IN_PROGRESS, Status.DISPUTE]
+            }
+          }
+        });
+
+        if (activeTransactions > 0) {
+          return error(400, { 
+            error: "Невозможно удалить реквизит с активными транзакциями" 
+          });
+        }
+
+        // Delete the bank detail
+        await db.bankDetail.delete({
+          where: { id: params.id }
+        });
+
+        return { ok: true, message: "Реквизит успешно удален" };
+      },
+      {
+        tags: ["trader"],
+        detail: { summary: "Удалить реквизит" },
+        params: t.Object({ id: t.String() }),
+        response: {
+          200: t.Object({ ok: t.Boolean(), message: t.String() }),
+          400: ErrorSchema,
           401: ErrorSchema,
           403: ErrorSchema,
           404: ErrorSchema,

@@ -9,42 +9,49 @@
  * ---------------------------------------------------------------------------
  */
 
-import { Elysia, t } from 'elysia'
-import { db } from '@/db'
-import { Prisma, Status, TransactionType, PayoutStatus } from '@prisma/client'
-import ErrorSchema from '@/types/error'
-import { randomBytes } from 'node:crypto'
+import { Elysia, t } from "elysia";
+import { db } from "@/db";
+import {
+  Prisma,
+  Status,
+  TransactionType,
+  PayoutStatus,
+  SettleRequestStatus,
+} from "@prisma/client";
+import ErrorSchema from "@/types/error";
+import { roundDown2 } from "@/utils/rounding";
+import { randomBytes } from "node:crypto";
 
 /* ─────────── Общие схемы ─────────── */
 
-const AuthHeader = t.Object({ 'x-admin-key': t.String() })
+const AuthHeader = t.Object({ "x-admin-key": t.String() });
 
 const MerchantBase = t.Object({
   id: t.String(),
   name: t.String(),
-  token: t.String({ description: 'Уникальный API-токен' }),
+  token: t.String({ description: "Уникальный API-токен" }),
   apiKeyPublic: t.Nullable(t.String()),
   apiKeyPrivate: t.Nullable(t.String()),
   disabled: t.Boolean(),
   banned: t.Boolean(),
   createdAt: t.String(),
   balanceUsdt: t.Number(),
-  countInRubEquivalent: t.Boolean()
-})
+  countInRubEquivalent: t.Boolean(),
+});
 
 const MerchantWithCounters = t.Intersect([
   MerchantBase,
   t.Object({
-    totalTx: t.Number({ description: 'Всего транзакций' }),
-    paidTx:  t.Number({ description: 'Транзакций со статусом READY' }),
-    balanceRub: t.Number({ description: 'Баланс в рублях с учетом комиссий' })
-  })
-])
+    totalTx: t.Number({ description: "Всего транзакций" }),
+    paidTx: t.Number({ description: "Транзакций со статусом READY" }),
+    balanceRub: t.Number({ description: "Баланс в рублях с учетом комиссий" }),
+  }),
+]);
 
 /* ─────────── Утилиты ─────────── */
 
 const toISO = <T extends { createdAt: Date }>(obj: T) =>
-  ({ ...obj, createdAt: obj.createdAt.toISOString() } as any)
+  ({ ...obj, createdAt: obj.createdAt.toISOString() } as any);
 
 /* ─────────── Роутер ─────────── */
 
@@ -52,41 +59,58 @@ export default (app: Elysia) =>
   app
     /* ───────── POST /admin/merchant/create ───────── */
     .post(
-      '/create',
+      "/create",
       async ({ body, error }) => {
         try {
           const m = await db.merchant.create({
-            data: { name: body.name, token: randomBytes(32).toString('hex') },
-            select: { id: true, name: true, token: true, createdAt: true, balanceUsdt: true, apiKeyPublic: true, apiKeyPrivate: true, disabled: true, banned: true, countInRubEquivalent: true }
-          })
+            data: { name: body.name, token: randomBytes(32).toString("hex") },
+            select: {
+              id: true,
+              name: true,
+              token: true,
+              createdAt: true,
+              balanceUsdt: true,
+              apiKeyPublic: true,
+              apiKeyPrivate: true,
+              disabled: true,
+              banned: true,
+              countInRubEquivalent: true,
+            },
+          });
           return new Response(JSON.stringify(toISO(m)), {
             status: 201,
-            headers: { 'Content-Type': 'application/json' }
-          })
+            headers: { "Content-Type": "application/json" },
+          });
         } catch (e) {
           if (
             e instanceof Prisma.PrismaClientKnownRequestError &&
-            e.code === 'P2002'
+            e.code === "P2002"
           )
-            return error(409, { error: 'Мерчант с таким именем уже существует' })
-          throw e
+            return error(409, {
+              error: "Мерчант с таким именем уже существует",
+            });
+          throw e;
         }
       },
       {
-        tags: ['admin'],
-        detail: { summary: 'Создать нового мерчанта' },
+        tags: ["admin"],
+        detail: { summary: "Создать нового мерчанта" },
         headers: AuthHeader,
-        body: t.Object({ name: t.String({ description: 'Название мерчанта' }) }),
-        response: { 201: MerchantBase, 409: ErrorSchema }
+        body: t.Object({
+          name: t.String({ description: "Название мерчанта" }),
+        }),
+        response: { 201: MerchantBase, 409: ErrorSchema },
       }
     )
 
     /* ───────── POST /admin/merchant/settle ───────── */
     .post(
-      '/settle',
+      "/settle",
       async ({ body, error }) => {
-        const merchant = await db.merchant.findUnique({ where: { id: body.id } });
-        if (!merchant) return error(404, { error: 'Мерчант не найден' });
+        const merchant = await db.merchant.findUnique({
+          where: { id: body.id },
+        });
+        if (!merchant) return error(404, { error: "Мерчант не найден" });
 
         const transactions = await db.transaction.findMany({
           where: {
@@ -101,7 +125,8 @@ export default (app: Elysia) =>
         let amount = 0;
         for (const tx of transactions) {
           if (tx.rate && tx.method) {
-            const netAmount = tx.amount - (tx.amount * tx.method.commissionPayin) / 100;
+            const netAmount =
+              tx.amount - (tx.amount * tx.method.commissionPayin) / 100;
             amount += netAmount / tx.rate;
           }
         }
@@ -127,24 +152,24 @@ export default (app: Elysia) =>
         return { ok: true, amount };
       },
       {
-        tags: ['admin'],
-        detail: { summary: 'Обнулить баланс мерчанта и записать сетл' },
+        tags: ["admin"],
+        detail: { summary: "Обнулить баланс мерчанта и записать сетл" },
         headers: AuthHeader,
         body: t.Object({ id: t.String() }),
         response: {
           200: t.Object({ ok: t.Boolean(), amount: t.Number() }),
           404: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────── GET /admin/merchant/settlements ───────── */
     .get(
-      '/settlements',
+      "/settlements",
       async () => {
         const items = await db.merchantSettlement.findMany({
           include: { merchant: true, transactions: true },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
         });
         return items.map((i) => ({
           id: i.id,
@@ -158,8 +183,8 @@ export default (app: Elysia) =>
         }));
       },
       {
-        tags: ['admin'],
-        detail: { summary: 'История сетлов мерчантов' },
+        tags: ["admin"],
+        detail: { summary: "История сетлов мерчантов" },
         headers: AuthHeader,
         response: {
           200: t.Array(
@@ -168,50 +193,61 @@ export default (app: Elysia) =>
               amount: t.Number(),
               createdAt: t.String(),
               merchant: t.Object({ id: t.String(), name: t.String() }),
-            }),
+            })
           ),
           401: ErrorSchema,
           403: ErrorSchema,
         },
-      },
+      }
     )
 
     /* ───────── GET /admin/merchant/list ───────── */
     .get(
-      '/list',
+      "/list",
       async () => {
         /* 1. Получаем мерчантов */
         const merchants = await db.merchant.findMany({
-          select: { id: true, name: true, token: true, createdAt: true, balanceUsdt: true, apiKeyPublic: true, apiKeyPrivate: true, disabled: true, banned: true, countInRubEquivalent: true }
-        })
+          select: {
+            id: true,
+            name: true,
+            token: true,
+            createdAt: true,
+            balanceUsdt: true,
+            apiKeyPublic: true,
+            apiKeyPrivate: true,
+            disabled: true,
+            banned: true,
+            countInRubEquivalent: true,
+          },
+        });
 
-        if (!merchants.length) return []
+        if (!merchants.length) return [];
 
-        const ids = merchants.map((m) => m.id)
+        const ids = merchants.map((m) => m.id);
 
         /* 2. Агрегируем транзакции одним groupBy */
         const grouped = await db.transaction.groupBy({
-          by: ['merchantId'],
+          by: ["merchantId"],
           _count: { _all: true },
-          where: { merchantId: { in: ids } }
-        })
+          where: { merchantId: { in: ids } },
+        });
 
         const groupedPaid = await db.transaction.groupBy({
-          by: ['merchantId'],
+          by: ["merchantId"],
           _count: { _all: true },
           where: {
             merchantId: { in: ids },
-            status: Status.READY
-          }
-        })
+            status: Status.READY,
+          },
+        });
 
         /* 3. Быстрый lookup по merchantId → counts */
         const totalMap = Object.fromEntries(
           grouped.map((g) => [g.merchantId, g._count._all])
-        )
+        );
         const paidMap = Object.fromEntries(
           groupedPaid.map((g) => [g.merchantId, g._count._all])
-        )
+        );
 
         // Рассчитываем рублевый баланс для каждого мерчанта
         const merchantsWithRubBalance = await Promise.all(
@@ -251,9 +287,10 @@ export default (app: Elysia) =>
 
             // Добавляем транзакции
             for (const tx of successfulTransactions) {
-              const commission = tx.type === TransactionType.IN 
-                ? tx.method.commissionPayin 
-                : tx.method.commissionPayout;
+              const commission =
+                tx.type === TransactionType.IN
+                  ? tx.method.commissionPayin
+                  : tx.method.commissionPayout;
               const netAmount = tx.amount * (1 - commission / 100);
               balanceRub += netAmount;
             }
@@ -276,16 +313,16 @@ export default (app: Elysia) =>
         return merchantsWithRubBalance;
       },
       {
-        tags: ['admin'],
-        detail: { summary: 'Список мерчантов + статистика транзакций' },
+        tags: ["admin"],
+        detail: { summary: "Список мерчантов + статистика транзакций" },
         headers: AuthHeader,
-        response: { 200: t.Array(MerchantWithCounters) }
+        response: { 200: t.Array(MerchantWithCounters) },
       }
     )
 
     /* ───────── PUT /admin/merchant/update ───────── */
     .put(
-      '/update',
+      "/update",
       async ({ body, error }) => {
         try {
           const merchant = await db.merchant.update({
@@ -296,23 +333,34 @@ export default (app: Elysia) =>
               banned: body.banned,
               countInRubEquivalent: body.countInRubEquivalent,
             },
-            select: { id: true, name: true, token: true, createdAt: true, balanceUsdt: true, disabled: true, banned: true, apiKeyPublic: true, apiKeyPrivate: true, countInRubEquivalent: true }
-          })
-          return toISO(merchant)
+            select: {
+              id: true,
+              name: true,
+              token: true,
+              createdAt: true,
+              balanceUsdt: true,
+              disabled: true,
+              banned: true,
+              apiKeyPublic: true,
+              apiKeyPrivate: true,
+              countInRubEquivalent: true,
+            },
+          });
+          return toISO(merchant);
         } catch (e) {
           if (
             e instanceof Prisma.PrismaClientKnownRequestError &&
-            e.code === 'P2025'
+            e.code === "P2025"
           )
-            return error(404, { error: 'Мерчант не найден' })
-          throw e
+            return error(404, { error: "Мерчант не найден" });
+          throw e;
         }
       },
       {
-        tags: ['admin'],
-        detail: { summary: 'Обновить мерчанта' },
+        tags: ["admin"],
+        detail: { summary: "Обновить мерчанта" },
         headers: AuthHeader,
-        body: t.Object({ 
+        body: t.Object({
           id: t.String(),
           name: t.String(),
           disabled: t.Optional(t.Boolean()),
@@ -320,32 +368,67 @@ export default (app: Elysia) =>
           countInRubEquivalent: t.Optional(t.Boolean()),
         }),
         response: {
-          200: t.Intersect([MerchantBase, t.Object({ disabled: t.Boolean(), banned: t.Boolean(), countInRubEquivalent: t.Boolean() })]),
-          404: ErrorSchema
+          200: t.Intersect([
+            MerchantBase,
+            t.Object({
+              disabled: t.Boolean(),
+              banned: t.Boolean(),
+              countInRubEquivalent: t.Boolean(),
+            }),
+          ]),
+          404: ErrorSchema,
+        },
+      }
+    )
+
+    /* ───────── POST /admin/merchant/reset-2fa ───────── */
+    .post(
+      "/reset-2fa",
+      async ({ body, error }) => {
+        try {
+          await db.merchant.update({
+            where: { id: body.id },
+            data: { totpEnabled: false, totpSecret: null },
+          });
+          return { success: true };
+        } catch (e) {
+          if (
+            e instanceof Prisma.PrismaClientKnownRequestError &&
+            e.code === "P2025"
+          )
+            return error(404, { error: "Мерчант не найден" });
+          throw e;
         }
+      },
+      {
+        tags: ["admin"],
+        detail: { summary: "Сброс 2FA у мерчанта" },
+        headers: AuthHeader,
+        body: t.Object({ id: t.String() }),
+        response: { 200: t.Object({ success: t.Boolean() }), 404: ErrorSchema },
       }
     )
 
     /* ───────── GET /admin/merchant/:id/settlements ───────── */
     .get(
-      '/:id/settlements',
+      "/:id/settlements",
       async ({ params: { id }, error }) => {
         const merchant = await db.merchant.findUnique({
           where: { id },
           include: {
             settlements: {
-              orderBy: { createdAt: 'desc' },
+              orderBy: { createdAt: "desc" },
               include: {
                 _count: {
-                  select: { transactions: true }
-                }
-              }
-            }
-          }
-        })
-        
-        if (!merchant) return error(404, { error: 'Мерчант не найден' })
-        
+                  select: { transactions: true },
+                },
+              },
+            },
+          },
+        });
+
+        if (!merchant) return error(404, { error: "Мерчант не найден" });
+
         // Подсчет суммы готовой к сеттлу
         const pendingTransactions = await db.transaction.findMany({
           where: {
@@ -355,63 +438,66 @@ export default (app: Elysia) =>
             settlementId: null,
           },
           include: { method: true },
-        })
-        
-        let pendingAmount = 0
+        });
+
+        let pendingAmount = 0;
         for (const tx of pendingTransactions) {
           if (tx.rate && tx.method) {
-            const netAmount = tx.amount - (tx.amount * tx.method.commissionPayin) / 100
-            pendingAmount += netAmount / tx.rate
+            const netAmount =
+              tx.amount - (tx.amount * tx.method.commissionPayin) / 100;
+            pendingAmount += netAmount / tx.rate;
           }
         }
-        
+
         return {
-          settlements: merchant.settlements.map(s => ({
+          settlements: merchant.settlements.map((s) => ({
             id: s.id,
             amount: s.amount,
             createdAt: s.createdAt.toISOString(),
-            transactionCount: s._count.transactions
+            transactionCount: s._count.transactions,
           })),
-          pendingAmount
-        }
+          pendingAmount,
+        };
       },
       {
-        tags: ['admin'],
-        detail: { summary: 'Получить сеттлы мерчанта' },
+        tags: ["admin"],
+        detail: { summary: "Получить сеттлы мерчанта" },
         headers: AuthHeader,
         params: t.Object({ id: t.String() }),
         response: {
           200: t.Object({
-            settlements: t.Array(t.Object({
-              id: t.String(),
-              amount: t.Number(),
-              createdAt: t.String(),
-              transactionCount: t.Number(),
-            })),
+            settlements: t.Array(
+              t.Object({
+                id: t.String(),
+                amount: t.Number(),
+                createdAt: t.String(),
+                transactionCount: t.Number(),
+              })
+            ),
             pendingAmount: t.Number(),
           }),
-          404: ErrorSchema
-        }
+          404: ErrorSchema,
+        },
       }
     )
 
     /* ───────── GET /admin/merchant/:id ───────── */
     .get(
-      '/:id',
+      "/:id",
       async ({ params: { id }, error }) => {
         const merchant = await db.merchant.findUnique({
           where: { id },
           include: {
             merchantMethods: {
               include: {
-                method: true
-              }
-            }
-          }
-        })
-        
-        if (!merchant) return error(404, { error: 'Мерчант не найден' })
-        
+                method: true,
+              },
+            },
+          },
+        });
+
+        if (!merchant) return error(404, { error: "Мерчант не найден" });
+
         // Рассчитываем рублевый баланс
         const successfulTransactions = await db.transaction.findMany({
           where: {
@@ -445,9 +531,10 @@ export default (app: Elysia) =>
 
         // Добавляем транзакции
         for (const tx of successfulTransactions) {
-          const commission = tx.type === TransactionType.IN 
-            ? tx.method.commissionPayin 
-            : tx.method.commissionPayout;
+          const commission =
+            tx.type === TransactionType.IN
+              ? tx.method.commissionPayin
+              : tx.method.commissionPayout;
           const netAmount = tx.amount * (1 - commission / 100);
           balanceRub += netAmount;
         }
@@ -457,13 +544,14 @@ export default (app: Elysia) =>
           const netAmount = payout.amount * (1 + payout.feePercent / 100);
           balanceRub -= netAmount; // Выплаты уменьшают баланс
         }
-        
+
         return {
           ...toISO(merchant),
           apiKeyPublic: merchant.apiKeyPublic,
           apiKeyPrivate: merchant.apiKeyPrivate,
+          countInRubEquivalent: merchant.countInRubEquivalent,
           balanceRub: Math.round(balanceRub * 100) / 100,
-          merchantMethods: merchant.merchantMethods.map(mm => ({
+          merchantMethods: merchant.merchantMethods.map((mm) => ({
             id: mm.id,
             isEnabled: mm.isEnabled,
             method: {
@@ -472,15 +560,16 @@ export default (app: Elysia) =>
               name: mm.method.name,
               type: mm.method.type,
               currency: mm.method.currency,
-            }
-          }))
-        }
+            },
+          })),
+        };
       },
       {
-        tags: ['admin'],
-        detail: { summary: 'Получить мерчанта с методами' },
+        tags: ["admin"],
+        detail: { summary: "Получить мерчанта с методами" },
         headers: AuthHeader,
         params: t.Object({ id: t.String() }),
+
         response: {
           200: t.Object({
             id: t.String(),
@@ -490,35 +579,41 @@ export default (app: Elysia) =>
             apiKeyPrivate: t.Nullable(t.String()),
             disabled: t.Boolean(),
             banned: t.Boolean(),
+            countInRubEquivalent: t.Boolean(),
             balanceUsdt: t.Number(),
             balanceRub: t.Number(),
             createdAt: t.String(),
-            merchantMethods: t.Array(t.Object({
-              id: t.String(),
-              isEnabled: t.Boolean(),
-              method: t.Object({
+            merchantMethods: t.Array(
+              t.Object({
                 id: t.String(),
-                code: t.String(),
-                name: t.String(),
-                type: t.String(),
-                currency: t.String(),
+
+                isEnabled: t.Boolean(),
+                method: t.Object({
+                  id: t.String(),
+                  code: t.String(),
+                  name: t.String(),
+                  type: t.String(),
+                  currency: t.String(),
+                }),
               })
-            }))
+            ),
           }),
-          404: ErrorSchema
-        }
+          404: ErrorSchema,
+        },
       }
     )
 
     /* ───────── POST /admin/merchant/:id/methods ───────── */
     .post(
-      '/:id/methods',
+      "/:id/methods",
       async ({ params: { id }, body, error }) => {
-        const merchant = await db.merchant.findUnique({ where: { id } })
-        if (!merchant) return error(404, { error: 'Мерчант не найден' })
+        const merchant = await db.merchant.findUnique({ where: { id } });
+        if (!merchant) return error(404, { error: "Мерчант не найден" });
 
-        const method = await db.method.findUnique({ where: { id: body.methodId } })
-        if (!method) return error(404, { error: 'Метод не найден' })
+        const method = await db.method.findUnique({
+          where: { id: body.methodId },
+        });
+        if (!method) return error(404, { error: "Метод не найден" });
 
         try {
           const merchantMethod = await db.merchantMethod.create({
@@ -528,9 +623,9 @@ export default (app: Elysia) =>
               isEnabled: body.isEnabled ?? true,
             },
             include: {
-              method: true
-            }
-          })
+              method: true,
+            },
+          });
 
           return {
             id: merchantMethod.id,
@@ -541,23 +636,23 @@ export default (app: Elysia) =>
               name: merchantMethod.method.name,
               type: merchantMethod.method.type,
               currency: merchantMethod.method.currency,
-            }
-          }
+            },
+          };
         } catch (e) {
           if (
             e instanceof Prisma.PrismaClientKnownRequestError &&
-            e.code === 'P2002'
+            e.code === "P2002"
           )
-            return error(409, { error: 'Метод уже привязан к мерчанту' })
-          throw e
+            return error(409, { error: "Метод уже привязан к мерчанту" });
+          throw e;
         }
       },
       {
-        tags: ['admin'],
-        detail: { summary: 'Добавить метод к мерчанту' },
+        tags: ["admin"],
+        detail: { summary: "Добавить метод к мерчанту" },
         headers: AuthHeader,
         params: t.Object({ id: t.String() }),
-        body: t.Object({ 
+        body: t.Object({
           methodId: t.String(),
           isEnabled: t.Optional(t.Boolean()),
         }),
@@ -571,64 +666,64 @@ export default (app: Elysia) =>
               name: t.String(),
               type: t.String(),
               currency: t.String(),
-            })
+            }),
           }),
           404: ErrorSchema,
-          409: ErrorSchema
-        }
+          409: ErrorSchema,
+        },
       }
     )
 
     /* ───────── DELETE /admin/merchant/:id/methods/:methodId ───────── */
     .delete(
-      '/:id/methods/:methodId',
+      "/:id/methods/:methodId",
       async ({ params: { id, methodId }, error }) => {
         try {
           await db.merchantMethod.delete({
             where: {
               merchantId_methodId: {
                 merchantId: id,
-                methodId: methodId
-              }
-            }
-          })
-          return { ok: true }
+                methodId: methodId,
+              },
+            },
+          });
+          return { ok: true };
         } catch (e) {
           if (
             e instanceof Prisma.PrismaClientKnownRequestError &&
-            e.code === 'P2025'
+            e.code === "P2025"
           )
-            return error(404, { error: 'Связь мерчант-метод не найдена' })
-          throw e
+            return error(404, { error: "Связь мерчант-метод не найдена" });
+          throw e;
         }
       },
       {
-        tags: ['admin'],
-        detail: { summary: 'Удалить метод у мерчанта' },
+        tags: ["admin"],
+        detail: { summary: "Удалить метод у мерчанта" },
         headers: AuthHeader,
         params: t.Object({ id: t.String(), methodId: t.String() }),
         response: {
           200: t.Object({ ok: t.Boolean() }),
-          404: ErrorSchema
-        }
+          404: ErrorSchema,
+        },
       }
     )
 
     /* ───────── PUT /admin/merchant/:id/methods/:methodId ───────── */
     .put(
-      '/:id/methods/:methodId',
+      "/:id/methods/:methodId",
       async ({ params: { id, methodId }, body, error }) => {
         try {
           const merchantMethod = await db.merchantMethod.update({
             where: {
               merchantId_methodId: {
                 merchantId: id,
-                methodId: methodId
-              }
+                methodId: methodId,
+              },
             },
             data: { isEnabled: body.isEnabled },
-            include: { method: true }
-          })
+            include: { method: true },
+          });
 
           return {
             id: merchantMethod.id,
@@ -639,20 +734,20 @@ export default (app: Elysia) =>
               name: merchantMethod.method.name,
               type: merchantMethod.method.type,
               currency: merchantMethod.method.currency,
-            }
-          }
+            },
+          };
         } catch (e) {
           if (
             e instanceof Prisma.PrismaClientKnownRequestError &&
-            e.code === 'P2025'
+            e.code === "P2025"
           )
-            return error(404, { error: 'Связь мерчант-метод не найдена' })
-          throw e
+            return error(404, { error: "Связь мерчант-метод не найдена" });
+          throw e;
         }
       },
       {
-        tags: ['admin'],
-        detail: { summary: 'Обновить метод мерчанта' },
+        tags: ["admin"],
+        detail: { summary: "Обновить метод мерчанта" },
         headers: AuthHeader,
         params: t.Object({ id: t.String(), methodId: t.String() }),
         body: t.Object({ isEnabled: t.Boolean() }),
@@ -666,63 +761,69 @@ export default (app: Elysia) =>
               name: t.String(),
               type: t.String(),
               currency: t.String(),
-            })
+            }),
           }),
-          404: ErrorSchema
-        }
+          404: ErrorSchema,
+        },
       }
     )
 
     /* ───────── GET /admin/merchant/:id/milk-deals ───────── */
     .get(
-      '/:id/milk-deals',
+      "/:id/milk-deals",
       async ({ params: { id }, query, error }) => {
-        const merchant = await db.merchant.findUnique({ where: { id } })
-        if (!merchant) return error(404, { error: 'Мерчант не найден' })
+        const merchant = await db.merchant.findUnique({ where: { id } });
+        if (!merchant) return error(404, { error: "Мерчант не найден" });
 
         // Build filters
         const where: any = {
           merchantId: id,
           type: TransactionType.IN,
           status: Status.MILK,
-        }
+        };
 
         // Add filters
         if (query.startDate) {
-          where.createdAt = { ...where.createdAt, gte: new Date(query.startDate) }
+          where.createdAt = {
+            ...where.createdAt,
+            gte: new Date(query.startDate),
+          };
         }
         if (query.endDate) {
-          where.createdAt = { ...where.createdAt, lte: new Date(query.endDate) }
+          where.createdAt = {
+            ...where.createdAt,
+            lte: new Date(query.endDate),
+          };
         }
         if (query.amountMin) {
-          where.amount = { ...where.amount, gte: query.amountMin }
+          where.amount = { ...where.amount, gte: query.amountMin };
         }
         if (query.amountMax) {
-          where.amount = { ...where.amount, lte: query.amountMax }
+          where.amount = { ...where.amount, lte: query.amountMax };
         }
         if (query.currency) {
-          where.currency = query.currency
+          where.currency = query.currency;
         }
         if (query.txId) {
-          where.orderId = { contains: query.txId }
+          where.orderId = { contains: query.txId };
         }
 
         // Determine reason based on query
-        let reasonFilter: any = {}
-        if (query.reason === 'provider') {
+        let reasonFilter: any = {};
+        if (query.reason === "provider") {
           // FAIL_PROVIDER: client didn't pay, no requisites issued
           reasonFilter = {
             requisites: null,
-          }
-        } else if (query.reason === 'aggregator') {
+          };
+        } else if (query.reason === "aggregator") {
           // FAIL_AGGREGATOR: requisites issued but not paid
           reasonFilter = {
             requisites: { isNot: null },
-          }
+          };
         }
         // If reason === 'success' or not specified, include all MILK deals
 
-        const finalWhere = { ...where, ...reasonFilter }
+        const finalWhere = { ...where, ...reasonFilter };
 
         // Get total counts for each category
         const [totalProvider, totalAggregator, totalAll] = await Promise.all([
@@ -732,7 +833,7 @@ export default (app: Elysia) =>
               type: TransactionType.IN,
               status: Status.MILK,
               requisites: null,
-            }
+            },
           }),
           db.transaction.count({
             where: {
@@ -740,21 +841,21 @@ export default (app: Elysia) =>
               type: TransactionType.IN,
               status: Status.MILK,
               requisites: { isNot: null },
-            }
+            },
           }),
           db.transaction.count({
             where: {
               merchantId: id,
               type: TransactionType.IN,
               status: Status.MILK,
-            }
+            },
           }),
-        ])
+        ]);
 
         // Pagination
-        const page = query.page || 1
-        const pageSize = query.pageSize || 50
-        const skip = (page - 1) * pageSize
+        const page = query.page || 1;
+        const pageSize = query.pageSize || 50;
+        const skip = (page - 1) * pageSize;
 
         // Get paginated data
         const [transactions, total] = await Promise.all([
@@ -768,23 +869,23 @@ export default (app: Elysia) =>
                   id: true,
                   name: true,
                   email: true,
-                }
-              }
+                },
+              },
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: "desc" },
             skip,
             take: pageSize,
           }),
-          db.transaction.count({ where: finalWhere })
-        ])
+          db.transaction.count({ where: finalWhere }),
+        ]);
 
         // Determine reason for each transaction
-        const deals = transactions.map(tx => {
-          let reason: string = 'SUCCESS'
+        const deals = transactions.map((tx) => {
+          let reason: string = "SUCCESS";
           if (!tx.requisites) {
-            reason = 'FAIL_PROVIDER'
+            reason = "FAIL_PROVIDER";
           } else {
-            reason = 'FAIL_AGGREGATOR'
+            reason = "FAIL_AGGREGATOR";
           }
 
           return {
@@ -792,26 +893,30 @@ export default (app: Elysia) =>
             numericId: tx.numericId,
             orderId: tx.orderId,
             amount: tx.amount,
-            currency: tx.currency || 'RUB',
+            currency: tx.currency || "RUB",
             status: tx.status,
             reason,
             clientName: tx.clientName,
             userIp: tx.userIp,
-            method: tx.method ? {
-              id: tx.method.id,
-              code: tx.method.code,
-              name: tx.method.name,
-            } : null,
+            method: tx.method
+              ? {
+                  id: tx.method.id,
+                  code: tx.method.code,
+                  name: tx.method.name,
+                }
+              : null,
             trader: tx.trader,
-            requisites: tx.requisites ? {
-              id: tx.requisites.id,
-              cardNumber: tx.requisites.cardNumber,
-              bankType: tx.requisites.bankType,
-            } : null,
+            requisites: tx.requisites
+              ? {
+                  id: tx.requisites.id,
+                  cardNumber: tx.requisites.cardNumber,
+                  bankType: tx.requisites.bankType,
+                }
+              : null,
             createdAt: tx.createdAt.toISOString(),
             expiredAt: tx.expired_at.toISOString(),
-          }
-        })
+          };
+        });
 
         return {
           statistics: {
@@ -826,16 +931,22 @@ export default (app: Elysia) =>
             pageSize,
             total,
             totalPages: Math.ceil(total / pageSize),
-          }
-        }
+          },
+        };
       },
       {
-        tags: ['admin'],
-        detail: { summary: 'Получить milk deals мерчанта' },
+        tags: ["admin"],
+        detail: { summary: "Получить milk deals мерчанта" },
         headers: AuthHeader,
         params: t.Object({ id: t.String() }),
         query: t.Object({
-          reason: t.Optional(t.Union([t.Literal('provider'), t.Literal('aggregator'), t.Literal('success')])),
+          reason: t.Optional(
+            t.Union([
+              t.Literal("provider"),
+              t.Literal("aggregator"),
+              t.Literal("success"),
+            ])
+          ),
           startDate: t.Optional(t.String()),
           endDate: t.Optional(t.String()),
           amountMin: t.Optional(t.Number()),
@@ -853,34 +964,42 @@ export default (app: Elysia) =>
               success: t.Number(),
               total: t.Number(),
             }),
-            deals: t.Array(t.Object({
-              id: t.String(),
-              numericId: t.Number(),
-              orderId: t.String(),
-              amount: t.Number(),
-              currency: t.String(),
-              status: t.String(),
-              reason: t.String(),
-              clientName: t.String(),
-              userIp: t.Nullable(t.String()),
-              method: t.Nullable(t.Object({
+            deals: t.Array(
+              t.Object({
                 id: t.String(),
-                code: t.String(),
-                name: t.String(),
-              })),
-              trader: t.Nullable(t.Object({
-                id: t.String(),
-                name: t.String(),
-                email: t.String(),
-              })),
-              requisites: t.Nullable(t.Object({
-                id: t.String(),
-                cardNumber: t.String(),
-                bankType: t.String(),
-              })),
-              createdAt: t.String(),
-              expiredAt: t.String(),
-            })),
+                numericId: t.Number(),
+                orderId: t.String(),
+                amount: t.Number(),
+                currency: t.String(),
+                status: t.String(),
+                reason: t.String(),
+                clientName: t.String(),
+                userIp: t.Nullable(t.String()),
+                method: t.Nullable(
+                  t.Object({
+                    id: t.String(),
+                    code: t.String(),
+                    name: t.String(),
+                  })
+                ),
+                trader: t.Nullable(
+                  t.Object({
+                    id: t.String(),
+                    name: t.String(),
+                    email: t.String(),
+                  })
+                ),
+                requisites: t.Nullable(
+                  t.Object({
+                    id: t.String(),
+                    cardNumber: t.String(),
+                    bankType: t.String(),
+                  })
+                ),
+                createdAt: t.String(),
+                expiredAt: t.String(),
+              })
+            ),
             pagination: t.Object({
               page: t.Number(),
               pageSize: t.Number(),
@@ -888,28 +1007,34 @@ export default (app: Elysia) =>
               totalPages: t.Number(),
             }),
           }),
-          404: ErrorSchema
-        }
+          404: ErrorSchema,
+        },
       }
     )
 
     /* ───────── GET /admin/merchant/:id/extra-settlements ───────── */
     .get(
-      '/:id/extra-settlements',
+      "/:id/extra-settlements",
       async ({ params: { id }, query, error }) => {
-        const merchant = await db.merchant.findUnique({ where: { id } })
-        if (!merchant) return error(404, { error: 'Мерчант не найден' })
+        const merchant = await db.merchant.findUnique({ where: { id } });
+        if (!merchant) return error(404, { error: "Мерчант не найден" });
 
-        const page = query.page || 1
-        const pageSize = query.pageSize || 50
-        const skip = (page - 1) * pageSize
+        const page = query.page || 1;
+        const pageSize = query.pageSize || 50;
+        const skip = (page - 1) * pageSize;
 
-        const where: any = { merchantId: id }
+        const where: any = { merchantId: id };
         if (query.startDate) {
-          where.createdAt = { ...where.createdAt, gte: new Date(query.startDate) }
+          where.createdAt = {
+            ...where.createdAt,
+            gte: new Date(query.startDate),
+          };
         }
         if (query.endDate) {
-          where.createdAt = { ...where.createdAt, lte: new Date(query.endDate) }
+          where.createdAt = {
+            ...where.createdAt,
+            lte: new Date(query.endDate),
+          };
         }
 
         const [settlements, total] = await Promise.all([
@@ -922,22 +1047,22 @@ export default (app: Elysia) =>
                   numericId: true,
                   amount: true,
                   status: true,
-                }
-              }
+                },
+              },
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: "desc" },
             skip,
             take: pageSize,
           }),
-          db.merchantSettlement.count({ where })
-        ])
+          db.merchantSettlement.count({ where }),
+        ]);
 
         return {
-          settlements: settlements.map(s => ({
+          settlements: settlements.map((s) => ({
             id: s.id,
             amount: s.amount,
             transactionCount: s.transactions.length,
-            reason: 'manual', // или другое поле если добавите в схему
+            reason: "manual", // или другое поле если добавите в схему
             createdAt: s.createdAt.toISOString(),
           })),
           pagination: {
@@ -945,12 +1070,12 @@ export default (app: Elysia) =>
             pageSize,
             total,
             totalPages: Math.ceil(total / pageSize),
-          }
-        }
+          },
+        };
       },
       {
-        tags: ['admin'],
-        detail: { summary: 'Получить дополнительные сеттлы мерчанта' },
+        tags: ["admin"],
+        detail: { summary: "Получить дополнительные сеттлы мерчанта" },
         headers: AuthHeader,
         params: t.Object({ id: t.String() }),
         query: t.Object({
@@ -961,13 +1086,15 @@ export default (app: Elysia) =>
         }),
         response: {
           200: t.Object({
-            settlements: t.Array(t.Object({
-              id: t.String(),
-              amount: t.Number(),
-              transactionCount: t.Number(),
-              reason: t.String(),
-              createdAt: t.String(),
-            })),
+            settlements: t.Array(
+              t.Object({
+                id: t.String(),
+                amount: t.Number(),
+                transactionCount: t.Number(),
+                reason: t.String(),
+                createdAt: t.String(),
+              })
+            ),
             pagination: t.Object({
               page: t.Number(),
               pageSize: t.Number(),
@@ -975,35 +1102,404 @@ export default (app: Elysia) =>
               totalPages: t.Number(),
             }),
           }),
-          404: ErrorSchema
+          404: ErrorSchema,
+        },
+      }
+    )
+
+    /* ───────── GET /admin/merchant/:id/transactions ───────── */
+    .get(
+      "/:id/transactions",
+      async ({ params: { id }, query, error }) => {
+        const merchant = await db.merchant.findUnique({ where: { id } });
+        if (!merchant) return error(404, { error: "Мерчант не найден" });
+
+        const page = query.page || 1;
+        const pageSize = query.pageSize || 50;
+        const skip = (page - 1) * pageSize;
+
+        const where: any = {
+          merchantId: id,
+          type: TransactionType.IN,
+        };
+
+        if (query.status) {
+          where.status = query.status;
         }
+        if (query.startDate) {
+          where.createdAt = {
+            ...where.createdAt,
+            gte: new Date(query.startDate),
+          };
+        }
+        if (query.endDate) {
+          where.createdAt = {
+            ...where.createdAt,
+            lte: new Date(query.endDate),
+          };
+        }
+
+        const [transactions, total] = await Promise.all([
+          db.transaction.findMany({
+            where,
+            include: {
+              method: true,
+              trader: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+              requisites: {
+                select: {
+                  id: true,
+                  cardNumber: true,
+                  bankType: true,
+                  recipientName: true,
+                },
+              },
+            },
+            orderBy: { createdAt: "desc" },
+            skip,
+            take: pageSize,
+          }),
+          db.transaction.count({ where }),
+        ]);
+
+        // Get last completed settle request to filter transactions
+        const lastCompletedSettle = await db.settleRequest.findFirst({
+          where: {
+            merchantId: id,
+            status: SettleRequestStatus.COMPLETED,
+          },
+          orderBy: { createdAt: "desc" },
+          select: { createdAt: true },
+        });
+
+        // Filter for transactions after last settle
+        const dateFilter = lastCompletedSettle?.createdAt
+          ? { createdAt: { gt: lastCompletedSettle.createdAt } }
+          : {};
+
+        // Calculate totals for balance formula
+
+        const [successfulTransactions, successfulPayouts] = await Promise.all([
+          db.transaction.findMany({
+            where: {
+              merchantId: id,
+              status: Status.READY,
+              type: TransactionType.IN,
+              ...dateFilter,
+            },
+            include: { method: true },
+          }),
+          db.payout.findMany({
+            where: {
+              merchantId: id,
+              status: PayoutStatus.COMPLETED,
+              ...dateFilter,
+            },
+            include: { method: { select: { commissionPayout: true } } },
+          }),
+        ]);
+
+        // Get rate settings for methods
+        const methodIds = [
+          ...new Set(
+            successfulTransactions.map((tx) => tx.method?.id).filter(Boolean)
+          ),
+        ];
+        const rateSettings = await db.rateSettings.findMany({
+          where: { methodId: { in: methodIds } },
+        });
+        const rateSettingsMap = new Map(
+          rateSettings.map((rs) => [rs.methodId, rs])
+        );
+
+        // Calculate sums for balance formula
+
+        let totalSuccessfulDealsUsdt = 0;
+        let platformCommissionDeals = 0;
+        let netBalanceUsdt = 0; // Track net balance separately to match merchant dashboard
+
+        let totalDealsRub = 0;
+        let platformCommissionDealsRub = 0;
+        let netBalanceRub = 0;
+
+        for (const tx of successfulTransactions) {
+          // If merchantRate is null, calculate effective rate using formula
+          let effectiveRate = tx.merchantRate;
+          if (!tx.merchantRate && tx.rate && tx.method) {
+            // s0 = s / (1 + (p/100)), where s = rate, p = kkkPercent from RateSettings
+            const rateSetting = rateSettingsMap.get(tx.method.id);
+            const kkkPercent = rateSetting?.kkkPercent || 0;
+            effectiveRate = tx.rate / (1 + kkkPercent / 100);
+          }
+
+          const commissionRub = tx.amount * (tx.method.commissionPayin / 100);
+          const netRub = tx.amount - commissionRub;
+
+          totalDealsRub += tx.amount;
+          platformCommissionDealsRub += commissionRub;
+          netBalanceRub += netRub;
+
+          if (
+            !merchant.countInRubEquivalent &&
+            effectiveRate &&
+            effectiveRate > 0
+          ) {
+            const dealUsdt = tx.amount / effectiveRate;
+            const commissionUsdt = dealUsdt * (tx.method.commissionPayin / 100);
+            const netUsdt = dealUsdt - commissionUsdt;
+
+            // Truncate to 2 decimal places for each transaction separately (same as merchant dashboard)
+            const truncatedDealUsdt = roundDown2(dealUsdt);
+            const truncatedCommissionUsdt = roundDown2(commissionUsdt);
+            const truncatedNetUsdt = roundDown2(netUsdt);
+
+            totalSuccessfulDealsUsdt += truncatedDealUsdt;
+            platformCommissionDeals += truncatedCommissionUsdt;
+            netBalanceUsdt += truncatedNetUsdt;
+          }
+        }
+
+        let totalPayoutsUsdt = 0;
+        let platformCommissionPayouts = 0;
+
+        let totalPayoutsRub = 0;
+        let platformCommissionPayoutsRub = 0;
+
+        for (const payout of successfulPayouts) {
+          const commissionPercent =
+            payout.method?.commissionPayout ?? payout.feePercent ?? 0;
+          const commissionRub = payout.amount * (commissionPercent / 100);
+          const totalRub = payout.amount + commissionRub;
+
+          totalPayoutsRub += payout.amount;
+          platformCommissionPayoutsRub += commissionRub;
+          netBalanceRub -= totalRub;
+
+          if (!merchant.countInRubEquivalent) {
+            const payoutUsdt = payout.amountUsdt || 0;
+            const commissionUsdt = payoutUsdt * (commissionPercent / 100);
+
+            // Truncate payouts too
+            const truncatedPayoutUsdt = roundDown2(payoutUsdt);
+            const truncatedCommissionUsdt = roundDown2(commissionUsdt);
+
+            totalPayoutsUsdt += truncatedPayoutUsdt;
+            platformCommissionPayouts += truncatedCommissionUsdt;
+            netBalanceUsdt -= truncatedPayoutUsdt + truncatedCommissionUsdt;
+          }
+        }
+
+        // Use net balances which match merchant dashboard calculation
+        const currentBalance = merchant.countInRubEquivalent
+          ? 0
+          : netBalanceUsdt;
+        const currentBalanceRub = roundDown2(netBalanceRub);
+
+        // Get rate settings for transaction methods
+        const txMethodIds = [
+          ...new Set(transactions.map((tx) => tx.method?.id).filter(Boolean)),
+        ];
+        const txRateSettings = await db.rateSettings.findMany({
+          where: { methodId: { in: txMethodIds } },
+        });
+        const txRateSettingsMap = new Map(
+          txRateSettings.map((rs) => [rs.methodId, rs])
+        );
+
+        return {
+          transactions: transactions.map((tx) => {
+            // Calculate effective rate with formula if merchantRate is null
+            let effectiveRate = tx.merchantRate;
+            let isRecalculated = false;
+
+            if (!tx.merchantRate && tx.rate && tx.method) {
+              // s0 = s / (1 + (p/100)), where s = rate, p = kkkPercent from RateSettings
+              const rateSetting = txRateSettingsMap.get(tx.method.id);
+              const kkkPercent = rateSetting?.kkkPercent || 0;
+              effectiveRate = tx.rate / (1 + kkkPercent / 100);
+              isRecalculated = true;
+            }
+
+            const usdtAmount =
+              effectiveRate && effectiveRate > 0
+                ? tx.amount / effectiveRate
+                : 0;
+            const commission =
+              tx.method && usdtAmount > 0
+                ? usdtAmount * (tx.method.commissionPayin / 100)
+                : 0;
+            const merchantBalance = usdtAmount - commission;
+
+            return {
+              id: tx.id,
+              numericId: tx.numericId,
+              orderId: tx.orderId,
+              amount: tx.amount,
+              rate: tx.rate,
+              merchantRate: tx.merchantRate,
+              effectiveRate,
+              isRecalculated,
+              usdtAmount,
+              commission,
+              merchantBalance,
+              status: tx.status,
+              method: tx.method
+                ? {
+                    id: tx.method.id,
+                    code: tx.method.code,
+                    name: tx.method.name,
+                    commissionPayin: tx.method.commissionPayin,
+                  }
+                : null,
+              trader: tx.trader,
+              requisites: tx.requisites,
+              createdAt: tx.createdAt.toISOString(),
+              updatedAt: tx.updatedAt.toISOString(),
+            };
+          }),
+
+          balanceFormula: {
+            totalSuccessfulDealsUsdt: merchant.countInRubEquivalent
+              ? undefined
+              : totalSuccessfulDealsUsdt,
+            platformCommissionDeals: merchant.countInRubEquivalent
+              ? undefined
+              : platformCommissionDeals,
+            totalPayoutsUsdt: merchant.countInRubEquivalent
+              ? undefined
+              : totalPayoutsUsdt,
+            platformCommissionPayouts: merchant.countInRubEquivalent
+              ? undefined
+              : platformCommissionPayouts,
+            currentBalance: merchant.countInRubEquivalent
+              ? undefined
+              : currentBalance,
+            totalSuccessfulDealsRub: totalDealsRub,
+            platformCommissionDealsRub: platformCommissionDealsRub,
+            totalPayoutsRub: totalPayoutsRub,
+            platformCommissionPayoutsRub: platformCommissionPayoutsRub,
+            currentBalanceRub,
+            currency: merchant.countInRubEquivalent ? "RUB" : "USDT",
+          },
+
+          pagination: {
+            page,
+            pageSize,
+            total,
+            totalPages: Math.ceil(total / pageSize),
+          },
+        };
+      },
+      {
+        tags: ["admin"],
+        detail: { summary: "Получить историю транзакций мерчанта" },
+        headers: AuthHeader,
+        params: t.Object({ id: t.String() }),
+        query: t.Object({
+          status: t.Optional(t.String()),
+          startDate: t.Optional(t.String()),
+          endDate: t.Optional(t.String()),
+          page: t.Optional(t.Number({ minimum: 1 })),
+          pageSize: t.Optional(t.Number({ minimum: 1, maximum: 100 })),
+        }),
+        response: {
+          200: t.Object({
+            transactions: t.Array(
+              t.Object({
+                id: t.String(),
+                numericId: t.Number(),
+                orderId: t.String(),
+                amount: t.Number(),
+                rate: t.Nullable(t.Number()),
+                merchantRate: t.Nullable(t.Number()),
+                effectiveRate: t.Number(),
+                usdtAmount: t.Number(),
+                commission: t.Number(),
+                merchantBalance: t.Number(),
+                status: t.String(),
+                method: t.Nullable(
+                  t.Object({
+                    id: t.String(),
+                    code: t.String(),
+                    name: t.String(),
+                    commissionPayin: t.Number(),
+                  })
+                ),
+                trader: t.Nullable(
+                  t.Object({
+                    id: t.String(),
+                    name: t.String(),
+                    email: t.String(),
+                  })
+                ),
+                requisites: t.Nullable(
+                  t.Object({
+                    id: t.String(),
+                    cardNumber: t.String(),
+                    bankType: t.String(),
+                    recipientName: t.String(),
+                  })
+                ),
+                createdAt: t.String(),
+                updatedAt: t.String(),
+              })
+            ),
+
+            balanceFormula: t.Object({
+              totalSuccessfulDealsUsdt: t.Optional(t.Number()),
+              platformCommissionDeals: t.Optional(t.Number()),
+              totalPayoutsUsdt: t.Optional(t.Number()),
+              platformCommissionPayouts: t.Optional(t.Number()),
+              currentBalance: t.Optional(t.Number()),
+              totalSuccessfulDealsRub: t.Number(),
+              platformCommissionDealsRub: t.Number(),
+              totalPayoutsRub: t.Number(),
+              platformCommissionPayoutsRub: t.Number(),
+              currentBalanceRub: t.Number(),
+              currency: t.String(),
+            }),
+
+            pagination: t.Object({
+              page: t.Number(),
+              pageSize: t.Number(),
+              total: t.Number(),
+              totalPages: t.Number(),
+            }),
+          }),
+          404: ErrorSchema,
+        },
       }
     )
 
     /* ───────── DELETE /admin/merchant/delete ───────── */
     .delete(
-      '/delete',
+      "/delete",
       async ({ body, error }) => {
         try {
-          await db.merchant.delete({ where: { id: body.id } })
-          return { ok: true }
+          await db.merchant.delete({ where: { id: body.id } });
+          return { ok: true };
         } catch (e) {
           if (
             e instanceof Prisma.PrismaClientKnownRequestError &&
-            e.code === 'P2025'
+            e.code === "P2025"
           )
-            return error(404, { error: 'Мерчант не найден' })
-          throw e
+            return error(404, { error: "Мерчант не найден" });
+          throw e;
         }
       },
       {
-        tags: ['admin'],
-        detail: { summary: 'Удалить мерчанта' },
+        tags: ["admin"],
+        detail: { summary: "Удалить мерчанта" },
         headers: AuthHeader,
         body: t.Object({ id: t.String() }),
         response: {
           200: t.Object({ ok: t.Boolean() }),
-          404: ErrorSchema
-        }
+          404: ErrorSchema,
+        },
       }
-    )
+    );

@@ -127,7 +127,7 @@ async function quickPopulate() {
           userId: merchantUser.id,
           isActive: true,
           domain: 'test.com',
-          apiKey: 'test-api-key',
+          token: 'test-api-key',
           callbackUrl: 'https://test.com/callback',
           successUrl: 'https://test.com/success',
           failUrl: 'https://test.com/fail'

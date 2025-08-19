@@ -319,9 +319,12 @@ export default (app: Elysia) =>
             }
           })
 
-          // Update payout status based on resolution
+          // Update payout status based on resolution and handle frozen funds
+          const payout = dispute.payout;
+          const frozenAmountRub = payout.amount || 0;
+
           if (body.inFavorOf === 'MERCHANT') {
-            // In favor of merchant - payout is rejected
+            // In favor of merchant - payout is rejected, return frozen funds to trader
             await tx.payout.update({
               where: { id: dispute.payoutId },
               data: {
@@ -330,8 +333,22 @@ export default (app: Elysia) =>
                 rejectionReason: `Спор разрешен в пользу мерчанта. ${body.resolution || ''}`,
               }
             })
+
+            // Return frozen funds to trader's balances
+            if (frozenAmountRub > 0 && payout.traderId) {
+              await tx.user.update({
+                where: { id: payout.traderId },
+                data: {
+                  frozenRub: { decrement: frozenAmountRub },
+                  balanceRub: { increment: frozenAmountRub },
+                  frozenPayoutBalance: { decrement: frozenAmountRub },
+                  payoutBalance: { increment: frozenAmountRub }
+                }
+              });
+              console.log(`[WithdrawalDisputeResolution] Merchant won: returned ${frozenAmountRub} RUB to trader ${payout.traderId}`);
+            }
           } else {
-            // In favor of trader - payout is completed
+            // In favor of trader - payout is completed, remove frozen funds (payout succeeds)
             await tx.payout.update({
               where: { id: dispute.payoutId },
               data: {
@@ -339,6 +356,18 @@ export default (app: Elysia) =>
                 completedAt: new Date(),
               }
             })
+
+            // Remove frozen funds without returning to balance (payout goes through)
+            if (frozenAmountRub > 0 && payout.traderId) {
+              await tx.user.update({
+                where: { id: payout.traderId },
+                data: {
+                  frozenRub: { decrement: frozenAmountRub },
+                  frozenPayoutBalance: { decrement: frozenAmountRub }
+                }
+              });
+              console.log(`[WithdrawalDisputeResolution] Trader won: completed payout of ${frozenAmountRub} RUB for trader ${payout.traderId}`);
+            }
           }
         })
 

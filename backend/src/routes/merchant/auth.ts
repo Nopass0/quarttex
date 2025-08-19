@@ -2,6 +2,7 @@ import { Elysia, t } from "elysia";
 import { db } from "@/db";
 import ErrorSchema from "@/types/error";
 import crypto from "crypto";
+import { authenticator } from "otplib";
 
 /**
  * Маршруты для аутентификации мерчантов
@@ -13,13 +14,44 @@ export default (app: Elysia) =>
     .post(
       "/login",
       async ({ body, error, set }) => {
-        // Поиск мерчанта по токену
-        const merchant = await db.merchant.findUnique({
-          where: { token: body.token },
+        // Проверяем токен сотрудника
+        const staff = await db.merchantStaff.findFirst({
+          where: { token: body.token, isActive: true },
         });
 
-        if (!merchant) {
-          return error(401, { error: "Неверный токен" });
+        let merchant;
+        let role: "owner" | "staff" = "owner";
+        let staffId: string | null = null;
+        let rights = {
+          can_settle: true,
+          can_view_docs: true,
+          can_view_token: true,
+          can_manage_disputes: true,
+        };
+
+        if (staff) {
+          merchant = await db.merchant.findUnique({
+            where: { id: staff.merchantId },
+          });
+          if (!merchant) {
+            return error(401, { error: "Неверный токен" });
+          }
+          role = staff.role;
+          staffId = staff.id;
+          rights = {
+            can_settle: false,
+            can_view_docs: false,
+            can_view_token: false,
+            can_manage_disputes: true,
+          };
+        } else {
+          merchant = await db.merchant.findUnique({
+            where: { token: body.token },
+          });
+
+          if (!merchant) {
+            return error(401, { error: "Неверный токен" });
+          }
         }
 
         // Проверка статуса мерчанта
@@ -31,17 +63,47 @@ export default (app: Elysia) =>
           return error(403, { error: "Мерчант заблокирован" });
         }
 
-        // Создаем сессионный токен
+        // Если включен TOTP, запускаем двухэтапную авторизацию
+        if (merchant.totpEnabled) {
+          const challengeId = crypto.randomBytes(16).toString("hex");
+          const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+          await db.systemConfig.upsert({
+            where: { key: `merchant_totp_challenge_${challengeId}` },
+            update: { value: JSON.stringify({ merchantId: merchant.id, staffId, role, rights, expiresAt }) },
+            create: {
+              key: `merchant_totp_challenge_${challengeId}`,
+              value: JSON.stringify({ merchantId: merchant.id, staffId, role, rights, expiresAt }),
+            },
+          });
+
+          set.status = 200;
+          return {
+            success: true,
+            requiresTotp: true,
+            challengeId,
+            message: "Введите код из приложения Google Authenticator",
+          };
+        }
+
+        // Создаем сессионный токен (без TOTP)
         const sessionToken = crypto.randomBytes(32).toString("hex");
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 часа
 
-        // Сохраняем сессию в базе данных (используем модель SystemConfig для простоты)
+        // Сохраняем сессию в базе данных
+        const sessionData = {
+          merchantId: merchant.id,
+          staffId,
+          role,
+          rights,
+          expiresAt,
+        };
+
         await db.systemConfig.upsert({
           where: { key: `merchant_session_${sessionToken}` },
-          update: { value: JSON.stringify({ merchantId: merchant.id, expiresAt }) },
-          create: { 
-            key: `merchant_session_${sessionToken}`, 
-            value: JSON.stringify({ merchantId: merchant.id, expiresAt }) 
+          update: { value: JSON.stringify(sessionData) },
+          create: {
+            key: `merchant_session_${sessionToken}`,
+            value: JSON.stringify(sessionData),
           },
         });
 
@@ -64,6 +126,8 @@ export default (app: Elysia) =>
           success: true,
           sessionToken,
           expiresAt: expiresAt.toISOString(),
+          role,
+          rights,
           merchant: {
             id: merchant.id,
             name: merchant.name,
@@ -72,8 +136,8 @@ export default (app: Elysia) =>
             statistics: {
               totalTransactions,
               successfulTransactions,
-              successRate: totalTransactions > 0 
-                ? Math.round((successfulTransactions / totalTransactions) * 100) 
+              successRate: totalTransactions > 0
+                ? Math.round((successfulTransactions / totalTransactions) * 100)
                 : 0,
               totalVolume: totalVolume._sum.amount || 0,
             },
@@ -82,30 +146,91 @@ export default (app: Elysia) =>
       },
       {
         tags: ["merchant-auth"],
-        detail: { summary: "Вход в систему для мерчанта" },
-        body: t.Object({
-          token: t.String({ description: "API токен мерчанта" }),
-        }),
+        detail: { summary: "Авторизация мерчанта по токену (с TOTP при включении)" },
+        body: t.Object({ token: t.String() }),
         response: {
-          200: t.Object({
-            success: t.Boolean(),
-            sessionToken: t.String({ description: "Сессионный токен для авторизации" }),
-            expiresAt: t.String({ description: "Время истечения сессии" }),
-            merchant: t.Object({
-              id: t.String(),
-              name: t.String(),
-              balanceUsdt: t.Number(),
-              createdAt: t.String(),
-              statistics: t.Object({
-                totalTransactions: t.Number(),
-                successfulTransactions: t.Number(),
-                successRate: t.Number(),
-                totalVolume: t.Number(),
-              }),
-            }),
-          }),
+          200: t.Any(),
           401: ErrorSchema,
           403: ErrorSchema,
+        },
+      },
+    )
+
+    /* ──────── POST /merchant/auth/verify-totp ──────── */
+    .post(
+      "/verify-totp",
+      async ({ body, error, set }) => {
+        const { challengeId, code } = body as { challengeId: string; code: string };
+
+        const challengeConfig = await db.systemConfig.findUnique({
+          where: { key: `merchant_totp_challenge_${challengeId}` },
+        });
+
+        if (!challengeConfig) {
+          return error(400, { error: "Неверный или истекший челендж" });
+        }
+
+        const challenge = JSON.parse(challengeConfig.value);
+        if (new Date(challenge.expiresAt) < new Date()) {
+          await db.systemConfig.delete({ where: { key: `merchant_totp_challenge_${challengeId}` } });
+          return error(400, { error: "Челендж истек" });
+        }
+
+        const merchant = await db.merchant.findUnique({ where: { id: challenge.merchantId } });
+        if (!merchant) return error(404, { error: "Мерчант не найден" });
+        if (!merchant.totpEnabled || !merchant.totpSecret) {
+          return error(400, { error: "TOTP не настроен" });
+        }
+
+        const isValid = authenticator.verify({ token: code, secret: merchant.totpSecret });
+        if (!isValid) return error(401, { error: "Неверный код" });
+
+        // Удаляем челендж и создаем сессию
+        await db.systemConfig.delete({ where: { key: `merchant_totp_challenge_${challengeId}` } });
+
+        const sessionToken = crypto.randomBytes(32).toString("hex");
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        const sessionData = {
+          merchantId: merchant.id,
+          staffId: challenge.staffId ?? null,
+          role: challenge.role ?? "owner",
+          rights: challenge.rights ?? {},
+          expiresAt,
+        };
+
+        await db.systemConfig.upsert({
+          where: { key: `merchant_session_${sessionToken}` },
+          update: { value: JSON.stringify(sessionData) },
+          create: { key: `merchant_session_${sessionToken}`, value: JSON.stringify(sessionData) },
+        });
+
+        set.status = 200;
+        return {
+          success: true,
+          sessionToken,
+          expiresAt: expiresAt.toISOString(),
+          role: sessionData.role,
+          rights: sessionData.rights,
+          merchant: {
+            id: merchant.id,
+            name: merchant.name,
+            balanceUsdt: merchant.balanceUsdt,
+            createdAt: merchant.createdAt.toISOString(),
+          },
+        };
+      },
+      {
+        tags: ["merchant-auth"],
+        detail: { summary: "Проверка TOTP и выдача сессии" },
+        body: t.Object({
+          challengeId: t.String(),
+          code: t.String(),
+        }),
+        response: {
+          200: t.Any(),
+          400: ErrorSchema,
+          401: ErrorSchema,
+          404: ErrorSchema,
         },
       },
     )
@@ -113,39 +238,24 @@ export default (app: Elysia) =>
     /* ──────── POST /merchant/auth/logout ──────── */
     .post(
       "/logout",
-      async ({ headers, set }) => {
-        const authHeader = headers.authorization;
+      async ({ headers, set, error }) => {
+        const authHeader = headers.authorization as string | undefined;
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
-          set.status = 200;
-          return { success: true };
+          return error(401, { error: "Отсутствует токен авторизации" });
         }
-
         const sessionToken = authHeader.substring(7);
-        
-        // Удаляем сессию из базы данных
         try {
-          await db.systemConfig.delete({
-            where: { key: `merchant_session_${sessionToken}` },
-          });
-        } catch (e) {
-          // Игнорируем ошибку, если сессия не найдена
-        }
-
+          await db.systemConfig.delete({ where: { key: `merchant_session_${sessionToken}` } });
+        } catch {}
         set.status = 200;
         return { success: true };
       },
       {
         tags: ["merchant-auth"],
-        detail: { summary: "Выход из системы для мерчанта" },
-        headers: t.Object({
-          authorization: t.Optional(t.String({ description: "Bearer токен сессии" })),
-        }),
-        response: {
-          200: t.Object({
-            success: t.Boolean(),
-          }),
-        },
-      },
+        detail: { summary: "Выход мерчанта из системы" },
+        headers: t.Object({ authorization: t.String() }),
+        response: { 200: t.Object({ success: t.Boolean() }) },
+      }
     )
 
     /* ──────── GET /merchant/auth/me ──────── */
@@ -210,6 +320,7 @@ export default (app: Elysia) =>
                   name: true,
                   type: true,
                   currency: true,
+                  isEnabled: true,
                 },
               },
             },
@@ -217,19 +328,25 @@ export default (app: Elysia) =>
         ]);
 
         return {
-          id: merchant.id,
-          name: merchant.name,
-          balanceUsdt: merchant.balanceUsdt,
-          createdAt: merchant.createdAt.toISOString(),
-          statistics: {
-            totalTransactions,
-            successfulTransactions,
-            successRate: totalTransactions > 0 
-              ? Math.round((successfulTransactions / totalTransactions) * 100) 
-              : 0,
-            totalVolume: totalVolume._sum.amount || 0,
+          merchant: {
+            id: merchant.id,
+            name: merchant.name,
+            balanceUsdt: merchant.balanceUsdt,
+            countInRubEquivalent: merchant.countInRubEquivalent,
+            createdAt: merchant.createdAt.toISOString(),
+            statistics: {
+              totalTransactions,
+              successfulTransactions,
+              successRate: totalTransactions > 0
+                ? Math.round((successfulTransactions / totalTransactions) * 100)
+                : 0,
+              totalVolume: totalVolume._sum.amount || 0,
+            },
+            methods: methods.filter(mm => mm.method.isEnabled).map(mm => mm.method),
+            totpEnabled: merchant.totpEnabled,
           },
-          methods: methods.filter(mm => mm.method.isEnabled).map(mm => mm.method),
+          role: session.role,
+          rights: session.rights,
         };
       },
       {
@@ -240,25 +357,31 @@ export default (app: Elysia) =>
         }),
         response: {
           200: t.Object({
-            id: t.String(),
-            name: t.String(),
-            balanceUsdt: t.Number(),
-            createdAt: t.String(),
-            statistics: t.Object({
-              totalTransactions: t.Number(),
-              successfulTransactions: t.Number(),
-              successRate: t.Number(),
-              totalVolume: t.Number(),
+            merchant: t.Object({
+              id: t.String(),
+              name: t.String(),
+              balanceUsdt: t.Number(),
+              countInRubEquivalent: t.Boolean(),
+              createdAt: t.String(),
+              statistics: t.Object({
+                totalTransactions: t.Number(),
+                successfulTransactions: t.Number(),
+                successRate: t.Number(),
+                totalVolume: t.Number(),
+              }),
+              methods: t.Array(
+                t.Object({
+                  id: t.String(),
+                  code: t.String(),
+                  name: t.String(),
+                  type: t.String(),
+                  currency: t.String(),
+                })
+              ),
+              totpEnabled: t.Boolean(),
             }),
-            methods: t.Array(
-              t.Object({
-                id: t.String(),
-                code: t.String(),
-                name: t.String(),
-                type: t.String(),
-                currency: t.String(),
-              })
-            ),
+            role: t.String(),
+            rights: t.Record(t.String(), t.Boolean()),
           }),
           401: ErrorSchema,
           404: ErrorSchema,
