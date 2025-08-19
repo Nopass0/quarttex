@@ -21,6 +21,12 @@ class DeviceStatusWebSocket extends EventEmitter {
   }
 
   connect() {
+    // Check if we're in a browser environment
+    if (typeof window === 'undefined' || !window.WebSocket) {
+      console.warn('[DeviceStatusWS] WebSocket not available in this environment');
+      return;
+    }
+
     if (this.ws?.readyState === WebSocket.OPEN) {
       console.log('[DeviceStatusWS] Already connected');
       return;
@@ -28,16 +34,24 @@ class DeviceStatusWebSocket extends EventEmitter {
 
     try {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      let wsUrl = process.env.NEXT_PUBLIC_API_URL?.replace('https:', 'wss:').replace('http:', 'ws:') || '';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+      let wsUrl = apiUrl.replace('https:', 'wss:').replace('http:', 'ws:');
       
       // Remove /api from the end if it exists since we'll add it with the path
       if (wsUrl.endsWith('/api')) {
         wsUrl = wsUrl.slice(0, -4);
       }
       
-      const fullUrl = `${wsUrl}/api/device-status`;
+      // Ensure we have a valid WebSocket URL
+      if (!wsUrl || wsUrl === '') {
+        console.error('[DeviceStatusWS] Invalid WebSocket URL configuration');
+        return;
+      }
+      
+      const fullUrl = `${wsUrl}/ws/device-status`;
 
       console.log('[DeviceStatusWS] Connecting to:', fullUrl);
+      console.log('[DeviceStatusWS] Base URL:', process.env.NEXT_PUBLIC_API_URL);
 
       this.ws = new WebSocket(fullUrl);
 
@@ -93,8 +107,11 @@ class DeviceStatusWebSocket extends EventEmitter {
         }
       };
 
-      this.ws.onerror = (error) => {
-        console.error('[DeviceStatusWS] Error:', error);
+      this.ws.onerror = (event) => {
+        console.error('[DeviceStatusWS] WebSocket error occurred');
+        // WebSocket error events don't contain detailed error information
+        // We emit a custom error object instead
+        const error = new Error('WebSocket connection error');
         this.emit('error', error);
       };
 
@@ -111,7 +128,12 @@ class DeviceStatusWebSocket extends EventEmitter {
 
     } catch (error) {
       console.error('[DeviceStatusWS] Connection error:', error);
-      this.emit('error', error);
+      // Only emit error if it's a meaningful error object
+      if (error instanceof Error) {
+        this.emit('error', error);
+      } else {
+        this.emit('error', new Error('Failed to connect to WebSocket'));
+      }
       this.scheduleReconnect();
     }
   }

@@ -43,7 +43,7 @@ export default function AgentLoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0f0f0f] px-4">
-      <Card className="w-full max-w-md bg-white dark:bg-[#292133] border-gray-200 dark:border-[#292133]">
+      <Card className="w-full max-w-md bg-white dark:bg-[#29382f] border-gray-200 dark:border-[#29382f]">
         <CardHeader className="space-y-4">
           <div className="flex justify-center">
             <Logo size="lg" />
@@ -60,7 +60,7 @@ export default function AgentLoginPage() {
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#530FAD] dark:text-[#530FAD]" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#006039] dark:text-[#2d6a42]" />
                 <Input
                   id="email"
                   type="email"
@@ -76,7 +76,7 @@ export default function AgentLoginPage() {
             <div className="space-y-2">
               <Label htmlFor="password">Пароль</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#530FAD] dark:text-[#530FAD]" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#006039] dark:text-[#2d6a42]" />
                 <Input
                   id="password"
                   type="password"
@@ -91,7 +91,7 @@ export default function AgentLoginPage() {
 
             <Button
               type="submit"
-              className="w-full bg-[#530FAD] hover:bg-[#530FAD/90] dark:bg-[#530FAD] dark:hover:bg-[#530FAD/80]"
+              className="w-full bg-[#006039] hover:bg-[#004d2e] dark:bg-[#2d6a42] dark:hover:bg-[#236035]"
               disabled={isLoading}
             >
               {isLoading ? 'Вход...' : 'Войти'}

@@ -7,19 +7,19 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-[#006039] text-white hover:bg-[#004d2e] dark:bg-[#2d6a42] dark:hover:bg-[#236035]",
+        default: "bg-purple-600 text-white hover:bg-purple-700 dark:bg-purple-600 dark:hover:bg-purple-700 dark:shadow-[0_0_15px_rgba(168,85,247,0.3)]",
         destructive:
           "bg-red-600 text-white hover:bg-red-700 dark:bg-[#c64444] dark:hover:bg-[#a63636]",
         outline:
-          "border border-gray-200 dark:border-[#29382f] bg-white dark:bg-[#0f0f0f] hover:bg-gray-50 dark:hover:bg-[#29382f] text-gray-900 dark:text-[#eeeeee]",
+          "border border-gray-200 dark:border-purple-800/50 bg-white dark:bg-[#0f0f0f] hover:bg-purple-50 dark:hover:bg-purple-900/20 text-gray-900 dark:text-[#eeeeee] hover:border-purple-300 dark:hover:border-purple-700",
         secondary:
-          "bg-gray-100 dark:bg-[#29382f] text-gray-900 dark:text-[#eeeeee] hover:bg-gray-200 dark:hover:bg-[#1f2923]",
-        ghost: "hover:bg-gray-100 dark:hover:bg-[#29382f] text-gray-900 dark:text-[#eeeeee]",
-        link: "text-[#006039] dark:text-[#2d6a42] underline-offset-4 hover:underline",
+          "bg-purple-100 dark:bg-purple-900/30 text-purple-900 dark:text-purple-100 hover:bg-purple-200 dark:hover:bg-purple-900/50",
+        ghost: "hover:bg-purple-100 dark:hover:bg-purple-900/30 text-gray-900 dark:text-[#eeeeee]",
+        link: "text-purple-600 dark:text-purple-400 underline-offset-4 hover:underline",
       },
       size: {
         default: "h-10 px-4 py-2",

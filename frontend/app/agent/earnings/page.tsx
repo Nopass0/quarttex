@@ -82,7 +82,7 @@ export default function AgentEarningsPage() {
           <CardContent>
             <div className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-gray-400" />
-              <span className="text-2xl font-bold text-[#530FAD]">
+              <span className="text-2xl font-bold text-[#006039]">
                 ${formatAmount(earnings.totalEarnings)}
               </span>
             </div>
@@ -96,7 +96,7 @@ export default function AgentEarningsPage() {
           <CardContent>
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-gray-400" />
-              <span className="text-2xl font-bold text-[#530FAD]">
+              <span className="text-2xl font-bold text-[#006039]">
                 ${formatAmount(earnings.thisMonthEarnings)}
               </span>
             </div>
@@ -110,7 +110,7 @@ export default function AgentEarningsPage() {
           <CardContent>
             <div className="flex items-center gap-2">
               <Percent className="h-5 w-5 text-gray-400" />
-              <span className="text-2xl font-bold text-[#530FAD]">
+              <span className="text-2xl font-bold text-[#006039]">
                 {earnings.commissionRate}%
               </span>
             </div>
@@ -166,7 +166,7 @@ export default function AgentEarningsPage() {
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Этот месяц</span>
-              <span className="font-semibold text-[#530FAD]">
+              <span className="font-semibold text-[#006039]">
                 ${formatAmount(earnings.thisMonthEarnings)}
               </span>
             </div>
@@ -180,7 +180,7 @@ export default function AgentEarningsPage() {
               <span className="text-sm text-gray-600">Изменение</span>
               <span className={`font-semibold ${
                 earnings.thisMonthEarnings >= earnings.lastMonthEarnings 
-                  ? 'text-purple-600' 
+                  ? 'text-green-600' 
                   : 'text-red-600'
               }`}>
                 {earnings.thisMonthEarnings >= earnings.lastMonthEarnings ? '+' : ''}
@@ -212,7 +212,7 @@ export default function AgentEarningsPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-semibold text-[#530FAD]">
+                  <div className="font-semibold text-[#006039]">
                     +${formatAmount(earning.amount)}
                   </div>
                   <div className="text-xs text-gray-500">

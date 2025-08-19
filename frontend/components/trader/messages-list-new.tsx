@@ -677,9 +677,9 @@ export function MessagesListNew() {
                         variant="ghost"
                         size="default"
                         className={cn(
-                          "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                          "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400",
                           filterStatus === "all" &&
-                            "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
+                            "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
                         )}
                         onClick={() => setFilterStatus("all")}
                       >
@@ -689,9 +689,9 @@ export function MessagesListNew() {
                         variant="ghost"
                         size="default"
                         className={cn(
-                          "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                          "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400",
                           filterStatus === "processed" &&
-                            "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
+                            "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
                         )}
                         onClick={() => setFilterStatus("processed")}
                       >
@@ -701,9 +701,9 @@ export function MessagesListNew() {
                         variant="ghost"
                         size="default"
                         className={cn(
-                          "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                          "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400",
                           filterStatus === "danger" &&
-                            "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
+                            "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
                         )}
                         onClick={() => setFilterStatus("danger")}
                       >
@@ -713,9 +713,9 @@ export function MessagesListNew() {
                         variant="ghost"
                         size="default"
                         className={cn(
-                          "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                          "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400",
                           filterStatus === "warning" &&
-                            "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
+                            "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
                         )}
                         onClick={() => setFilterStatus("warning")}
                       >
@@ -725,9 +725,9 @@ export function MessagesListNew() {
                         variant="ghost"
                         size="default"
                         className={cn(
-                          "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                          "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400",
                           filterStatus === "new" &&
-                            "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
+                            "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
                         )}
                         onClick={() => setFilterStatus("new")}
                       >
@@ -776,9 +776,9 @@ export function MessagesListNew() {
                         variant="ghost"
                         size="default"
                         className={cn(
-                          "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                          "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400",
                           filterDevice === "all" &&
-                            "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
+                            "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
                         )}
                         onClick={() => setFilterDevice("all")}
                       >
@@ -806,8 +806,8 @@ export function MessagesListNew() {
                             variant="ghost"
                             size="default"
                             className={cn(
-                              "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
-                              filterDevice === device.id && "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
+                              "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400",
+                              filterDevice === device.id && "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
                             )}
                             onClick={() => setFilterDevice(device.id)}
                           >
@@ -894,9 +894,9 @@ export function MessagesListNew() {
                         variant="ghost"
                         size="default"
                         className={cn(
-                          "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                          "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400",
                           filterBank === "all" &&
-                            "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
+                            "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
                         )}
                         onClick={() => setFilterBank("all")}
                       >
@@ -924,8 +924,8 @@ export function MessagesListNew() {
                             variant="ghost"
                             size="default"
                             className={cn(
-                              "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
-                              filterBank === bank.code && "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
+                              "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400",
+                              filterBank === bank.code && "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
                             )}
                             onClick={() => setFilterBank(bank.code)}
                           >
@@ -1072,7 +1072,7 @@ export function MessagesListNew() {
                 </Button>
                 <Button
                   size="sm"
-                  className="flex-1 h-12 bg-green-100 hover:bg-green-200 transition-colors duration-150 text-green-500"
+                  className="flex-1 h-12 bg-purple-100 hover:bg-purple-200 transition-colors duration-150 text-purple-600 dark:bg-purple-900/30 dark:hover:bg-purple-900/50 dark:text-purple-400"
                   onClick={() => setFiltersOpen(false)}
                 >
                   Применить фильтры
@@ -1222,7 +1222,7 @@ export function MessagesListNew() {
                           {message.amount && message.amount > 0 ? (
                             <Badge
                               variant="outline"
-                              className="px-2 py-1 text-xs font-bold border rounded-lg bg-green-50 text-green-600 border-green-200"
+                              className="px-2 py-1 text-xs font-bold border rounded-lg bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800"
                             >
                               {message.amount.toLocaleString("ru-RU")} ₽
                             </Badge>
@@ -1298,7 +1298,7 @@ export function MessagesListNew() {
                       {message.amount && message.amount > 0 ? (
                         <Badge
                           variant="outline"
-                          className="px-4 py-2 text-sm font-bold border rounded-xl bg-green-50 text-green-600 border-green-200 w-full text-center justify-center"
+                          className="px-4 py-2 text-sm font-bold border rounded-xl bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800 w-full text-center justify-center"
                         >
                           {message.amount.toLocaleString("ru-RU")} RUB
                         </Badge>
@@ -1446,7 +1446,7 @@ export function MessagesListNew() {
                           Обнаруженная сумма
                         </span>
                         {selectedMessage.amount && selectedMessage.amount > 0 ? (
-                          <span className="text-lg font-semibold text-green-600">
+                          <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
                             {selectedMessage.amount.toLocaleString("ru-RU")} RUB
                           </span>
                         ) : (

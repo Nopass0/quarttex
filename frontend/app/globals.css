@@ -29,12 +29,12 @@
 @layer base {
   @keyframes flash {
     0%, 100% {
-      background-color: rgb(220 252 231);
-      border-color: rgb(134 239 172);
+      background-color: rgb(233 213 255 / 0.3);
+      border-color: rgb(168 85 247 / 0.5);
     }
     50% {
-      background-color: rgb(187 247 208);
-      border-color: rgb(74 222 128);
+      background-color: rgb(221 214 254 / 0.5);
+      border-color: rgb(147 51 234 / 0.7);
     }
   }
   
@@ -42,7 +42,7 @@
     animation: flash 0.5s ease-in-out;
   }
   
-  /* Green hover effect for all interactive elements */
+  /* Purple hover effect for all interactive elements */
   button:not(.bg-\[\#530FAD\]):hover,
   a:not(.bg-\[\#530FAD\]):hover,
   [role="button"]:not(.bg-\[\#530FAD\]):hover {
@@ -216,14 +216,14 @@
 }
 
 /* Animation for new transactions */
-@keyframes flash {
+@keyframes flash-transaction {
   0% { background-color: rgb(139 92 246 / 0.2); border-color: rgb(139 92 246 / 0.5); }
   50% { background-color: rgb(139 92 246 / 0.4); border-color: rgb(139 92 246 / 0.8); }
   100% { background-color: transparent; border-color: transparent; }
 }
 
 .flash-once {
-  animation: flash 1s ease-in-out;
+  animation: flash-transaction 1s ease-in-out;
 }
 
 /* Animation for search fields */
