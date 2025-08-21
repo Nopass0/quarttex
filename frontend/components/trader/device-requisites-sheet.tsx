@@ -481,7 +481,10 @@ export function DeviceRequisitesSheet({
         <div className="mt-6">
           {!showForm ? (
             <div className="space-y-4">
-              <Button onClick={handleAddNew} className="w-full">
+              <Button
+                onClick={handleAddNew}
+                className="w-full bg-purple-600 hover:bg-purple-600/90 text-white"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Добавить реквизит
               </Button>
@@ -879,7 +882,7 @@ export function DeviceRequisitesSheet({
                   <Button
                     type="submit"
                     disabled={loading || hasEmptyRequiredNumbers}
-                    className="bg-[purple-600] hover:bg-[purple-600]/90"
+                    className="bg-purple-600 hover:bg-purple-600/90 text-white"
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {editingRequisite ? "Сохранить" : "Добавить"}
