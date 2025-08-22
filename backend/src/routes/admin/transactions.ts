@@ -456,14 +456,35 @@ export default (app: Elysia) =>
           where.method = { type: query.methodType as MethodType };
 
         // Поиск по numericId, orderId или ID транзакции
+        const searchConditions = [];
+        
         if (query.numericId) {
           const num = Number(query.numericId);
-          if (!Number.isNaN(num)) where.numericId = num;
+          if (!Number.isNaN(num)) {
+            searchConditions.push({ numericId: num });
+          }
         }
 
         if (query.id) {
           // Поиск по ID транзакции (UUID) - не пытаемся парсить как число
-          where.id = { contains: query.id, mode: "insensitive" };
+          searchConditions.push({ id: { contains: query.id, mode: "insensitive" as const } });
+        }
+
+        if (query.search) {
+          const s = query.search;
+          searchConditions.push(
+            { id: { contains: s, mode: "insensitive" as const } },
+            { orderId: { contains: s, mode: "insensitive" as const } },
+            { assetOrBank: { contains: s, mode: "insensitive" as const } },
+            { clientName: { contains: s, mode: "insensitive" as const } },
+            { currency: { contains: s, mode: "insensitive" as const } },
+            { userIp: { contains: s, mode: "insensitive" as const } }
+          );
+        }
+
+        // Если есть условия поиска, объединяем их через OR
+        if (searchConditions.length > 0) {
+          where.OR = searchConditions;
         }
 
         if (query.isMock !== undefined) where.isMock = query.isMock === "true";
@@ -482,18 +503,6 @@ export default (app: Elysia) =>
             ...where.createdAt,
             lte: new Date(query.createdTo),
           };
-
-        if (query.search) {
-          const s = query.search;
-          where.OR = [
-            { id: { contains: s, mode: "insensitive" } },
-            { orderId: { contains: s, mode: "insensitive" } },
-            { assetOrBank: { contains: s, mode: "insensitive" } },
-            { clientName: { contains: s, mode: "insensitive" } },
-            { currency: { contains: s, mode: "insensitive" } },
-            { userIp: { contains: s, mode: "insensitive" } },
-          ];
-        }
 
         const orderBy: Record<string, "asc" | "desc"> = {};
         if (query.sortBy)
@@ -869,7 +878,43 @@ export default (app: Elysia) =>
                     frozenUsdt: {
                       decrement: truncate2(existing.frozenUsdtAmount),
                     },
+                    // Добавляем сумму заморозки к trustBalance при отмене сделки "В работе"
+                    trustBalance: { increment: truncate2(existing.frozenUsdtAmount) },
                   },
+                });
+              }
+            } else if (existing.status === Status.READY) {
+              // Для готовых сделок при отмене списываем с trustBalance и убираем прибыль
+              const usdtAmount = existing.rate
+                ? existing.amount / existing.rate
+                : 0;
+
+              if (usdtAmount > 0) {
+                console.log(
+                  `[Admin PUT Cancel] Processing READY->CANCELED: trader=${existing.traderId}, usdtAmount=${usdtAmount}`
+                );
+
+                const updateFields: any = {
+                  // Списываем сумму в USDT с trustBalance
+                  trustBalance: { decrement: truncate2(usdtAmount) },
+                };
+
+                // Если у сделки была прибыль, убираем её
+                if (existing.traderProfit && existing.traderProfit > 0) {
+                  updateFields.profitFromDeals = { 
+                    decrement: truncate2(existing.traderProfit) 
+                  };
+                }
+
+                console.log(`[Admin PUT Cancel] READY balance deduction:`, {
+                  usdtAmount,
+                  traderProfit: existing.traderProfit,
+                  updateFields,
+                });
+
+                await db.user.update({
+                  where: { id: existing.traderId },
+                  data: updateFields,
                 });
               }
             }
@@ -2251,7 +2296,43 @@ export default (app: Elysia) =>
                     frozenUsdt: {
                       decrement: truncate2(existing.frozenUsdtAmount),
                     },
+                    // Добавляем сумму заморозки к trustBalance при отмене сделки "В работе"
+                    trustBalance: { increment: truncate2(existing.frozenUsdtAmount) },
                   },
+                });
+              }
+            } else if (existing.status === Status.READY) {
+              // Для готовых сделок при отмене списываем с trustBalance и убираем прибыль
+              const usdtAmount = existing.rate
+                ? existing.amount / existing.rate
+                : 0;
+
+              if (usdtAmount > 0) {
+                console.log(
+                  `[Admin Cancel] Processing READY->CANCELED: trader=${existing.traderId}, usdtAmount=${usdtAmount}`
+                );
+
+                const updateFields: any = {
+                  // Списываем сумму в USDT с trustBalance
+                  trustBalance: { decrement: truncate2(usdtAmount) },
+                };
+
+                // Если у сделки была прибыль, убираем её
+                if (existing.traderProfit && existing.traderProfit > 0) {
+                  updateFields.profitFromDeals = { 
+                    decrement: truncate2(existing.traderProfit) 
+                  };
+                }
+
+                console.log(`[Admin Cancel] READY balance deduction:`, {
+                  usdtAmount,
+                  traderProfit: existing.traderProfit,
+                  updateFields,
+                });
+
+                await db.user.update({
+                  where: { id: existing.traderId },
+                  data: updateFields,
                 });
               }
             }

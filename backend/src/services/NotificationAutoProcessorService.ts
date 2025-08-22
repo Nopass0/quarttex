@@ -409,7 +409,7 @@ export class NotificationAutoProcessorService extends BaseService {
         ? fullTransaction.amount / fullTransaction.rate
         : 0;
 
-      // Calculate commission using flexible rates
+      // Calculate commission using flexible rates (как в БТ-входе)
       const {
         getFlexibleFeePercent,
       } = require("../utils/flexible-fee-calculator");
@@ -420,10 +420,9 @@ export class NotificationAutoProcessorService extends BaseService {
         fullTransaction.amount,
         "IN"
       );
-      const commissionUsdt = spentUsdt * (commissionPercent / 100);
 
-      // Trader profit = commission earned (truncated to 2 decimal places)
-      const traderProfit = truncate2(commissionUsdt);
+      // Trader profit = спенс в USDT * процент комиссии (как в БТ-входе)
+      const traderProfit = truncate2(spentUsdt * (commissionPercent / 100));
 
       console.log(
         `Profit calculation: amount=${fullTransaction.amount}, rate=${fullTransaction.rate}, spentUsdt=${spentUsdt}, commissionPercent=${commissionPercent}, profit=${traderProfit}`

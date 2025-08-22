@@ -26,6 +26,7 @@ import topupSettingsRoutes from "@/routes/admin/topup-settings";
 import { servicesRoutes } from "@/routes/admin/services";
 import traderMerchantsRoutes from "@/routes/admin/trader-merchants";
 import traderMerchantFeeRangesRoutes from "@/routes/admin/trader-merchant-fee-ranges";
+import merchantTradersRoutes from "@/routes/admin/merchant-traders";
 import agentsRoutes from "@/routes/admin/agents";
 import paymentDetailsRoutes from "@/routes/admin/payment-details";
 import devicesRoutes from "@/routes/admin/devices";
@@ -129,6 +130,7 @@ export default (app: Elysia) =>
     .group("/devices", (a) => devicesRoutes(a))
     .use(databaseRoute)
     .use(traderMerchantsRoutes)
+    .use(merchantTradersRoutes)
     .use(traderMerchantFeeRangesRoutes)
     .use(agentsRoutes)
     .use(traderSettingsRoutes)

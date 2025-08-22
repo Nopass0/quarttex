@@ -586,22 +586,39 @@ export default (app: Elysia) =>
             continue;
           }
 
-          // Проверка лимита по количеству операций без срока давности
+          // Атомарная проверка лимита по количеству операций
           if (bd.operationLimit > 0) {
-            const totalOperations = await db.transaction.count({
-              where: {
-                bankDetailId: bd.id,
-                status: {
-                  in: [Status.IN_PROGRESS, Status.READY],
-                },
-              },
-            });
-            console.log(
-              `[Merchant] - Общее количество операций (IN_PROGRESS + READY): ${totalOperations}/${bd.operationLimit}`
-            );
-            if (totalOperations >= bd.operationLimit) {
-              console.log(
-                `[Merchant] Реквизит ${bd.id} отклонен: достигнут лимит количества операций. Текущее количество: ${totalOperations}, лимит: ${bd.operationLimit}`
+            try {
+              const isValidChoice = await db.$transaction(async (tx) => {
+                const totalOperations = await tx.transaction.count({
+                  where: {
+                    bankDetailId: bd.id,
+                    status: {
+                      in: [Status.IN_PROGRESS, Status.READY],
+                    },
+                  },
+                });
+                console.log(
+                  `[Merchant] - Общее количество операций (IN_PROGRESS + READY): ${totalOperations}/${bd.operationLimit}`
+                );
+
+                if (totalOperations >= bd.operationLimit) {
+                  console.log(
+                    `[Merchant] Реквизит ${bd.id} отклонен: достигнут лимит количества операций. Текущее количество: ${totalOperations}, лимит: ${bd.operationLimit}`
+                  );
+                  return false;
+                }
+
+                return true;
+              });
+
+              if (!isValidChoice) {
+                continue;
+              }
+            } catch (error) {
+              console.error(
+                `[Merchant] Ошибка при проверке лимита операций для реквизита ${bd.id}:`,
+                error
               );
               continue;
             }
