@@ -308,10 +308,10 @@ export function RequisitesAndDevices() {
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-fit grid grid-cols-2 gap-1 bg-gray-100 p-1">
-          <TabsTrigger 
-            value="requisites" 
-            className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm px-4"
+        <TabsList className="w-fit grid grid-cols-2 gap-1 bg-gray-100 dark:bg-purple-900/30 p-1">
+          <TabsTrigger
+            value="requisites"
+            className="px-4 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm data-[state=active]:dark:bg-purple-900 data-[state=active]:dark:text-[#eeeeee]"
           >
             <CreditCard className="mr-2 h-4 w-4" />
             Реквизиты
@@ -319,9 +319,9 @@ export function RequisitesAndDevices() {
               {requisites.length}
             </span>
           </TabsTrigger>
-          <TabsTrigger 
+          <TabsTrigger
             value="devices"
-            className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm px-4"
+            className="px-4 data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm data-[state=active]:dark:bg-purple-900 data-[state=active]:dark:text-[#eeeeee]"
           >
             <Smartphone className="mr-2 h-4 w-4" />
             Устройства
