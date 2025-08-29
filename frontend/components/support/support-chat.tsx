@@ -298,7 +298,7 @@ export function SupportChat({ variant }: SupportChatProps) {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 h-12 w-12 md:h-14 md:w-14 rounded-full bg-[purple-600] text-white shadow-lg hover:bg-[#005030] transition-all hover:scale-110 flex items-center justify-center z-30"
+        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 h-12 w-12 md:h-14 md:w-14 rounded-full bg-[purple-600] text-white shadow-lg hover:bg-[#3d0b80] transition-all hover:scale-110 flex items-center justify-center z-30"
       >
         <MessageCircle className="h-6 w-6" />
         {tickets.some(t => t.unreadCount > 0) && (
@@ -351,7 +351,7 @@ export function SupportChat({ variant }: SupportChatProps) {
                     <div className="p-4 space-y-3">
                       <Button
                         onClick={() => setIsCreatingTicket(true)}
-                        className="w-full bg-[purple-600] hover:bg-[#005030]"
+                        className="w-full bg-[purple-600] hover:bg-[#3d0b80]"
                       >
                         <Plus className="mr-2 h-4 w-4" />
                         Создать новый тикет
@@ -450,7 +450,7 @@ export function SupportChat({ variant }: SupportChatProps) {
                 <Button
                   onClick={createTicket}
                   disabled={isSending || !newSubject.trim() || !newMessage.trim()}
-                  className="w-full bg-[purple-600] hover:bg-[#005030]"
+                  className="w-full bg-[purple-600] hover:bg-[#3d0b80]"
                 >
                   {isSending ? (
                     <>
@@ -551,7 +551,7 @@ export function SupportChat({ variant }: SupportChatProps) {
                     <Button
                       onClick={sendMessage}
                       disabled={isSending || !replyMessage.trim()}
-                      className="bg-[purple-600] hover:bg-[#005030]"
+                      className="bg-[purple-600] hover:bg-[#3d0b80]"
                     >
                       {isSending ? (
                         <Loader2 className="h-4 w-4 animate-spin text-[purple-600]" />

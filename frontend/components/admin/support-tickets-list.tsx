@@ -636,7 +636,7 @@ export function SupportTicketsList() {
                       <Button
                         onClick={sendReply}
                         disabled={isSending || !replyMessage.trim()}
-                        className="bg-[purple-600] hover:bg-[#005030]"
+                        className="bg-[purple-600] hover:bg-[#3d0b80]"
                       >
                         {isSending ? (
                           <Loader2 className="h-4 w-4 animate-spin text-white" />

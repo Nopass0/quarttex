@@ -192,7 +192,7 @@ export default function ElementsTestPage() {
                 <Button className="btn-outline-glow">Outline Glow</Button>
                 <Button className="btn-ghost-glow">Ghost Glow</Button>
                 <Button className="btn-glass">Glass</Button>
-                <Button className="bg-gradient-to-r from-[purple-600] to-[#00a060] text-white hover:from-[#00a060] hover:to-[purple-600] transition-all duration-500">Gradient</Button>
+                <Button className="bg-gradient-to-r from-[purple-600] to-[#7c3aed] text-white hover:from-[#7c3aed] hover:to-[purple-600] transition-all duration-500">Gradient</Button>
               </div>
               <div className="flex flex-wrap gap-2 mb-4">
                 <Button size="sm">Small</Button>

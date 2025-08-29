@@ -223,7 +223,7 @@ export function KkkSettings() {
 
       <Button
         onClick={handleSave}
-        className="w-full bg-[purple-600] hover:bg-[#005030]"
+        className="w-full bg-[purple-600] hover:bg-[#3d0b80]"
         disabled={isLoading}
       >
         Сохранить настройки

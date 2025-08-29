@@ -1525,7 +1525,7 @@ export function TransactionsList() {
           <DialogFooter>
             <Button
               onClick={handleRecalcTransaction}
-              className="bg-[purple-600] hover:bg-[#005030]"
+              className="bg-[purple-600] hover:bg-[#3d0b80]"
               disabled={isLoading}
             >
               Перерасчитать
@@ -1700,7 +1700,7 @@ export function TransactionsList() {
           <DialogFooter>
             <Button
               onClick={handleUpdateTransaction}
-              className="bg-[purple-600] hover:bg-[#005030]"
+              className="bg-[purple-600] hover:bg-[#3d0b80]"
               disabled={isLoading}
             >
               Сохранить
