@@ -1,4 +1,4 @@
-package ru.chasepay.mobile.models;
+package ru.quattrex.mobile.models;
 
 public class ConnectRequest {
     public String deviceCode;

@@ -39,7 +39,7 @@ echo "Base URL: $BASE_URL"
 
 # Build Docker image
 echo -e "${YELLOW}Building Docker image...${NC}"
-docker build -t chase-apk-builder \
+docker build -t quattrex-apk-builder \
   --build-arg BUILD_TYPE=$BUILD_TYPE \
   --build-arg BASE_URL=$BASE_URL \
   .
@@ -49,13 +49,13 @@ mkdir -p ../build/apk
 
 # Run container and extract APK
 echo -e "${YELLOW}Extracting APK...${NC}"
-docker run --rm -v $(pwd)/../build/apk:/output chase-apk-builder sh -c "cp /output/chase-app.apk /output/chase-app-${BUILD_TYPE}.apk"
+docker run --rm -v $(pwd)/../build/apk:/output quattrex-apk-builder sh -c "cp /output/quattrex-app.apk /output/quattrex-app-${BUILD_TYPE}.apk"
 
 echo -e "${GREEN}✓ APK built successfully!${NC}"
-echo -e "Location: build/apk/chase-app-${BUILD_TYPE}.apk"
+echo -e "Location: build/apk/quattrex-app-${BUILD_TYPE}.apk"
 
 # If in debug mode, show instructions for testing
 if [ "$BUILD_TYPE" = "debug" ]; then
     echo -e "\n${YELLOW}To install on emulator:${NC}"
-    echo "adb install -r ../build/apk/chase-app-debug.apk"
+    echo "adb install -r ../build/apk/quattrex-app-debug.apk"
 fi

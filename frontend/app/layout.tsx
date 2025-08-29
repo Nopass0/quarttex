@@ -5,9 +5,21 @@ import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Quattrex платформ",
-  description: "Торговая и платежная платформа",
+  title: "Quattrex - Торговая и платежная платформа",
+  description: "Quattrex - современная торговая и платежная платформа для безопасных финансовых операций",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+  openGraph: {
+    title: "Quattrex - Торговая и платежная платформа",
+    description: "Quattrex - современная торговая и платежная платформа для безопасных финансовых операций",
+    url: "https://quattrex.pro",
+    siteName: "Quattrex",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Quattrex - Торговая и платежная платформа",
+    description: "Quattrex - современная торговая и платежная платформа для безопасных финансовых операций",
+  },
 };
 
 export default function RootLayout({

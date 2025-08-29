@@ -2,7 +2,7 @@ const { spawn } = require('child_process');
 
 // Test if the backend can compile
 const testBackend = spawn('bun', ['check', 'src/index.ts'], {
-  cwd: '/home/user/projects/chase/backend',
+  cwd: '/home/user/projects/quattrex/backend',
   stdio: 'inherit'
 });
 

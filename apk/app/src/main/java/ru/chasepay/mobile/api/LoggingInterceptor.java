@@ -1,4 +1,4 @@
-package ru.chasepay.mobile.api;
+package ru.quattrex.mobile.api;
 
 import android.util.Log;
 
@@ -11,7 +11,7 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 import okio.Buffer;
 import okio.BufferedSource;
-import ru.chasepay.mobile.utils.ApiLogManager;
+import ru.quattrex.mobile.utils.ApiLogManager;
 
 public class LoggingInterceptor implements Interceptor {
     private static final String TAG = "API_LOG";

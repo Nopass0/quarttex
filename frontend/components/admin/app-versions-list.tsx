@@ -207,7 +207,7 @@ export function AppVersionsList() {
         </div>
         <Button
           onClick={() => setIsUploadDialogOpen(true)}
-          className="bg-[purple-600] hover:bg-[#005030]"
+          className="bg-[purple-600] hover:bg-[#3d0b80]"
         >
           <Upload className="mr-2 h-4 w-4" />
           Загрузить новую версию
@@ -407,7 +407,7 @@ export function AppVersionsList() {
             </Button>
             <Button
               onClick={handleUpload}
-              className="bg-[purple-600] hover:bg-[#005030]"
+              className="bg-[purple-600] hover:bg-[#3d0b80]"
               disabled={isUploading || !selectedFile || !newVersion}
             >
               {isUploading ? (

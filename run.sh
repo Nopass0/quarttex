@@ -35,7 +35,7 @@ SUPER_ADMIN_KEY="local-admin-key"
 EOF
     else
         cat > backend/.env << 'EOF'
-DATABASE_URL="postgresql://postgres:password@localhost:5432/chase"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/quattrex"
 JWT_SECRET="local-jwt-secret-key-change-in-production"
 PORT=3001
 NODE_ENV=development
@@ -67,9 +67,9 @@ if grep -q "localhost\|127.0.0.1" backend/.env 2>/dev/null; then
 
     # Create database if not exists
     echo -e "${BLUE}Checking local database...${NC}"
-    psql -U postgres -h localhost -tc "SELECT 1 FROM pg_database WHERE datname = 'chase'" | grep -q 1 || {
-        echo -e "${YELLOW}Creating database 'chase'...${NC}"
-        psql -U postgres -h localhost -c "CREATE DATABASE chase"
+    psql -U postgres -h localhost -tc "SELECT 1 FROM pg_database WHERE datname = 'quattrex'" | grep -q 1 || {
+        echo -e "${YELLOW}Creating database 'quattrex'...${NC}"
+        psql -U postgres -h localhost -c "CREATE DATABASE quattrex"
     }
 else
     echo -e "${BLUE}Using external database${NC}"

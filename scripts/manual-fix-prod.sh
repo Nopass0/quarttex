@@ -22,4 +22,4 @@ echo "🔄 Restarting backend container..."
 docker compose -f docker-compose.prod.yml restart backend
 
 echo "✅ Production database schema should now be fixed!"
-echo "📋 Check logs with: docker logs chase_backend"
+echo "📋 Check logs with: docker logs quattrex_backend"

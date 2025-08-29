@@ -181,7 +181,7 @@ export function AgentsList() {
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[purple-600] hover:bg-[#005030]">
+            <Button className="bg-[purple-600] hover:bg-[#3d0b80]">
               <UserPlus className="mr-2 h-4 w-4 text-white" />
               Добавить агента
             </Button>
@@ -249,7 +249,7 @@ export function AgentsList() {
             <DialogFooter>
               <Button
                 onClick={handleCreateAgent}
-                className="bg-[purple-600] hover:bg-[#005030]"
+                className="bg-[purple-600] hover:bg-[#3d0b80]"
                 disabled={isLoading || !formData.email || !formData.name}
               >
                 Создать
@@ -384,7 +384,7 @@ export function AgentsList() {
                 setShowPasswordDialog(false)
                 setGeneratedPassword('')
               }}
-              className="bg-[purple-600] hover:bg-[#005030]"
+              className="bg-[purple-600] hover:bg-[#3d0b80]"
             >
               Закрыть
             </Button>

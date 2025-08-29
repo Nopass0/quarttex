@@ -4,7 +4,7 @@
 echo "🔧 Fixing production database schema..."
 
 # Navigate to backend directory
-cd /home/user/projects/chase/backend
+cd /home/user/projects/quattrex/backend
 
 # Set production environment variables
 export NODE_ENV=production

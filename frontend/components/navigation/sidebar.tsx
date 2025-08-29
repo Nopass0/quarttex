@@ -722,16 +722,16 @@ export function Sidebar({ variant }: SidebarProps) {
 
               {/* Ставка TRC-20 */}
               {rapiraRate && (
-                <div className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/10 dark:to-teal-900/10 rounded-lg border-2 border-emerald-500 dark:border-emerald-600">
+                <div className="p-4 bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/10 dark:to-violet-900/10 rounded-lg border-2 border-purple-500 dark:border-purple-600">
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                      <TrendingUp className="h-5 w-5 text-[#530FAD] dark:text-purple-400" />
                       <span className="text-base font-semibold text-gray-900 dark:text-gray-200">
                         Ставка TRC-20
                       </span>
                     </div>
                     <div className="flex items-center gap-1 pl-7">
-                      <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                      <span className="text-lg font-bold text-[#530FAD] dark:text-purple-400">
                         {rapiraRate.rate.toFixed(2)}
                       </span>
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">

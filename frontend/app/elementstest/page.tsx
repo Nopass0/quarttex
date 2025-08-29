@@ -192,7 +192,7 @@ export default function ElementsTestPage() {
                 <Button className="btn-outline-glow">Outline Glow</Button>
                 <Button className="btn-ghost-glow">Ghost Glow</Button>
                 <Button className="btn-glass">Glass</Button>
-                <Button className="bg-gradient-to-r from-[purple-600] to-[#00a060] text-white hover:from-[#00a060] hover:to-[purple-600] transition-all duration-500">Gradient</Button>
+                <Button className="bg-gradient-to-r from-[purple-600] to-[#7c3aed] text-white hover:from-[#7c3aed] hover:to-[purple-600] transition-all duration-500">Gradient</Button>
               </div>
               <div className="flex flex-wrap gap-2 mb-4">
                 <Button size="sm">Small</Button>
@@ -358,7 +358,7 @@ export default function ElementsTestPage() {
                     <BankCard cardNumber="6221 2345 6789 0123" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Chase Sapphire (Visa)</Label>
+                    <Label className="text-sm text-muted-foreground">Quattrex Premium (Visa)</Label>
                     <BankCard cardNumber="4111 1111 1111 1111" />
                   </div>
                   <div className="space-y-2">
@@ -797,7 +797,7 @@ export default function ElementsTestPage() {
                   defaultValue={[30]} 
                   max={100} 
                   step={1}
-                  className="[&_[role=slider]]:bg-gradient-to-r [&_[role=slider]]:from-purple-500 [&_[role=slider]]:to-emerald-500"
+                  className="[&_[role=slider]]:bg-gradient-to-r [&_[role=slider]]:from-purple-500 [&_[role=slider]]:to-purple-700"
                 />
               </div>
             </CardContent>
@@ -1780,7 +1780,7 @@ export default function ElementsTestPage() {
                 title="Analytics"
                 description="Track your website analytics with beautiful charts"
                 header={
-                  <div className="h-32 rounded-lg bg-gradient-to-br from-purple-400 to-emerald-600 magic-float" />
+                  <div className="h-32 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 magic-float" />
                 }
                 icon={<Zap className="h-4 w-4 text-primary" />}
               />

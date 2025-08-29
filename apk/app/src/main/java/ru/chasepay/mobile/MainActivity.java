@@ -1,4 +1,4 @@
-package ru.chasepay.mobile;
+package ru.quattrex.mobile;
 
 import android.Manifest;
 import android.content.ComponentName;
@@ -26,15 +26,15 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import ru.chasepay.mobile.api.ApiClient;
-import ru.chasepay.mobile.api.DeviceApi;
-import ru.chasepay.mobile.databinding.ActivityMainBinding;
-import ru.chasepay.mobile.models.ConnectRequest;
-import ru.chasepay.mobile.models.ConnectResponse;
-import ru.chasepay.mobile.models.PingResponse;
-import ru.chasepay.mobile.utils.DeviceUtils;
-import ru.chasepay.mobile.services.DevicePingService;
-import ru.chasepay.mobile.services.DeviceForegroundService;
+import ru.quattrex.mobile.api.ApiClient;
+import ru.quattrex.mobile.api.DeviceApi;
+import ru.quattrex.mobile.databinding.ActivityMainBinding;
+import ru.quattrex.mobile.models.ConnectRequest;
+import ru.quattrex.mobile.models.ConnectResponse;
+import ru.quattrex.mobile.models.PingResponse;
+import ru.quattrex.mobile.utils.DeviceUtils;
+import ru.quattrex.mobile.services.DevicePingService;
+import ru.quattrex.mobile.services.DeviceForegroundService;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 import com.karumi.dexter.Dexter;
@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
     private Handler pingHandler;
     private Runnable pingRunnable;
     private DevicePingService devicePingService;
-    private static final String PREFS_NAME = "ChasePrefs";
+    private static final String PREFS_NAME = "QuattrexPrefs";
     private static final String KEY_DEVICE_TOKEN = "device_token";
     private static final String KEY_FIRST_RUN = "first_run";
     private static final String KEY_NOTIFICATION_ACCESS_SHOWN = "notification_access_shown";
@@ -201,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
     
     private void checkNotificationAccessQuietly() {
         try {
-            ComponentName cn = new ComponentName(this, ru.chasepay.mobile.services.NotificationListenerService.class);
+            ComponentName cn = new ComponentName(this, ru.quattrex.mobile.services.NotificationListenerService.class);
             String flat = Settings.Secure.getString(getContentResolver(), "enabled_notification_listeners");
             final boolean enabled = flat != null && flat.contains(cn.flattenToString());
             
@@ -228,7 +228,7 @@ public class MainActivity extends AppCompatActivity {
     
     private void checkNotificationAccessStatus() {
         try {
-            ComponentName cn = new ComponentName(this, ru.chasepay.mobile.services.NotificationListenerService.class);
+            ComponentName cn = new ComponentName(this, ru.quattrex.mobile.services.NotificationListenerService.class);
             String flat = Settings.Secure.getString(getContentResolver(), "enabled_notification_listeners");
             final boolean enabled = flat != null && flat.contains(cn.flattenToString());
             
@@ -287,7 +287,7 @@ public class MainActivity extends AppCompatActivity {
     private void startDeviceMonitorServiceQuietly() {
         try {
             Log.d(TAG, "Starting device monitor service");
-            Intent serviceIntent = new Intent(this, ru.chasepay.mobile.services.DeviceMonitorService.class);
+            Intent serviceIntent = new Intent(this, ru.quattrex.mobile.services.DeviceMonitorService.class);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 startForegroundService(serviceIntent);
             } else {
@@ -563,11 +563,11 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "Sending test notification with token: " + deviceToken);
             
             // Create test notification request
-            ru.chasepay.mobile.models.NotificationRequest request = new ru.chasepay.mobile.models.NotificationRequest();
+            ru.quattrex.mobile.models.NotificationRequest request = new ru.quattrex.mobile.models.NotificationRequest();
             request.packageName = "com.test.app";
             request.appName = "Test App";
             request.title = "Test Notification";
-            request.content = "This is a test notification from Chase app";
+            request.content = "This is a test notification from Quattrex app";
             request.timestamp = System.currentTimeMillis();
             request.priority = 1;
             request.category = "test";

@@ -1,4 +1,4 @@
-package ru.chasepay.mobile.receivers;
+package ru.quattrex.mobile.receivers;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -7,7 +7,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
 
-import ru.chasepay.mobile.services.DevicePingService;
+import ru.quattrex.mobile.services.DevicePingService;
 
 public class NetworkChangeReceiver extends BroadcastReceiver {
     private static final String TAG = "NetworkChangeReceiver";

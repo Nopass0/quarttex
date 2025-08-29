@@ -1,4 +1,4 @@
-package ru.chasepay.mobile.services;
+package ru.quattrex.mobile.services;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -16,11 +16,11 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import ru.chasepay.mobile.utils.DeviceUtils;
+import ru.quattrex.mobile.utils.DeviceUtils;
 
 public class DeviceHttpPingService {
     private static final String TAG = "DeviceHttpPingService";
-    private static final String PREFS_NAME = "ChasePrefs";
+    private static final String PREFS_NAME = "QuattrexPrefs";
     private static final String KEY_DEVICE_TOKEN = "device_token";
     
     // Ping every 5 seconds via HTTP
@@ -103,7 +103,7 @@ public class DeviceHttpPingService {
                 return;
             }
             
-            String baseUrl = ru.chasepay.mobile.BuildConfig.BASE_URL;
+            String baseUrl = ru.quattrex.mobile.BuildConfig.BASE_URL;
             String pingUrl = baseUrl.replace("/api", "") + "/api/device/health-check";
             
             JSONObject pingData = new JSONObject();

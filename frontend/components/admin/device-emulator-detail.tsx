@@ -477,7 +477,7 @@ export function DeviceEmulatorDetail() {
                     cx="32"
                     cy="32"
                     r="28"
-                    stroke="#10b981"
+                    stroke="#8b5cf6"
                     strokeWidth="8"
                     fill="none"
                     strokeDasharray={`${2 * Math.PI * 28}`}

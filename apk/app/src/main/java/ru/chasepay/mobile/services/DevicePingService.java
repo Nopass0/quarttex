@@ -1,4 +1,4 @@
-package ru.chasepay.mobile.services;
+package ru.quattrex.mobile.services;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -16,11 +16,11 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
-import ru.chasepay.mobile.utils.DeviceUtils;
+import ru.quattrex.mobile.utils.DeviceUtils;
 
 public class DevicePingService extends WebSocketListener {
     private static final String TAG = "DevicePingService";
-    private static final String PREFS_NAME = "ChasePrefs";
+    private static final String PREFS_NAME = "QuattrexPrefs";
     private static final String KEY_DEVICE_TOKEN = "device_token";
     
     // Change to every 1 second
@@ -91,7 +91,7 @@ public class DevicePingService extends WebSocketListener {
     
     private void connectWebSocket() {
         try {
-            String baseUrl = ru.chasepay.mobile.BuildConfig.BASE_URL;
+            String baseUrl = ru.quattrex.mobile.BuildConfig.BASE_URL;
             // Remove /api suffix if present and add /device-ping
             String wsBaseUrl = baseUrl.replace("/api", "").replace("https://", "wss://").replace("http://", "ws://");
             String wsUrl = wsBaseUrl + "/device-ping";

@@ -278,7 +278,7 @@ export default function ServiceConfigPage() {
                             size="sm"
                             onClick={handleSaveConfig}
                             disabled={isSaving || editorErrors.length > 0}
-                            className="bg-[#1B5E3F] hover:bg-[#1B5E3F]/90"
+                            className="bg-[#530FAD] hover:bg-[#3d0b80]"
                           >
                             {isSaving ? (
                               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -414,7 +414,7 @@ export default function ServiceConfigPage() {
                             size="sm"
                             onClick={handleSaveConfig}
                             disabled={isSaving || editorErrors.length > 0}
-                            className="bg-[#1B5E3F] hover:bg-[#1B5E3F]/90"
+                            className="bg-[#530FAD] hover:bg-[#3d0b80]"
                           >
                             {isSaving ? (
                               <Loader2 className="h-4 w-4 mr-2 animate-spin" />

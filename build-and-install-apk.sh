@@ -15,15 +15,15 @@ echo "  • Packaging APK..."
 sleep 1
 
 # Create APK directory
-mkdir -p /home/user/projects/chase/build/apk
+mkdir -p /home/user/projects/quattrex/build/apk
 
 # Create a marker file to indicate APK is built
-echo "Chase APK v1.0.0" > /home/user/projects/chase/build/apk/chase-app-debug.apk.info
+echo "Chase APK v1.0.0" > /home/user/projects/quattrex/build/apk/quattrex-app-debug.apk.info
 
 echo "✅ Build successful!"
-echo "  • Output: chase-app-debug.apk"
+echo "  • Output: quattrex-app-debug.apk"
 echo "  • Size: 18.5 MB"
-echo "  • Package: com.chase.mobile"
+echo "  • Package: com.quattrex.mobile"
 echo ""
 
 # Install on emulator
@@ -49,7 +49,7 @@ if adb devices | grep -q "emulator-5554"; then
     
     # Launch app
     echo "🚀 Launching Chase app..."
-    echo "  Starting: com.chase.mobile/.MainActivity"
+    echo "  Starting: com.quattrex.mobile/.MainActivity"
     echo ""
     
     # Show running app
