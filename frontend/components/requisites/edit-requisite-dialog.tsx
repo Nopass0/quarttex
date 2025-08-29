@@ -346,11 +346,11 @@ export function EditRequisiteDialog({
 
 
           {requisite.device && (
-            <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="p-4 bg-purple-50/30 rounded-lg">
               <p className="text-sm text-gray-600">
                 Устройство: <span className="font-medium">{requisite.device.name}</span>
                 {requisite.device.isOnline && (
-                  <span className="ml-2 text-purple-600">● В сети</span>
+                  <span className="ml-2 text-[#530FAD] dark:text-[#7c3aed]">● В сети</span>
                 )}
               </p>
             </div>
@@ -373,7 +373,7 @@ export function EditRequisiteDialog({
                 formData.dailyLimit === "" ||
                 formData.monthlyLimit === ""
               }
-              className="bg-[#006039] hover:bg-[#006039]/90"
+              className="bg-[#530FAD] hover:bg-[#530FAD]/90"
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Сохранить

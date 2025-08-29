@@ -380,7 +380,7 @@ export function RateSources() {
               <div className="space-y-4">
                 {/* Курсы */}
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <div className="flex justify-between items-center p-3 bg-purple-50/30 rounded-lg">
                     <span className="text-sm text-gray-600">Базовый курс:</span>
                     <span className="font-semibold">
                       {source.currentRate ? `${source.currentRate.toFixed(2)} ₽/USDT` : 'Нет данных'}
@@ -392,7 +392,7 @@ export function RateSources() {
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-gray-600">Корректировка:</span>
                         {source.kkkOperation === 'PLUS' ? (
-                          <TrendingUp className="h-4 w-4 text-purple-600" />
+                          <TrendingUp className="h-4 w-4 text-[#530FAD] dark:text-[#7c3aed]" />
                         ) : (
                           <TrendingDown className="h-4 w-4 text-red-600" />
                         )}
@@ -415,14 +415,14 @@ export function RateSources() {
 
                 {/* Статистика */}
                 <div className="flex gap-4">
-                  <div className="flex-1 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex-1 p-3 bg-purple-50/30 rounded-lg">
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-gray-500" />
                       <span className="text-sm text-gray-600">Трейдеры:</span>
                     </div>
                     <span className="text-lg font-semibold">{source._count?.traders || 0}</span>
                   </div>
-                  <div className="flex-1 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex-1 p-3 bg-purple-50/30 rounded-lg">
                     <div className="flex items-center gap-2">
                       <Building2 className="h-4 w-4 text-gray-500" />
                       <span className="text-sm text-gray-600">Мерчанты:</span>

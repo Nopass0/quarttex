@@ -25,7 +25,7 @@ export function Sparkles({
   children,
   className,
   sparkleCount = 50,
-  sparkleColor = "#006039",
+  sparkleColor = "#530FAD",
   minSize = 2,
   maxSize = 6,
 }: SparklesProps) {

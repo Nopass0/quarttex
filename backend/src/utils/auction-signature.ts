@@ -1,21 +1,24 @@
 /**
- * Утилиты для подписи и верификации RSA-SHA256 в аукционной системе
+ * Утилиты для работы с RSA подписью в аукционной системе
+ * Реализация согласно документации IE Cloud Summit
  */
 
 import crypto from "crypto";
+import forge from "node-forge";
 import {
   AuctionOperation,
   SignatureUtils,
   RSAKeyPair,
   RSAKeyGenerator,
-} from "../types/auction";
+  AuctionErrorCode,
+} from "@/types/auction";
 
 /**
- * Реализация утилит для работы с RSA подписями
+ * Реализация утилит подписи согласно документации
  */
-export class AuctionSignatureUtils implements SignatureUtils {
+class AuctionSignatureHelpers implements SignatureUtils {
   /**
-   * Создает каноничную строку для подписи
+   * Создает каноничную строку для подписи согласно документации
    * Формат: {timestamp}|{external_system_name}|{key_field}|{operation}
    */
   createCanonicalString(
@@ -24,288 +27,229 @@ export class AuctionSignatureUtils implements SignatureUtils {
     keyField: string,
     operation: AuctionOperation
   ): string {
-    return `${timestamp}|${externalSystemName}|${keyField}|${operation}`;
+    // Строгий формат согласно документации
+    const canonical = `${timestamp}|${externalSystemName}|${keyField}|${operation}`;
+    console.log(`[AuctionSignature] Canonical string: "${canonical}"`);
+    return canonical;
   }
 
   /**
-   * Подписывает каноничную строку приватным ключом RSA-SHA256
+   * Подписывает каноничную строку приватным ключом (node-forge реализация)
+   * Алгоритм: RSA-SHA256, ключ 2048 бит, результат в Base64
    */
   signCanonicalString(canonicalString: string, privateKeyPem: string): string {
     try {
-      const sign = crypto.createSign("RSA-SHA256");
-      sign.update(canonicalString, "utf8");
-      const signature = sign.sign(privateKeyPem, "base64");
-      return signature;
+      const privateKey = forge.pki.privateKeyFromPem(privateKeyPem);
+      const md = forge.md.sha256.create();
+      md.update(canonicalString, "utf8");
+      const signature = privateKey.sign(md);
+      const base64Signature = forge.util.encode64(signature);
+      
+      console.log(`[AuctionSignature] Signed string length: ${canonicalString.length}, signature length: ${base64Signature.length}`);
+      return base64Signature;
     } catch (error) {
-      throw new Error(`Ошибка подписи: ${error instanceof Error ? error.message : String(error)}`);
+      console.error(`[AuctionSignature] Signing error:`, error);
+      throw new Error(`Failed to sign canonical string: ${error}`);
     }
   }
 
   /**
-   * Проверяет подпись публичным ключом RSA-SHA256
+   * Проверяет подпись публичным ключом (node-forge реализация)
+   * Алгоритм: RSA-SHA256, проверка Base64 подписи
    */
   verifySignature(
     canonicalString: string,
-    signature: string,
+    base64Signature: string,
     publicKeyPem: string
   ): boolean {
     try {
-      const verify = crypto.createVerify("RSA-SHA256");
-      verify.update(canonicalString, "utf8");
-      return verify.verify(publicKeyPem, signature, "base64");
+      const publicKey = forge.pki.publicKeyFromPem(publicKeyPem);
+      const md = forge.md.sha256.create();
+      md.update(canonicalString, "utf8");
+      const signatureBytes = forge.util.decode64(base64Signature);
+      const isValid = publicKey.verify(md.digest().bytes(), signatureBytes);
+      
+      console.log(`[AuctionSignature] Verification result: ${isValid}`);
+      return isValid;
     } catch (error) {
-      console.error("Ошибка верификации подписи:", error);
+      console.error(`[AuctionSignature] Verification error:`, error);
       return false;
     }
   }
 
   /**
-   * Проверяет валидность timestamp (±120 секунд от текущего времени)
+   * Проверяет валидность timestamp (±120 секунд согласно документации)
    */
   validateTimestamp(timestamp: number): boolean {
     const now = Math.floor(Date.now() / 1000);
     const diff = Math.abs(now - timestamp);
-    return diff <= 120; // ±120 секунд
+    const isValid = diff <= 120; // ±2 минуты
+    
+    console.log(`[AuctionSignature] Timestamp validation: ${timestamp}, now: ${now}, diff: ${diff}s, valid: ${isValid}`);
+    return isValid;
+  }
+}
+
+/**
+ * Генератор RSA ключей согласно документации
+ */
+class AuctionRSAKeyGenerator implements RSAKeyGenerator {
+  /**
+   * Генерирует пару RSA ключей 2048 бит
+   * Формат: PKCS#8 (приватный), X.509 (публичный)
+   */
+  async generateKeyPair(): Promise<RSAKeyPair> {
+    try {
+      console.log(`[AuctionRSA] Generating 2048-bit RSA key pair...`);
+      
+      const keypair = forge.pki.rsa.generateKeyPair(2048);
+      
+      // Приватный ключ в формате PKCS#8
+      const privateKeyPem = forge.pki.privateKeyToPem(keypair.privateKey);
+      
+      // Публичный ключ в формате X.509
+      const publicKeyPem = forge.pki.publicKeyToPem(keypair.publicKey);
+      
+      console.log(`[AuctionRSA] Key pair generated successfully`);
+      console.log(`[AuctionRSA] Public key length: ${publicKeyPem.length}`);
+      console.log(`[AuctionRSA] Private key length: ${privateKeyPem.length}`);
+      
+      return {
+        publicKeyPem,
+        privateKeyPem
+      };
+    } catch (error) {
+      console.error(`[AuctionRSA] Key generation error:`, error);
+      throw new Error(`Failed to generate RSA key pair: ${error}`);
+    }
   }
 
   /**
-   * Создает заголовки для HTTP запроса с подписью
+   * Проверяет валидность ключей
    */
-  createSignedHeaders(
-    canonicalString: string,
-    privateKeyPem: string,
-    timestamp?: number
-  ): Record<string, string> {
-    const ts = timestamp || Math.floor(Date.now() / 1000);
-    const signature = this.signCanonicalString(canonicalString, privateKeyPem);
-
-    return {
-      "Content-Type": "application/json",
-      "X-Timestamp": ts.toString(),
-      "X-Signature": signature,
-    };
+  validateKeyPair(publicKeyPem: string, privateKeyPem: string): boolean {
+    try {
+      // Проверяем что ключи можно загрузить
+      const privateKey = forge.pki.privateKeyFromPem(privateKeyPem);
+      const publicKey = forge.pki.publicKeyFromPem(publicKeyPem);
+      
+      // Проверяем что ключи совпадают (тест подписи)
+      const testString = "test_validation_string";
+      const md = forge.md.sha256.create();
+      md.update(testString, "utf8");
+      
+      const signature = privateKey.sign(md);
+      
+      const md2 = forge.md.sha256.create();
+      md2.update(testString, "utf8");
+      const isValid = publicKey.verify(md2.digest().bytes(), signature);
+      
+      console.log(`[AuctionRSA] Key pair validation: ${isValid}`);
+      return isValid;
+    } catch (error) {
+      console.error(`[AuctionRSA] Key validation error:`, error);
+      return false;
+    }
   }
+}
 
-  /**
-   * Валидирует входящие заголовки с подписью
-   */
-  validateIncomingHeaders(
-    headers: Record<string, string>,
-    canonicalString: string,
-    publicKeyPem: string
-  ): { valid: boolean; error?: string } {
+/**
+ * Валидация запроса с подписью
+ */
+export function validateAuctionRequest(
+  headers: Record<string, string>,
+  body: any,
+  publicKeyPem: string,
+  externalSystemName: string,
+  keyField: string,
+  operation: AuctionOperation
+): { valid: boolean; error?: AuctionErrorCode; message?: string } {
+  try {
+    // Проверяем наличие заголовков
     const timestamp = headers["x-timestamp"] || headers["X-Timestamp"];
     const signature = headers["x-signature"] || headers["X-Signature"];
 
     if (!timestamp) {
-      return { valid: false, error: "timestamp_missing" };
+      return {
+        valid: false,
+        error: "timestamp_invalid",
+        message: "Missing X-Timestamp header"
+      };
     }
 
     if (!signature) {
-      return { valid: false, error: "signature_missing" };
+      return {
+        valid: false,
+        error: "signature_missing", 
+        message: "Missing X-Signature header"
+      };
     }
 
-    const timestampNum = parseInt(timestamp, 10);
+    // Проверяем timestamp
+    const timestampNum = parseInt(timestamp);
     if (isNaN(timestampNum)) {
-      return { valid: false, error: "timestamp_invalid" };
+      return {
+        valid: false,
+        error: "timestamp_invalid",
+        message: "Invalid timestamp format"
+      };
     }
 
-    if (!this.validateTimestamp(timestampNum)) {
-      return { valid: false, error: "timestamp_expired" };
+    const signatureUtils = new AuctionSignatureHelpers();
+    
+    if (!signatureUtils.validateTimestamp(timestampNum)) {
+      return {
+        valid: false,
+        error: "timestamp_expired",
+        message: "Timestamp is outside allowed window (±120 seconds)"
+      };
     }
 
-    if (!this.verifySignature(canonicalString, signature, publicKeyPem)) {
-      return { valid: false, error: "signature_invalid" };
+    // Создаем каноничную строку
+    const canonical = signatureUtils.createCanonicalString(
+      timestampNum,
+      externalSystemName,
+      keyField,
+      operation
+    );
+
+    // Проверяем подпись
+    const isSignatureValid = signatureUtils.verifySignature(
+      canonical,
+      signature,
+      publicKeyPem
+    );
+
+    if (!isSignatureValid) {
+      return {
+        valid: false,
+        error: "signature_invalid",
+        message: "RSA signature verification failed"
+      };
     }
 
     return { valid: true };
+    
+  } catch (error) {
+    console.error(`[AuctionSignature] Validation error:`, error);
+    return {
+      valid: false,
+      error: "signature_invalid",
+      message: `Validation error: ${error}`
+    };
   }
 }
 
-/**
- * Генератор RSA ключей для аукционной системы
- */
-export class AuctionRSAKeyGenerator implements RSAKeyGenerator {
-  /**
-   * Генерирует пару RSA ключей 2048 бит
-   */
-  async generateKeyPair(): Promise<RSAKeyPair> {
-    return new Promise((resolve, reject) => {
-      crypto.generateKeyPair(
-        "rsa",
-        {
-          modulusLength: 2048,
-          publicKeyEncoding: {
-            type: "spki",
-            format: "pem",
-          },
-          privateKeyEncoding: {
-            type: "pkcs8",
-            format: "pem",
-          },
-        },
-        (err, publicKey, privateKey) => {
-          if (err) {
-            reject(new Error(`Ошибка генерации ключей: ${err.message}`));
-            return;
-          }
-
-          resolve({
-            publicKeyPem: publicKey,
-            privateKeyPem: privateKey,
-          });
-        }
-      );
-    });
-  }
-
-  /**
-   * Проверяет валидность пары ключей
-   */
-  validateKeyPair(publicKeyPem: string, privateKeyPem: string): boolean {
-    try {
-      // Создаем тестовую строку для проверки
-      const testString = "test_validation_string";
-      const signatureUtils = new AuctionSignatureUtils();
-      
-      // Подписываем тестовую строку приватным ключом
-      const signature = signatureUtils.signCanonicalString(testString, privateKeyPem);
-      
-      // Проверяем подпись публичным ключом
-      return signatureUtils.verifySignature(testString, signature, publicKeyPem);
-    } catch (error) {
-      console.error("Ошибка валидации ключей:", error);
-      return false;
-    }
-  }
-
-  /**
-   * Извлекает информацию о ключе (размер, алгоритм)
-   */
-  getKeyInfo(keyPem: string): { type: string; size: number } | null {
-    try {
-      const keyObject = crypto.createPublicKey(keyPem);
-      return {
-        type: keyObject.asymmetricKeyType || "unknown",
-        size: keyObject.asymmetricKeySize || 0,
-      };
-    } catch (error) {
-      console.error("Ошибка получения информации о ключе:", error);
-      return null;
-    }
-  }
-}
-
-/**
- * Синглтон экземпляры для использования в приложении
- */
-export const auctionSignatureUtils = new AuctionSignatureUtils();
-export const auctionRSAKeyGenerator = new AuctionRSAKeyGenerator();
-
-/**
- * Вспомогательные функции для работы с подписями
- */
-export const AuctionSignatureHelpers = {
-  /**
-   * Создает каноничную строку для CreateOrder
-   */
-  createOrderCanonical(
-    timestamp: number,
-    externalSystemName: string,
-    systemOrderId: string
-  ): string {
-    return auctionSignatureUtils.createCanonicalString(
-      timestamp,
-      externalSystemName,
-      systemOrderId,
-      "CreateOrder"
-    );
-  },
-
-  /**
-   * Создает каноничную строку для CancelOrder
-   */
-  cancelOrderCanonical(
-    timestamp: number,
-    externalSystemName: string,
-    systemOrderId: string
-  ): string {
-    return auctionSignatureUtils.createCanonicalString(
-      timestamp,
-      externalSystemName,
-      systemOrderId,
-      "CancelOrder"
-    );
-  },
-
-  /**
-   * Создает каноничную строку для GetOrderStatus
-   */
-  getOrderStatusCanonical(
-    timestamp: number,
-    externalSystemName: string,
-    systemOrderId: string
-  ): string {
-    return auctionSignatureUtils.createCanonicalString(
-      timestamp,
-      externalSystemName,
-      systemOrderId,
-      "GetOrderStatus"
-    );
-  },
-
-  /**
-   * Создает каноничную строку для CreateDispute
-   */
-  createDisputeCanonical(
-    timestamp: number,
-    externalSystemName: string,
-    systemOrderId: string
-  ): string {
-    return auctionSignatureUtils.createCanonicalString(
-      timestamp,
-      externalSystemName,
-      systemOrderId,
-      "CreateDispute"
-    );
-  },
-
-  /**
-   * Создает каноничную строку для AuctionCallback
-   */
-  auctionCallbackCanonical(
-    timestamp: number,
-    externalSystemName: string,
-    orderId: string
-  ): string {
-    return auctionSignatureUtils.createCanonicalString(
-      timestamp,
-      externalSystemName,
-      orderId,
-      "AuctionCallback"
-    );
-  },
+// Константы для аукционной системы
+export const AUCTION_CONSTANTS = {
+  MAX_RESPONSE_TIMEOUT: 5000, // 5 секунд согласно документации
+  TIMESTAMP_TOLERANCE: 120,   // ±120 секунд
+  RSA_KEY_SIZE: 2048,        // Размер RSA ключа
 };
 
-/**
- * Константы для аукционной системы
- */
-export const AUCTION_CONSTANTS = {
-  /** Максимальное время ожидания ответа от внешней системы (5 секунд) */
-  MAX_RESPONSE_TIMEOUT: 5000,
-  
-  /** Окно валидности timestamp (±120 секунд) */
-  TIMESTAMP_WINDOW: 120,
-  
-  /** Размер RSA ключа в битах */
-  RSA_KEY_SIZE: 2048,
-  
-  /** Алгоритм подписи */
-  SIGNATURE_ALGORITHM: "RSA-SHA256",
-  
-  /** Формат приватного ключа */
-  PRIVATE_KEY_FORMAT: "PKCS#8",
-  
-  /** Формат публичного ключа */
-  PUBLIC_KEY_FORMAT: "X.509",
-} as const;
+// Экспортируем экземпляры классов
+export const auctionSignatureUtils = new AuctionSignatureHelpers();
+export const auctionRSAKeyGenerator = new AuctionRSAKeyGenerator();
+
+// Экспортируем классы для возможности наследования
+export { AuctionSignatureHelpers, AuctionRSAKeyGenerator };

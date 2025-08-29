@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Logo } from "@/components/ui/logo";
+import QuatrexLogo from "@/components/ui/quattrex-logo";
 import { toast } from "sonner";
 import { useAggregatorAuth } from "@/stores/aggregator-auth";
 import { Loader2, Mail, Lock, Globe } from "lucide-react";
@@ -124,12 +124,12 @@ export default function AggregatorLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0f0f0f] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 bg-white dark:bg-[#29382f] shadow-lg border-gray-200 dark:border-[#29382f]">
+    <div className="min-h-screen bg-purple-50/30 dark:bg-[#0f0f0f] flex items-center justify-center p-4">
+      <Card className="bg-purple-50/10 w-full max-w-md p-8 bg-purple-50/20 dark:bg-purple-900/15 dark:bg-purple-800/60 shadow-lg border-purple-200/60 dark:border-purple-700/60">
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center gap-3 mb-6">
             <Globe className="h-10 w-10 text-[#006039] dark:text-[#2d6a42]" />
-            <Logo size="lg" animated />
+            <QuatrexLogo size="lg"  />
           </div>
           <h1 className="mt-4 text-2xl font-semibold text-gray-900 dark:text-[#eeeeee]">
             Личный кабинет агрегатора
@@ -181,7 +181,7 @@ export default function AggregatorLoginPage() {
 
             <Button
               type="submit"
-              className="w-full bg-[#006039] hover:bg-[#004d2e] dark:bg-[#2d6a42] dark:hover:bg-[#236035]"
+              className="w-full bg-[#530FAD] hover:bg-purple-700/80 dark:bg-purple-800/60 dark:hover:bg-purple-800/60"
               disabled={loading}
             >
               {loading ? (
@@ -212,7 +212,7 @@ export default function AggregatorLoginPage() {
             </div>
             <Button
               type="submit"
-              className="w-full bg-[#006039] hover:bg-[#004d2e] dark:bg-[#2d6a42] dark:hover:bg-[#236035]"
+              className="w-full bg-[#530FAD] hover:bg-purple-700/80 dark:bg-purple-800/60 dark:hover:bg-purple-800/60"
               disabled={loading || otp.length < 6}
             >
               {loading ? (
@@ -243,7 +243,7 @@ export default function AggregatorLoginPage() {
             Нет доступа?{" "}
             <a
               href="#"
-              className="text-[#006039] dark:text-[#2d6a42] hover:text-[#004d2e] dark:hover:text-[#236035] font-medium"
+              className="text-[#006039] dark:text-[#2d6a42] hover:text-[#3d0b80] dark:hover:text-[#236035] font-medium"
             >
               Свяжитесь с администратором
             </a>

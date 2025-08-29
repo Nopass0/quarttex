@@ -161,7 +161,7 @@ const statusIcons: Record<Status, any> = {
 };
 
 const statusColors: Record<Status, string> = {
-  CREATED: "bg-gray-100 text-gray-700",
+  CREATED: "bg-purple-100/40 text-gray-700",
   IN_PROGRESS: "bg-blue-100 text-blue-700",
   READY: "bg-purple-100 text-purple-700",
   CANCELED: "bg-red-100 text-red-700",
@@ -720,7 +720,7 @@ export function TransactionsList() {
     if (requisites.phoneNumber) {
       return (
         <div className="flex items-center gap-2">
-          <Phone className="h-3 w-3 text-[purple-600]" />
+          <Phone className="h-3 w-3 text-[#006039]" />
           <button
             onClick={() =>
               copyToClipboard(
@@ -728,7 +728,7 @@ export function TransactionsList() {
                 "Номер телефона скопирован"
               )
             }
-            className="text-sm hover:text-[purple-600] transition-colors"
+            className="text-sm hover:text-[#006039] transition-colors"
           >
             {formatPhoneNumber(requisites.phoneNumber)}
           </button>
@@ -741,8 +741,8 @@ export function TransactionsList() {
       return (
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <div className="bg-gray-100 rounded px-2 py-1 flex items-center gap-2">
-              <CreditCard className="h-3 w-3 text-[purple-600]" />
+            <div className="bg-purple-100/40 rounded px-2 py-1 flex items-center gap-2">
+              <CreditCard className="h-3 w-3 text-[#006039]" />
               <div>
                 <button
                   onClick={() =>
@@ -751,7 +751,7 @@ export function TransactionsList() {
                       "Номер карты скопирован"
                     )
                   }
-                  className="text-xs font-mono hover:text-[purple-600] transition-colors"
+                  className="text-xs font-mono hover:text-[#006039] transition-colors"
                 >
                   {formatCardNumber(requisites.cardNumber)}
                 </button>
@@ -776,7 +776,7 @@ export function TransactionsList() {
       <div
         key={transaction.id}
         className={cn(
-          "bg-white rounded-lg p-4 cursor-pointer hover:shadow-md transition-all duration-300 border border-gray-100",
+          "bg-purple-50/20 dark:bg-purple-900/15 rounded-lg p-4 cursor-pointer hover:shadow-md transition-all duration-300 border border-gray-100",
           transaction.isNew && "flash-once"
         )}
         onClick={() => openTransactionDetailsDialog(transaction)}
@@ -896,7 +896,7 @@ export function TransactionsList() {
                 )}
               </div>
             ) : (
-              <div className="bg-gray-100 text-gray-500 px-3 py-2 rounded-md">
+              <div className="bg-purple-100/40 text-gray-500 px-3 py-2 rounded-md">
                 <div className="text-sm">Не назначено</div>
               </div>
             )}
@@ -917,7 +917,7 @@ export function TransactionsList() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <div className="relative w-[500px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[purple-600]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#006039]" />
             <Input
               placeholder="Поиск по ID, Numeric ID, OrderID, клиенту..."
               value={searchQuery}
@@ -928,10 +928,10 @@ export function TransactionsList() {
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline">
-                <Filter className="h-4 w-4 mr-2 text-[purple-600]" />
+                <Filter className="h-4 w-4 mr-2 text-[#006039]" />
                 Фильтры
                 {Object.values(filters).some((v) => v && v !== "all") && (
-                  <span className="ml-2 bg-[purple-600] text-white rounded-full px-2 py-0.5 text-xs">
+                  <span className="ml-2 bg-[#530FAD] text-white rounded-full px-2 py-0.5 text-xs">
                     {
                       Object.values(filters).filter((v) => v && v !== "all")
                         .length
@@ -1082,7 +1082,7 @@ export function TransactionsList() {
                       })
                     }
                   >
-                    <X className="h-4 w-4 mr-2 text-[purple-600]" />
+                    <X className="h-4 w-4 mr-2 text-[#006039]" />
                     Сбросить фильтры
                   </Button>
                 </div>
@@ -1096,12 +1096,12 @@ export function TransactionsList() {
           >
             {isExporting ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin text-[purple-600]" />
+                <Loader2 className="h-4 w-4 mr-2 animate-spin text-[#006039]" />
                 Экспорт...
               </>
             ) : (
               <>
-                <Download className="h-4 w-4 mr-2 text-[purple-600]" />
+                <Download className="h-4 w-4 mr-2 text-[#006039]" />
                 Экспорт
               </>
             )}
@@ -1113,7 +1113,7 @@ export function TransactionsList() {
             disabled={isLoading}
           >
             <RefreshCw
-              className={`h-4 w-4 text-[purple-600] ${
+              className={`h-4 w-4 text-[#006039] ${
                 isLoading ? "animate-spin" : ""
               }`}
             />
@@ -1133,7 +1133,7 @@ export function TransactionsList() {
         <TabsContent value={activeTab} className="mt-4">
           {isLoading && transactions.length === 0 ? (
             <div className="flex justify-center items-center py-8">
-              <RefreshCw className="h-8 w-8 animate-spin text-[purple-600]" />
+              <RefreshCw className="h-8 w-8 animate-spin text-[#006039]" />
             </div>
           ) : (
             <>
@@ -1159,7 +1159,7 @@ export function TransactionsList() {
                       onClick={() => setMeta({ ...meta, page: meta.page - 1 })}
                       disabled={meta.page === 1 || isLoading}
                     >
-                      <ChevronLeft className="h-4 w-4 text-[purple-600]" />
+                      <ChevronLeft className="h-4 w-4 text-[#006039]" />
                     </Button>
                     <Button
                       variant="outline"
@@ -1167,7 +1167,7 @@ export function TransactionsList() {
                       onClick={() => setMeta({ ...meta, page: meta.page + 1 })}
                       disabled={meta.page === meta.totalPages || isLoading}
                     >
-                      <ChevronRight className="h-4 w-4 text-[purple-600]" />
+                      <ChevronRight className="h-4 w-4 text-[#006039]" />
                     </Button>
                   </div>
                 </div>
@@ -1188,7 +1188,7 @@ export function TransactionsList() {
                 <div>
                   <Label className="text-gray-500">ID транзакции</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    <code className="text-sm bg-gray-100 px-2 py-1 rounded">
+                    <code className="text-sm bg-purple-100/40 px-2 py-1 rounded">
                       {selectedTransaction.id}
                     </code>
                     <Button
@@ -1198,14 +1198,14 @@ export function TransactionsList() {
                         copyToClipboard(selectedTransaction.id, "ID скопирован")
                       }
                     >
-                      <Copy className="h-3 w-3 text-[purple-600]" />
+                      <Copy className="h-3 w-3 text-[#006039]" />
                     </Button>
                   </div>
                 </div>
                 <div>
                   <Label className="text-gray-500">Numeric ID</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    <code className="text-sm bg-gray-100 px-2 py-1 rounded">
+                    <code className="text-sm bg-purple-100/40 px-2 py-1 rounded">
                       {selectedTransaction.numericId}
                     </code>
                     <Button
@@ -1218,14 +1218,14 @@ export function TransactionsList() {
                         )
                       }
                     >
-                      <Copy className="h-3 w-3 text-[purple-600]" />
+                      <Copy className="h-3 w-3 text-[#006039]" />
                     </Button>
                   </div>
                 </div>
                 <div>
                   <Label className="text-gray-500">Order ID</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    <code className="text-sm bg-gray-100 px-2 py-1 rounded">
+                    <code className="text-sm bg-purple-100/40 px-2 py-1 rounded">
                       {selectedTransaction.orderId}
                     </code>
                     <Button
@@ -1238,7 +1238,7 @@ export function TransactionsList() {
                         )
                       }
                     >
-                      <Copy className="h-3 w-3 text-[purple-600]" />
+                      <Copy className="h-3 w-3 text-[#006039]" />
                     </Button>
                   </div>
                 </div>
@@ -1280,7 +1280,7 @@ export function TransactionsList() {
                           "IP адрес скопирован"
                         )
                       }
-                      className="hover:text-[purple-600] transition-colors"
+                      className="hover:text-[#006039] transition-colors"
                     >
                       {selectedTransaction.userIp || "Не указан"}
                     </button>
@@ -1357,7 +1357,7 @@ export function TransactionsList() {
                     )}
                   </div>
                 ) : (
-                  <div className="mt-1 bg-gray-100 p-3 rounded-md text-gray-500">
+                  <div className="mt-1 bg-purple-100/40 p-3 rounded-md text-gray-500">
                     Не назначен
                   </div>
                 )}
@@ -1387,7 +1387,7 @@ export function TransactionsList() {
               <div className="space-y-3">
                 <Label className="text-gray-500">Callback URLs</Label>
                 <div className="grid grid-cols-1 gap-3">
-                  <div className="bg-gray-50 p-3 rounded-md">
+                  <div className="bg-purple-50/30 p-3 rounded-md">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="text-sm font-medium">Callback URI</div>
@@ -1406,13 +1406,13 @@ export function TransactionsList() {
                             )
                           }
                         >
-                          <Send className="h-3 w-3 mr-1 text-[purple-600]" />
+                          <Send className="h-3 w-3 mr-1 text-[#006039]" />
                           Отправить
                         </Button>
                       )}
                     </div>
                   </div>
-                  <div className="bg-gray-50 p-3 rounded-md">
+                  <div className="bg-purple-50/30 p-3 rounded-md">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="text-sm font-medium">Success URI</div>
@@ -1431,13 +1431,13 @@ export function TransactionsList() {
                             )
                           }
                         >
-                          <Send className="h-3 w-3 mr-1 text-[purple-600]" />
+                          <Send className="h-3 w-3 mr-1 text-[#006039]" />
                           Отправить
                         </Button>
                       )}
                     </div>
                   </div>
-                  <div className="bg-gray-50 p-3 rounded-md">
+                  <div className="bg-purple-50/30 p-3 rounded-md">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="text-sm font-medium">Fail URI</div>
@@ -1456,7 +1456,7 @@ export function TransactionsList() {
                             )
                           }
                         >
-                          <Send className="h-3 w-3 mr-1 text-[purple-600]" />
+                          <Send className="h-3 w-3 mr-1 text-[#006039]" />
                           Отправить
                         </Button>
                       )}
@@ -1485,7 +1485,7 @@ export function TransactionsList() {
                 openEditDialog(selectedTransaction!);
               }}
             >
-              <Edit className="h-4 w-4 mr-2 text-[purple-600]" />
+              <Edit className="h-4 w-4 mr-2 text-[#006039]" />
               Редактировать
             </Button>
             <Button
@@ -1525,7 +1525,7 @@ export function TransactionsList() {
           <DialogFooter>
             <Button
               onClick={handleRecalcTransaction}
-              className="bg-[purple-600] hover:bg-[#3d0b80]"
+              className="bg-[#530FAD] hover:bg-purple-800/60"
               disabled={isLoading}
             >
               Перерасчитать
@@ -1546,7 +1546,7 @@ export function TransactionsList() {
                 <div>
                   <Label>ID транзакции</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                    <code className="text-xs bg-purple-100/40 px-2 py-1 rounded">
                       {selectedTransaction.id}
                     </code>
                     <Button
@@ -1556,14 +1556,14 @@ export function TransactionsList() {
                         copyToClipboard(selectedTransaction.id, "ID скопирован")
                       }
                     >
-                      <Copy className="h-3 w-3 text-[purple-600]" />
+                      <Copy className="h-3 w-3 text-[#006039]" />
                     </Button>
                   </div>
                 </div>
                 <div>
                   <Label>Numeric ID</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                    <code className="text-xs bg-purple-100/40 px-2 py-1 rounded">
                       {selectedTransaction.numericId}
                     </code>
                     <Button
@@ -1576,14 +1576,14 @@ export function TransactionsList() {
                         )
                       }
                     >
-                      <Copy className="h-3 w-3 text-[purple-600]" />
+                      <Copy className="h-3 w-3 text-[#006039]" />
                     </Button>
                   </div>
                 </div>
                 <div>
                   <Label>Order ID</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                    <code className="text-xs bg-purple-100/40 px-2 py-1 rounded">
                       {selectedTransaction.orderId}
                     </code>
                     <Button
@@ -1596,7 +1596,7 @@ export function TransactionsList() {
                         )
                       }
                     >
-                      <Copy className="h-3 w-3 text-[purple-600]" />
+                      <Copy className="h-3 w-3 text-[#006039]" />
                     </Button>
                   </div>
                 </div>
@@ -1671,7 +1671,7 @@ export function TransactionsList() {
                 />
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-purple-50/30 p-4 rounded-lg">
                 <h4 className="font-medium mb-2">Дополнительная информация</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>Мерчант: {selectedTransaction.merchant.name}</div>
@@ -1700,7 +1700,7 @@ export function TransactionsList() {
           <DialogFooter>
             <Button
               onClick={handleUpdateTransaction}
-              className="bg-[purple-600] hover:bg-[#3d0b80]"
+              className="bg-[#530FAD] hover:bg-purple-800/60"
               disabled={isLoading}
             >
               Сохранить

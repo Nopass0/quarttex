@@ -54,7 +54,7 @@ export function DeviceSelector({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "w-full justify-between dark:bg-gray-700 dark:border-gray-600 dark:text-white",
+            "w-full justify-between dark:bg-purple-900/25 dark:border-gray-600 dark:text-white",
             className
           )}
         >
@@ -71,7 +71,7 @@ export function DeviceSelector({
                 <div
                   className={cn(
                     "w-2 h-2 rounded-full",
-                    selectedDevice.isOnline ? "bg-purple-500" : "bg-red-500"
+                    selectedDevice.isOnline ? "bg-[#530FAD]" : "bg-red-500"
                   )}
                 />
                 <Badge variant="secondary" className="text-xs">
@@ -98,15 +98,15 @@ export function DeviceSelector({
                   setOpen(false);
                 }}
                 className={cn(
-                  "w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors",
+                  "w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-purple-100/40 dark:hover:bg-gray-800 transition-colors",
                   selectedDeviceId === device.id &&
-                    "bg-gray-100 dark:bg-gray-800"
+                    "bg-purple-100/40 dark:bg-gray-800"
                 )}
               >
                 <div
                   className={cn(
                     "w-2 h-2 rounded-full shrink-0",
-                    device.isOnline ? "bg-purple-500" : "bg-red-500"
+                    device.isOnline ? "bg-[#530FAD]" : "bg-red-500"
                   )}
                 />
                 <Smartphone className="h-4 w-4 shrink-0 text-gray-500" />
@@ -133,7 +133,7 @@ export function DeviceSelector({
                     {device.bankDetails?.length || 0} рекв.
                   </Badge>
                   {selectedDeviceId === device.id && (
-                    <Check className="h-4 w-4 text-purple-500" />
+                    <Check className="h-4 w-4 text-[#530FAD]" />
                   )}
                 </div>
               </button>

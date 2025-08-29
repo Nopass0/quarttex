@@ -1,3 +1,5 @@
+import React from "react"
+
 export default function QuatrexLogo({
   className = "",
   size = "md",
@@ -22,7 +24,7 @@ export default function QuatrexLogo({
       {/* Logo Icon */}
       <div className={`${iconSizeClasses[size]} relative`}>
         {/* Outer glow effect */}
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-400 to-purple-600 blur-sm opacity-60"></div>
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-400 to-purple-600 blur-sm opacity-60 dark:opacity-80"></div>
         
         {/* Main container */}
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500 via-purple-600 to-purple-800 p-0.5">
@@ -130,7 +132,7 @@ export default function QuatrexLogo({
       {/* Logo Text */}
       <div className="flex flex-col">
         <span
-          className={`bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 bg-clip-text text-transparent font-bold tracking-wide ${
+          className={`bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 dark:from-purple-400 dark:via-purple-500 dark:to-purple-600 bg-clip-text text-transparent font-bold tracking-wide dark:drop-shadow-[0_0_8px_rgba(124,58,237,0.4)] ${
             size === "sm" ? "text-2xl" : size === "md" ? "text-3xl" : "text-4xl"
           }`}
           style={{
@@ -140,7 +142,7 @@ export default function QuatrexLogo({
             letterSpacing: "0.02em",
           }}
         >
-          QUATT<span className="text-purple-500">REX</span>
+          QUATT<span className="text-purple-500 dark:text-purple-400 dark:drop-shadow-[0_0_6px_rgba(124,58,237,0.4)]">REX</span>
         </span>
       </div>
     </div>

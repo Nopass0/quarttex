@@ -664,7 +664,7 @@ export function TestMerchantTransactions({
 
   return (
     <>
-      <Card className="dark:bg-gray-800 dark:border-gray-700">
+      <Card className="bg-purple-50/10 dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
           <CardTitle className="dark:text-white">Тестовые транзакции</CardTitle>
           <CardDescription className="dark:text-gray-400">
@@ -680,7 +680,7 @@ export function TestMerchantTransactions({
               id="random-mode"
               checked={useRandomData}
               onCheckedChange={setUseRandomData}
-              className="dark:bg-gray-700"
+              className="dark:bg-purple-900/25"
             />
           </div>
 
@@ -688,7 +688,7 @@ export function TestMerchantTransactions({
             value={transactionType}
             onValueChange={(v) => setTransactionType(v as "IN" | "OUT")}
           >
-            <TabsList className="grid w-full grid-cols-2 dark:bg-gray-700">
+            <TabsList className="grid w-full grid-cols-2 dark:bg-purple-900/25">
               <TabsTrigger
                 value="IN"
                 className="dark:data-[state=active]:bg-gray-600 dark:data-[state=active]:text-white"
@@ -710,10 +710,10 @@ export function TestMerchantTransactions({
                     Метод оплаты
                   </Label>
                   <Select value={methodId} onValueChange={setMethodId}>
-                    <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <SelectTrigger className="dark:bg-purple-900/25 dark:border-gray-600 dark:text-white">
                       <SelectValue placeholder="Выберите метод" />
                     </SelectTrigger>
-                    <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                    <SelectContent className="dark:bg-purple-900/25 dark:border-gray-600">
                       {activeMethods.map((mm) => (
                         <SelectItem
                           key={mm.method.id}
@@ -740,7 +740,7 @@ export function TestMerchantTransactions({
                           value={amount}
                           onChange={(e) => setAmount(e.target.value)}
                           placeholder="5000"
-                          className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                          className="dark:bg-purple-900/25 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                         />
                       </div>
                       <div>
@@ -754,7 +754,7 @@ export function TestMerchantTransactions({
                           value={rate}
                           onChange={(e) => setRate(e.target.value)}
                           placeholder="95.5"
-                          className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                          className="dark:bg-purple-900/25 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                         />
                       </div>
                     </div>
@@ -769,7 +769,7 @@ export function TestMerchantTransactions({
                           value={orderId}
                           onChange={(e) => setOrderId(e.target.value)}
                           placeholder="TEST_ORDER_123"
-                          className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                          className="dark:bg-purple-900/25 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                         />
                         <Button
                           type="button"
@@ -780,7 +780,7 @@ export function TestMerchantTransactions({
                               `TEST_${transactionType}_${Date.now()}_${Math.random().toString(36).substring(7)}`,
                             )
                           }
-                          className="dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
+                          className="dark:bg-purple-900/25 dark:border-gray-600 dark:hover:bg-gray-600"
                         >
                           <Shuffle className="h-4 w-4" />
                         </Button>
@@ -797,7 +797,7 @@ export function TestMerchantTransactions({
                           value={userIp}
                           onChange={(e) => setUserIp(e.target.value)}
                           placeholder="192.168.1.1"
-                          className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                          className="dark:bg-purple-900/25 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                         />
                         <Button
                           type="button"
@@ -808,7 +808,7 @@ export function TestMerchantTransactions({
                               `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
                             )
                           }
-                          className="dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
+                          className="dark:bg-purple-900/25 dark:border-gray-600 dark:hover:bg-gray-600"
                         >
                           <Shuffle className="h-4 w-4" />
                         </Button>
@@ -826,7 +826,7 @@ export function TestMerchantTransactions({
                     value={callbackUri}
                     onChange={(e) => setCallbackUri(e.target.value)}
                     placeholder="https://example.com/webhook"
-                    className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                    className="dark:bg-purple-900/25 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                   />
                 </div>
               </div>
@@ -872,7 +872,7 @@ export function TestMerchantTransactions({
                       size="sm"
                       onClick={() => createBatchTransactions(1)}
                       disabled={isLoading}
-                      className="dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:text-gray-200"
+                      className="dark:bg-purple-900/25 dark:border-gray-600 dark:hover:bg-gray-600 dark:text-gray-200"
                     >
                       Создать 1
                     </Button>
@@ -881,7 +881,7 @@ export function TestMerchantTransactions({
                       size="sm"
                       onClick={() => createBatchTransactions(2)}
                       disabled={isLoading}
-                      className="dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:text-gray-200"
+                      className="dark:bg-purple-900/25 dark:border-gray-600 dark:hover:bg-gray-600 dark:text-gray-200"
                     >
                       Создать 2
                     </Button>
@@ -890,7 +890,7 @@ export function TestMerchantTransactions({
                       size="sm"
                       onClick={() => createBatchTransactions(5)}
                       disabled={isLoading}
-                      className="dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:text-gray-200"
+                      className="dark:bg-purple-900/25 dark:border-gray-600 dark:hover:bg-gray-600 dark:text-gray-200"
                     >
                       Создать 5
                     </Button>
@@ -899,7 +899,7 @@ export function TestMerchantTransactions({
                       size="sm"
                       onClick={() => createBatchTransactions(10)}
                       disabled={isLoading}
-                      className="dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:text-gray-200"
+                      className="dark:bg-purple-900/25 dark:border-gray-600 dark:hover:bg-gray-600 dark:text-gray-200"
                     >
                       Создать 10
                     </Button>
@@ -908,7 +908,7 @@ export function TestMerchantTransactions({
                       size="sm"
                       onClick={() => createBatchTransactions(20)}
                       disabled={isLoading}
-                      className="dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:text-gray-200"
+                      className="dark:bg-purple-900/25 dark:border-gray-600 dark:hover:bg-gray-600 dark:text-gray-200"
                     >
                       Создать 20
                     </Button>
@@ -934,7 +934,7 @@ export function TestMerchantTransactions({
                             stopAutoCreate(transactionType);
                           }
                         }}
-                        className="dark:bg-gray-700"
+                        className="dark:bg-purple-900/25"
                       />
                     </div>
 
@@ -961,7 +961,7 @@ export function TestMerchantTransactions({
                           min="1"
                           max="300"
                           disabled={autoCreateEnabled[transactionType]}
-                          className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          className="dark:bg-purple-900/25 dark:border-gray-600 dark:text-white"
                         />
                       </div>
                       <div>
@@ -980,7 +980,7 @@ export function TestMerchantTransactions({
                           min="1"
                           max="300"
                           disabled={autoCreateEnabled[transactionType]}
-                          className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          className="dark:bg-purple-900/25 dark:border-gray-600 dark:text-white"
                         />
                       </div>
                     </div>
@@ -999,7 +999,7 @@ export function TestMerchantTransactions({
       </Card>
 
       {/* Секция для создания тестовых SMS */}
-      <Card className="mt-4 dark:bg-gray-800 dark:border-gray-700">
+      <Card className="bg-purple-50/10 mt-4 dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
           <CardTitle className="dark:text-white">
             Тестовые SMS сообщения
@@ -1010,7 +1010,7 @@ export function TestMerchantTransactions({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <Alert className="dark:bg-gray-700 dark:border-gray-600">
+            <Alert className="dark:bg-purple-900/25 dark:border-gray-600">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="dark:text-gray-300">
                 SMS будут отправлены случайным активным трейдерам с имитацией
@@ -1033,7 +1033,7 @@ export function TestMerchantTransactions({
                 onClick={() => createTestSMS(5)}
                 disabled={isLoading}
                 variant="outline"
-                className="flex-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600"
+                className="flex-1 dark:bg-purple-900/25 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600"
               >
                 {isLoading && (
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -1044,7 +1044,7 @@ export function TestMerchantTransactions({
                 onClick={() => createTestSMS(10)}
                 disabled={isLoading}
                 variant="outline"
-                className="flex-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600"
+                className="flex-1 dark:bg-purple-900/25 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600"
               >
                 {isLoading && (
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -1057,7 +1057,7 @@ export function TestMerchantTransactions({
       </Card>
 
       {/* Секция для создания тестовых уведомлений от банков */}
-      <Card className="mt-4 dark:bg-gray-800 dark:border-gray-700">
+      <Card className="bg-purple-50/10 mt-4 dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 dark:text-white">
             <Smartphone className="h-5 w-5" />
@@ -1095,7 +1095,7 @@ export function TestMerchantTransactions({
                 value={notificationAmount}
                 onChange={(e) => setNotificationAmount(e.target.value)}
                 placeholder="5000"
-                className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                className="dark:bg-purple-900/25 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
               />
             </div>
           </div>
@@ -1109,10 +1109,10 @@ export function TestMerchantTransactions({
                 value={selectedBankPackage}
                 onValueChange={setSelectedBankPackage}
               >
-                <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <SelectTrigger className="dark:bg-purple-900/25 dark:border-gray-600 dark:text-white">
                   <SelectValue placeholder="Автоматически из реквизитов" />
                 </SelectTrigger>
-                <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                <SelectContent className="dark:bg-purple-900/25 dark:border-gray-600">
                   {Object.entries(bankPackageNames).map(
                     ([bank, packageName], index) => (
                       <SelectItem
@@ -1136,7 +1136,7 @@ export function TestMerchantTransactions({
                 value={notificationTitle}
                 onChange={(e) => setNotificationTitle(e.target.value)}
                 placeholder="Будет использован банк из реквизитов"
-                className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                className="dark:bg-purple-900/25 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
               />
             </div>
           </div>
@@ -1149,7 +1149,7 @@ export function TestMerchantTransactions({
               id="custom-text"
               checked={useCustomText}
               onCheckedChange={setUseCustomText}
-              className="dark:bg-gray-700"
+              className="dark:bg-purple-900/25"
             />
           </div>
 
@@ -1167,7 +1167,7 @@ export function TestMerchantTransactions({
                 onChange={(e) => setCustomNotificationText(e.target.value)}
                 placeholder="Перевод от IVANOV I I. Сумма: 5000 руб. Баланс: 25000 руб."
                 rows={3}
-                className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                className="dark:bg-purple-900/25 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
               />
             </div>
           ) : (
@@ -1176,7 +1176,7 @@ export function TestMerchantTransactions({
                 <Label className="dark:text-gray-300">
                   Сгенерированный текст:
                 </Label>
-                <div className="mt-1 p-3 bg-gray-100 dark:bg-gray-700 rounded border text-sm">
+                <div className="mt-1 p-3 bg-purple-100/40 dark:bg-purple-900/25 rounded border text-sm">
                   {(() => {
                     const device = devices.find((d) => d.id === selectedDevice);
                     const bankType =
@@ -1191,7 +1191,7 @@ export function TestMerchantTransactions({
             )
           )}
 
-          <Alert className="dark:bg-gray-700 dark:border-gray-600">
+          <Alert className="dark:bg-purple-900/25 dark:border-gray-600">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="dark:text-gray-300">
               Уведомление будет создано на выбранном устройстве и обработано
@@ -1218,7 +1218,7 @@ export function TestMerchantTransactions({
               variant="outline"
               onClick={loadDevices}
               disabled={isLoading}
-              className="dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
+              className="dark:bg-purple-900/25 dark:border-gray-600 dark:hover:bg-gray-600"
             >
               <RefreshCw className="h-4 w-4" />
             </Button>

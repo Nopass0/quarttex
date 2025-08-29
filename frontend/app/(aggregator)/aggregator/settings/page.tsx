@@ -341,7 +341,7 @@ export default function AggregatorSettings() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium">Баланс USDT</p>
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-2xl font-bold text-[#530FAD] dark:text-[#7c3aed]">
                     {profile?.balanceUsdt.toFixed(2) || "0.00"}
                   </p>
                 </div>
@@ -516,7 +516,7 @@ export default function AggregatorSettings() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Shield className="h-5 w-5 text-purple-600" />
+                      <Shield className="h-5 w-5 text-[#530FAD] dark:text-[#7c3aed]" />
                       <span className="font-medium">2FA активирована</span>
                     </div>
                     <Badge variant="success">Включена</Badge>

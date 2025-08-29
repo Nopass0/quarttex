@@ -92,12 +92,12 @@ const disputeStatusConfig = {
   },
   RESOLVED_FAIL: {
     label: "Решен в вашу пользу",
-    color: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
+    color: "bg-purple-100 text-purple-800 border-green-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
     icon: CheckCircle
   },
   CANCELLED: {
     label: "Отменен",
-    color: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600",
+    color: "bg-purple-100/40 text-gray-800 border-purple-200/60 dark:bg-purple-900/25 dark:text-gray-300 dark:border-gray-600",
     icon: Ban
   }
 };
@@ -202,7 +202,7 @@ export function MerchantDealDisputesList() {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
+        <Card className="bg-purple-50/10 p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Всего споров</p>
@@ -211,7 +211,7 @@ export function MerchantDealDisputesList() {
             <AlertCircle className="h-8 w-8 text-gray-400" />
           </div>
         </Card>
-        <Card className="p-4">
+        <Card className="bg-purple-50/10 p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Активные</p>
@@ -222,7 +222,7 @@ export function MerchantDealDisputesList() {
             <Clock className="h-8 w-8 text-blue-400" />
           </div>
         </Card>
-        <Card className="p-4">
+        <Card className="bg-purple-50/10 p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">В вашу пользу</p>
@@ -233,7 +233,7 @@ export function MerchantDealDisputesList() {
             <CheckCircle className="h-8 w-8 text-purple-400" />
           </div>
         </Card>
-        <Card className="p-4">
+        <Card className="bg-purple-50/10 p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Не в вашу пользу</p>
@@ -247,7 +247,7 @@ export function MerchantDealDisputesList() {
       </div>
 
       {/* Filters */}
-      <Card className="p-4">
+      <Card className="bg-purple-50/10 p-4">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -294,7 +294,7 @@ export function MerchantDealDisputesList() {
 
         <TabsContent value={activeTab} className="space-y-4 mt-4">
           {filteredDisputes.length === 0 ? (
-            <Card className="p-12 text-center">
+            <Card className="bg-purple-50/10 p-12 text-center">
               <p className="text-gray-500 dark:text-gray-400">
                 {searchQuery ? "Споры не найдены" : "Нет споров"}
               </p>
@@ -408,7 +408,7 @@ export function MerchantDealDisputesList() {
                 </div>
                 
                 {disputeDetails.deal.orderId && (
-                  <div className="mt-3 p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                  <div className="mt-3 p-2 bg-purple-50/30 dark:bg-gray-800 rounded">
                     <span className="text-sm text-gray-500 dark:text-gray-400">Order ID: </span>
                     <span className="font-mono text-sm">{disputeDetails.deal.orderId}</span>
                   </div>

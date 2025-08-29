@@ -258,7 +258,7 @@ export function DeviceMessageEmulator({
           <Button 
             onClick={handleSend}
             disabled={loading || !message.trim()}
-            className="bg-[#530FAD] hover:bg-[#3d0b80]"
+            className="bg-purple-700/80 hover:bg-purple-700/80/90"
           >
             {loading ? (
               <>

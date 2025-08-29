@@ -96,7 +96,7 @@ export function CustomCalendar({ value, onChange, onApply, onCancel, className }
   const calendarDays = generateCalendarDays();
 
   return (
-    <div className={cn("bg-white dark:bg-gray-800 border rounded-lg p-4 w-[400px]", className)}>
+    <div className={cn("bg-purple-50/20 dark:bg-purple-900/10 border rounded-lg p-4 w-[400px]", className)}>
       <div className="flex gap-4">
         {/* Calendar Section */}
         <div className="flex-1">
@@ -159,12 +159,12 @@ export function CustomCalendar({ value, onChange, onApply, onCancel, className }
                 className={cn(
                   "w-8 h-8 rounded text-sm transition-colors",
                   !day && "invisible",
-                  day && "hover:bg-gray-100 dark:hover:bg-gray-700",
+                  day && "hover:bg-purple-100/40 dark:hover:bg-gray-700",
                   day &&
                     selectedDate.getDate() === day &&
                     selectedDate.getMonth() === currentMonth &&
                     selectedDate.getFullYear() === currentYear &&
-                    "bg-[#006039] text-white hover:bg-[#006039]/90",
+                    "bg-[#530FAD] text-white hover:bg-[#530FAD]/90",
                   day &&
                     new Date().getDate() === day &&
                     new Date().getMonth() === currentMonth &&
@@ -196,7 +196,7 @@ export function CustomCalendar({ value, onChange, onApply, onCancel, className }
           <div className="flex flex-col items-center gap-1">
             <button
               onClick={() => handleTimeChange('hours', true)}
-              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+              className="p-1 hover:bg-purple-100/40 dark:hover:bg-gray-700 rounded"
             >
               <ChevronUp className="w-4 h-4" />
             </button>
@@ -205,7 +205,7 @@ export function CustomCalendar({ value, onChange, onApply, onCancel, className }
             </div>
             <button
               onClick={() => handleTimeChange('hours', false)}
-              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+              className="p-1 hover:bg-purple-100/40 dark:hover:bg-gray-700 rounded"
             >
               <ChevronDown className="w-4 h-4" />
             </button>
@@ -217,7 +217,7 @@ export function CustomCalendar({ value, onChange, onApply, onCancel, className }
           <div className="flex flex-col items-center gap-1">
             <button
               onClick={() => handleTimeChange('minutes', true)}
-              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+              className="p-1 hover:bg-purple-100/40 dark:hover:bg-gray-700 rounded"
             >
               <ChevronUp className="w-4 h-4" />
             </button>
@@ -226,7 +226,7 @@ export function CustomCalendar({ value, onChange, onApply, onCancel, className }
             </div>
             <button
               onClick={() => handleTimeChange('minutes', false)}
-              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+              className="p-1 hover:bg-purple-100/40 dark:hover:bg-gray-700 rounded"
             >
               <ChevronDown className="w-4 h-4" />
             </button>
@@ -235,7 +235,7 @@ export function CustomCalendar({ value, onChange, onApply, onCancel, className }
       </div>
 
       {/* Apply Button */}
-      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+      <div className="mt-4 pt-4 border-t border-purple-200/60 dark:border-gray-600">
         <div className="flex gap-2 justify-end">
           {onCancel && (
             <Button
@@ -249,7 +249,7 @@ export function CustomCalendar({ value, onChange, onApply, onCancel, className }
           <Button
             size="sm"
             onClick={handleApply}
-            className="bg-[#006039] hover:bg-[#006039]/90"
+            className="bg-[#530FAD] hover:bg-[#530FAD]/90"
           >
             Применить
           </Button>

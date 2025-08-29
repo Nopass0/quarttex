@@ -151,7 +151,7 @@ export default function MerchantPayoutsPage() {
 
       {/* Filters */}
       {showFilters && (
-        <Card className="p-6">
+        <Card className="bg-purple-50/10 p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="search">Поиск</Label>

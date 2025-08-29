@@ -46,6 +46,7 @@ import {
   subHours,
 } from "date-fns";
 import { MerchantCreateDeal } from "@/components/admin/merchant-create-deal";
+import { AuctionMerchantConfig } from "@/components/admin/auction-merchant-config";
 
 type Merchant = {
   id: string;
@@ -285,7 +286,7 @@ export default function MerchantDetailPage() {
       <AuthLayout variant="admin">
         <div className="space-y-6 max-w-7xl mx-auto">
           {/* Header */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-6">
+          <div className="bg-purple-50/20 dark:bg-purple-900/10 rounded-lg border dark:border-gray-700 p-6">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
                 <Button
@@ -344,7 +345,7 @@ export default function MerchantDetailPage() {
                   variant={merchant.disabled ? "secondary" : "default"}
                   className={
                     merchant.disabled
-                      ? "bg-gray-100 dark:bg-gray-700"
+                      ? "bg-purple-100/40 dark:bg-purple-900/25"
                       : "bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700"
                   }
                 >
@@ -363,7 +364,7 @@ export default function MerchantDetailPage() {
                   size="icon"
                   onClick={fetchMerchant}
                   disabled={isLoading}
-                  className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="hover:bg-purple-100/40 dark:hover:bg-gray-700"
                 >
                   <RefreshCw
                     className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
@@ -375,7 +376,7 @@ export default function MerchantDetailPage() {
 
           {/* Wellbit API Keys */}
           {isWellbitMerchant && (
-            <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-6">
+            <div className="bg-purple-50/20 dark:bg-purple-900/10 rounded-lg border dark:border-gray-700 p-6">
               <h2 className="text-lg font-semibold mb-4">Wellbit API ключи</h2>
               <div className="space-y-4">
                 <div>
@@ -383,7 +384,7 @@ export default function MerchantDetailPage() {
                     x-api-key (Публичный ключ)
                   </p>
                   <div className="flex items-center gap-2">
-                    <code className="text-xs bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded flex-1 truncate font-mono">
+                    <code className="text-xs bg-purple-100/40 dark:bg-purple-900/25 px-3 py-2 rounded flex-1 truncate font-mono">
                       {merchant.apiKeyPublic || "Не установлен"}
                     </code>
                     {merchant.apiKeyPublic && (
@@ -396,7 +397,7 @@ export default function MerchantDetailPage() {
                             "Публичный ключ скопирован"
                           )
                         }
-                        className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="hover:bg-purple-100/40 dark:hover:bg-gray-700"
                       >
                         <Copy className="h-3 w-3" />
                       </Button>
@@ -408,7 +409,7 @@ export default function MerchantDetailPage() {
                     Приватный ключ (для генерации x-api-token)
                   </p>
                   <div className="flex items-center gap-2">
-                    <code className="text-xs bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded flex-1 truncate font-mono">
+                    <code className="text-xs bg-purple-100/40 dark:bg-purple-900/25 px-3 py-2 rounded flex-1 truncate font-mono">
                       {merchant.apiKeyPrivate || "Не установлен"}
                     </code>
                     {merchant.apiKeyPrivate && (
@@ -421,7 +422,7 @@ export default function MerchantDetailPage() {
                             "Приватный ключ скопирован"
                           )
                         }
-                        className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="hover:bg-purple-100/40 dark:hover:bg-gray-700"
                       >
                         <Copy className="h-3 w-3" />
                       </Button>
@@ -442,7 +443,7 @@ export default function MerchantDetailPage() {
                   <Button
                     variant="outline"
                     onClick={() => router.push("/admin/wellbit-keys")}
-                    className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                    className="hover:bg-purple-100/40 dark:hover:bg-gray-700"
                   >
                     <Settings className="h-4 w-4 mr-2" />
                     Настройки Wellbit
@@ -489,7 +490,7 @@ export default function MerchantDetailPage() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border dark:border-gray-700 hover:shadow-md dark:hover:shadow-gray-900 transition-shadow">
+            <div className="bg-purple-50/20 dark:bg-purple-900/10 p-6 rounded-lg border dark:border-gray-700 hover:shadow-md dark:hover:shadow-gray-900 transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
@@ -509,13 +510,13 @@ export default function MerchantDetailPage() {
               </div>
             </div>
             {!isWellbitMerchant ? (
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border dark:border-gray-700 hover:shadow-md dark:hover:shadow-gray-900 transition-shadow">
+              <div className="bg-purple-50/20 dark:bg-purple-900/10 p-6 rounded-lg border dark:border-gray-700 hover:shadow-md dark:hover:shadow-gray-900 transition-shadow">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 font-medium mb-3">
                     API ключ
                   </p>
                   <div className="flex items-center gap-2">
-                    <code className="text-xs bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded flex-1 truncate font-mono">
+                    <code className="text-xs bg-purple-100/40 dark:bg-purple-900/25 px-3 py-2 rounded flex-1 truncate font-mono">
                       {merchant.token}
                     </code>
                     <Button
@@ -524,7 +525,7 @@ export default function MerchantDetailPage() {
                       onClick={() =>
                         copyToClipboard(merchant.token, "API ключ скопирован")
                       }
-                      className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="hover:bg-purple-100/40 dark:hover:bg-gray-700"
                     >
                       <Copy className="h-3 w-3" />
                     </Button>
@@ -532,14 +533,14 @@ export default function MerchantDetailPage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border dark:border-gray-700 hover:shadow-md dark:hover:shadow-gray-900 transition-shadow">
+              <div className="bg-purple-50/20 dark:bg-purple-900/10 p-6 rounded-lg border dark:border-gray-700 hover:shadow-md dark:hover:shadow-gray-900 transition-shadow">
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 font-medium mb-2">
                       Token (для входа)
                     </p>
                     <div className="flex items-center gap-2">
-                      <code className="text-xs bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded flex-1 truncate font-mono">
+                      <code className="text-xs bg-purple-100/40 dark:bg-purple-900/25 px-3 py-2 rounded flex-1 truncate font-mono">
                         {merchant.token}
                       </code>
                       <Button
@@ -548,7 +549,7 @@ export default function MerchantDetailPage() {
                         onClick={() =>
                           copyToClipboard(merchant.token, "Token скопирован")
                         }
-                        className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="hover:bg-purple-100/40 dark:hover:bg-gray-700"
                       >
                         <Copy className="h-3 w-3" />
                       </Button>
@@ -566,7 +567,7 @@ export default function MerchantDetailPage() {
           >
             <TabsList
               className={`grid w-full ${
-                isTestMerchant ? "grid-cols-5" : "grid-cols-4"
+                isTestMerchant ? "grid-cols-6" : "grid-cols-5"
               } lg:w-auto lg:inline-grid dark:bg-gray-800`}
             >
               {isTestMerchant && (
@@ -583,6 +584,7 @@ export default function MerchantDetailPage() {
               </TabsTrigger>
               <TabsTrigger value="traders">Трейдеры</TabsTrigger>
               <TabsTrigger value="methods">Методы оплаты</TabsTrigger>
+              <TabsTrigger value="auction">Аукционная система</TabsTrigger>
             </TabsList>
 
             {isTestMerchant && (
@@ -612,7 +614,7 @@ export default function MerchantDetailPage() {
             </TabsContent>
 
             <TabsContent value="methods" className="mt-6">
-              <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700">
+              <div className="bg-purple-50/20 dark:bg-purple-900/10 rounded-lg border dark:border-gray-700">
                 <div className="p-6 border-b dark:border-gray-700">
                   <h3 className="text-lg font-semibold">
                     Подключенные методы оплаты
@@ -627,20 +629,20 @@ export default function MerchantDetailPage() {
                       {merchant.merchantMethods.map((mm) => (
                         <div
                           key={mm.id}
-                          className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                          className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-lg hover:bg-purple-50/30 dark:hover:bg-gray-700 transition-colors"
                         >
                           <div className="flex items-center gap-4">
                             <div
                               className={`p-2 rounded-lg ${
                                 mm.isEnabled
                                   ? "bg-purple-50 dark:bg-purple-900/30"
-                                  : "bg-gray-100 dark:bg-gray-700"
+                                  : "bg-purple-100/40 dark:bg-purple-900/25"
                               }`}
                             >
                               <Activity
                                 className={`h-5 w-5 ${
                                   mm.isEnabled
-                                    ? "text-purple-600 dark:text-purple-400"
+                                    ? "text-[#530FAD] dark:text-[#7c3aed] dark:text-purple-400"
                                     : "text-gray-400 dark:text-gray-500"
                                 }`}
                               />
@@ -650,7 +652,7 @@ export default function MerchantDetailPage() {
                                 {mm.method.name}
                               </div>
                               <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-1">
-                                <code className="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-xs">
+                                <code className="bg-purple-100/40 dark:bg-purple-900/25 px-2 py-0.5 rounded text-xs">
                                   {mm.method.code}
                                 </code>
                                 <span>•</span>
@@ -667,7 +669,7 @@ export default function MerchantDetailPage() {
                             className={
                               mm.isEnabled
                                 ? "bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700"
-                                : "dark:bg-gray-700 dark:text-gray-400"
+                                : "dark:bg-purple-900/25 dark:text-gray-400"
                             }
                           >
                             {mm.isEnabled ? "Активен" : "Отключен"}
@@ -685,6 +687,14 @@ export default function MerchantDetailPage() {
                   )}
                 </div>
               </div>
+            </TabsContent>
+
+            <TabsContent value="auction" className="mt-6">
+              <AuctionMerchantConfig
+                merchantId={merchantId}
+                merchantName={merchant.name}
+                adminToken={adminToken || ""}
+              />
             </TabsContent>
           </Tabs>
         </div>

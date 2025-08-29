@@ -44,7 +44,7 @@ const binRanges: { start: string; end: string; bank: string }[] = [
 ]
 
 const bankColors: Record<string, { bg: string; text: string; logo: string }> = {
-  SBERBANK: { bg: "bg-gradient-to-br from-purple-600 to-purple-700", text: "text-white", logo: "💚" },
+  SBERBANK: { bg: "bg-gradient-to-br from-purple-600 to-purple-700", text: "text-white", logo: "💜" },
   TBANK: { bg: "bg-gradient-to-br from-yellow-400 to-yellow-500", text: "text-black", logo: "⚡" },
   ALFABANK: { bg: "bg-gradient-to-br from-red-600 to-red-700", text: "text-white", logo: "🅰️" },
   VTB: { bg: "bg-gradient-to-br from-blue-600 to-blue-700", text: "text-white", logo: "🔷" },

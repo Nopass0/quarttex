@@ -58,7 +58,7 @@ const statusConfig = {
   READY: { label: "Завершено", color: "bg-purple-50 text-purple-600 border-purple-200" },
   EXPIRED: { label: "Истекло", color: "bg-red-50 text-red-600 border-red-200" },
   DISPUTE: { label: "Спор", color: "bg-purple-50 text-purple-600 border-purple-200" },
-  CANCELED: { label: "Отменено", color: "bg-gray-50 text-gray-600 border-gray-200" },
+  CANCELED: { label: "Отменено", color: "bg-purple-50/30 text-gray-600 border-gray-200" },
 }
 
 export function DealsTable() {
@@ -122,43 +122,43 @@ export function DealsTable() {
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-fit grid grid-cols-4 gap-1 bg-gray-100 p-1 mb-6">
+        <TabsList className="w-fit grid grid-cols-4 gap-1 bg-purple-100/40 p-1 mb-6">
           <TabsTrigger 
             value="active" 
-            className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm px-4"
+            className="data-[state=active]:bg-purple-50/20 dark:bg-purple-900/15 data-[state=active]:text-gray-900 data-[state=active]:shadow-sm px-4"
           >
             Активные
             {transactions.filter(t => ["CREATED", "IN_PROGRESS"].includes(t.status)).length > 0 && (
-              <span className="ml-2 px-1.5 py-0.5 text-xs bg-[#006039] text-white rounded-full">
+              <span className="ml-2 px-1.5 py-0.5 text-xs bg-[#530FAD] text-white rounded-full">
                 {transactions.filter(t => ["CREATED", "IN_PROGRESS"].includes(t.status)).length}
               </span>
             )}
           </TabsTrigger>
           <TabsTrigger 
             value="completed"
-            className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm px-4"
+            className="data-[state=active]:bg-purple-50/20 dark:bg-purple-900/15 data-[state=active]:text-gray-900 data-[state=active]:shadow-sm px-4"
           >
             Завершенные
           </TabsTrigger>
           <TabsTrigger 
             value="disputes"
-            className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm px-4"
+            className="data-[state=active]:bg-purple-50/20 dark:bg-purple-900/15 data-[state=active]:text-gray-900 data-[state=active]:shadow-sm px-4"
           >
             Споры
           </TabsTrigger>
           <TabsTrigger 
             value="all"
-            className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm px-4"
+            className="data-[state=active]:bg-purple-50/20 dark:bg-purple-900/15 data-[state=active]:text-gray-900 data-[state=active]:shadow-sm px-4"
           >
             Все
           </TabsTrigger>
         </TabsList>
         
         <TabsContent value={activeTab} className="mt-0">
-          <Card className="overflow-hidden shadow-sm border-gray-200 bg-white">
+          <Card className="bg-purple-50/10 overflow-hidden shadow-sm border-purple-200/60 bg-white">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50/50 hover:bg-gray-50/50 border-b">
+                <TableRow className="bg-gray-50/50 hover:bg-purple-50/50/50 border-b">
                   <TableHead className="font-medium text-gray-600 text-sm">ID</TableHead>
                   <TableHead className="font-medium text-gray-600 text-sm">Создано</TableHead>
                   <TableHead className="font-medium text-gray-600 text-sm">Обновлено</TableHead>
@@ -181,7 +181,7 @@ export function DealsTable() {
                     const statusInfo = statusConfig[transaction.status as keyof typeof statusConfig] || statusConfig.CREATED
                     
                     return (
-                      <TableRow key={transaction.id} className="hover:bg-gray-50/50">
+                      <TableRow key={transaction.id} className="hover:bg-purple-50/50/50">
                         <TableCell className="font-medium text-sm">
                           {transaction.numericId}
                         </TableCell>
@@ -214,7 +214,7 @@ export function DealsTable() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="hover:bg-gray-100 h-8 w-8 p-0"
+                            className="hover:bg-purple-100/40 h-8 w-8 p-0"
                           >
                             <ExternalLink className="h-4 w-4" />
                           </Button>

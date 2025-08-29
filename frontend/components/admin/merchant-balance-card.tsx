@@ -161,7 +161,7 @@ export function MerchantBalanceCard({
         <div className="text-right">
           {!countInRubEquivalent && statistics.balance.totalUsdt !== undefined ? (
             <>
-              <div className="text-3xl font-bold text-purple-600">
+              <div className="text-3xl font-bold text-[#530FAD] dark:text-[#7c3aed]">
                 {truncateDecimals(statistics.balance.totalUsdt, 2)} USDT
               </div>
               <div className="text-lg text-gray-600 mt-1">
@@ -169,7 +169,7 @@ export function MerchantBalanceCard({
               </div>
             </>
           ) : (
-            <div className="text-3xl font-bold text-purple-600">
+            <div className="text-3xl font-bold text-[#530FAD] dark:text-[#7c3aed]">
               {formatAmount(statistics.balance.total)} ₽
             </div>
           )}
@@ -187,7 +187,7 @@ export function MerchantBalanceCard({
             <div className="bg-muted/50 p-4 rounded-lg space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Сумма успешных сделок:</span>
-                <span className="font-medium text-purple-600">
+                <span className="font-medium text-[#530FAD] dark:text-[#7c3aed]">
                   +{truncateDecimals(statistics.balance.formulaUsdt.dealsTotal, 2)} USDT
                 </span>
               </div>
@@ -218,7 +218,7 @@ export function MerchantBalanceCard({
               <Separator className="my-2" />
               <div className="flex justify-between text-sm font-medium">
                 <span>Итоговый баланс:</span>
-                <span className="text-purple-600">
+                <span className="text-[#530FAD] dark:text-[#7c3aed]">
                   {truncateDecimals(statistics.balance.totalUsdt!, 2)} USDT
                 </span>
               </div>
@@ -234,7 +234,7 @@ export function MerchantBalanceCard({
             <div className="bg-muted/50 p-4 rounded-lg space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Сумма успешных сделок:</span>
-                <span className="font-medium text-purple-600">
+                <span className="font-medium text-[#530FAD] dark:text-[#7c3aed]">
                   +{formatAmount(statistics.balance.formula.dealsTotal)} ₽
                 </span>
               </div>
@@ -265,7 +265,7 @@ export function MerchantBalanceCard({
               <Separator className="my-2" />
               <div className="flex justify-between text-sm font-medium">
                 <span>Итоговый баланс:</span>
-                <span className="text-purple-600">
+                <span className="text-[#530FAD] dark:text-[#7c3aed]">
                   {formatAmount(statistics.balance.total)} ₽
                 </span>
               </div>

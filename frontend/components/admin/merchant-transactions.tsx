@@ -67,7 +67,7 @@ export function MerchantTransactions({ merchantId }: MerchantTransactionsProps) 
   const [isLoading, setIsLoading] = useState(false)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [statusFilter, setStatusFilter] = useState<string>('')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
@@ -112,11 +112,11 @@ export function MerchantTransactions({ merchantId }: MerchantTransactionsProps) 
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { variant: any; label: string; className: string }> = {
-      CREATED: { variant: 'secondary', label: 'Создана', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' },
+      CREATED: { variant: 'secondary', label: 'Создана', className: 'bg-purple-100/40 text-gray-700 dark:bg-purple-900/25 dark:text-gray-300' },
       IN_PROGRESS: { variant: 'default', label: 'В процессе', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
       READY: { variant: 'default', label: 'Успешно', className: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' },
       MILK: { variant: 'destructive', label: 'Проблема', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
-      CANCELED: { variant: 'secondary', label: 'Отменена', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' },
+      CANCELED: { variant: 'secondary', label: 'Отменена', className: 'bg-purple-100/40 text-gray-700 dark:bg-purple-900/25 dark:text-gray-300' },
       EXPIRED: { variant: 'secondary', label: 'Истекла', className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' },
     }
     const config = statusConfig[status] || { variant: 'outline', label: status, className: '' }
@@ -142,10 +142,10 @@ export function MerchantTransactions({ merchantId }: MerchantTransactionsProps) 
     <div className="space-y-6">
       {/* Balance Formula Card */}
       {balanceFormula && (
-        <Card className="border-[#006039] dark:border-purple-800">
+        <Card className="bg-purple-50/10 border-[#530FAD] dark:border-purple-800">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Calculator className="h-5 w-5 text-[#006039] dark:text-purple-400" />
+              <Calculator className="h-5 w-5 text-[#530FAD] dark:text-purple-400" />
               Формула расчета баланса
             </CardTitle>
             <CardDescription>Расчет USDT баланса на основе merchantRate</CardDescription>
@@ -155,10 +155,10 @@ export function MerchantTransactions({ merchantId }: MerchantTransactionsProps) 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    <TrendingUp className="inline h-3 w-3 mr-1 text-purple-600" />
+                    <TrendingUp className="inline h-3 w-3 mr-1 text-[#530FAD] dark:text-[#7c3aed]" />
                     Сумма успешных сделок:
                   </span>
-                  <span className="font-medium text-purple-600 dark:text-purple-400">
+                  <span className="font-medium text-[#530FAD] dark:text-[#7c3aed] dark:text-purple-400">
                     +{formatAmount(balanceFormula.totalSuccessfulDealsUsdt)} USDT
                   </span>
                 </div>
@@ -191,12 +191,12 @@ export function MerchantTransactions({ merchantId }: MerchantTransactionsProps) 
                 </div>
               </div>
               <div className="space-y-3">
-                <div className="p-4 bg-[#006039]/10 dark:bg-purple-900/20 rounded-lg">
+                <div className="p-4 bg-[#530FAD]/10 dark:bg-purple-900/20 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Итоговый баланс:
                     </span>
-                    <span className="text-xl font-bold text-[#006039] dark:text-purple-400">
+                    <span className="text-xl font-bold text-[#530FAD] dark:text-purple-400">
                       {formatAmount(balanceFormula.currentBalance)} USDT
                     </span>
                   </div>
@@ -225,7 +225,7 @@ export function MerchantTransactions({ merchantId }: MerchantTransactionsProps) 
               size="icon"
               onClick={fetchTransactions}
               disabled={isLoading}
-              className="hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="hover:bg-purple-100/40 dark:hover:bg-gray-700"
             >
               <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             </Button>
@@ -247,7 +247,7 @@ export function MerchantTransactions({ merchantId }: MerchantTransactionsProps) 
                 <SelectValue placeholder="Все статусы" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Все статусы</SelectItem>
+                <SelectItem value="all">Все статусы</SelectItem>
                 <SelectItem value="CREATED">Создана</SelectItem>
                 <SelectItem value="IN_PROGRESS">В процессе</SelectItem>
                 <SelectItem value="READY">Успешно</SelectItem>
@@ -327,7 +327,7 @@ export function MerchantTransactions({ merchantId }: MerchantTransactionsProps) 
                     <TableCell className="text-red-600 dark:text-red-400">
                       -{formatAmount(tx.commission)} USDT
                     </TableCell>
-                    <TableCell className="font-medium text-[#006039] dark:text-purple-400">
+                    <TableCell className="font-medium text-[#530FAD] dark:text-purple-400">
                       {formatAmount(tx.merchantBalance)} USDT
                     </TableCell>
                     <TableCell>{getStatusBadge(tx.status)}</TableCell>

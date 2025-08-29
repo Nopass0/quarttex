@@ -192,7 +192,7 @@ export function SystemSettingsList() {
 
   if (loading) {
     return (
-      <Card className="p-6">
+      <Card className="bg-purple-50/10 p-6">
         <div className="flex items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin" />
         </div>
@@ -208,9 +208,9 @@ export function SystemSettingsList() {
   return (
     <div className="space-y-6">
       {/* Wallet Settings */}
-      <Card className="p-6">
+      <Card className="bg-purple-50/10 p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Wallet className="h-5 w-5 text-purple-600" />
+          <Wallet className="h-5 w-5 text-[#530FAD] dark:text-[#7c3aed]" />
           <h2 className="text-lg font-semibold">Настройки кошелька для пополнений</h2>
         </div>
         
@@ -233,7 +233,7 @@ export function SystemSettingsList() {
       </Card>
 
       {/* Withdrawal Settings */}
-      <Card className="p-6">
+      <Card className="bg-purple-50/10 p-6">
         <div className="flex items-center gap-2 mb-4">
           <Wallet className="h-5 w-5 text-blue-600" />
           <h2 className="text-lg font-semibold">Настройки вывода средств</h2>

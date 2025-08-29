@@ -10,6 +10,7 @@ declare module "elysia" {
       email: string;
       name: string;
       apiToken: string;
+      callbackToken: string;
       apiBaseUrl?: string | null;
       balanceUsdt: number;
       isActive: boolean;

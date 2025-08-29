@@ -1,360 +1,358 @@
 /**
- * Админские роуты для управления аукционной системой
+ * Админские роуты для управления аукционными мерчантами
+ * Согласно документации IE Cloud Summit
  */
 
 import { Elysia, t } from "elysia";
 import { db } from "@/db";
+import { auctionIntegrationService } from "@/services/auction-integration.service";
+import { AuctionMerchantConfig } from "@/types/auction";
 import { auctionRSAKeyGenerator } from "@/utils/auction-signature";
-import ErrorSchema from "@/types/error";
-
-const authHeader = t.Object({ "x-admin-key": t.String() });
 
 export default (app: Elysia) =>
   app
-    /* ───────── POST /admin/auction/generate-keys/{merchantId} ───────── */
-    .post(
-      "/generate-keys/:merchantId",
-      async ({ params, error }) => {
-        try {
-          const { merchantId } = params;
+    .group("/auction", (app) =>
+      app
+        /* ──────── POST /admin/auction/toggle/{merchantId} ──────── */
+        .post(
+          "/toggle/:merchantId",
+          async ({ params, body, error }) => {
+            const { merchantId } = params;
+            const { enabled, auctionBaseUrl, auctionCallbackUrl, externalSystemName } = body;
 
-          // Проверяем, что мерчант существует
-          const merchant = await db.merchant.findUnique({
-            where: { id: merchantId },
-            select: { id: true, name: true, isAuctionEnabled: true },
-          });
+            try {
+              const merchant = await db.merchant.findUnique({
+                where: { id: merchantId },
+              });
 
-          if (!merchant) {
-            return error(404, { error: "Мерчант не найден" });
-          }
+              if (!merchant) {
+                return error(404, { error: "Мерчант не найден" });
+              }
 
-          if (!merchant.isAuctionEnabled) {
-            return error(400, { error: "Аукционная система не включена для этого мерчанта" });
-          }
+              console.log(`[AdminAuction] Toggling auction for merchant ${merchant.name}: ${enabled}`);
 
-          // Генерируем новую пару ключей
-          console.log(`[AuctionAdmin] Генерация RSA ключей для мерчанта ${merchant.name} (${merchantId})`);
-          const keyPair = await auctionRSAKeyGenerator.generateKeyPair();
+              // Обновляем настройки аукциона
+              const updatedMerchant = await db.merchant.update({
+                where: { id: merchantId },
+                data: {
+                  isAuctionEnabled: enabled,
+                  auctionBaseUrl: enabled ? auctionBaseUrl : null,
+                  auctionCallbackUrl: enabled ? auctionCallbackUrl : null,
+                  externalSystemName: enabled ? externalSystemName : null,
+                },
+              });
 
-          // Проверяем валидность сгенерированных ключей
-          const isValid = auctionRSAKeyGenerator.validateKeyPair(
-            keyPair.publicKeyPem,
-            keyPair.privateKeyPem
-          );
+              console.log(`[AdminAuction] Auction ${enabled ? 'enabled' : 'disabled'} for ${merchant.name}`);
 
-          if (!isValid) {
-            console.error(`[AuctionAdmin] Сгенерированные ключи невалидны для мерчанта ${merchantId}`);
-            return error(500, { error: "Ошибка генерации ключей - ключи невалидны" });
-          }
-
-          // Сохраняем ключи в базу данных
-          const updatedMerchant = await db.merchant.update({
-            where: { id: merchantId },
-            data: {
-              rsaPublicKeyPem: keyPair.publicKeyPem,
-              rsaPrivateKeyPem: keyPair.privateKeyPem,
-              keysGeneratedAt: new Date(),
+              return {
+                success: true,
+                merchant: {
+                  id: updatedMerchant.id,
+                  name: updatedMerchant.name,
+                  isAuctionEnabled: updatedMerchant.isAuctionEnabled,
+                  auctionBaseUrl: updatedMerchant.auctionBaseUrl,
+                  auctionCallbackUrl: updatedMerchant.auctionCallbackUrl,
+                  externalSystemName: updatedMerchant.externalSystemName,
+                  hasKeys: !!(updatedMerchant.rsaPublicKeyPem && updatedMerchant.rsaPrivateKeyPem),
+                  keysGeneratedAt: updatedMerchant.keysGeneratedAt,
+                },
+              };
+            } catch (err) {
+              console.error("Error toggling auction for merchant:", err);
+              return error(500, { error: "Ошибка обновления настроек аукциона" });
+            }
+          },
+          {
+            tags: ["admin", "auction"],
+            detail: {
+              summary: "Включение/выключение аукционного режима для мерчанта",
+              description: "Настройка мерчанта для работы через внешнюю аукционную систему"
             },
-            select: {
-              id: true,
-              name: true,
-              rsaPublicKeyPem: true,
-              keysGeneratedAt: true,
-            },
-          });
-
-          console.log(`[AuctionAdmin] RSA ключи успешно сгенерированы для мерчанта ${merchant.name}`);
-
-          return {
-            success: true,
-            message: "RSA ключи успешно сгенерированы",
-            merchant: {
-              id: updatedMerchant.id,
-              name: updatedMerchant.name,
-              keysGeneratedAt: updatedMerchant.keysGeneratedAt?.toISOString(),
-            },
-            publicKey: updatedMerchant.rsaPublicKeyPem,
-            // Приватный ключ возвращаем только один раз при генерации
-            privateKey: keyPair.privateKeyPem,
-            warning: "Приватный ключ показан только один раз. Сохраните его в безопасном месте.",
-          };
-        } catch (err) {
-          console.error(`[AuctionAdmin] Ошибка генерации ключей:`, err);
-          return error(500, { error: "Внутренняя ошибка при генерации ключей" });
-        }
-      },
-      {
-        tags: ["admin", "auction"],
-        detail: { 
-          summary: "Генерация RSA ключей для аукционного мерчанта",
-          description: "Генерирует новую пару RSA ключей (2048 бит) для мерчанта с включенной аукционной системой"
-        },
-        headers: authHeader,
-        params: t.Object({
-          merchantId: t.String({ description: "ID мерчанта" })
-        }),
-        response: {
-          200: t.Object({
-            success: t.Boolean(),
-            message: t.String(),
-            merchant: t.Object({
-              id: t.String(),
-              name: t.String(),
-              keysGeneratedAt: t.Nullable(t.String()),
+            params: t.Object({
+              merchantId: t.String({ description: "ID мерчанта" })
             }),
-            publicKey: t.String(),
-            privateKey: t.String(),
-            warning: t.String(),
-          }),
-          400: ErrorSchema,
-          404: ErrorSchema,
-          500: ErrorSchema,
-        },
-      }
-    )
-
-    /* ───────── GET /admin/auction/download-key/{merchantId}/{keyType} ───────── */
-    .get(
-      "/download-key/:merchantId/:keyType",
-      async ({ params, error, set }) => {
-        try {
-          const { merchantId, keyType } = params;
-
-          if (!["public", "private"].includes(keyType)) {
-            return error(400, { error: "Тип ключа должен быть 'public' или 'private'" });
-          }
-
-          const merchant = await db.merchant.findUnique({
-            where: { id: merchantId },
-            select: {
-              id: true,
-              name: true,
-              isAuctionEnabled: true,
-              rsaPublicKeyPem: true,
-              rsaPrivateKeyPem: true,
-            },
-          });
-
-          if (!merchant) {
-            return error(404, { error: "Мерчант не найден" });
-          }
-
-          if (!merchant.isAuctionEnabled) {
-            return error(400, { error: "Аукционная система не включена для этого мерчанта" });
-          }
-
-          const keyContent = keyType === "public" 
-            ? merchant.rsaPublicKeyPem 
-            : merchant.rsaPrivateKeyPem;
-
-          if (!keyContent) {
-            return error(404, { error: `${keyType === "public" ? "Публичный" : "Приватный"} ключ не найден` });
-          }
-
-          // Устанавливаем заголовки для скачивания файла
-          const filename = `${merchant.name.replace(/[^a-zA-Z0-9]/g, "_")}_${keyType}_key.pem`;
-          set.headers["Content-Type"] = "application/x-pem-file";
-          set.headers["Content-Disposition"] = `attachment; filename="${filename}"`;
-
-          return keyContent;
-        } catch (err) {
-          console.error(`[AuctionAdmin] Ошибка скачивания ключа:`, err);
-          return error(500, { error: "Внутренняя ошибка при скачивании ключа" });
-        }
-      },
-      {
-        tags: ["admin", "auction"],
-        detail: { 
-          summary: "Скачивание RSA ключа",
-          description: "Скачивает публичный или приватный RSA ключ мерчанта в формате PEM"
-        },
-        headers: authHeader,
-        params: t.Object({
-          merchantId: t.String({ description: "ID мерчанта" }),
-          keyType: t.Union([t.Literal("public"), t.Literal("private")], { 
-            description: "Тип ключа для скачивания" 
-          })
-        }),
-        response: {
-          200: t.String({ description: "Содержимое PEM файла" }),
-          400: ErrorSchema,
-          404: ErrorSchema,
-          500: ErrorSchema,
-        },
-      }
-    )
-
-    /* ───────── PUT /admin/auction/toggle/{merchantId} ───────── */
-    .put(
-      "/toggle/:merchantId",
-      async ({ params, body, error }) => {
-        try {
-          const { merchantId } = params;
-
-          const merchant = await db.merchant.findUnique({
-            where: { id: merchantId },
-            select: { id: true, name: true, isAuctionEnabled: true },
-          });
-
-          if (!merchant) {
-            return error(404, { error: "Мерчант не найден" });
-          }
-
-          const updatedMerchant = await db.merchant.update({
-            where: { id: merchantId },
-            data: {
-              isAuctionEnabled: body.isAuctionEnabled,
-              auctionBaseUrl: body.auctionBaseUrl || null,
-              externalSystemName: body.externalSystemName || null,
-            },
-            select: {
-              id: true,
-              name: true,
-              isAuctionEnabled: true,
-              auctionBaseUrl: true,
-              externalSystemName: true,
-              keysGeneratedAt: true,
-            },
-          });
-
-          console.log(`[AuctionAdmin] Аукционная система ${body.isAuctionEnabled ? "включена" : "отключена"} для мерчанта ${merchant.name}`);
-
-          return {
-            success: true,
-            message: `Аукционная система ${body.isAuctionEnabled ? "включена" : "отключена"}`,
-            merchant: {
-              ...updatedMerchant,
-              keysGeneratedAt: updatedMerchant.keysGeneratedAt?.toISOString(),
-            },
-          };
-        } catch (err) {
-          console.error(`[AuctionAdmin] Ошибка переключения аукционной системы:`, err);
-          return error(500, { error: "Внутренняя ошибка при изменении настроек" });
-        }
-      },
-      {
-        tags: ["admin", "auction"],
-        detail: { 
-          summary: "Включение/отключение аукционной системы",
-          description: "Включает или отключает аукционную систему для мерчанта и устанавливает базовые настройки"
-        },
-        headers: authHeader,
-        params: t.Object({
-          merchantId: t.String({ description: "ID мерчанта" })
-        }),
-        body: t.Object({
-          isAuctionEnabled: t.Boolean({ description: "Включить аукционную систему" }),
-          auctionBaseUrl: t.Optional(t.String({ description: "URL для отправки callback'ов внешней системе" })),
-          externalSystemName: t.Optional(t.String({ description: "Имя внешней системы для подписи" })),
-        }),
-        response: {
-          200: t.Object({
-            success: t.Boolean(),
-            message: t.String(),
-            merchant: t.Object({
-              id: t.String(),
-              name: t.String(),
-              isAuctionEnabled: t.Boolean(),
-              auctionBaseUrl: t.Nullable(t.String()),
-              externalSystemName: t.Nullable(t.String()),
-              keysGeneratedAt: t.Nullable(t.String()),
-            }),
-          }),
-          404: ErrorSchema,
-          500: ErrorSchema,
-        },
-      }
-    )
-
-    /* ───────── GET /admin/auction/status/{merchantId} ───────── */
-    .get(
-      "/status/:merchantId",
-      async ({ params, error }) => {
-        try {
-          const { merchantId } = params;
-
-          const merchant = await db.merchant.findUnique({
-            where: { id: merchantId },
-            select: {
-              id: true,
-              name: true,
-              isAuctionEnabled: true,
-              auctionBaseUrl: true,
-              externalSystemName: true,
-              keysGeneratedAt: true,
-              rsaPublicKeyPem: true,
-              rsaPrivateKeyPem: true,
-            },
-          });
-
-          if (!merchant) {
-            return error(404, { error: "Мерчант не найден" });
-          }
-
-          const hasKeys = !!(merchant.rsaPublicKeyPem && merchant.rsaPrivateKeyPem);
-          const isFullyConfigured = !!(merchant.isAuctionEnabled && 
-            hasKeys && 
-            merchant.auctionBaseUrl && 
-            merchant.externalSystemName);
-
-          return {
-            merchant: {
-              id: merchant.id,
-              name: merchant.name,
-              isAuctionEnabled: merchant.isAuctionEnabled,
-              auctionBaseUrl: merchant.auctionBaseUrl,
-              externalSystemName: merchant.externalSystemName,
-              keysGeneratedAt: merchant.keysGeneratedAt?.toISOString(),
-            },
-            status: {
-              hasKeys,
-              isFullyConfigured,
-              configurationSteps: {
-                auctionEnabled: merchant.isAuctionEnabled,
-                baseUrlSet: !!merchant.auctionBaseUrl,
-                systemNameSet: !!merchant.externalSystemName,
-                keysGenerated: hasKeys,
-              },
-            },
-          };
-        } catch (err) {
-          console.error(`[AuctionAdmin] Ошибка получения статуса:`, err);
-          return error(500, { error: "Внутренняя ошибка при получении статуса" });
-        }
-      },
-      {
-        tags: ["admin", "auction"],
-        detail: { 
-          summary: "Получение статуса аукционной системы",
-          description: "Возвращает текущий статус и конфигурацию аукционной системы для мерчанта"
-        },
-        headers: authHeader,
-        params: t.Object({
-          merchantId: t.String({ description: "ID мерчанта" })
-        }),
-        response: {
-          200: t.Object({
-            merchant: t.Object({
-              id: t.String(),
-              name: t.String(),
-              isAuctionEnabled: t.Boolean(),
-              auctionBaseUrl: t.Nullable(t.String()),
-              externalSystemName: t.Nullable(t.String()),
-              keysGeneratedAt: t.Nullable(t.String()),
-            }),
-            status: t.Object({
-              hasKeys: t.Boolean(),
-              isFullyConfigured: t.Boolean(),
-              configurationSteps: t.Object({
-                auctionEnabled: t.Boolean(),
-                baseUrlSet: t.Boolean(),
-                systemNameSet: t.Boolean(),
-                keysGenerated: t.Boolean(),
+            body: t.Object({
+              enabled: t.Boolean({ 
+                description: "Включить аукционный режим для мерчанта" 
               }),
+              auctionBaseUrl: t.Optional(t.String({
+                description: "Base URL внешней аукционной системы",
+                examples: ["https://partner.example.com/api"]
+              })),
+              auctionCallbackUrl: t.Optional(t.String({
+                description: "URL для callback'ов от внешней системы", 
+                examples: ["https://partner.example.com/callback"]
+              })),
+              externalSystemName: t.Optional(t.String({
+                description: "Имя внешней системы для подписи",
+                examples: ["test-auction-system"]
+              })),
             }),
-          }),
-          404: ErrorSchema,
-          500: ErrorSchema,
-        },
-      }
+          }
+        )
+
+        /* ──────── GET /admin/auction/status/{merchantId} ──────── */
+        .get(
+          "/status/:merchantId",
+          async ({ params, error }) => {
+            const { merchantId } = params;
+
+            try {
+              const merchant = await db.merchant.findUnique({
+                where: { id: merchantId },
+                select: {
+                  id: true,
+                  name: true,
+                  isAuctionEnabled: true,
+                  auctionBaseUrl: true,
+                  auctionCallbackUrl: true,
+                  externalSystemName: true,
+                  rsaPublicKeyPem: true,
+                  rsaPrivateKeyPem: true,
+                  keysGeneratedAt: true,
+                },
+              });
+
+              if (!merchant) {
+                return error(404, { error: "Мерчант не найден" });
+              }
+
+              return {
+                success: true,
+                config: {
+                  isAuctionEnabled: merchant.isAuctionEnabled,
+                  auctionBaseUrl: merchant.auctionBaseUrl,
+                  auctionCallbackUrl: merchant.auctionCallbackUrl,
+                  externalSystemName: merchant.externalSystemName,
+                  hasKeys: !!(merchant.rsaPublicKeyPem && merchant.rsaPrivateKeyPem),
+                  keysGeneratedAt: merchant.keysGeneratedAt,
+                  // Не возвращаем сами ключи в статусе для безопасности
+                } as AuctionMerchantConfig,
+              };
+            } catch (err) {
+              console.error("Error getting auction status:", err);
+              return error(500, { error: "Ошибка получения статуса аукциона" });
+            }
+          },
+          {
+            tags: ["admin", "auction"],
+            detail: {
+              summary: "Получение статуса аукционного мерчанта",
+              description: "Возвращает текущие настройки аукционной системы для мерчанта"
+            },
+            params: t.Object({
+              merchantId: t.String({ description: "ID мерчанта" })
+            }),
+          }
+        )
+
+        /* ──────── POST /admin/auction/generate-keys/{merchantId} ──────── */
+        .post(
+          "/generate-keys/:merchantId",
+          async ({ params, error }) => {
+            const { merchantId } = params;
+
+            try {
+              const merchant = await db.merchant.findUnique({
+                where: { id: merchantId },
+              });
+
+              if (!merchant) {
+                return error(404, { error: "Мерчант не найден" });
+              }
+
+              if (!merchant.isAuctionEnabled) {
+                return error(400, { error: "Аукционный режим не включен для данного мерчанта" });
+              }
+
+              console.log(`[AdminAuction] Generating RSA keys for merchant ${merchant.name}...`);
+
+              // Генерируем RSA ключи 2048 бит
+              const keyPair = await auctionRSAKeyGenerator.generateKeyPair();
+
+              // Проверяем валидность ключей
+              const isValid = auctionRSAKeyGenerator.validateKeyPair(
+                keyPair.publicKeyPem,
+                keyPair.privateKeyPem
+              );
+
+              if (!isValid) {
+                throw new Error("Generated keys failed validation");
+              }
+
+              // Сохраняем ключи в БД
+              const updatedMerchant = await db.merchant.update({
+                where: { id: merchantId },
+                data: {
+                  rsaPublicKeyPem: keyPair.publicKeyPem,
+                  rsaPrivateKeyPem: keyPair.privateKeyPem,
+                  keysGeneratedAt: new Date(),
+                },
+              });
+
+              console.log(`[AdminAuction] RSA keys generated for ${merchant.name}`);
+
+              return {
+                success: true,
+                message: "RSA ключи сгенерированы успешно",
+                publicKey: keyPair.publicKeyPem,
+                privateKey: keyPair.privateKeyPem, // Возвращаем только при создании!
+                generatedAt: updatedMerchant.keysGeneratedAt,
+                warning: "ВНИМАНИЕ: Сохраните приватный ключ в безопасном месте. Он больше не будет показан в открытом виде."
+              };
+            } catch (err) {
+              console.error("Error generating RSA keys:", err);
+              return error(500, { error: `Ошибка генерации ключей: ${err}` });
+            }
+          },
+          {
+            tags: ["admin", "auction"],
+            detail: {
+              summary: "Генерация RSA ключей для аукционного мерчанта",
+              description: "Генерирует новую пару RSA ключей 2048 бит для подписи запросов. ВНИМАНИЕ: Приватный ключ показывается только один раз!"
+            },
+            params: t.Object({
+              merchantId: t.String({ description: "ID мерчанта" })
+            }),
+          }
+        )
+
+        /* ──────── GET /admin/auction/download-key/{merchantId}/{keyType} ──────── */
+        .get(
+          "/download-key/:merchantId/:keyType",
+          async ({ params, query, headers, error, set }) => {
+            const { merchantId, keyType } = params;
+            
+            // Поддерживаем admin key как в query параметре так и в заголовке
+            const adminKey = query["admin_key"] || query["x-admin-key"] || headers["x-admin-key"];
+            
+            if (!adminKey) {
+              return error(401, { error: "Admin key required" });
+            }
+
+            // Простая проверка admin ключа (в продакшене должна быть более строгая)
+            const validAdminKey = "3d3b2e3efa297cae2bc6b19f3f8448ed2b2c7fd43af823a2a3a0585edfbb67d1";
+            if (adminKey !== validAdminKey) {
+              return error(403, { error: "Invalid admin key" });
+            }
+
+            if (keyType !== "public" && keyType !== "private") {
+              return error(400, { error: "Неверный тип ключа. Используйте 'public' или 'private'" });
+            }
+
+            try {
+              const merchant = await db.merchant.findUnique({
+                where: { id: merchantId },
+                select: {
+                  name: true,
+                  rsaPublicKeyPem: true,
+                  rsaPrivateKeyPem: keyType === "private", // Приватный только если запрошен
+                  keysGeneratedAt: true,
+                },
+              });
+
+              if (!merchant) {
+                return error(404, { error: "Мерчант не найден" });
+              }
+
+              const keyContent = keyType === "public" 
+                ? merchant.rsaPublicKeyPem 
+                : merchant.rsaPrivateKeyPem;
+
+              if (!keyContent) {
+                return error(404, { error: `${keyType === "public" ? "Публичный" : "Приватный"} ключ не найден` });
+              }
+
+              // Устанавливаем заголовки для скачивания файла
+              set.headers = {
+                "Content-Type": "application/x-pem-file",
+                "Content-Disposition": `attachment; filename="${merchant.name}_${keyType}_key.pem"`
+              };
+
+              console.log(`[AdminAuction] Downloaded ${keyType} key for ${merchant.name}`);
+
+              return keyContent;
+            } catch (err) {
+              console.error("Error downloading key:", err);
+              return error(500, { error: "Ошибка скачивания ключа" });
+            }
+          },
+          {
+            tags: ["admin", "auction"],
+            detail: {
+              summary: "Скачивание RSA ключа",
+              description: "Скачивает публичный или приватный ключ в формате PEM"
+            },
+            params: t.Object({
+              merchantId: t.String({ description: "ID мерчанта" }),
+              keyType: t.Union([
+                t.Literal("public"),
+                t.Literal("private")
+              ], { description: "Тип ключа для скачивания" })
+            }),
+          }
+        )
+
+        /* ──────── GET /admin/auction/status/{merchantId} ──────── */
+        .get(
+          "/status/:merchantId",
+          async ({ params, error }) => {
+            const { merchantId } = params;
+
+            try {
+              const merchant = await db.merchant.findUnique({
+                where: { id: merchantId },
+                select: {
+                  id: true,
+                  name: true,
+                  isAuctionEnabled: true,
+                  auctionBaseUrl: true,
+                  auctionCallbackUrl: true,
+                  externalSystemName: true,
+                  rsaPublicKeyPem: true,
+                  rsaPrivateKeyPem: true,
+                  keysGeneratedAt: true,
+                },
+              });
+
+              if (!merchant) {
+                return error(404, { error: "Мерчант не найден" });
+              }
+
+              const hasKeys = !!(merchant.rsaPublicKeyPem && merchant.rsaPrivateKeyPem);
+              
+              console.log(`[AdminAuction] Status for ${merchant.name}:`, {
+                hasKeys,
+                publicKeyLength: merchant.rsaPublicKeyPem?.length || 0,
+                privateKeyLength: merchant.rsaPrivateKeyPem?.length || 0
+              });
+
+              return {
+                success: true,
+                config: {
+                  isAuctionEnabled: merchant.isAuctionEnabled,
+                  auctionBaseUrl: merchant.auctionBaseUrl,
+                  auctionCallbackUrl: merchant.auctionCallbackUrl,
+                  externalSystemName: merchant.externalSystemName,
+                  hasKeys: hasKeys,
+                  keysGeneratedAt: merchant.keysGeneratedAt,
+                  publicKeyPreview: merchant.rsaPublicKeyPem, // Полный ключ для копирования
+                } as AuctionMerchantConfig,
+              };
+            } catch (err) {
+              console.error("Error getting auction status:", err);
+              return error(500, { error: "Ошибка получения статуса аукциона" });
+            }
+          },
+          {
+            tags: ["admin", "auction"],
+            detail: {
+              summary: "Получение статуса аукционного мерчанта",
+              description: "Возвращает текущие настройки аукционной системы для мерчанта"
+            },
+            params: t.Object({
+              merchantId: t.String({ description: "ID мерчанта" })
+            }),
+          }
+        )
     );

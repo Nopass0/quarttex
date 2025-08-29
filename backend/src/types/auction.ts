@@ -1,42 +1,37 @@
 /**
- * Типы и интерфейсы для аукционной системы внешних мерчантов
- * Реализация HTTP POST JSON API с RSA-подписью (SHA256, ключ 2048)
+ * Типы для аукционной системы согласно документации IE Cloud Summit
  */
 
-// ============================================================================
-// Базовые типы
-// ============================================================================
-
+// Методы оплаты
 export type PaymentMethod = "card_number" | "phone_number" | "account_number" | "iban" | "sbp";
 
-export type AuctionOrderStatus = 
-  | 1  // создана
-  | 2  // назначен трейдер
-  | 3  // реквизиты назначены
-  | 4  // мерч подтвердил оплату
-  | 5  // трейдер подтвердил оплату
-  | 6  // завершена
-  | 7  // спор
-  | 8  // отменена по таймауту
-  | 9  // отменена мерчантом
-  | 10 // отменена трейдером
-  | 11 // отменена админом
-  | 12 // отменена супервайзером
-  | 13; // отменена по результату спора
+// Типы реквизитов оплаты
+export type PaymentDetails =
+  | { type: "card_number"; name: string; bank_name: string; card: string; transfer_info?: string }
+  | { type: "phone_number"; name: string; bank_name: string; phone_number: string; transfer_info?: string }
+  | { type: "account_number"; account_number: string; name: string; bank_name: string; transfer_info?: string }
+  | { type: "iban"; iban: string; name: string; bank_name: string; transfer_info?: string }
+  | { type: "sbp"; phone_number: string; bank_name: string; name: string; transfer_info?: string };
 
-export type CancelReason =
+// Причины отмены
+export type CancelReason = 
   | "too_long_response"
-  | "not_valid_response"
+  | "not_valid_response" 
   | "system_selected_another_performer"
   | "auction_timeout_after_finish"
   | "server_error"
   | "other";
 
+// Типы диспутов
 export type DisputeType = "message" | "change_amount" | "dispute";
 
-export type AuctionErrorCode =
+// Статусы заказов (1-13)
+export type AuctionOrderStatus = 1|2|3|4|5|6|7|8|9|10|11|12|13;
+
+// Коды ошибок
+export type AuctionErrorCode = 
   | "signature_missing"
-  | "signature_invalid"
+  | "signature_invalid" 
   | "timestamp_invalid"
   | "timestamp_expired"
   | "validation_error"
@@ -51,70 +46,23 @@ export type AuctionErrorCode =
   | "exists_same_amount_order"
   | "other";
 
-// ============================================================================
-// Детали платежа по типам
-// ============================================================================
-
-export type PaymentDetails =
-  | {
-      type: "card_number";
-      name: string;
-      bank_name: string;
-      card: string;
-      transfer_info?: string;
-    }
-  | {
-      type: "phone_number";
-      name: string;
-      bank_name: string;
-      phone_number: string;
-      transfer_info?: string;
-    }
-  | {
-      type: "account_number";
-      account_number: string;
-      name: string;
-      bank_name: string;
-      transfer_info?: string;
-    }
-  | {
-      type: "iban";
-      iban: string;
-      name: string;
-      bank_name: string;
-      transfer_info?: string;
-    }
-  | {
-      type: "sbp";
-      phone_number: string;
-      bank_name: string;
-      name: string;
-      transfer_info?: string;
-    };
-
-// ============================================================================
-// Базовый конверт API
-// ============================================================================
-
+// Базовый конверт ответа
 export interface ApiEnvelope {
   is_success: boolean;
   error_code: AuctionErrorCode | null;
   error_message: string | null;
 }
 
-// ============================================================================
-// CreateOrder - Создание заказа
-// ============================================================================
-
+// Запросы к внешней системе
 export interface CreateOrderRequest {
-  system_order_id: string;
-  currency: string;
-  max_exchange_rate: number;
-  max_commission: number;
-  amount: number;
-  cancel_order_time_unix: number;
-  stop_auction_time_unix: number;
-  callback_url: string;
+  system_order_id: string;              // GUID, наш ID заявки
+  currency: string;                     // пример: "RUB"
+  max_exchange_rate: number;            // макс курс к USDT
+  max_commission: number;               // макс комиссия (%)
+  amount: number;                       // сумма заявки
+  cancel_order_time_unix: number;       // Unix(sec)
+  stop_auction_time_unix: number;       // Unix(sec) - окончание аукциона
+  callback_url: string;                 // куда им слать callback нам
   allowed_payment_method: PaymentMethod;
   iterative_sum_search_enabled: boolean;
   allowed_bank_name?: string;
@@ -129,241 +77,56 @@ export interface CreateOrderResponse extends ApiEnvelope {
   payment_details?: PaymentDetails;
 }
 
-// ============================================================================
-// CancelOrder - Отмена заказа
-// ============================================================================
-
 export interface CancelOrderRequest {
-  system_order_id: string;
-  external_id: string;
+  system_order_id: string;       // наш GUID
+  external_id: string;           // их внутренний ID
   reason: CancelReason;
   reason_message?: string;
 }
 
 export interface CancelOrderResponse extends ApiEnvelope {}
 
-// ============================================================================
-// GetStatusOrder - Получение статуса заказа
-// ============================================================================
-
 export interface GetStatusOrderRequest {
-  system_order_id: string;
-  external_id: string;
+  system_order_id: string;   // наш GUID
+  external_id: string;       // их внутренний ID
 }
 
 export interface GetStatusOrderResponse extends ApiEnvelope {
   status?: AuctionOrderStatus;
 }
 
-// ============================================================================
-// CreateDispute - Создание спора
-// ============================================================================
-
 export interface CreateDisputeRequest {
-  system_order_id: string;
-  external_order_id: string;
+  system_order_id: string;        // наш GUID
+  external_order_id: string;      // их ID
   comment: string;
-  attachment_path?: string;
+  attachment_path?: string;        // URL изображения/скриншота
   type: DisputeType;
-  new_amount?: number;
+  new_amount?: number;             // только если type = "change_amount"
 }
 
 export interface CreateDisputeResponse extends ApiEnvelope {}
 
-// ============================================================================
-// AuctionCallback - Обратный вызов от внешней системы
-// ============================================================================
-
+// Callback от внешней системы к нам
 export interface AuctionCallbackRequest {
-  order_id: string;
-  status_id?: number;
-  amount?: number;
+  order_id: string;       // совпадает с system_order_id или external_id
+  status_id?: number;     // 1..100 при изменении статуса
+  amount?: number;        // новая сумма (если корректировалась)
 }
 
-export interface AuctionCallbackResponse extends ApiEnvelope {}
-
-// ============================================================================
-// Заголовки для подписи
-// ============================================================================
-
-export interface AuctionHeaders {
-  "Content-Type": "application/json";
-  "X-Timestamp": string;
-  "X-Signature": string;
-}
-
-// ============================================================================
-// Операции для канонических строк
-// ============================================================================
-
-export type AuctionOperation = 
-  | "CreateOrder"
-  | "CancelOrder" 
-  | "GetOrderStatus"
-  | "CreateDispute"
-  | "AuctionCallback";
-
-// ============================================================================
 // Конфигурация аукционного мерчанта
-// ============================================================================
-
 export interface AuctionMerchantConfig {
-  id: string;
-  name: string;
   isAuctionEnabled: boolean;
   auctionBaseUrl?: string;
+  auctionCallbackUrl?: string;
   rsaPublicKeyPem?: string;
   rsaPrivateKeyPem?: string;
-  keysGeneratedAt?: Date;
   externalSystemName?: string;
+  keysGeneratedAt?: Date;
 }
 
-// ============================================================================
-// Контекст аукциона для сделки
-// ============================================================================
-
-export interface AuctionContext {
-  systemOrderId: string;
-  externalOrderId?: string;
-  externalSystemId?: number;
-  stopAuctionTimeUnix: number;
-  cancelOrderTimeUnix: number;
-  callbackUrl: string;
-  merchantConfig: AuctionMerchantConfig;
-}
-
-// ============================================================================
-// Результат аукциона
-// ============================================================================
-
-export interface AuctionResult {
-  success: boolean;
-  externalOrderId?: string;
-  externalSystemId?: number;
-  paymentDetails?: PaymentDetails;
-  exchangeRate?: number;
-  commission?: number;
-  amount?: number;
-  errorCode?: AuctionErrorCode;
-  errorMessage?: string;
-  responseTime: number;
-  receivedAt: number;
-}
-
-// ============================================================================
-// Утилиты для подписи
-// ============================================================================
-
-export interface SignatureUtils {
-  /**
-   * Создает каноничную строку для подписи
-   */
-  createCanonicalString(
-    timestamp: number,
-    externalSystemName: string,
-    keyField: string,
-    operation: AuctionOperation
-  ): string;
-
-  /**
-   * Подписывает каноничную строку приватным ключом
-   */
-  signCanonicalString(canonicalString: string, privateKeyPem: string): string;
-
-  /**
-   * Проверяет подпись публичным ключом
-   */
-  verifySignature(
-    canonicalString: string,
-    signature: string,
-    publicKeyPem: string
-  ): boolean;
-
-  /**
-   * Проверяет валидность timestamp (±120 секунд)
-   */
-  validateTimestamp(timestamp: number): boolean;
-}
-
-// ============================================================================
-// Клиент для работы с внешними системами
-// ============================================================================
-
-export interface AuctionApiClient {
-  /**
-   * Отправляет запрос на создание заказа
-   */
-  createOrder(
-    config: AuctionMerchantConfig,
-    request: CreateOrderRequest
-  ): Promise<CreateOrderResponse>;
-
-  /**
-   * Отправляет запрос на отмену заказа
-   */
-  cancelOrder(
-    config: AuctionMerchantConfig,
-    request: CancelOrderRequest
-  ): Promise<CancelOrderResponse>;
-
-  /**
-   * Получает статус заказа
-   */
-  getOrderStatus(
-    config: AuctionMerchantConfig,
-    request: GetStatusOrderRequest
-  ): Promise<GetStatusOrderResponse>;
-
-  /**
-   * Создает спор по заказу
-   */
-  createDispute(
-    config: AuctionMerchantConfig,
-    request: CreateDisputeRequest
-  ): Promise<CreateDisputeResponse>;
-}
-
-// ============================================================================
-// Обработчик callback'ов
-// ============================================================================
-
-export interface AuctionCallbackHandler {
-  /**
-   * Обрабатывает входящий callback от внешней системы
-   */
-  handleCallback(
-    merchantId: string,
-    headers: Record<string, string>,
-    body: AuctionCallbackRequest
-  ): Promise<AuctionCallbackResponse>;
-
-  /**
-   * Валидирует подпись callback'а
-   */
-  validateCallbackSignature(
-    merchantConfig: AuctionMerchantConfig,
-    headers: Record<string, string>,
-    body: AuctionCallbackRequest
-  ): boolean;
-}
-
-// ============================================================================
-// Генератор RSA ключей
-// ============================================================================
-
-export interface RSAKeyPair {
-  publicKeyPem: string;
-  privateKeyPem: string;
-}
-
-export interface RSAKeyGenerator {
-  /**
-   * Генерирует пару RSA ключей 2048 бит
-   */
-  generateKeyPair(): Promise<RSAKeyPair>;
-
-  /**
-   * Проверяет валидность ключей
-   */
-  validateKeyPair(publicKeyPem: string, privateKeyPem: string): boolean;
+// Результат валидации подписи
+export interface SignatureValidationResult {
+  valid: boolean;
+  error?: AuctionErrorCode;
+  message?: string;
 }

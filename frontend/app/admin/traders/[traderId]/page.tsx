@@ -612,7 +612,7 @@ function TraderProfileContent() {
             </div>
             <div className="space-y-1">
               <p className="text-sm text-gray-500">Депозит</p>
-              <p className="font-semibold text-lg text-purple-600">
+              <p className="font-semibold text-lg text-[#530FAD] dark:text-[#7c3aed]">
                 ${formatAmount(trader.deposit)}
               </p>
             </div>
@@ -963,7 +963,7 @@ function TraderProfileContent() {
               <Separator />
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Общая прибыль</p>
-                <p className="font-semibold text-lg text-purple-600">
+                <p className="font-semibold text-lg text-[#530FAD] dark:text-[#7c3aed]">
                   $
                   {formatAmount(
                     dateFilter.startDate || dateFilter.endDate
@@ -1322,7 +1322,7 @@ function TraderProfileContent() {
                 <Button
                   onClick={handleSaveSettings}
                   disabled={isSavingSettings}
-                  className="bg-[#006039] hover:bg-[#006039]/90"
+                  className="bg-[#530FAD] hover:bg-[#530FAD]/90"
                 >
                   {isSavingSettings ? (
                     <>

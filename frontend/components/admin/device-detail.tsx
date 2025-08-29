@@ -228,7 +228,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
       IN_PROGRESS: { color: 'bg-yellow-100 text-yellow-700', icon: Clock, text: 'В работе' },
       DISPUTE: { color: 'bg-orange-100 text-orange-700', icon: AlertCircle, text: 'Спор' },
       READY: { color: 'bg-purple-100 text-purple-700', icon: CheckCircle, text: 'Готова' },
-      EXPIRED: { color: 'bg-gray-100 text-gray-700', icon: XCircle, text: 'Истекла' },
+      EXPIRED: { color: 'bg-purple-100/40 text-gray-700', icon: XCircle, text: 'Истекла' },
       CANCELED: { color: 'bg-red-100 text-red-700', icon: XCircle, text: 'Отменена' },
       MILK: { color: 'bg-purple-100 text-purple-700', icon: AlertCircle, text: 'Слив' },
     }
@@ -286,7 +286,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
             size="sm"
             onClick={handleToggleTrust}
           >
-            <Shield className={cn("w-4 h-4 mr-2", device.isTrusted && "text-purple-600")} />
+            <Shield className={cn("w-4 h-4 mr-2", device.isTrusted && "text-[#530FAD] dark:text-[#7c3aed]")} />
             {device.isTrusted ? 'Отозвать доверие' : 'Доверять'}
           </Button>
         </div>
@@ -295,11 +295,11 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
       {/* Device Phone Mockup and Info */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Phone Mockup */}
-        <Card className="lg:col-span-1">
+        <Card className="bg-purple-50/10 lg:col-span-1">
           <CardContent className="p-6">
             <div className="relative mx-auto w-[280px] h-[580px] bg-gray-900 rounded-[3rem] shadow-xl">
               {/* Phone Frame */}
-              <div className="absolute inset-[3px] bg-white rounded-[2.8rem] overflow-hidden">
+              <div className="absolute inset-[3px] bg-purple-50/20 dark:bg-purple-900/15 rounded-[2.8rem] overflow-hidden">
                 {/* Status Bar */}
                 <div className="bg-gray-900 text-white px-6 py-2 text-xs flex justify-between items-center">
                   <span>{new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</span>
@@ -344,7 +344,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
         </Card>
 
         {/* Device Info */}
-        <Card className="lg:col-span-2">
+        <Card className="bg-purple-50/10 lg:col-span-2">
           <CardHeader>
             <CardTitle>Информация об устройстве</CardTitle>
           </CardHeader>
@@ -496,7 +496,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
               {messages.length > 0 ? (
                 <div className="divide-y">
                   {messages.map((message) => (
-                    <div key={message.id} className="p-4 hover:bg-gray-50">
+                    <div key={message.id} className="p-4 hover:bg-purple-50/50">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
@@ -507,7 +507,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
                               </>
                             ) : (
                               <>
-                                <Hash className="w-4 h-4 text-purple-500" />
+                                <Hash className="w-4 h-4 text-[#530FAD] dark:text-[#7c3aed]" />
                                 <span className="font-medium text-sm">{message.phoneNumber}</span>
                               </>
                             )}
@@ -562,7 +562,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
               {transactions.length > 0 ? (
                 <div className="divide-y">
                   {transactions.map((transaction) => (
-                    <div key={transaction.id} className="p-4 hover:bg-gray-50">
+                    <div key={transaction.id} className="p-4 hover:bg-purple-50/50">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-4 mb-2">
@@ -599,7 +599,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
                           </div>
                           
                           {transaction.requisites && (
-                            <div className="mt-2 p-2 bg-gray-50 rounded text-sm">
+                            <div className="mt-2 p-2 bg-purple-50/30 rounded text-sm">
                               <CreditCard className="w-4 h-4 inline mr-2 text-gray-400" />
                               <span>{transaction.requisites.cardNumber}</span>
                               <span className="mx-2">•</span>

@@ -545,7 +545,7 @@ export default function AdminAggregatorsPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            <DollarSign className="h-4 w-4 text-purple-600" />
+                            <DollarSign className="h-4 w-4 text-[#530FAD] dark:text-[#7c3aed]" />
                             {formatAmount(aggregator.balanceUsdt)}
                           </div>
                         </TableCell>

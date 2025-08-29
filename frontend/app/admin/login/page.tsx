@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Logo } from "@/components/ui/logo"
+import QuatrexLogo from "@/components/ui/quattrex-logo"
 import { toast } from "sonner"
 import { useAdminAuth } from "@/stores/auth"
 import { adminApi } from "@/services/api"
@@ -65,10 +65,10 @@ export default function AdminLoginPage() {
   }
   
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0f0f0f] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 bg-white dark:bg-[#29382f] shadow-lg border-gray-200 dark:border-[#29382f]">
+    <div className="min-h-screen bg-purple-50/30 dark:bg-[#0f0f0f] flex items-center justify-center p-4">
+      <Card className="bg-purple-50/10 w-full max-w-md p-8 bg-purple-50/20 dark:bg-purple-900/15 dark:bg-purple-800/60 shadow-lg border-purple-200/60 dark:border-purple-700/60">
         <div className="flex flex-col items-center mb-8">
-                      <Logo size="lg" animated />
+                      <QuatrexLogo size="lg" />
           <h1 className="mt-6 text-2xl font-semibold text-gray-900 dark:text-[#eeeeee]">
             Вход в админ-панель
           </h1>
@@ -83,7 +83,7 @@ export default function AdminLoginPage() {
               Мастер-ключ
             </Label>
             <div className="mt-1 relative">
-              <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#006039] dark:text-[#2d6a42] h-4 w-4" />
+              <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#530FAD] dark:text-[#7c3aed] h-4 w-4" />
               <Input
                 id="masterKey"
                 type="password"
@@ -98,7 +98,7 @@ export default function AdminLoginPage() {
           
           <Button
             type="submit"
-            className="w-full bg-[#006039] hover:bg-[#004d2e] dark:bg-[#2d6a42] dark:hover:bg-[#236035]"
+            className="w-full bg-[#530FAD] hover:bg-purple-800/60 dark:bg-[#7c3aed] dark:hover:bg-[#6d28d9]"
             disabled={loading}
           >
             {loading ? (
@@ -115,7 +115,7 @@ export default function AdminLoginPage() {
         <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
           <p>
             Проблемы со входом?{" "}
-            <a href="#" className="text-[#006039] dark:text-[#2d6a42] hover:text-[#004d2e] dark:hover:text-[#236035] font-medium">
+            <a href="#" className="text-[#530FAD] dark:text-[#7c3aed] hover:text-[#3d0b80] dark:hover:text-[#6d28d9] font-medium">
               Обратитесь к разработчику
             </a>
           </p>

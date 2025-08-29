@@ -210,7 +210,7 @@ export function WithdrawalDialog({ open, onOpenChange, defaultBalanceType }: Wit
                       key={type}
                       className={cn(
                         "flex items-center space-x-3 p-3 rounded-lg border",
-                        disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-gray-50"
+                        disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-purple-50/50"
                       )}
                     >
                       <RadioGroupItem value={type} disabled={disabled} />
@@ -276,7 +276,7 @@ export function WithdrawalDialog({ open, onOpenChange, defaultBalanceType }: Wit
 
             {/* Fee Calculation - Show only if fees are enabled */}
             {amount && parseFloat(amount) > 0 && settings?.feeEnabled && (
-              <Card className="p-4 border-blue-200 bg-blue-50/50">
+              <Card className="bg-purple-50/10 p-4 border-blue-200 bg-blue-50/50">
                 <div className="flex items-start gap-3">
                   <Calculator className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
                   <div className="text-sm text-blue-800 space-y-1">
@@ -298,7 +298,7 @@ export function WithdrawalDialog({ open, onOpenChange, defaultBalanceType }: Wit
             )}
 
             {/* Info */}
-            <Card className="p-4 border-orange-200 bg-orange-50/50">
+            <Card className="bg-purple-50/10 p-4 border-orange-200 bg-orange-50/50">
               <div className="flex items-start gap-3">
                 <Info className="h-4 w-4 text-orange-600 shrink-0 mt-0.5" />
                 <div className="text-sm text-orange-800">
@@ -350,7 +350,7 @@ export function WithdrawalDialog({ open, onOpenChange, defaultBalanceType }: Wit
               </Badge>
             </div>
 
-            <Card className="p-4 border-blue-200 bg-blue-50/50">
+            <Card className="bg-purple-50/10 p-4 border-blue-200 bg-blue-50/50">
               <div className="flex items-start gap-3">
                 <Clock className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
                 <div className="text-sm text-blue-800">

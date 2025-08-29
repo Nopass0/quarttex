@@ -1694,6 +1694,12 @@ export const aggregatorApi = {
     );
     return response.data;
   },
+  getCallbacks: async () => {
+    const response = await aggregatorApiInstance.get(
+      "/aggregator/api-docs/callbacks"
+    );
+    return response.data;
+  },
   getIntegrationFlow: async () => {
     const response = await aggregatorApiInstance.get(
       "/aggregator/api-docs/integration-flow"

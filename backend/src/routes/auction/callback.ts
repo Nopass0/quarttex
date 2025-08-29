@@ -1,10 +1,197 @@
 /**
- * Роуты для обработки callback'ов от внешних аукционных систем
+ * Обработка callback'ов от внешних аукционных систем
+ * Согласно документации IE Cloud Summit
  */
 
 import { Elysia, t } from "elysia";
-import { auctionCallbackHandler } from "@/services/auction-callback-handler";
-import { AuctionCallbackRequest } from "@/types/auction";
+import { db } from "@/db";
+import { Status } from "@prisma/client";
+import { 
+  AuctionCallbackRequest, 
+  AuctionCallbackResponse,
+  AuctionErrorCode,
+} from "@/types/auction";
+import { validateAuctionRequest } from "@/utils/auction-signature";
+import { sendTransactionCallbacks } from "@/utils/notify";
+
+/**
+ * Маппинг аукционных статусов на внутренние
+ */
+const AUCTION_TO_STATUS: Record<number, Status> = {
+  1: Status.CREATED,     // создана
+  2: Status.IN_PROGRESS, // назначен трейдер
+  3: Status.IN_PROGRESS, // реквизиты назначены
+  4: Status.IN_PROGRESS, // мерч подтвердил оплату
+  5: Status.IN_PROGRESS, // трейдер подтвердил оплату
+  6: Status.READY,       // завершена
+  7: Status.DISPUTE,     // спор
+  8: Status.EXPIRED,     // отменена по таймауту
+  9: Status.CANCELED,    // отменена мерчантом
+  10: Status.CANCELED,   // отменена трейдером
+  11: Status.CANCELED,   // отменена админом
+  12: Status.CANCELED,   // отменена супервайзером
+  13: Status.CANCELED,   // отменена по результату спора
+};
+
+/**
+ * Обработчик callback'ов от внешних аукционных систем
+ */
+class AuctionCallbackHandler {
+  /**
+   * Обрабатывает входящий callback
+   */
+  async handleCallback(
+    merchantId: string,
+    headers: Record<string, string>,
+    body: AuctionCallbackRequest
+  ): Promise<AuctionCallbackResponse> {
+    try {
+      console.log(`[AuctionCallback] Получен callback для мерчанта ${merchantId}:`, {
+        order_id: body.order_id,
+        status_id: body.status_id,
+        amount: body.amount,
+      });
+
+      // Находим мерчанта
+      const merchant = await db.merchant.findUnique({
+        where: { id: merchantId },
+        select: {
+          id: true,
+          name: true,
+          isAuctionEnabled: true,
+          rsaPublicKeyPem: true,
+          externalSystemName: true,
+        },
+      });
+
+      if (!merchant) {
+        return {
+          is_success: false,
+          error_code: "validation_error",
+          error_message: "Мерчант не найден",
+        };
+      }
+
+      if (!merchant.isAuctionEnabled) {
+        return {
+          is_success: false,
+          error_code: "validation_error",
+          error_message: "Аукционная система не включена для данного мерчанта",
+        };
+      }
+
+      if (!merchant.rsaPublicKeyPem || !merchant.externalSystemName) {
+        return {
+          is_success: false,
+          error_code: "validation_error",
+          error_message: "RSA ключи не настроены для мерчанта",
+        };
+      }
+
+      // Валидируем подпись callback'а
+      const signatureValidation = validateAuctionRequest(
+        headers,
+        body,
+        merchant.rsaPublicKeyPem,
+        merchant.externalSystemName,
+        body.order_id,
+        "AuctionCallback"
+      );
+
+      if (!signatureValidation.valid) {
+        console.log(`[AuctionCallback] Signature validation failed:`, signatureValidation);
+        return {
+          is_success: false,
+          error_code: signatureValidation.error as AuctionErrorCode,
+          error_message: signatureValidation.message || "Ошибка валидации подписи",
+        };
+      }
+
+      // Находим транзакцию
+      const transaction = await db.transaction.findFirst({
+        where: {
+          OR: [
+            { orderId: body.order_id },
+            { id: body.order_id },
+            { externalOrderId: body.order_id },
+          ],
+          merchantId: merchantId,
+        },
+        include: {
+          merchant: true,
+          method: true,
+          trader: true,
+          requisites: true,
+        },
+      });
+
+      if (!transaction) {
+        return {
+          is_success: false,
+          error_code: "order_not_found",
+          error_message: "Транзакция не найдена",
+        };
+      }
+
+      // Обновляем статус если указан
+      if (body.status_id !== undefined) {
+        const newStatus = AUCTION_TO_STATUS[body.status_id];
+        
+        if (newStatus) {
+          console.log(`[AuctionCallback] Updating status: ${transaction.status} → ${newStatus}`);
+          
+          await db.transaction.update({
+            where: { id: transaction.id },
+            data: { status: newStatus },
+          });
+
+          // Отправляем callback'и при изменении статуса
+          const updatedTransaction = await db.transaction.findFirst({
+            where: { id: transaction.id },
+            include: {
+              merchant: true,
+              method: true,
+              trader: true,
+              requisites: true,
+            },
+          });
+
+          if (updatedTransaction) {
+            await sendTransactionCallbacks(updatedTransaction);
+          }
+        }
+      }
+
+      // Обновляем сумму если указана
+      if (body.amount !== undefined && body.amount !== transaction.amount) {
+        console.log(`[AuctionCallback] Updating amount: ${transaction.amount} → ${body.amount}`);
+        
+        await db.transaction.update({
+          where: { id: transaction.id },
+          data: { amount: body.amount },
+        });
+      }
+
+      console.log(`[AuctionCallback] Callback обработан успешно для транзакции ${transaction.id}`);
+
+      return {
+        is_success: true,
+        error_code: null,
+        error_message: null,
+      };
+
+    } catch (error) {
+      console.error(`[AuctionCallback] Ошибка обработки callback'а:`, error);
+      return {
+        is_success: false,
+        error_code: "other",
+        error_message: `Внутренняя ошибка: ${error}`,
+      };
+    }
+  }
+}
+
+const auctionCallbackHandler = new AuctionCallbackHandler();
 
 /**
  * Роуты для аукционных callback'ов
@@ -14,62 +201,17 @@ export default (app: Elysia) =>
     /* ──────── POST /auction/callback/{merchantId} ──────── */
     .post(
       "/callback/:merchantId",
-      async ({ params, headers, body, set }) => {
-        try {
-          const { merchantId } = params;
-          
-          // Логируем входящий запрос
-          console.log(`[AuctionCallback] Получен callback для мерчанта ${merchantId}`, {
-            headers: Object.keys(headers),
-            bodyKeys: Object.keys(body as any),
-          });
-
-          // Обрабатываем callback
-          const response = await auctionCallbackHandler.handleCallback(
-            merchantId,
-            headers as Record<string, string>,
-            body as AuctionCallbackRequest
-          );
-
-          // Устанавливаем соответствующий HTTP статус
-          if (!response.is_success) {
-            // Определяем HTTP статус по коду ошибки
-            switch (response.error_code) {
-              case "signature_missing":
-              case "signature_invalid":
-              case "timestamp_invalid":
-              case "timestamp_expired":
-                set.status = 401; // Unauthorized
-                break;
-              case "validation_error":
-              case "request_parameters_is_invalid":
-                set.status = 400; // Bad Request
-                break;
-              case "order_not_found":
-                set.status = 404; // Not Found
-                break;
-              default:
-                set.status = 500; // Internal Server Error
-                break;
-            }
-          } else {
-            set.status = 200; // OK
-          }
-
-          return response;
-        } catch (error) {
-          console.error(`[AuctionCallback] Необработанная ошибка:`, error);
-          
-          set.status = 500;
-          return {
-            is_success: false,
-            error_code: "other",
-            error_message: "Внутренняя ошибка сервера",
-          };
-        }
+      async ({ params, headers, body }) => {
+        const { merchantId } = params;
+        
+        return await auctionCallbackHandler.handleCallback(
+          merchantId,
+          headers as Record<string, string>,
+          body as AuctionCallbackRequest
+        );
       },
       {
-        tags: ["auction"],
+        tags: ["auction", "callback"],
         detail: { 
           summary: "Обработка callback от внешней аукционной системы",
           description: "Принимает уведомления об изменении статуса заказов от внешних систем с проверкой RSA подписи"
@@ -110,81 +252,22 @@ export default (app: Elysia) =>
         }),
         response: {
           200: t.Object({
-            is_success: t.Literal(true),
-            error_code: t.Null(),
-            error_message: t.Null()
+            is_success: t.Boolean(),
+            error_code: t.Nullable(t.String()),
+            error_message: t.Nullable(t.String()),
           }),
           400: t.Object({
             is_success: t.Literal(false),
-            error_code: t.Union([
-              t.Literal("validation_error"),
-              t.Literal("request_parameters_is_invalid")
-            ]),
-            error_message: t.String()
-          }),
-          401: t.Object({
-            is_success: t.Literal(false),
-            error_code: t.Union([
-              t.Literal("signature_missing"),
-              t.Literal("signature_invalid"),
-              t.Literal("timestamp_invalid"),
-              t.Literal("timestamp_expired")
-            ]),
-            error_message: t.String()
-          }),
-          404: t.Object({
-            is_success: t.Literal(false),
-            error_code: t.Literal("order_not_found"),
-            error_message: t.String()
+            error_code: t.String(),
+            error_message: t.String(),
           }),
           500: t.Object({
             is_success: t.Literal(false),
             error_code: t.Literal("other"),
-            error_message: t.String()
-          })
-        }
-      }
-    )
-
-    /* ──────── GET /auction/callback/test/{merchantId} ──────── */
-    .get(
-      "/callback/test/:merchantId",
-      async ({ params, query }) => {
-        const { merchantId } = params;
-        const { orderId = "test-order-123", statusId = "6" } = query;
-
-        return {
-          message: "Тестовый endpoint для callback'ов",
-          merchantId,
-          testCallback: {
-            url: `/auction/callback/${merchantId}`,
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Timestamp": Math.floor(Date.now() / 1000).toString(),
-              "X-Signature": "test_signature_here"
-            },
-            body: {
-              order_id: orderId,
-              status_id: parseInt(statusId as string, 10),
-              amount: 1000.0
-            }
-          },
-          note: "Для реального тестирования нужна валидная RSA подпись"
-        };
-      },
-      {
-        tags: ["auction"],
-        detail: { 
-          summary: "Тестовый endpoint для проверки callback'ов",
-          description: "Возвращает пример запроса для тестирования callback'ов"
+            error_message: t.String(),
+          }),
         },
-        params: t.Object({
-          merchantId: t.String()
-        }),
-        query: t.Object({
-          orderId: t.Optional(t.String()),
-          statusId: t.Optional(t.String())
-        })
       }
     );
+
+export { auctionCallbackHandler };

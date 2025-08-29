@@ -119,15 +119,15 @@ const btRequisiteStatusConfig = {
   ACTIVE: {
     label: "Активен",
     description: "Реквизит активен",
-    color: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
-    badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
+    color: "bg-purple-100 text-purple-800 border-green-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
+    badgeColor: "bg-purple-50 text-purple-700 border-green-200",
     icon: CheckCircle
   },
   INACTIVE: {
     label: "Неактивен",
     description: "Реквизит неактивен",
-    color: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600",
-    badgeColor: "bg-gray-50 text-gray-700 border-gray-200",
+    color: "bg-purple-100/40 text-gray-800 border-purple-200/60 dark:bg-purple-900/25 dark:text-gray-300 dark:border-gray-600",
+    badgeColor: "bg-purple-50/30 text-gray-700 border-gray-200",
     icon: Ban
   },
   BLOCKED: {
@@ -409,7 +409,7 @@ export function BtRequisitesSheet({
                   <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
                 </div>
               ) : requisites.length === 0 ? (
-                <Card className="p-8 text-center">
+                <Card className="bg-purple-50/10 p-8 text-center">
                   <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500">Нет реквизитов для БТ-входа</p>
                   <p className="text-sm text-gray-400 mt-2">
@@ -437,7 +437,7 @@ export function BtRequisitesSheet({
                               </div>
                               <Badge className={cn(
                                 "text-xs",
-                                statusConfig?.badgeColor || "bg-gray-50 text-gray-700 border-gray-200"
+                                statusConfig?.badgeColor || "bg-purple-50/30 text-gray-700 border-gray-200"
                               )}>
                                 {statusConfig?.label || status}
                               </Badge>
@@ -813,7 +813,7 @@ export function BtRequisitesSheet({
                   <Button
                     type="submit"
                     disabled={loading || !form.formState.isValid || hasEmptyRequiredNumbers}
-                    className="bg-[#006039] hover:bg-[#006039]/90"
+                    className="bg-[#530FAD] hover:bg-[#530FAD]/90"
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {editingRequisite ? "Сохранить" : "Добавить"}

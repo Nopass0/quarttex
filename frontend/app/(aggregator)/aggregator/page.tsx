@@ -158,7 +158,7 @@ export default function AggregatorDashboard() {
       </div>
 
       {/* API Token Card */}
-      <Card className="border-[#006039]/20 bg-gradient-to-r from-[#006039]/5 to-transparent">
+      <Card className="bg-purple-50/10 border-[#006039]/20 bg-gradient-to-r from-[#006039]/5 to-transparent">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Globe className="h-5 w-5 text-[#006039]" />
@@ -204,7 +204,7 @@ export default function AggregatorDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-2xl font-bold text-[#530FAD] dark:text-[#7c3aed]">
               {formatAmount(
                 overview?.balanceUsdt || aggregator.balanceUsdt || 0
               )}
@@ -291,7 +291,7 @@ export default function AggregatorDashboard() {
                 <span className="text-sm text-muted-foreground">
                   Успешных сделок
                 </span>
-                <span className="text-lg font-semibold text-purple-600">
+                <span className="text-lg font-semibold text-[#530FAD] dark:text-[#7c3aed]">
                   {overview?.successfulTransactions || 0}
                 </span>
               </div>
@@ -323,7 +323,7 @@ export default function AggregatorDashboard() {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-purple-600" />
+                  <CheckCircle className="h-4 w-4 text-[#530FAD] dark:text-[#7c3aed]" />
                   <span className="text-sm">Успешных</span>
                   <span className="ml-auto font-semibold">
                     {overview?.successfulTransactions || 0}

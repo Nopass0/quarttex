@@ -5,21 +5,9 @@ import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Quattrex - Торговая и платежная платформа",
-  description: "Quattrex - современная торговая и платежная платформа для безопасных финансовых операций",
+  title: "Quattrex платформ",
+  description: "Trading and payment platform",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1",
-  openGraph: {
-    title: "Quattrex - Торговая и платежная платформа",
-    description: "Quattrex - современная торговая и платежная платформа для безопасных финансовых операций",
-    url: "https://quattrex.pro",
-    siteName: "Quattrex",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Quattrex - Торговая и платежная платформа",
-    description: "Quattrex - современная торговая и платежная платформа для безопасных финансовых операций",
-  },
 };
 
 export default function RootLayout({
@@ -29,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased bg-white dark:bg-[#0f0f0f] text-gray-900 dark:text-[#eeeeee]">
+      <body className="antialiased bg-purple-50/20 dark:bg-purple-900/15 dark:bg-[#0f0f0f] text-gray-900 dark:text-[#eeeeee]">
         <Providers>
           {children}
         </Providers>

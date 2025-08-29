@@ -103,7 +103,7 @@ export default function AgentPayoutsPage() {
           </Button>
           <Button
             onClick={requestPayout}
-            className="bg-[#006039] hover:bg-[#006039]/90"
+            className="bg-[#530FAD] hover:bg-[#530FAD]/90"
           >
             <Download className="h-4 w-4 mr-2" />
             Запросить выплату
@@ -206,7 +206,7 @@ export default function AgentPayoutsPage() {
                     </div>
                   )}
                   {payout.adminNote && (
-                    <div className="text-xs text-gray-600 mt-2 p-2 bg-gray-50 rounded">
+                    <div className="text-xs text-gray-600 mt-2 p-2 bg-purple-50/30 rounded">
                       Примечание: {payout.adminNote}
                     </div>
                   )}

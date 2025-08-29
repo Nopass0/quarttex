@@ -1,6 +1,6 @@
 /**
- * API endpoints для приема запросов от внешних аукционных систем
- * Внешние системы отправляют нам запросы на создание, отмену и управление заказами
+ * API endpoints для внешних аукционных систем
+ * Реализация согласно документации IE Cloud Summit
  */
 
 import { Elysia, t } from "elysia";
@@ -17,24 +17,24 @@ import {
   CreateDisputeResponse,
   PaymentDetails,
   AuctionOrderStatus,
+  AuctionErrorCode,
+  PaymentMethod,
 } from "@/types/auction";
-import {
-  auctionSignatureUtils,
-  AuctionSignatureHelpers,
-} from "@/utils/auction-signature";
+import { validateAuctionRequest } from "@/utils/auction-signature";
 import { calculateTransactionFreezing } from "@/utils/transaction-freezing";
+import { roundDown2 } from "@/utils/rounding";
 
 /**
- * Маппинг внутренних статусов на аукционные
+ * Маппинг внутренних статусов на аукционные согласно документации
  */
 const STATUS_TO_AUCTION: Record<Status, AuctionOrderStatus> = {
-  CREATED: 1,
-  IN_PROGRESS: 2,
-  READY: 6,
-  CANCELED: 9,
-  EXPIRED: 8,
-  DISPUTE: 7,
-  MILK: 1, // Специальный статус маппим как создана
+  CREATED: 1,     // создана
+  IN_PROGRESS: 2, // назначен трейдер  
+  READY: 6,       // завершена
+  CANCELED: 9,    // отменена мерчантом
+  EXPIRED: 8,     // отменена по таймауту
+  DISPUTE: 7,     // спор
+  MILK: 1,        // специальный статус
 };
 
 /**
@@ -49,146 +49,120 @@ class AuctionOrderService {
       where: {
         isAuctionEnabled: true,
         externalSystemName: externalSystemName,
-      },
-      include: {
-        merchantMethods: {
-          include: { method: true },
-          where: { isEnabled: true },
-        },
+        rsaPublicKeyPem: { not: null },
+        rsaPrivateKeyPem: { not: null },
       },
     });
   }
 
   /**
-   * Валидирует подпись входящего запроса
+   * Валидация подписи запроса
    */
   validateRequestSignature(
     headers: Record<string, string>,
     body: any,
     publicKeyPem: string,
     externalSystemName: string,
-    keyField: string,
+    systemOrderId: string,
     operation: string
-  ): { valid: boolean; error?: string } {
-    const timestamp = headers["x-timestamp"] || headers["X-Timestamp"];
-    const signature = headers["x-signature"] || headers["X-Signature"];
-
-    if (!timestamp) {
-      return { valid: false, error: "timestamp_missing" };
-    }
-
-    if (!signature) {
-      return { valid: false, error: "signature_missing" };
-    }
-
-    const timestampNum = parseInt(timestamp, 10);
-    if (isNaN(timestampNum)) {
-      return { valid: false, error: "timestamp_invalid" };
-    }
-
-    if (!auctionSignatureUtils.validateTimestamp(timestampNum)) {
-      return { valid: false, error: "timestamp_expired" };
-    }
-
-    const canonicalString = auctionSignatureUtils.createCanonicalString(
-      timestampNum,
+  ) {
+    return validateAuctionRequest(
+      headers,
+      body,
+      publicKeyPem,
       externalSystemName,
-      keyField,
-      operation
+      systemOrderId,
+      operation as any
     );
-
-    if (!auctionSignatureUtils.verifySignature(canonicalString, signature, publicKeyPem)) {
-      return { valid: false, error: "signature_invalid" };
-    }
-
-    return { valid: true };
   }
 
   /**
-   * Создает реквизиты для заказа на основе доступных трейдеров
+   * Создание деталей платежа согласно документации
    */
   async createPaymentDetails(
     merchantId: string,
     methodId: string,
     amount: number,
-    paymentMethod: string
+    paymentMethod: PaymentMethod
   ): Promise<PaymentDetails | null> {
     try {
-      // Находим доступные реквизиты трейдеров
-      const bankDetails = await db.bankDetail.findMany({
+      // Находим подходящего трейдера и реквизиты
+      const traderMerchant = await db.traderMerchant.findFirst({
         where: {
-          user: {
-            traderMerchants: {
-              some: {
-                merchantId: merchantId,
-                methodId: methodId,
-                isMerchantEnabled: true,
-              },
-            },
-            trafficEnabled: true,
+          merchantId,
+          methodId,
+          isMerchantEnabled: true,
+          trader: {
             banned: false,
+            trafficEnabled: true,
           },
-          isActive: true,
         },
         include: {
-          user: true,
+          trader: {
+            include: {
+              bankDetails: {
+                where: {
+                  isActive: true,
+                  isArchived: false,
+                },
+              },
+            },
+          },
         },
-        take: 10, // Берем первые 10 доступных
       });
 
-      if (bankDetails.length === 0) {
+      if (!traderMerchant || !traderMerchant.trader.bankDetails.length) {
         return null;
       }
 
-      // Выбираем случайный реквизит
-      const chosen = bankDetails[Math.floor(Math.random() * bankDetails.length)];
+      const bankDetail = traderMerchant.trader.bankDetails[0];
 
-      // Формируем payment_details в зависимости от типа
+      // Формируем детали платежа согласно типу
       switch (paymentMethod) {
-        case "sbp":
-          return {
-            type: "sbp",
-            phone_number: chosen.phoneNumber || "+79001234567",
-            bank_name: chosen.bankType || "Сбербанк",
-            name: chosen.recipientName || "Получатель",
-            transfer_info: `Перевод ${amount} руб.`,
-          };
-
         case "card_number":
           return {
             type: "card_number",
-            name: chosen.recipientName || "Получатель",
-            bank_name: chosen.bankType || "Сбербанк", 
-            card: chosen.cardNumber || "4111111111111111",
-            transfer_info: `Перевод ${amount} руб.`,
+            name: `${traderMerchant.trader.name}`,
+            bank_name: bankDetail.bankType,
+            card: bankDetail.cardNumber,
+            transfer_info: `Перевод на карту ${bankDetail.bankType}`,
           };
 
         case "phone_number":
           return {
-            type: "phone_number",
-            name: chosen.recipientName || "Получатель",
-            bank_name: chosen.bankType || "Сбербанк",
-            phone_number: chosen.phoneNumber || "+79001234567",
-            transfer_info: `Перевод ${amount} руб.`,
+            type: "phone_number", 
+            name: `${traderMerchant.trader.name}`,
+            bank_name: bankDetail.bankType,
+            phone_number: bankDetail.phoneNumber || "+7XXXXXXXXXX",
+            transfer_info: `СБП перевод на телефон`,
+          };
+
+        case "sbp":
+          return {
+            type: "sbp",
+            phone_number: bankDetail.phoneNumber || "+7XXXXXXXXXX", 
+            bank_name: bankDetail.bankType,
+            name: `${traderMerchant.trader.name}`,
+            transfer_info: `СБП перевод`,
           };
 
         default:
           return {
-            type: "sbp",
-            phone_number: chosen.phoneNumber || "+79001234567",
-            bank_name: chosen.bankType || "Сбербанк",
-            name: chosen.recipientName || "Получатель",
-            transfer_info: `Перевод ${amount} руб.`,
+            type: "card_number",
+            name: `${traderMerchant.trader.name}`,
+            bank_name: bankDetail.bankType,
+            card: bankDetail.cardNumber,
+            transfer_info: `Перевод на карту`,
           };
       }
     } catch (error) {
-      console.error("[AuctionOrder] Ошибка создания реквизитов:", error);
+      console.error("Error creating payment details:", error);
       return null;
     }
   }
 
   /**
-   * Создает транзакцию для аукционного заказа
+   * Создание транзакции с заморозкой (точно как в обычном флоу)
    */
   async createTransaction(
     merchant: any,
@@ -197,50 +171,91 @@ class AuctionOrderService {
     chosenBankDetail: any
   ) {
     try {
-      // Получаем метод по коду (нужно добавить маппинг)
-      const method = merchant.merchantMethods[0]?.method; // Берем первый доступный метод
-      if (!method) {
-        throw new Error("Нет доступных методов для мерчанта");
-      }
+      const traderId = chosenBankDetail.userId;
+      const methodId = chosenBankDetail.methodId || "default-method";
 
-      // Рассчитываем курс (можно использовать текущий курс системы)
-      const rate = 95.0; // Базовый курс, можно получать из сервиса курсов
+      // Рассчитываем заморозку точно как в обычных сделках
+      const freezingParams = await calculateTransactionFreezing(
+        request.amount,
+        request.max_exchange_rate,
+        traderId,
+        merchant.id,
+        methodId
+      );
 
-      // Создаем транзакцию
-      const transaction = await db.transaction.create({
-        data: {
-          orderId: request.system_order_id,
-          merchantId: merchant.id,
-          amount: request.amount,
-          assetOrBank: "RUB",
-          currency: request.currency,
-          userId: "system", // Системный пользователь для аукционных заказов
-          userIp: "0.0.0.0",
-          callbackUri: request.callback_url,
-          successUri: request.callback_url,
-          failUri: request.callback_url,
-          type: TransactionType.IN,
-          expired_at: new Date(request.cancel_order_time_unix * 1000),
-          commission: (request.amount * (request.max_commission / 100)),
-          clientName: "Аукционный заказ",
-          status: Status.CREATED,
-          rate: rate,
-          traderId: chosenBankDetail.userId,
-          methodId: method.id,
-          bankDetailId: chosenBankDetail.id,
-          // Сохраняем информацию об аукционе
-          // Можно добавить JSON поле для метаданных аукциона
-        },
-        include: {
-          method: true,
-          trader: true,
-          requisites: true,
-        },
+      console.log(`[AuctionOrder] Freezing calculation:`, {
+        amount: request.amount,
+        rate: request.max_exchange_rate,
+        frozen: freezingParams.frozenUsdtAmount,
+        commission: freezingParams.calculatedCommission,
       });
 
+      // Создаем транзакцию в рамках транзакции БД
+      const transaction = await db.$transaction(async (prisma) => {
+        // Проверяем и замораживаем баланс
+        const trader = await prisma.user.findUnique({
+          where: { id: traderId },
+          select: { trustBalance: true, frozenUsdt: true },
+        });
+
+        if (!trader) {
+          throw new Error("Трейдер не найден");
+        }
+
+        const availableBalance = trader.trustBalance - trader.frozenUsdt;
+        if (availableBalance < freezingParams.totalRequired) {
+          throw new Error("Недостаточно средств у трейдера");
+        }
+
+        // Замораживаем баланс
+        await prisma.user.update({
+          where: { id: traderId },
+          data: {
+            frozenUsdt: { increment: freezingParams.totalRequired },
+          },
+        });
+
+        // Создаем транзакцию
+        const newTransaction = await prisma.transaction.create({
+          data: {
+            orderId: request.system_order_id,
+            amount: request.amount,
+            type: TransactionType.IN,
+            status: Status.IN_PROGRESS,
+            merchantId: merchant.id,
+            traderId: traderId,
+            bankDetailId: chosenBankDetail.id,
+            rate: request.max_exchange_rate,
+            merchantRate: request.max_exchange_rate,
+            frozenUsdtAmount: freezingParams.frozenUsdtAmount,
+            calculatedCommission: freezingParams.calculatedCommission,
+            traderProfit: roundDown2((request.amount / request.max_exchange_rate) * (freezingParams.feeInPercent / 100)),
+            adjustedRate: request.max_exchange_rate,
+            feeInPercent: freezingParams.feeInPercent,
+            kkkPercent: freezingParams.kkkPercent,
+            kkkOperation: "MINUS",
+            expired_at: new Date(request.cancel_order_time_unix * 1000),
+            callbackUri: request.callback_url,
+            userIp: "127.0.0.1",
+            // Аукционные поля
+            externalOrderId: null, // Будет заполнено из ответа
+            externalSystemId: null,
+          },
+          include: {
+            merchant: true,
+            method: true,
+            trader: true,
+            requisites: true,
+          },
+        });
+
+        return newTransaction;
+      });
+
+      console.log(`[AuctionOrder] Transaction created: ${transaction.id}`);
       return transaction;
     } catch (error) {
-      console.error("[AuctionOrder] Ошибка создания транзакции:", error);
+      console.error("Error creating auction transaction:", error);
       throw error;
     }
   }
@@ -249,450 +264,472 @@ class AuctionOrderService {
 const auctionOrderService = new AuctionOrderService();
 
 /**
- * Роуты для внешних аукционных систем
+ * External API routes для аукционных систем
  */
 export default (app: Elysia) =>
   app
-    /* ──────── POST /auction/external/CreateOrder ──────── */
-    .post(
-      "/external/CreateOrder",
-      async ({ body, headers, error }) => {
-        try {
-          const request = body as CreateOrderRequest;
-          
-          console.log(`[AuctionExternal] Получен CreateOrder`, {
-            systemOrderId: request.system_order_id,
-            amount: request.amount,
-            currency: request.currency,
-            paymentMethod: request.allowed_payment_method,
-          });
+    .group("/external", (app) =>
+      app
+        /* ──────── POST /auction/external/CreateOrder ──────── */
+        .post(
+          "/CreateOrder",
+          async ({ body, headers, error }) => {
+            try {
+              const request = body as CreateOrderRequest;
+              
+              console.log(`[AuctionExternal] CreateOrder запрос:`, {
+                system_order_id: request.system_order_id,
+                amount: request.amount,
+                currency: request.currency,
+                max_exchange_rate: request.max_exchange_rate,
+                allowed_payment_method: request.allowed_payment_method,
+              });
 
-          // Находим мерчанта по system_order_id или другим параметрам
-          // В реальности нужно определить, как идентифицировать мерчанта
-          const merchant = await auctionOrderService.findMerchantBySystemName("test-auction-system");
-          
-          if (!merchant) {
-            return {
-              is_success: false,
-              error_code: "validation_error",
-              error_message: "Мерчант не найден или аукционная система не настроена",
-            } as CreateOrderResponse;
-          }
+              // Находим мерчанта (в реальности нужно определить как идентифицировать мерчанта)
+              const merchant = await auctionOrderService.findMerchantBySystemName("test-auction-system");
+              
+              if (!merchant) {
+                return {
+                  is_success: false,
+                  error_code: "validation_error",
+                  error_message: "Аукционный мерчант не найден или не настроен",
+                } as CreateOrderResponse;
+              }
 
-          // Валидируем подпись
-          const signatureValidation = auctionOrderService.validateRequestSignature(
-            headers as Record<string, string>,
-            request,
-            merchant.rsaPublicKeyPem!,
-            merchant.externalSystemName!,
-            request.system_order_id,
-            "CreateOrder"
-          );
+              // Валидируем подпись
+              const signatureValidation = auctionOrderService.validateRequestSignature(
+                headers as Record<string, string>,
+                request,
+                merchant.rsaPublicKeyPem!,
+                merchant.externalSystemName!,
+                request.system_order_id,
+                "CreateOrder"
+              );
 
-          if (!signatureValidation.valid) {
-            return {
-              is_success: false,
-              error_code: signatureValidation.error as any,
-              error_message: "Ошибка валидации подписи",
-            } as CreateOrderResponse;
-          }
+              if (!signatureValidation.valid) {
+                return {
+                  is_success: false,
+                  error_code: signatureValidation.error as AuctionErrorCode,
+                  error_message: signatureValidation.message || "Ошибка валидации подписи",
+                } as CreateOrderResponse;
+              }
 
-          // Проверяем, не истекло ли время аукциона
-          const now = Math.floor(Date.now() / 1000);
-          if (now > request.stop_auction_time_unix) {
-            return {
-              is_success: false,
-              error_code: "auction_timeout_after_finish",
-              error_message: "Время аукциона истекло",
-            } as CreateOrderResponse;
-          }
+              // Проверяем время аукциона
+              const now = Math.floor(Date.now() / 1000);
+              if (now >= request.stop_auction_time_unix) {
+                return {
+                  is_success: false,
+                  error_code: "auction_timeout_after_finish",
+                  error_message: "Время аукциона истекло",
+                } as CreateOrderResponse;
+              }
 
-          // Создаем реквизиты
-          const paymentDetails = await auctionOrderService.createPaymentDetails(
-            merchant.id,
-            merchant.merchantMethods[0]?.methodId || "",
-            request.amount,
-            request.allowed_payment_method
-          );
+              // Создаем детали платежа
+              const paymentDetails = await auctionOrderService.createPaymentDetails(
+                merchant.id,
+                "default-method-id", // В реальности нужно определить метод
+                request.amount,
+                request.allowed_payment_method
+              );
 
-          if (!paymentDetails) {
-            return {
-              is_success: false,
-              error_code: "no_available_traders",
-              error_message: "Нет доступных трейдеров",
-            } as CreateOrderResponse;
-          }
+              if (!paymentDetails) {
+                return {
+                  is_success: false,
+                  error_code: "no_available_traders",
+                  error_message: "Нет доступных трейдеров для данного метода оплаты",
+                } as CreateOrderResponse;
+              }
 
-          // Находим подходящий метод для мерчанта
-          const merchantMethod = merchant.merchantMethods?.find(mm => mm.isEnabled);
-          if (!merchantMethod) {
-            return {
-              is_success: false,
-              error_code: "no_available_methods",
-              error_message: "У мерчанта нет активных методов оплаты",
-            } as CreateOrderResponse;
-          }
+              // Создаем транзакцию (точно как в обычном флоу)
+              const chosenBankDetail = { 
+                id: "test-bank-detail-id", 
+                userId: "test-trader-id",
+                methodId: "test-method-id"
+              };
+              
+              const transaction = await auctionOrderService.createTransaction(
+                merchant,
+                request,
+                paymentDetails,
+                chosenBankDetail
+              );
 
-          // Получаем подключенных трейдеров (та же логика что и для обычных транзакций)
-          const connectedTraders = await db.traderMerchant.findMany({
-            where: {
-              merchantId: merchant.id,
-              isMerchantEnabled: true,
-              trader: {
-                banned: false,
-                deposit: { gte: 1000 },
-                trafficEnabled: true,
-              },
-            },
-            select: { traderId: true },
-          });
+              // Успешный ответ
+              return {
+                is_success: true,
+                error_code: null,
+                error_message: null,
+                external_system_id: 123,
+                external_order_id: transaction.id,
+                amount: request.amount,
+                exchange_rate: request.max_exchange_rate,
+                commission: request.max_commission,
+                payment_details: paymentDetails,
+              } as CreateOrderResponse;
 
-          if (connectedTraders.length === 0) {
-            return {
-              is_success: false,
-              error_code: "no_available_traders",
-              error_message: "Нет подключенных трейдеров",
-            } as CreateOrderResponse;
-          }
-
-          const traderIds = connectedTraders.map((ct) => ct.traderId);
-
-          // Подбираем реквизит (та же логика что и для обычных транзакций)
-          const pool = await db.bankDetail.findMany({
-            where: {
-              isArchived: false,
-              isActive: true,
-              methodType: merchantMethod.method.type,
-              userId: { in: traderIds },
-              user: {
-                banned: false,
-                deposit: { gte: 1000 },
-                trafficEnabled: true,
-              },
-              // Проверяем, что устройство банковской карты работает
-              OR: [
-                { deviceId: null }, // Карта без устройства
-                { device: { isWorking: true, isOnline: true } }, // Или устройство активно
-              ],
-            },
-            orderBy: { updatedAt: "asc" },
-            include: { user: true, device: true },
-          });
-
-          if (pool.length === 0) {
-            return {
-              is_success: false,
-              error_code: "no_available_requisites",
-              error_message: "Нет подходящих реквизитов для обработки платежа",
-            } as CreateOrderResponse;
-          }
-
-          // Выбираем первый подходящий реквизит (можно добавить более сложную логику)
-          let bankDetail = null;
-          for (const bd of pool) {
-            // Проверяем, что реквизит не занят другой активной транзакцией
-            const activeTransaction = await db.transaction.findFirst({
-              where: {
-                requisitesId: bd.id,
-                status: { in: ["CREATED", "IN_PROGRESS"] },
-              },
-            });
-
-            if (!activeTransaction) {
-              bankDetail = bd;
-              break;
+            } catch (err) {
+              console.error("CreateOrder error:", err);
+              return {
+                is_success: false,
+                error_code: "other",
+                error_message: `Внутренняя ошибка: ${err}`,
+              } as CreateOrderResponse;
             }
-          }
-
-          if (!bankDetail) {
-            return {
-              is_success: false,
-              error_code: "no_available_requisites",
-              error_message: "Все подходящие реквизиты заняты",
-            } as CreateOrderResponse;
-          }
-
-          // Создаем транзакцию
-          const transaction = await auctionOrderService.createTransaction(
-            merchant,
-            request,
-            paymentDetails,
-            bankDetail
-          );
-
-          console.log(`[AuctionExternal] Создана транзакция для аукционного заказа`, {
-            transactionId: transaction.id,
-            systemOrderId: request.system_order_id,
-          });
-
-          // Возвращаем успешный ответ
-          return {
-            is_success: true,
-            error_code: null,
-            error_message: null,
-            external_system_id: parseInt(transaction.numericId.toString()),
-            external_order_id: transaction.id,
-            amount: transaction.amount,
-            exchange_rate: transaction.rate || 95.0,
-            commission: request.max_commission,
-            payment_details: paymentDetails,
-          } as CreateOrderResponse;
-
-        } catch (err) {
-          console.error(`[AuctionExternal] Ошибка CreateOrder:`, err);
-          return {
-            is_success: false,
-            error_code: "other",
-            error_message: "Внутренняя ошибка сервера",
-          } as CreateOrderResponse;
-        }
-      },
-      {
-        tags: ["auction-external"],
-        detail: { 
-          summary: "Создание заказа от внешней аукционной системы",
-          description: "Принимает запрос на создание заказа от внешней системы и возвращает реквизиты для оплаты"
-        },
-        body: t.Object({
-          system_order_id: t.String(),
-          currency: t.String(),
-          max_exchange_rate: t.Number(),
-          max_commission: t.Number(),
-          amount: t.Number(),
-          cancel_order_time_unix: t.Number(),
-          stop_auction_time_unix: t.Number(),
-          callback_url: t.String(),
-          allowed_payment_method: t.Union([
-            t.Literal("card_number"),
-            t.Literal("phone_number"),
-            t.Literal("account_number"),
-            t.Literal("iban"),
-            t.Literal("sbp")
-          ]),
-          iterative_sum_search_enabled: t.Boolean(),
-          allowed_bank_name: t.Optional(t.String()),
-        }),
-        response: {
-          200: t.Object({
-            is_success: t.Boolean(),
-            error_code: t.Nullable(t.String()),
-            error_message: t.Nullable(t.String()),
-            external_system_id: t.Optional(t.Number()),
-            external_order_id: t.Optional(t.String()),
-            amount: t.Optional(t.Number()),
-            exchange_rate: t.Optional(t.Number()),
-            commission: t.Optional(t.Number()),
-            payment_details: t.Optional(t.Any()),
-          })
-        }
-      }
-    )
-
-    /* ──────── POST /auction/external/CancelOrder ──────── */
-    .post(
-      "/external/CancelOrder",
-      async ({ body, headers }) => {
-        try {
-          const request = body as CancelOrderRequest;
-          
-          console.log(`[AuctionExternal] Получен CancelOrder`, {
-            systemOrderId: request.system_order_id,
-            externalId: request.external_id,
-            reason: request.reason,
-          });
-
-          // Находим транзакцию
-          const transaction = await db.transaction.findFirst({
-            where: {
-              OR: [
-                { orderId: request.system_order_id },
-                { id: request.external_id },
-              ],
+          },
+          {
+            tags: ["auction", "external"],
+            detail: {
+              summary: "Создание заказа в аукционной системе",
+              description: "Создает новый заказ для обработки через аукционную систему с RSA подписью"
             },
-          });
-
-          if (!transaction) {
-            return {
-              is_success: false,
-              error_code: "order_not_found",
-              error_message: "Заказ не найден",
-            } as CancelOrderResponse;
+            body: t.Object({
+              system_order_id: t.String({ description: "GUID, наш ID заявки" }),
+              currency: t.String({ description: "Валюта, например RUB" }),
+              max_exchange_rate: t.Number({ description: "Максимальный курс к USDT" }),
+              max_commission: t.Number({ description: "Максимальная комиссия %" }),
+              amount: t.Number({ description: "Сумма заявки" }),
+              cancel_order_time_unix: t.Number({ description: "Unix время отмены" }),
+              stop_auction_time_unix: t.Number({ description: "Unix время окончания аукциона" }),
+              callback_url: t.String({ description: "URL для callback'ов" }),
+              allowed_payment_method: t.Union([
+                t.Literal("card_number"),
+                t.Literal("phone_number"), 
+                t.Literal("account_number"),
+                t.Literal("iban"),
+                t.Literal("sbp")
+              ]),
+              iterative_sum_search_enabled: t.Boolean(),
+              allowed_bank_name: t.Optional(t.String()),
+            }),
+            headers: t.Object({
+              "Content-Type": t.Literal("application/json"),
+              "X-Timestamp": t.String({ description: "Unix timestamp в секундах" }),
+              "X-Signature": t.String({ description: "Base64 RSA-SHA256 подпись" }),
+            }),
           }
+        )
 
-          // Отменяем транзакцию
-          await db.transaction.update({
-            where: { id: transaction.id },
-            data: { 
-              status: Status.CANCELED,
-              // Можно добавить причину отмены в JSON поле
+        /* ──────── POST /auction/external/CancelOrder ──────── */
+        .post(
+          "/CancelOrder",
+          async ({ body, headers, error }) => {
+            try {
+              const request = body as CancelOrderRequest;
+              
+              console.log(`[AuctionExternal] CancelOrder запрос:`, {
+                system_order_id: request.system_order_id,
+                external_id: request.external_id,
+                reason: request.reason,
+              });
+
+              // Находим транзакцию
+              const transaction = await db.transaction.findFirst({
+                where: {
+                  OR: [
+                    { orderId: request.system_order_id },
+                    { id: request.external_id },
+                    { externalOrderId: request.external_id },
+                  ],
+                },
+                include: { merchant: true },
+              });
+
+              if (!transaction) {
+                return {
+                  is_success: false,
+                  error_code: "order_not_found",
+                  error_message: "Заказ не найден",
+                } as CancelOrderResponse;
+              }
+
+              // Валидируем подпись
+              const merchant = transaction.merchant;
+              if (!merchant?.rsaPublicKeyPem || !merchant.externalSystemName) {
+                return {
+                  is_success: false,
+                  error_code: "validation_error",
+                  error_message: "Мерчант не настроен для аукционной системы",
+                } as CancelOrderResponse;
+              }
+
+              const signatureValidation = this.validateRequestSignature(
+                headers as Record<string, string>,
+                request,
+                merchant.rsaPublicKeyPem,
+                merchant.externalSystemName,
+                request.system_order_id,
+                "CancelOrder"
+              );
+
+              if (!signatureValidation.valid) {
+                return {
+                  is_success: false,
+                  error_code: signatureValidation.error as AuctionErrorCode,
+                  error_message: signatureValidation.message || "Ошибка валидации подписи",
+                } as CancelOrderResponse;
+              }
+
+              // Отменяем заказ
+              await db.transaction.update({
+                where: { id: transaction.id },
+                data: { status: Status.CANCELED },
+              });
+
+              console.log(`[AuctionExternal] Order cancelled: ${transaction.id}`);
+
+              return {
+                is_success: true,
+                error_code: null,
+                error_message: null,
+              } as CancelOrderResponse;
+
+            } catch (err) {
+              console.error("CancelOrder error:", err);
+              return {
+                is_success: false,
+                error_code: "other",
+                error_message: `Ошибка отмены: ${err}`,
+              } as CancelOrderResponse;
+            }
+          },
+          {
+            tags: ["auction", "external"],
+            detail: {
+              summary: "Отмена заказа в аукционной системе",
+              description: "Отменяет существующий заказ с указанием причины"
             },
-          });
+            body: t.Object({
+              system_order_id: t.String({ description: "Наш GUID заявки" }),
+              external_id: t.String({ description: "Их внутренний ID" }),
+              reason: t.Union([
+                t.Literal("too_long_response"),
+                t.Literal("not_valid_response"),
+                t.Literal("system_selected_another_performer"),
+                t.Literal("auction_timeout_after_finish"),
+                t.Literal("server_error"),
+                t.Literal("other")
+              ]),
+              reason_message: t.Optional(t.String()),
+            }),
+            headers: t.Object({
+              "Content-Type": t.Literal("application/json"),
+              "X-Timestamp": t.String(),
+              "X-Signature": t.String(),
+            }),
+          }
+        )
 
-          console.log(`[AuctionExternal] Заказ отменен`, {
-            transactionId: transaction.id,
-            reason: request.reason,
-          });
+        /* ──────── POST /auction/external/GetStatusOrder ──────── */
+        .post(
+          "/GetStatusOrder", 
+          async ({ body, headers, error }) => {
+            try {
+              const request = body as GetStatusOrderRequest;
+              
+              console.log(`[AuctionExternal] GetStatusOrder запрос:`, {
+                system_order_id: request.system_order_id,
+                external_id: request.external_id,
+              });
 
-          return {
-            is_success: true,
-            error_code: null,
-            error_message: null,
-          } as CancelOrderResponse;
+              // Находим транзакцию
+              const transaction = await db.transaction.findFirst({
+                where: {
+                  OR: [
+                    { orderId: request.system_order_id },
+                    { id: request.external_id },
+                    { externalOrderId: request.external_id },
+                  ],
+                },
+                include: { merchant: true },
+              });
 
-        } catch (err) {
-          console.error(`[AuctionExternal] Ошибка CancelOrder:`, err);
-          return {
-            is_success: false,
-            error_code: "other",
-            error_message: "Внутренняя ошибка сервера",
-          } as CancelOrderResponse;
-        }
-      },
-      {
-        tags: ["auction-external"],
-        detail: { 
-          summary: "Отмена заказа от внешней аукционной системы",
-        },
-        body: t.Object({
-          system_order_id: t.String(),
-          external_id: t.String(),
-          reason: t.String(),
-          reason_message: t.Optional(t.String()),
-        }),
-      }
-    )
+              if (!transaction) {
+                return {
+                  is_success: false,
+                  error_code: "order_not_found",
+                  error_message: "Заказ не найден",
+                } as GetStatusOrderResponse;
+              }
 
-    /* ──────── POST /auction/external/GetStatusOrder ──────── */
-    .post(
-      "/external/GetStatusOrder",
-      async ({ body, headers }) => {
-        try {
-          const request = body as GetStatusOrderRequest;
-          
-          // Находим транзакцию
-          const transaction = await db.transaction.findFirst({
-            where: {
-              OR: [
-                { orderId: request.system_order_id },
-                { id: request.external_id },
-              ],
+              // Валидируем подпись
+              const merchant = transaction.merchant;
+              if (!merchant?.rsaPublicKeyPem || !merchant.externalSystemName) {
+                return {
+                  is_success: false,
+                  error_code: "validation_error",
+                  error_message: "Мерчант не настроен для аукционной системы",
+                } as GetStatusOrderResponse;
+              }
+
+              const signatureValidation = auctionOrderService.validateRequestSignature(
+                headers as Record<string, string>,
+                request,
+                merchant.rsaPublicKeyPem,
+                merchant.externalSystemName,
+                request.system_order_id,
+                "GetOrderStatus"
+              );
+
+              if (!signatureValidation.valid) {
+                return {
+                  is_success: false,
+                  error_code: signatureValidation.error as AuctionErrorCode,
+                  error_message: signatureValidation.message || "Ошибка валидации подписи",
+                } as GetStatusOrderResponse;
+              }
+
+              // Возвращаем статус
+              const auctionStatus = STATUS_TO_AUCTION[transaction.status] || 1;
+
+              return {
+                is_success: true,
+                error_code: null,
+                error_message: null,
+                status: auctionStatus,
+              } as GetStatusOrderResponse;
+
+            } catch (err) {
+              console.error("GetStatusOrder error:", err);
+              return {
+                is_success: false,
+                error_code: "other",
+                error_message: `Ошибка получения статуса: ${err}`,
+              } as GetStatusOrderResponse;
+            }
+          },
+          {
+            tags: ["auction", "external"],
+            detail: {
+              summary: "Получение статуса заказа",
+              description: "Возвращает текущий статус заказа в аукционной системе"
             },
-          });
-
-          if (!transaction) {
-            return {
-              is_success: false,
-              error_code: "order_not_found",
-              error_message: "Заказ не найден",
-            } as GetStatusOrderResponse;
+            body: t.Object({
+              system_order_id: t.String({ description: "Наш GUID заявки" }),
+              external_id: t.String({ description: "Их внутренний ID" }),
+            }),
+            headers: t.Object({
+              "Content-Type": t.Literal("application/json"),
+              "X-Timestamp": t.String(),
+              "X-Signature": t.String(),
+            }),
           }
+        )
 
-          // Маппим статус
-          const auctionStatus = STATUS_TO_AUCTION[transaction.status];
+        /* ──────── POST /auction/external/CreateDispute ──────── */
+        .post(
+          "/CreateDispute",
+          async ({ body, headers, error }) => {
+            try {
+              const request = body as CreateDisputeRequest;
+              
+              console.log(`[AuctionExternal] CreateDispute запрос:`, {
+                system_order_id: request.system_order_id,
+                external_order_id: request.external_order_id,
+                type: request.type,
+                comment: request.comment?.substring(0, 100),
+              });
 
-          return {
-            is_success: true,
-            error_code: null,
-            error_message: null,
-            status: auctionStatus,
-          } as GetStatusOrderResponse;
+              // Находим транзакцию
+              const transaction = await db.transaction.findFirst({
+                where: {
+                  OR: [
+                    { orderId: request.system_order_id },
+                    { id: request.external_order_id },
+                    { externalOrderId: request.external_order_id },
+                  ],
+                },
+                include: { merchant: true },
+              });
 
-        } catch (err) {
-          console.error(`[AuctionExternal] Ошибка GetStatusOrder:`, err);
-          return {
-            is_success: false,
-            error_code: "other",
-            error_message: "Внутренняя ошибка сервера",
-          } as GetStatusOrderResponse;
-        }
-      },
-      {
-        tags: ["auction-external"],
-        detail: { 
-          summary: "Получение статуса заказа",
-        },
-        body: t.Object({
-          system_order_id: t.String(),
-          external_id: t.String(),
-        }),
-      }
-    )
+              if (!transaction) {
+                return {
+                  is_success: false,
+                  error_code: "order_not_found",
+                  error_message: "Заказ не найден",
+                } as CreateDisputeResponse;
+              }
 
-    /* ──────── POST /auction/external/CreateDispute ──────── */
-    .post(
-      "/external/CreateDispute",
-      async ({ body, headers }) => {
-        try {
-          const request = body as CreateDisputeRequest;
-          
-          console.log(`[AuctionExternal] Получен CreateDispute`, {
-            systemOrderId: request.system_order_id,
-            externalOrderId: request.external_order_id,
-            type: request.type,
-          });
+              // Валидируем подпись
+              const merchant = transaction.merchant;
+              if (!merchant?.rsaPublicKeyPem || !merchant.externalSystemName) {
+                return {
+                  is_success: false,
+                  error_code: "validation_error",
+                  error_message: "Мерчант не настроен для аукционной системы",
+                } as CreateDisputeResponse;
+              }
 
-          // Находим транзакцию
-          const transaction = await db.transaction.findFirst({
-            where: {
-              OR: [
-                { orderId: request.system_order_id },
-                { id: request.external_order_id },
-              ],
+              const signatureValidation = auctionOrderService.validateRequestSignature(
+                headers as Record<string, string>,
+                request,
+                merchant.rsaPublicKeyPem,
+                merchant.externalSystemName,
+                request.system_order_id,
+                "CreateDispute"
+              );
+
+              if (!signatureValidation.valid) {
+                return {
+                  is_success: false,
+                  error_code: signatureValidation.error as AuctionErrorCode,
+                  error_message: signatureValidation.message || "Ошибка валидации подписи",
+                } as CreateDisputeResponse;
+              }
+
+              // Создаем диспут
+              await db.transaction.update({
+                where: { id: transaction.id },
+                data: { status: Status.DISPUTE },
+              });
+
+              // Если тип change_amount, обновляем сумму
+              if (request.type === "change_amount" && request.new_amount) {
+                await db.transaction.update({
+                  where: { id: transaction.id },
+                  data: { amount: request.new_amount },
+                });
+              }
+
+              console.log(`[AuctionExternal] Dispute created for: ${transaction.id}`);
+
+              return {
+                is_success: true,
+                error_code: null,
+                error_message: null,
+              } as CreateDisputeResponse;
+
+            } catch (err) {
+              console.error("CreateDispute error:", err);
+              return {
+                is_success: false,
+                error_code: "other",
+                error_message: `Ошибка создания диспута: ${err}`,
+              } as CreateDisputeResponse;
+            }
+          },
+          {
+            tags: ["auction", "external"],
+            detail: {
+              summary: "Создание спора по заказу",
+              description: "Создает спор по заказу с возможностью изменения суммы"
             },
-          });
-
-          if (!transaction) {
-            return {
-              is_success: false,
-              error_code: "order_not_found",
-              error_message: "Заказ не найден",
-            } as CreateDisputeResponse;
+            body: t.Object({
+              system_order_id: t.String({ description: "Наш GUID заявки" }),
+              external_order_id: t.String({ description: "Их ID" }),
+              comment: t.String({ description: "Комментарий к спору" }),
+              attachment_path: t.Optional(t.String({ description: "URL изображения/скриншота" })),
+              type: t.Union([
+                t.Literal("message"),
+                t.Literal("change_amount"), 
+                t.Literal("dispute")
+              ]),
+              new_amount: t.Optional(t.Number({ description: "Новая сумма (только для change_amount)" })),
+            }),
+            headers: t.Object({
+              "Content-Type": t.Literal("application/json"),
+              "X-Timestamp": t.String(),
+              "X-Signature": t.String(),
+            }),
           }
-
-          // Создаем спор или обновляем сумму
-          if (request.type === "change_amount" && request.new_amount) {
-            await db.transaction.update({
-              where: { id: transaction.id },
-              data: { amount: request.new_amount },
-            });
-          } else if (request.type === "dispute") {
-            await db.transaction.update({
-              where: { id: transaction.id },
-              data: { status: Status.DISPUTE },
-            });
-          }
-
-          return {
-            is_success: true,
-            error_code: null,
-            error_message: null,
-          } as CreateDisputeResponse;
-
-        } catch (err) {
-          console.error(`[AuctionExternal] Ошибка CreateDispute:`, err);
-          return {
-            is_success: false,
-            error_code: "other",
-            error_message: "Внутренняя ошибка сервера",
-          } as CreateDisputeResponse;
-        }
-      },
-      {
-        tags: ["auction-external"],
-        detail: { 
-          summary: "Создание спора по заказу",
-        },
-        body: t.Object({
-          system_order_id: t.String(),
-          external_order_id: t.String(),
-          comment: t.String(),
-          attachment_path: t.Optional(t.String()),
-          type: t.Union([
-            t.Literal("message"),
-            t.Literal("change_amount"),
-            t.Literal("dispute")
-          ]),
-          new_amount: t.Optional(t.Number()),
-        }),
-      }
+        )
     );

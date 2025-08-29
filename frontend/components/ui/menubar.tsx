@@ -82,7 +82,7 @@ const MenubarSubTrigger = React.forwardRef<
     {...props}
   >
     {children}
-    <ChevronRight className="ml-auto h-4 w-4 text-[#006039]" />
+    <ChevronRight className="ml-auto h-4 w-4 text-[#530FAD]" />
   </MenubarPrimitive.SubTrigger>
 ))
 MenubarSubTrigger.displayName = MenubarPrimitive.SubTrigger.displayName
@@ -160,7 +160,7 @@ const MenubarCheckboxItem = React.forwardRef<
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <MenubarPrimitive.ItemIndicator>
-        <Check className="h-4 w-4 text-[#006039]" />
+        <Check className="h-4 w-4 text-[#530FAD]" />
       </MenubarPrimitive.ItemIndicator>
     </span>
     {children}
@@ -182,7 +182,7 @@ const MenubarRadioItem = React.forwardRef<
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <MenubarPrimitive.ItemIndicator>
-        <Circle className="h-2 w-2 fill-current text-[#006039]" />
+        <Circle className="h-2 w-2 fill-current text-[#530FAD]" />
       </MenubarPrimitive.ItemIndicator>
     </span>
     {children}

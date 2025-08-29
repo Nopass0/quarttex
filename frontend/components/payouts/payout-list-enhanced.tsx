@@ -79,7 +79,7 @@ const statusConfig = {
   },
   CANCELLED: {
     label: "Отменена",
-    color: "bg-gray-100 text-gray-800 border-gray-200",
+    color: "bg-purple-100/40 text-gray-800 border-gray-200",
     icon: XCircle,
     actions: []
   },
@@ -225,7 +225,7 @@ export function PayoutListEnhanced({ payouts, onRefresh }: PayoutListEnhancedPro
                       size="sm"
                       variant="outline"
                       onClick={() => handleConfirm(payout)}
-                      className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                      className="text-[#530FAD] border-purple-200 hover:bg-purple-50"
                     >
                       <Send className="h-4 w-4 mr-1" />
                       Подтвердить

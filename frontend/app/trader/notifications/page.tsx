@@ -246,7 +246,7 @@ export default function NotificationsPage() {
               <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
             </div>
           ) : notifications.length === 0 ? (
-            <Card className="p-8 text-center">
+            <Card className="bg-purple-50/10 p-8 text-center">
               <MessageSquare className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
               <p className="text-gray-500 dark:text-gray-400">
                 Уведомления не найдены
@@ -271,11 +271,11 @@ export default function NotificationsPage() {
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                         notification.isProcessed 
                           ? "bg-purple-100 dark:bg-purple-900/30" 
-                          : "bg-gray-100 dark:bg-gray-700"
+                          : "bg-purple-100/40 dark:bg-purple-900/25"
                       }`}>
                         <MessageSquare className={`h-5 w-5 ${
                           notification.isProcessed 
-                            ? "text-purple-600 dark:text-purple-400" 
+                            ? "text-[#530FAD] dark:text-[#7c3aed] dark:text-purple-400" 
                             : "text-gray-500 dark:text-gray-400"
                         }`} />
                       </div>
@@ -314,7 +314,7 @@ export default function NotificationsPage() {
                         </div>
                         {notification.matchedTransaction && (
                           <div className="flex items-center gap-1">
-                            <CheckCircle className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+                            <CheckCircle className="h-3 w-3 text-[#530FAD] dark:text-[#7c3aed] dark:text-purple-400" />
                             <span>Сделка #{notification.matchedTransaction.numericId}</span>
                           </div>
                         )}
@@ -351,14 +351,14 @@ export default function NotificationsPage() {
               
               <div className="space-y-4">
                 {/* Header */}
-                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                <div className="bg-purple-50/30 dark:bg-gray-800 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-medium dark:text-white">
                       {selectedNotification.application || "Банковское приложение"}
                     </h3>
                     <Badge className={selectedNotification.isProcessed 
                       ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" 
-                      : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                      : "bg-purple-100/40 text-gray-700 dark:bg-purple-900/25 dark:text-gray-300"
                     }>
                       {selectedNotification.isProcessed ? "Обработано" : "Не обработано"}
                     </Badge>
@@ -395,7 +395,7 @@ export default function NotificationsPage() {
                       {selectedNotification.matchedTransactions.map((tx: any) => (
                         <div
                           key={tx.id}
-                          className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                          className="bg-purple-50/30 dark:bg-gray-800 rounded-lg p-3 cursor-pointer hover:bg-purple-100/40 dark:hover:bg-gray-700 transition-colors"
                           onClick={() => {
                             setSelectedNotification(null);
                             router.push(`/trader/deals`);

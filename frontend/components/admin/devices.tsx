@@ -205,7 +205,7 @@ export function DevicesManagement() {
     const diffHours = (now.getTime() - lastActive.getTime()) / (1000 * 60 * 60)
     
     if (diffHours < 1) {
-      return { label: 'Онлайн', variant: 'default' as const, color: 'text-purple-600' }
+      return { label: 'Онлайн', variant: 'default' as const, color: 'text-[#530FAD] dark:text-[#7c3aed]' }
     } else if (diffHours < 24) {
       return { label: 'Сегодня', variant: 'secondary' as const, color: 'text-blue-600' }
     } else if (diffHours < 168) { // 7 days
@@ -240,18 +240,18 @@ export function DevicesManagement() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-purple-200">
+        <Card className="bg-purple-50/10 border-green-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium text-purple-600">Онлайн</CardTitle>
+            <CardTitle className="text-base font-medium text-[#530FAD] dark:text-[#7c3aed]">Онлайн</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <p className="text-2xl font-bold text-purple-600">{statistics.online}</p>
+              <p className="text-2xl font-bold text-[#530FAD] dark:text-[#7c3aed]">{statistics.online}</p>
               <Activity className="h-8 w-8 text-purple-400" />
             </div>
           </CardContent>
         </Card>
-        <Card className="border-red-200">
+        <Card className="bg-purple-50/10 border-red-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-medium text-red-600">Офлайн</CardTitle>
           </CardHeader>
@@ -315,7 +315,7 @@ export function DevicesManagement() {
                       <SelectValue placeholder="Все статусы" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Все статусы</SelectItem>
+                      <SelectItem value="all_statuses">Все статусы</SelectItem>
                       <SelectItem value="true">Онлайн</SelectItem>
                       <SelectItem value="false">Офлайн</SelectItem>
                     </SelectContent>
@@ -339,7 +339,7 @@ export function DevicesManagement() {
                       <SelectValue placeholder="Все типы" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Все типы</SelectItem>
+                      <SelectItem value="all_types">Все типы</SelectItem>
                       <SelectItem value="true">Эмулированные</SelectItem>
                       <SelectItem value="false">Реальные</SelectItem>
                     </SelectContent>
@@ -391,7 +391,7 @@ export function DevicesManagement() {
                       return (
                         <TableRow 
                           key={device.id}
-                          className="cursor-pointer hover:bg-gray-50"
+                          className="cursor-pointer hover:bg-purple-50/50"
                           onClick={() => navigateToDetails(device.id)}
                         >
                           <TableCell>
@@ -565,7 +565,7 @@ export function DevicesManagement() {
             <DialogDescription>
               Вы уверены, что хотите удалить это устройство? Это действие нельзя отменить.
               {selectedDevice && (
-                <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                <div className="mt-3 p-3 bg-purple-50/30 rounded-lg">
                   <p className="text-sm">
                     <strong>Устройство:</strong> {selectedDevice.name}
                   </p>

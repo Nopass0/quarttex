@@ -2,7 +2,7 @@
 
 # Script to download latest APK from GitHub releases
 
-GITHUB_REPO="Nopass0/quattrex"
+GITHUB_REPO="Nopass0/chase"
 UPLOAD_DIR="/app/uploads/apk"
 
 # Create directory if not exists
@@ -22,7 +22,7 @@ if [ -z "$APK_URL" ]; then
 fi
 
 echo "Downloading APK version $VERSION..."
-wget -O $UPLOAD_DIR/quattrex-mobile.apk "$APK_URL"
+wget -O $UPLOAD_DIR/chase-mobile.apk "$APK_URL"
 
 # Create version info
 cat > $UPLOAD_DIR/version-info.json << EOF

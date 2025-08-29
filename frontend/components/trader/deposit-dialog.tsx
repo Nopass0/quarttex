@@ -178,7 +178,7 @@ export function DepositDialog({ open, onOpenChange, onSuccess }: DepositDialogPr
                 Отмена
               </Button>
               <Button
-                className="bg-[#006039] hover:bg-[#006039]/90"
+                className="bg-[#530FAD] hover:bg-[#530FAD]/90"
                 onClick={handleSubmit}
                 disabled={isLoading || !amount || parseFloat(amount) < settings.minAmount}
               >
@@ -247,7 +247,7 @@ export function DepositDialog({ open, onOpenChange, onSuccess }: DepositDialogPr
               </div>
 
               {showQrCode && (
-                <div className="flex justify-center p-4 bg-white rounded-lg">
+                <div className="flex justify-center p-4 bg-purple-50/20 dark:bg-purple-900/15 rounded-lg">
                   <QRCode
                     value={depositRequest.address}
                     size={200}

@@ -477,7 +477,7 @@ export default function DevicesPage() {
           className:
             "bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-800/30 dark:text-purple-300 dark:border-purple-600",
         },
-        iconColor: "text-purple-600 dark:text-purple-400",
+        iconColor: "text-[#530FAD] dark:text-[#7c3aed]",
       };
     }
 
@@ -489,7 +489,7 @@ export default function DevicesPage() {
       badge: {
         text: "Не в работе",
         className:
-          "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-900/50 dark:text-gray-400 dark:border-gray-700",
+          "bg-purple-50/30 text-gray-600 border-purple-200/60 dark:bg-gray-900/50 dark:text-gray-400 dark:border-gray-700",
       },
       iconColor: "text-gray-500 dark:text-gray-500",
     };
@@ -500,7 +500,7 @@ export default function DevicesPage() {
       <ProtectedRoute variant="trader">
         <AuthLayout variant="trader">
           <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
           </div>
         </AuthLayout>
       </ProtectedRoute>
@@ -518,7 +518,7 @@ export default function DevicesPage() {
             </h1>
             <Button
               onClick={() => setDeviceDialogOpen(true)}
-              style={{ backgroundColor: "#006039", color: "white" }}
+              style={{ backgroundColor: "#530FAD", color: "white" }}
               className="hover:opacity-90 transition-opacity text-sm md:text-base"
             >
               <Wifi className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5" />
@@ -546,7 +546,7 @@ export default function DevicesPage() {
                     variant="outline"
                     className="gap-1 md:gap-2 h-10 md:h-12 px-3 md:px-6 text-sm md:text-base"
                   >
-                    <ArrowUpDown className="h-4 w-4 text-[#006039]" />
+                    <ArrowUpDown className="h-4 w-4 text-[#530FAD]" />
                     <span className="hidden sm:inline">
                       {sortBy === "newest" ? "Сначала новые" : "Сначала старые"}
                     </span>
@@ -569,7 +569,7 @@ export default function DevicesPage() {
           >
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
-                <Wifi className="h-4 w-4 text-[#006039]" />
+                <Wifi className="h-4 w-4 text-[#530FAD]" />
                 <Label>Статус устройств:</Label>
               </div>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -623,7 +623,7 @@ export default function DevicesPage() {
                           device.isRegistered
                             ? device.isWorking
                               ? "bg-purple-100 dark:bg-purple-800/30"
-                              : "bg-gray-50 dark:bg-gray-900/50"
+                              : "bg-purple-50/30 dark:bg-gray-900/50"
                             : "bg-red-100 dark:bg-red-900/20"
                         )}
                       >
@@ -684,7 +684,7 @@ export default function DevicesPage() {
                             <div
                               className={cn(
                                 "w-2 h-2 rounded-full",
-                                device.isOnline ? "bg-purple-500" : "bg-gray-400"
+                                device.isOnline ? "bg-[#530FAD]" : "bg-gray-400"
                               )}
                             />
                             <p className="text-xs text-gray-600">
@@ -734,7 +734,7 @@ export default function DevicesPage() {
                           device.isRegistered
                             ? device.isWorking
                               ? "bg-purple-100 dark:bg-purple-800/30"
-                              : "bg-gray-50 dark:bg-gray-900/50"
+                              : "bg-purple-50/30 dark:bg-gray-900/50"
                             : "bg-red-100 dark:bg-red-900/20"
                         )}
                       >
@@ -820,7 +820,7 @@ export default function DevicesPage() {
                         <p
                           className={cn(
                             "text-sm font-medium mt-1",
-                            device.isOnline ? "text-[#006039]" : "text-gray-600"
+                            device.isOnline ? "text-[#530FAD]" : "text-gray-600"
                           )}
                         >
                           {device.isOnline ? "Онлайн" : "Не в сети"}
@@ -846,7 +846,7 @@ export default function DevicesPage() {
           </div>
 
           {sortedDevices.length === 0 && (
-            <Card className="p-8 md:p-12 text-center">
+            <Card className="bg-purple-50/10 p-8 md:p-12 text-center">
               <Smartphone className="h-10 w-10 md:h-12 md:w-12 mx-auto text-gray-300 mb-3 md:mb-4" />
               <p className="text-sm md:text-base text-gray-500">
                 Устройства не найдены
@@ -893,7 +893,7 @@ export default function DevicesPage() {
               </Button>
               <Button
                 onClick={createDevice}
-                style={{ backgroundColor: "#006039", color: "white" }}
+                style={{ backgroundColor: "#530FAD", color: "white" }}
                 className="hover:opacity-90 transition-opacity w-full sm:w-auto"
                 disabled={!deviceForm.name}
               >
@@ -924,7 +924,7 @@ export default function DevicesPage() {
                 {/* QR Code */}
                 {qrCodeDataUrl && (
                   <div className="flex flex-col items-center space-y-2 md:space-y-3">
-                    <div className="p-3 md:p-4 bg-white border-2 border-gray-200 rounded-lg">
+                    <div className="p-3 md:p-4 bg-purple-50/20 border-purple-200/60-2 border-purple-200/60 rounded-lg">
                       <img
                         src={qrCodeDataUrl}
                         alt="QR код токена устройства"
@@ -938,7 +938,7 @@ export default function DevicesPage() {
                 )}
 
                 {/* Token Text */}
-                <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
+                <div className="p-3 md:p-4 bg-purple-50/30 rounded-lg">
                   <p className="text-xs text-gray-500 mb-2">
                     Токен устройства:
                   </p>

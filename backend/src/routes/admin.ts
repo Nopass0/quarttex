@@ -161,7 +161,7 @@ export default (app: Elysia) =>
     .use(merchantRequestLogsRoutes)
     .use(botDisputesRoutes)
     .group("/aggregators", (a) => aggregatorsRoutes(a))
-    .group("/auction", (a) => auctionRoutes(a))
+    .use(auctionRoutes)
     // .group("/test-tools", (a) => a.use(testToolsRoutes))
     .group("", (a) => metricsRoutes(a))
 

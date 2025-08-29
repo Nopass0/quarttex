@@ -122,7 +122,7 @@ const disputeStatusConfig = {
   },
   CANCELLED: {
     label: "Отменен",
-    color: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
+    color: "bg-purple-100/40 text-gray-700 dark:bg-purple-900/25 dark:text-gray-300",
     icon: Ban
   }
 };
@@ -154,7 +154,7 @@ const getBankIcon = (bankType: string, size: "sm" | "md" = "md") => {
   }
 
   return (
-    <div className={cn(sizeClasses, "bg-gray-100 rounded-lg flex items-center justify-center")}>
+    <div className={cn(sizeClasses, "bg-purple-100/40 rounded-lg flex items-center justify-center")}>
       <CreditCard className="h-5 w-5 text-gray-400" />
     </div>
   );
@@ -342,7 +342,7 @@ export function PayoutDisputesListEnhanced() {
                 На рассмотрении
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setFilterStatus("RESOLVED_SUCCESS")}>
-                <CheckCircle className="h-4 w-4 mr-2 text-purple-600" />
+                <CheckCircle className="h-4 w-4 mr-2 text-[#530FAD] dark:text-[#7c3aed]" />
                 В вашу пользу
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setFilterStatus("RESOLVED_FAIL")}>
@@ -393,7 +393,7 @@ export function PayoutDisputesListEnhanced() {
       {/* Content */}
       <div className="flex-1 overflow-auto p-6 pt-2">
         {filteredDisputes.length === 0 ? (
-          <Card className="p-8 text-center">
+          <Card className="bg-purple-50/10 p-8 text-center">
             <AlertCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
             <p className="text-gray-500">Нет споров для отображения</p>
           </Card>
@@ -408,7 +408,7 @@ export function PayoutDisputesListEnhanced() {
                   key={dispute.id}
                   className={cn(
                     "p-4 cursor-pointer hover:shadow-md transition-all duration-200",
-                    "dark:bg-[#29382f] dark:hover:bg-[#29382f]/80"
+                    "dark:bg-purple-800/60 dark:hover:bg-purple-800/60/80"
                   )}
                   onClick={() => handleViewDetails(dispute)}
                 >
@@ -421,13 +421,13 @@ export function PayoutDisputesListEnhanced() {
                         dispute.status === "IN_PROGRESS" && "bg-blue-100 dark:bg-blue-900/30",
                         dispute.status === "RESOLVED_SUCCESS" && "bg-purple-100 dark:bg-purple-900/30",
                         dispute.status === "RESOLVED_FAIL" && "bg-red-100 dark:bg-red-900/30",
-                        dispute.status === "CANCELLED" && "bg-gray-100 dark:bg-gray-700"
+                        dispute.status === "CANCELLED" && "bg-purple-100/40 dark:bg-purple-900/25"
                       )}>
                         <StatusIcon className={cn(
                           "h-6 w-6",
                           dispute.status === "OPEN" && "text-yellow-600 dark:text-yellow-400",
                           dispute.status === "IN_PROGRESS" && "text-blue-600 dark:text-blue-400",
-                          dispute.status === "RESOLVED_SUCCESS" && "text-purple-600 dark:text-purple-400",
+                          dispute.status === "RESOLVED_SUCCESS" && "text-[#530FAD] dark:text-[#7c3aed] dark:text-purple-400",
                           dispute.status === "RESOLVED_FAIL" && "text-red-600 dark:text-red-400",
                           dispute.status === "CANCELLED" && "text-gray-600 dark:text-gray-400"
                         )} />

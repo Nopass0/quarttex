@@ -98,7 +98,7 @@ const getBankIcon = (bankType: string, size: "sm" | "md" = "md") => {
   if (logoPath) {
     return (
       <div
-        className={`${sizeClasses} rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center p-1`}
+        className={`${sizeClasses} rounded-lg bg-purple-50/20 dark:bg-purple-900/15 dark:bg-purple-900/25 border border-purple-200/60 dark:border-gray-600 flex items-center justify-center p-1`}
       >
         <img
           src={logoPath}
@@ -120,7 +120,7 @@ const getBankIcon = (bankType: string, size: "sm" | "md" = "md") => {
   // Default neutral bank icon
   return (
     <div
-      className={`${sizeClasses} rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center`}
+      className={`${sizeClasses} rounded-lg bg-purple-100/40 border border-purple-200/60 flex items-center justify-center`}
     >
       <CreditCard className="w-5 h-5 text-gray-600" />
     </div>
@@ -187,15 +187,15 @@ const disputeStatusConfig = {
   RESOLVED_FAIL: {
     label: "Спор принят в сторону трейдера",
     description: "Решен в вашу пользу",
-    color: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
-    badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
+    color: "bg-purple-100 text-purple-800 border-green-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
+    badgeColor: "bg-purple-50 text-purple-700 border-green-200",
     icon: CheckCircle
   },
   CANCELLED: {
     label: "Отменен",
     description: "Спор отменен",
-    color: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600",
-    badgeColor: "bg-gray-50 text-gray-700 border-gray-200",
+    color: "bg-purple-100/40 text-gray-800 border-purple-200/60 dark:bg-purple-900/25 dark:text-gray-300 dark:border-gray-600",
+    badgeColor: "bg-purple-50/30 text-gray-700 border-gray-200",
     icon: Ban
   }
 };
@@ -218,7 +218,7 @@ export function DealDisputesList() {
 
   // Filters
   const [showFilters, setShowFilters] = useState(false);
-  const [filterBank, setFilterBank] = useState("");
+  const [filterBank, setFilterBank] = useState("all");
   const [filterDevice, setFilterDevice] = useState("");
   const [filterDateRange, setFilterDateRange] = useState<{
     from: Date | undefined;
@@ -543,7 +543,7 @@ export function DealDisputesList() {
                         <SelectValue placeholder="Выберите банк" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Все банки</SelectItem>
+                        <SelectItem value="all">Все банки</SelectItem>
                         <SelectItem value="SBERBANK">Сбербанк</SelectItem>
                         <SelectItem value="TBANK">Т-Банк</SelectItem>
                         <SelectItem value="VTB">ВТБ</SelectItem>
@@ -609,7 +609,7 @@ export function DealDisputesList() {
         <TabsContent value={activeTab} className="space-y-3 mt-4">
           
           {filteredDisputes.length === 0 ? (
-            <Card className="p-12 text-center">
+            <Card className="bg-purple-50/10 p-12 text-center">
               <p className="text-gray-500 dark:text-gray-400">
                 {searchQuery ? "Споры не найдены" : "Нет споров"}
               </p>
@@ -624,7 +624,7 @@ export function DealDisputesList() {
                 return (
                   <Card
                     key={dispute.id}
-                    className="group hover:shadow-lg transition-all cursor-pointer border-gray-200 dark:border-gray-700"
+                    className="group hover:shadow-lg transition-all cursor-pointer border-purple-200/60 dark:border-gray-700"
                     onClick={() => handleViewDetails(dispute)}
                   >
                     <div className="p-6">
@@ -703,7 +703,7 @@ export function DealDisputesList() {
                             <Badge 
                               className={cn(
                                 "px-3 py-1.5",
-                                statusConfig?.badgeColor || "bg-gray-50 text-gray-700 border-gray-200"
+                                statusConfig?.badgeColor || "bg-purple-50/30 text-gray-700 border-gray-200"
                               )}
                             >
                               {dispute.status === 'RESOLVED_SUCCESS' ? 'Отклонен' : 

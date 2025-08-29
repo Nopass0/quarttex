@@ -1,6 +1,8 @@
 import axios from 'axios'
 import { db } from '@/db'
 import { WellbitCallbackService } from '@/services/WellbitCallbackService'
+import { auctionIntegrationService } from '@/services/auction-integration.service'
+import { Status } from '@prisma/client'
 import crypto from 'crypto'
 
 // Helper function to send callback and save to history
@@ -58,6 +60,42 @@ async function sendCallbackWithHistory(url: string, payload: any, transactionId:
         const jsonString = JSON.stringify(sortedPayload);
         const signature = crypto.createHmac('sha256', merchant.apiKeyPrivate).update(jsonString).digest('hex');
         headers['x-api-token'] = signature;
+      }
+    } else {
+      // Проверяем, является ли мерчант аукционным
+      const isAuction = await auctionIntegrationService.isAuctionMerchant(merchantId);
+      if (isAuction) {
+        console.log(`[Callback] Detected auction merchant, sending auction callback in addition to regular`);
+        
+        // Отправляем аукционный callback параллельно
+        const statusMapping: Record<string, number> = {
+          'CREATED': 1,
+          'IN_PROGRESS': 2,
+          'READY': 6,
+          'CANCELED': 9,
+          'EXPIRED': 8,
+          'DISPUTE': 7,
+          'MILK': 1,
+        };
+
+        const auctionStatusId = statusMapping[payload.status as string] || 1;
+        
+        try {
+          const auctionResult = await auctionIntegrationService.notifyExternalSystem(
+            merchantId,
+            transactionId,
+            auctionStatusId,
+            payload.amount
+          );
+          
+          if (auctionResult.success) {
+            console.log(`[Callback] Auction callback sent successfully for transaction ${transactionId}`);
+          } else {
+            console.log(`[Callback] Auction callback failed for transaction ${transactionId}: ${auctionResult.error}`);
+          }
+        } catch (error) {
+          console.error(`[Callback] Error sending auction callback for transaction ${transactionId}:`, error);
+        }
       }
     }
   }

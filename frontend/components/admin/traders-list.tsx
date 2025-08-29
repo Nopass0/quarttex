@@ -332,7 +332,7 @@ export function TradersList() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <div className="relative w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[purple-600]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#006039]" />
             <Input
               placeholder="Поиск по email или ID..."
               value={searchQuery}
@@ -346,12 +346,12 @@ export function TradersList() {
             onClick={fetchTraders}
             disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 text-[purple-600] ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 text-[#006039] ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[purple-600] hover:bg-[#3d0b80]">
+            <Button className="bg-[#530FAD] hover:bg-purple-800/60">
               <UserPlus className="mr-2 h-4 w-4 text-white" />
               Добавить трейдера
             </Button>
@@ -421,7 +421,7 @@ export function TradersList() {
             <DialogFooter>
               <Button
                 onClick={handleCreateTrader}
-                className="bg-[purple-600] hover:bg-[#3d0b80]"
+                className="bg-[#530FAD] hover:bg-purple-800/60"
                 disabled={isLoading || !formData.email}
               >
                 Создать
@@ -459,7 +459,7 @@ export function TradersList() {
               {filteredTraders.map((trader) => (
                 <TableRow 
                   key={trader.id}
-                  className="cursor-pointer hover:bg-gray-50"
+                  className="cursor-pointer hover:bg-purple-50/50"
                   onClick={() => router.push(`/admin/traders/${trader.id}`)}
                 >
                   <TableCell>
@@ -483,7 +483,7 @@ export function TradersList() {
                     <div className="text-sm font-medium">${formatAmount(trader.trustBalance)}</div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm font-medium text-purple-600">${formatAmount(trader.deposit || 0)}</div>
+                    <div className="text-sm font-medium text-[#530FAD] dark:text-[#7c3aed]">${formatAmount(trader.deposit || 0)}</div>
                   </TableCell>
                   <TableCell>₽{formatAmount(trader.turnover)}</TableCell>
                   <TableCell>
@@ -534,7 +534,7 @@ export function TradersList() {
                           className="h-8 w-8 p-0"
                           disabled={isLoading}
                         >
-                          <MoreHorizontal className="h-4 w-4 text-[purple-600]" />
+                          <MoreHorizontal className="h-4 w-4 text-[#006039]" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-48" align="end">
@@ -548,12 +548,12 @@ export function TradersList() {
                           >
                             {trader.banned ? (
                               <>
-                                <CheckCircle className="h-4 w-4 mr-2 text-[purple-600]" />
+                                <CheckCircle className="h-4 w-4 mr-2 text-[#006039]" />
                                 Разблокировать
                               </>
                             ) : (
                               <>
-                                <Ban className="h-4 w-4 mr-2 text-[purple-600]" />
+                                <Ban className="h-4 w-4 mr-2 text-[#006039]" />
                                 Заблокировать
                               </>
                             )}
@@ -565,7 +565,7 @@ export function TradersList() {
                             onClick={() => handleRegeneratePassword(trader.id)}
                             disabled={isLoading}
                           >
-                            <RefreshCw className="h-4 w-4 mr-2 text-[purple-600]" />
+                            <RefreshCw className="h-4 w-4 mr-2 text-[#006039]" />
                             Новый пароль
                           </Button>
                           <Button
@@ -575,7 +575,7 @@ export function TradersList() {
                             onClick={() => handleDeleteTrader(trader.id)}
                             disabled={isLoading}
                           >
-                            <Trash2 className="h-4 w-4 mr-2 text-[purple-600]" />
+                            <Trash2 className="h-4 w-4 mr-2 text-[#006039]" />
                             Удалить
                           </Button>
                         </div>
@@ -716,7 +716,7 @@ export function TradersList() {
           <DialogFooter>
             <Button
               onClick={handleUpdateTrader}
-              className="bg-[purple-600] hover:bg-[#3d0b80]"
+              className="bg-[#530FAD] hover:bg-purple-800/60"
               disabled={isLoading}
             >
               Сохранить
@@ -734,7 +734,7 @@ export function TradersList() {
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <div className="bg-gray-100 p-4 rounded-lg font-mono text-lg text-center relative">
+            <div className="bg-purple-100/40 p-4 rounded-lg font-mono text-lg text-center relative">
               {generatedPassword}
               <Button
                 variant="outline"
@@ -742,7 +742,7 @@ export function TradersList() {
                 className="absolute right-2 top-1/2 -translate-y-1/2"
                 onClick={() => copyToClipboard(generatedPassword)}
               >
-                <Copy className="h-4 w-4 text-[purple-600]" />
+                <Copy className="h-4 w-4 text-[#006039]" />
               </Button>
             </div>
           </div>
@@ -752,7 +752,7 @@ export function TradersList() {
                 setShowPasswordDialog(false)
                 setGeneratedPassword('')
               }}
-              className="bg-[purple-600] hover:bg-[#3d0b80]"
+              className="bg-[#530FAD] hover:bg-purple-800/60"
             >
               Закрыть
             </Button>

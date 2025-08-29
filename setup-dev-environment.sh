@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Setup script for Chase P2P Payment Platform development environment
+# Setup script for Quattrex P2P Payment Platform development environment
 
 set -e
 
-echo "🚀 Chase P2P Platform - Development Environment Setup"
+echo "🚀 Quattrex P2P Platform - Development Environment Setup"
 echo "===================================================="
 
 # Colors for output
@@ -119,7 +119,7 @@ print_info "Creating environment configuration files..."
 
 # Root .env file
 cat > .env <<EOF
-# Chase P2P Platform - Root Environment Configuration
+# Quattrex P2P Platform - Root Environment Configuration
 # Generated on $(date)
 
 # Database
@@ -131,7 +131,7 @@ EOF
 
 # Backend .env file
 cat > backend/.env <<EOF
-# Chase P2P Platform - Backend Environment Configuration
+# Quattrex P2P Platform - Backend Environment Configuration
 # Generated on $(date)
 
 # Database
@@ -172,7 +172,7 @@ EOF
 
 # Frontend .env.local file
 cat > frontend/.env.local <<EOF
-# Chase P2P Platform - Frontend Environment Configuration
+# Quattrex P2P Platform - Frontend Environment Configuration
 # Generated on $(date)
 
 # API URLs
@@ -180,7 +180,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3000/api
 NEXT_PUBLIC_WS_URL=ws://localhost:3000/api/ws
 
 # App
-NEXT_PUBLIC_APP_NAME="Chase P2P"
+NEXT_PUBLIC_APP_NAME="Quattrex P2P"
 NEXT_PUBLIC_APP_URL=http://localhost:3001
 
 # Features

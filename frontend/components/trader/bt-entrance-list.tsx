@@ -94,7 +94,7 @@ const getBankIcon = (bankType: string, size: "sm" | "md" = "md") => {
   if (logoPath) {
     return (
       <div
-        className={`${sizeClasses} rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center p-1`}
+        className={`${sizeClasses} rounded-lg bg-purple-50/20 dark:bg-purple-900/15 dark:bg-purple-900/25 border border-purple-200/60 dark:border-gray-600 flex items-center justify-center p-1`}
       >
         <img
           src={logoPath}
@@ -116,7 +116,7 @@ const getBankIcon = (bankType: string, size: "sm" | "md" = "md") => {
   // Default neutral bank icon
   return (
     <div
-      className={`${sizeClasses} rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center`}
+      className={`${sizeClasses} rounded-lg bg-purple-100/40 border border-purple-200/60 flex items-center justify-center`}
     >
       <CreditCard className="w-5 h-5 text-gray-600" />
     </div>
@@ -150,15 +150,15 @@ const btRequisiteStatusConfig = {
   ACTIVE: {
     label: "Активен",
     description: "Реквизит активен",
-    color: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
-    badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
+    color: "bg-purple-100 text-purple-800 border-green-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
+    badgeColor: "bg-purple-50 text-purple-700 border-green-200",
     icon: CheckCircle
   },
   INACTIVE: {
     label: "Неактивен",
     description: "Реквизит неактивен",
-    color: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600",
-    badgeColor: "bg-gray-50 text-gray-700 border-gray-200",
+    color: "bg-purple-100/40 text-gray-800 border-purple-200/60 dark:bg-purple-900/25 dark:text-gray-300 dark:border-gray-600",
+    badgeColor: "bg-purple-50/30 text-gray-700 border-gray-200",
     icon: Ban
   },
   BLOCKED: {
@@ -174,15 +174,15 @@ const btDeviceStatusConfig = {
   ONLINE: {
     label: "Онлайн",
     description: "Устройство онлайн",
-    color: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
-    badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
+    color: "bg-purple-100 text-purple-800 border-green-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
+    badgeColor: "bg-purple-50 text-purple-700 border-green-200",
     icon: CheckCircle
   },
   OFFLINE: {
     label: "Оффлайн",
     description: "Устройство оффлайн",
-    color: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600",
-    badgeColor: "bg-gray-50 text-gray-700 border-gray-200",
+    color: "bg-purple-100/40 text-gray-800 border-purple-200/60 dark:bg-purple-900/25 dark:text-gray-300 dark:border-gray-600",
+    badgeColor: "bg-purple-50/30 text-gray-700 border-gray-200",
     icon: Ban
   },
   ERROR: {
@@ -215,7 +215,7 @@ export function BtEntranceList() {
   // Filters for requisites
   const [showFilters, setShowFilters] = useState(false);
   const [filterMerchant, setFilterMerchant] = useState("");
-  const [filterBank, setFilterBank] = useState("");
+  const [filterBank, setFilterBank] = useState("all");
   const [filterDateRange, setFilterDateRange] = useState<{
     from: Date | undefined;
     to: Date | undefined;
@@ -534,7 +534,7 @@ export function BtEntranceList() {
                           <SelectValue placeholder="Выберите банк" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Все банки</SelectItem>
+                          <SelectItem value="all">Все банки</SelectItem>
                           <SelectItem value="SBERBANK">Сбербанк</SelectItem>
                           <SelectItem value="TBANK">Т-Банк</SelectItem>
                           <SelectItem value="VTB">ВТБ</SelectItem>
@@ -591,7 +591,7 @@ export function BtEntranceList() {
         {/* Requisites Tab */}
         <TabsContent value="requisites" className="space-y-3 mt-4">
           {filteredRequisites.length === 0 ? (
-            <Card className="p-12 text-center">
+            <Card className="bg-purple-50/10 p-12 text-center">
               <p className="text-gray-500 dark:text-gray-400">
                 {searchQuery ? "Реквизиты не найдены" : "Нет реквизитов для БТ-входа"}
               </p>
@@ -606,7 +606,7 @@ export function BtEntranceList() {
                 return (
                   <Card
                     key={requisite.id}
-                    className="group hover:shadow-lg transition-all cursor-pointer border-gray-200 dark:border-gray-700"
+                    className="group hover:shadow-lg transition-all cursor-pointer border-purple-200/60 dark:border-gray-700"
                   >
                     <div className="p-6">
                       <div className="flex items-start justify-between gap-4">
@@ -656,7 +656,7 @@ export function BtEntranceList() {
                           <Badge 
                             className={cn(
                               "px-3 py-1.5",
-                              statusConfig?.badgeColor || "bg-gray-50 text-gray-700 border-gray-200"
+                              statusConfig?.badgeColor || "bg-purple-50/30 text-gray-700 border-gray-200"
                             )}
                           >
                             {requisite.isActive ? 'Активен' : 'Неактивен'}
@@ -685,7 +685,7 @@ export function BtEntranceList() {
         {/* Devices Tab */}
         <TabsContent value="devices" className="space-y-3 mt-4">
           {filteredDevices.length === 0 ? (
-            <Card className="p-12 text-center">
+            <Card className="bg-purple-50/10 p-12 text-center">
               <p className="text-gray-500 dark:text-gray-400">
                 {searchQuery ? "Устройства не найдены" : "Нет устройств для БТ-входа"}
               </p>
@@ -699,7 +699,7 @@ export function BtEntranceList() {
                 return (
                   <Card
                     key={device.id}
-                    className="group hover:shadow-lg transition-all cursor-pointer border-gray-200 dark:border-gray-700"
+                    className="group hover:shadow-lg transition-all cursor-pointer border-purple-200/60 dark:border-gray-700"
                   >
                     <div className="p-6">
                       <div className="flex items-start justify-between gap-4">
@@ -751,7 +751,7 @@ export function BtEntranceList() {
                           <Badge 
                             className={cn(
                               "px-3 py-1.5",
-                              statusConfig?.badgeColor || "bg-gray-50 text-gray-700 border-gray-200"
+                              statusConfig?.badgeColor || "bg-purple-50/30 text-gray-700 border-gray-200"
                             )}
                           >
                             {statusConfig?.label || device.status}

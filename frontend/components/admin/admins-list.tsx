@@ -206,7 +206,7 @@ export function AdminsList() {
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[purple-600] hover:bg-[#3d0b80]">
+            <Button className="bg-[#530FAD] hover:bg-purple-800/60">
               <UserPlus className="mr-2 h-4 w-4" />
               Добавить админа
             </Button>
@@ -240,7 +240,7 @@ export function AdminsList() {
             <DialogFooter>
               <Button
                 onClick={handleCreateAdmin}
-                className="bg-[purple-600] hover:bg-[#3d0b80]"
+                className="bg-[#530FAD] hover:bg-purple-800/60"
                 disabled={isLoading}
               >
                 Создать
@@ -278,7 +278,7 @@ export function AdminsList() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                        <code className="text-xs bg-purple-100/40 px-2 py-1 rounded">
                           {admin.token.slice(0, 20)}...{admin.token.slice(-10)}
                         </code>
                         <Button
@@ -364,7 +364,7 @@ export function AdminsList() {
           <DialogFooter>
             <Button
               onClick={handleEditSubmit}
-              className="bg-[purple-600] hover:bg-[#3d0b80]"
+              className="bg-[#530FAD] hover:bg-purple-800/60"
               disabled={isLoading}
             >
               Сохранить
@@ -382,7 +382,7 @@ export function AdminsList() {
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <div className="bg-gray-100 p-4 rounded-lg font-mono text-xs break-all">
+            <div className="bg-purple-100/40 p-4 rounded-lg font-mono text-xs break-all">
               {newAdminToken}
               <Button
                 variant="outline"
@@ -401,7 +401,7 @@ export function AdminsList() {
                 setShowTokenDialog(false)
                 setNewAdminToken('')
               }}
-              className="bg-[purple-600] hover:bg-[#3d0b80]"
+              className="bg-[#530FAD] hover:bg-purple-800/60"
             >
               Закрыть
             </Button>

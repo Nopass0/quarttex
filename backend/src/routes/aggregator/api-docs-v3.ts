@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { BankType, Status, MethodType } from "@prisma/client";
 import { BANKS } from "../../constants/banks";
+import { aggregatorSessionGuard } from "@/middleware/aggregatorGuard";
 
 /**
  * API документация для агрегаторов v3
@@ -8,12 +9,13 @@ import { BANKS } from "../../constants/banks";
  */
 export default (app: Elysia) =>
   app
+    .use(aggregatorSessionGuard())
     /* ──────── GET /aggregator/api-docs ──────── */
     .get(
       "/",
       async ({ aggregator }) => {
         const baseUrl = aggregator.apiBaseUrl || "https://your-api.example.com";
-        const ourBaseUrl = "https://chasepay.pro/api";
+        const ourBaseUrl = "https://quattrex.pro/api";
 
         return {
           version: "2.1",
@@ -92,6 +94,11 @@ export default (app: Elysia) =>
                 availability: "99.9% uptime"
               }
             },
+            callbacks: {
+              title: "📞 Callbacks",
+              description: "Полное описание формата коллбэков от агрегатора к нам",
+              url: "/api/aggregator/api-docs/callbacks"
+            },
             ourCallbacks: {
               title: "Наши callback endpoints",
               description: "Как отправлять callback'и в нашу систему",
@@ -145,7 +152,7 @@ export default (app: Elysia) =>
             },
             step2: {
               title: "2. Настройте отправку callback'ов",
-              callbackUrl: "https://chasepay.pro/api/aggregators/callback",
+              callbackUrl: "https://quattrex.pro/api/aggregators/callback",
               authentication: `Bearer ${aggregator.callbackToken}`,
               format: "JSON с полями: ourDealId, status, amount, partnerDealId"
             },
@@ -242,7 +249,7 @@ export default (app: Elysia) =>
                     type: "string",
                     required: true,
                     description: "URL для отправки callback'ов",
-                    example: "https://chasepay.pro/api/aggregators/callback"
+                    example: "https://quattrex.pro/api/aggregators/callback"
                   },
                   metadata: {
                     type: "object",
@@ -257,7 +264,7 @@ export default (app: Elysia) =>
                   rate: 100.5,
                   status: "CREATED",
                   expiryDate: "2024-01-29T15:30:00Z",
-                  callbackUrl: "https://chasepay.pro/api/aggregators/callback",
+                  callbackUrl: "https://quattrex.pro/api/aggregators/callback",
                   metadata: {
                     merchantName: "Example Shop"
                   }
@@ -355,7 +362,7 @@ export default (app: Elysia) =>
                       requisites: {
                         bankType: "SBERBANK",
                         phoneNumber: "+79001234567",
-                        recipientName: "ООО Компания"
+                        recipientName: "Иванов Иван"
                       },
                       expiryDate: "2024-01-29T15:30:00Z",
                       createdAt: "2024-01-29T14:30:00Z"
@@ -499,8 +506,8 @@ export default (app: Elysia) =>
                       description: "URL файла на сервере ChasePay"
                     },
                     example: [
-                      "https://chasepay.pro/files/dispute-screenshot-1.jpg",
-                      "https://chasepay.pro/files/dispute-document-2.pdf"
+                      "https://quattrex.pro/files/dispute-screenshot-1.jpg",
+                      "https://quattrex.pro/files/dispute-document-2.pdf"
                     ]
                   }
                 },
@@ -508,8 +515,8 @@ export default (app: Elysia) =>
                   ourDealId: "deal-123-456",
                   message: "Клиент не получил средства, прикладываю скриншоты",
                   attachments: [
-                    "https://chasepay.pro/files/dispute-screenshot-1.jpg",
-                    "https://chasepay.pro/files/dispute-document-2.pdf"
+                    "https://quattrex.pro/files/dispute-screenshot-1.jpg",
+                    "https://quattrex.pro/files/dispute-document-2.pdf"
                   ]
                 }
               },
@@ -554,7 +561,7 @@ export default (app: Elysia) =>
             {
               title: "1. Одиночный callback",
               method: "POST",
-              url: "https://chasepay.pro/api/aggregators/callback",
+              url: "https://quattrex.pro/api/aggregators/callback",
               headers: {
                 "Authorization": `Bearer ${aggregator.callbackToken}`,
                 "Content-Type": "application/json"
@@ -618,7 +625,7 @@ export default (app: Elysia) =>
             {
               title: "2. Массовый callback",
               method: "POST",
-              url: "https://chasepay.pro/api/aggregators/callback/batch",
+              url: "https://quattrex.pro/api/aggregators/callback/batch",
               description: "До 100 callback'ов одним запросом",
               headers: {
                 "Authorization": `Bearer ${aggregator.callbackToken}`,
@@ -668,6 +675,368 @@ export default (app: Elysia) =>
       {
         tags: ["aggregator-api-docs"],
         detail: { summary: "Как отправлять callback'и к нам" },
+      }
+    )
+
+    /* ──────── GET /aggregator/api-docs/callbacks ──────── */
+    .get(
+      "/callbacks",
+      async ({ aggregator }) => {
+        return {
+          title: "📞 Callbacks - Коллбэки от агрегатора к нам",
+          description: "Полное описание как агрегатор должен присылать коллбэки в нашу систему для обновления статусов сделок",
+          
+          overview: {
+            purpose: "Коллбэки используются для уведомления нашей системы об изменениях в статусе сделок на стороне агрегатора",
+            frequency: "Отправляйте коллбэк при каждом изменении статуса сделки",
+            reliability: "При неуспешной доставке повторите запрос через 30 секунд, затем через 5 минут, затем через час"
+          },
+
+          authentication: {
+            method: "Bearer Token",
+            header: "Authorization: Bearer <CALLBACK_TOKEN>",
+            token: aggregator.callbackToken,
+            description: "Используйте ваш Callback Token для авторизации всех коллбэков",
+            security: "Токен должен храниться безопасно и не логироваться в открытом виде"
+          },
+
+          endpoints: [
+            {
+              id: "single-callback",
+              title: "1. Одиночный коллбэк",
+              method: "POST",
+              url: "https://quattrex.pro/api/aggregators/callback",
+              description: "Отправка обновления для одной сделки",
+              
+              headers: {
+                "Authorization": `Bearer ${aggregator.callbackToken}`,
+                "Content-Type": "application/json",
+                "User-Agent": "YourAggregatorName/1.0"
+              },
+
+              requestBody: {
+                description: "JSON объект с информацией об обновлении сделки",
+                required: ["ourDealId"],
+                properties: {
+                  ourDealId: {
+                    type: "string",
+                    required: true,
+                    description: "ID сделки в нашей системе (тот, который мы передали при создании)",
+                    example: "deal-123-456-789"
+                  },
+                  status: {
+                    type: "string",
+                    required: false,
+                    enum: ["CREATED", "IN_PROGRESS", "READY", "CANCELED", "EXPIRED", "DISPUTE"],
+                    description: "Новый статус сделки",
+                    example: "READY"
+                  },
+                  amount: {
+                    type: "number",
+                    required: false,
+                    description: "Новая сумма сделки в копейках (если изменилась)",
+                    example: 10000
+                  },
+                  partnerDealId: {
+                    type: "string",
+                    required: false,
+                    description: "Ваш ID сделки в системе агрегатора",
+                    example: "AGG-2024-001"
+                  },
+                  reason: {
+                    type: "string",
+                    required: false,
+                    description: "Причина изменения статуса (особенно важно для CANCELED, DISPUTE)",
+                    example: "Пользователь отменил платеж"
+                  },
+                  updatedAt: {
+                    type: "string",
+                    required: false,
+                    description: "Время обновления в формате ISO 8601",
+                    example: "2024-01-29T15:30:00Z"
+                  },
+                  metadata: {
+                    type: "object",
+                    required: false,
+                    description: "Дополнительные данные (опционально)",
+                    example: { "processor": "internal", "fee": 50 }
+                  }
+                },
+                
+                examples: [
+                  {
+                    title: "Успешное завершение сделки",
+                    description: "Платеж был успешно обработан",
+                    body: {
+                      ourDealId: "deal-123-456",
+                      status: "READY",
+                      partnerDealId: "AGG-2024-001"
+                    }
+                  },
+                  {
+                    title: "Отмена сделки с причиной",
+                    description: "Пользователь отменил платеж",
+                    body: {
+                      ourDealId: "deal-789-012",
+                      status: "CANCELED",
+                      reason: "Пользователь отменил операцию",
+                      partnerDealId: "AGG-2024-002"
+                    }
+                  },
+                  {
+                    title: "Изменение суммы",
+                    description: "Сумма сделки была скорректирована",
+                    body: {
+                      ourDealId: "deal-345-678",
+                      status: "IN_PROGRESS",
+                      amount: 9500,
+                      reason: "Корректировка комиссии"
+                    }
+                  },
+                  {
+                    title: "Инициация спора",
+                    description: "Возникли проблемы с платежом",
+                    body: {
+                      ourDealId: "deal-456-789",
+                      status: "DISPUTE",
+                      reason: "Средства не поступили на счет получателя"
+                    }
+                  }
+                ]
+              },
+
+              responses: {
+                success: {
+                  status: 200,
+                  description: "Коллбэк успешно обработан",
+                  body: {
+                    status: "accepted",
+                    ourDealId: "deal-123-456",
+                    message: "Callback processed successfully",
+                    processedAt: "2024-01-29T15:30:00Z"
+                  }
+                },
+                ignored: {
+                  status: 200,
+                  description: "Коллбэк проигнорирован (дублирующий или неактуальный)",
+                  body: {
+                    status: "ignored",
+                    ourDealId: "deal-123-456",
+                    message: "Callback ignored - no changes needed"
+                  }
+                },
+                error: {
+                  status: 400,
+                  description: "Ошибка в данных коллбэка",
+                  body: {
+                    status: "error",
+                    message: "Invalid status transition",
+                    details: "Cannot change from READY to IN_PROGRESS"
+                  }
+                },
+                notFound: {
+                  status: 404,
+                  description: "Сделка не найдена",
+                  body: {
+                    status: "error",
+                    message: "Deal not found",
+                    ourDealId: "deal-123-456"
+                  }
+                },
+                unauthorized: {
+                  status: 401,
+                  description: "Неверный токен авторизации",
+                  body: {
+                    error: "Unauthorized",
+                    message: "Invalid callback token"
+                  }
+                }
+              }
+            },
+
+            {
+              id: "batch-callback",
+              title: "2. Массовый коллбэк",
+              method: "POST",
+              url: "https://quattrex.pro/api/aggregators/callback/batch",
+              description: "Отправка обновлений для нескольких сделок одним запросом (до 100 сделок)",
+              
+              headers: {
+                "Authorization": `Bearer ${aggregator.callbackToken}`,
+                "Content-Type": "application/json",
+                "User-Agent": "YourAggregatorName/1.0"
+              },
+
+              requestBody: {
+                description: "Массив объектов коллбэков (максимум 100 элементов)",
+                type: "array",
+                maxItems: 100,
+                items: "Такие же объекты как в одиночном коллбэке",
+                example: [
+                  {
+                    ourDealId: "deal-001",
+                    status: "READY",
+                    partnerDealId: "AGG-001"
+                  },
+                  {
+                    ourDealId: "deal-002", 
+                    status: "CANCELED",
+                    reason: "Timeout"
+                  },
+                  {
+                    ourDealId: "deal-003",
+                    status: "IN_PROGRESS"
+                  }
+                ]
+              },
+
+              responses: {
+                success: {
+                  status: 200,
+                  description: "Массовый коллбэк обработан",
+                  body: {
+                    status: "processed",
+                    totalCount: 3,
+                    successCount: 2,
+                    ignoredCount: 1,
+                    errorCount: 0,
+                    results: [
+                      {
+                        ourDealId: "deal-001",
+                        status: "accepted",
+                        message: "Status updated"
+                      },
+                      {
+                        ourDealId: "deal-002",
+                        status: "accepted", 
+                        message: "Deal canceled"
+                      },
+                      {
+                        ourDealId: "deal-003",
+                        status: "ignored",
+                        message: "No changes needed"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+
+          statusTransitions: {
+            title: "Допустимые переходы статусов",
+            description: "Не все переходы между статусами разрешены. Следуйте этой схеме:",
+            transitions: {
+              CREATED: {
+                allowed: ["IN_PROGRESS", "CANCELED", "EXPIRED"],
+                description: "Сделка создана, ожидает обработки"
+              },
+              IN_PROGRESS: {
+                allowed: ["READY", "CANCELED", "EXPIRED", "DISPUTE"],
+                description: "Сделка в процессе обработки"
+              },
+              READY: {
+                allowed: ["DISPUTE"],
+                description: "Сделка успешно завершена"
+              },
+              CANCELED: {
+                allowed: [],
+                description: "Сделка отменена (финальный статус)"
+              },
+              EXPIRED: {
+                allowed: [],
+                description: "Сделка истекла (финальный статус)"
+              },
+              DISPUTE: {
+                allowed: ["READY", "CANCELED"],
+                description: "По сделке открыт спор"
+              }
+            }
+          },
+
+          bestPractices: {
+            title: "Лучшие практики",
+            recommendations: [
+              {
+                title: "Своевременность",
+                description: "Отправляйте коллбэки сразу при изменении статуса, не накапливайте их"
+              },
+              {
+                title: "Идемпотентность", 
+                description: "Повторная отправка того же коллбэка должна быть безопасной"
+              },
+              {
+                title: "Обработка ошибок",
+                description: "При получении 4xx/5xx ответа повторите запрос через 30 сек, 5 мин, 1 час"
+              },
+              {
+                title: "Логирование",
+                description: "Логируйте все исходящие коллбэки и ответы от нашей системы"
+              },
+              {
+                title: "Таймауты",
+                description: "Устанавливайте таймаут запроса не менее 10 секунд"
+              },
+              {
+                title: "Причины отмены",
+                description: "Всегда указывайте причину для статусов CANCELED и DISPUTE"
+              }
+            ]
+          },
+
+          troubleshooting: {
+            title: "Решение проблем",
+            commonIssues: [
+              {
+                issue: "401 Unauthorized",
+                solution: "Проверьте правильность callback токена в заголовке Authorization"
+              },
+              {
+                issue: "404 Deal not found",
+                solution: "Убедитесь что ourDealId соответствует ID из нашей системы"
+              },
+              {
+                issue: "400 Invalid status transition",
+                solution: "Проверьте допустимые переходы статусов в таблице выше"
+              },
+              {
+                issue: "Коллбэк игнорируется",
+                solution: "Возможно статус уже был обновлен или переход недопустим"
+              },
+              {
+                issue: "Таймаут запроса",
+                solution: "Увеличьте таймаут до 10+ секунд, повторите через 30 секунд"
+              }
+            ]
+          },
+
+          testing: {
+            title: "Тестирование коллбэков",
+            description: "Используйте эти инструменты для тестирования интеграции:",
+            tools: [
+              {
+                name: "curl",
+                example: `curl -X POST https://quattrex.pro/api/aggregators/callback \\
+  -H "Authorization: Bearer ${aggregator.callbackToken}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "ourDealId": "test-deal-123",
+    "status": "READY",
+    "partnerDealId": "your-test-id"
+  }'`
+              },
+              {
+                name: "Журнал коллбэков",
+                description: "Все входящие коллбэки логируются и доступны в личном кабинете агрегатора",
+                url: "/api/aggregator/dashboard"
+              }
+            ]
+          }
+        };
+      },
+      {
+        tags: ["aggregator-api-docs"],
+        detail: { summary: "Полное описание формата коллбэков от агрегатора" },
       }
     )
 
@@ -796,7 +1165,7 @@ def create_deal():
               sendCallback: `import requests
 
 def send_callback(deal_id, status):
-    url = "https://chasepay.pro/api/aggregators/callback"
+    url = "https://quattrex.pro/api/aggregators/callback"
     headers = {
         "Authorization": "Bearer YOUR_CALLBACK_TOKEN",
         "Content-Type": "application/json"
@@ -834,7 +1203,7 @@ def send_callback(deal_id, status):
 
 async function sendCallback(dealId, status) {
     const response = await axios.post(
-        'https://chasepay.pro/api/aggregators/callback',
+        'https://quattrex.pro/api/aggregators/callback',
         {
             ourDealId: dealId,
             status: status
@@ -885,7 +1254,7 @@ async function sendCallback(dealId, status) {
                 paymentMethod: "string (required) - Метод платежа: 'SBP' или 'C2C'",
                 bankType: "string (optional) - Код банка для C2C операций",
                 partnerDealId: "string (optional) - Ваш ID сделки (если заранее известен)",
-                callbackUrl: "string (required) - URL для коллбеков: https://chasepay.pro/api/aggregators/callback"
+                callbackUrl: "string (required) - URL для коллбеков: https://quattrex.pro/api/aggregators/callback"
               },
               responseBody: {
                 accepted: "boolean (required) - Принята ли сделка",
@@ -960,7 +1329,7 @@ async function sendCallback(dealId, status) {
       async ({ aggregator }) => {
         return {
           title: "Формат callback'ов в нашу систему",
-          callbackUrl: "https://chasepay.pro/api/aggregators/callback",
+          callbackUrl: "https://quattrex.pro/api/aggregators/callback",
           authentication: {
             header: "Authorization",
             value: `Bearer ${aggregator.callbackToken}`,
@@ -971,7 +1340,7 @@ async function sendCallback(dealId, status) {
           },
           singleCallback: {
             method: "POST",
-            url: "https://chasepay.pro/api/aggregators/callback",
+            url: "https://quattrex.pro/api/aggregators/callback",
             headers: {
               "Authorization": `Bearer ${aggregator.callbackToken}`,
               "Content-Type": "application/json"
@@ -993,7 +1362,7 @@ async function sendCallback(dealId, status) {
           },
           batchCallback: {
             method: "POST", 
-            url: "https://chasepay.pro/api/aggregators/callback",
+            url: "https://quattrex.pro/api/aggregators/callback",
             body: "array of callback objects",
             response: "array of result objects"
           },
@@ -1033,7 +1402,7 @@ async function sendCallback(dealId, status) {
               title: "Обновления статуса",
               description: "Вы отправляете callback'и при изменении статуса сделки",
               direction: "Агрегатор → Мы",
-              endpoint: "https://chasepay.pro/api/aggregators/callback",
+              endpoint: "https://quattrex.pro/api/aggregators/callback",
               data: "ourDealId, status, amount, partnerDealId"
             },
             {
@@ -1109,7 +1478,7 @@ async function sendCallback(dealId, status) {
               title: "Отправьте тестовый callback",
               description: "Проверьте отправку callback'ов в нашу систему",
               example: {
-                url: "https://chasepay.pro/api/aggregators/callback",
+                url: "https://quattrex.pro/api/aggregators/callback",
                 headers: {
                   "Authorization": `Bearer ${aggregator.callbackToken}`
                 },

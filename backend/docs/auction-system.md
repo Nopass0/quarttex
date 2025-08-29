@@ -203,7 +203,7 @@ if (isAuctionMerchant) {
 
 ```bash
 # 1. Включить аукционную систему
-curl -X PUT "https://api.chasepay.pro/admin/auction/toggle/merchant-id" \
+curl -X PUT "https://api.quattrex.pro/admin/auction/toggle/merchant-id" \
   -H "x-admin-key: YOUR_ADMIN_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -213,11 +213,11 @@ curl -X PUT "https://api.chasepay.pro/admin/auction/toggle/merchant-id" \
   }'
 
 # 2. Сгенерировать ключи
-curl -X POST "https://api.chasepay.pro/admin/auction/generate-keys/merchant-id" \
+curl -X POST "https://api.quattrex.pro/admin/auction/generate-keys/merchant-id" \
   -H "x-admin-key: YOUR_ADMIN_KEY"
 
 # 3. Скачать публичный ключ
-curl "https://api.chasepay.pro/admin/auction/download-key/merchant-id/public" \
+curl "https://api.quattrex.pro/admin/auction/download-key/merchant-id/public" \
   -H "x-admin-key: YOUR_ADMIN_KEY" \
   -o merchant_public_key.pem
 ```
@@ -273,7 +273,7 @@ const timestamp = Math.floor(Date.now() / 1000);
 const canonical = `${timestamp}|partner-system|order-123|AuctionCallback`;
 const signature = signCanonicalString(canonical, privateKeyPem);
 
-fetch("https://api.chasepay.pro/auction/callback/merchant-id", {
+fetch("https://api.quattrex.pro/auction/callback/merchant-id", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",

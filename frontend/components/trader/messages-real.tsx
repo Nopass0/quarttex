@@ -87,9 +87,9 @@ const messageTypeIcons: Record<string, React.ElementType> = {
 
 const messageTypeColors: Record<string, string> = {
   SYSTEM: 'bg-blue-100 text-blue-800 border-blue-200',
-  TRANSACTION: 'bg-purple-100 text-purple-800 border-purple-200',
+  TRANSACTION: 'bg-purple-100 text-purple-800 border-green-200',
   PAYOUT: 'bg-purple-100 text-purple-800 border-purple-200',
-  ACCOUNT: 'bg-gray-100 text-gray-800 border-gray-200',
+  ACCOUNT: 'bg-purple-100/40 text-gray-800 border-gray-200',
   SECURITY: 'bg-red-100 text-red-800 border-red-200',
   DISPUTE: 'bg-orange-100 text-orange-800 border-orange-200',
   DEPOSIT: 'bg-purple-100 text-purple-800 border-purple-200',
@@ -335,7 +335,7 @@ export function TraderMessagesReal() {
       </div>
 
       {/* Filters and Search */}
-      <Card className="p-4">
+      <Card className="bg-purple-50/10 p-4">
         <div className="flex flex-col gap-4">
           <div className="flex gap-2">
             <div className="relative flex-1">
@@ -392,11 +392,11 @@ export function TraderMessagesReal() {
       </Card>
 
       {/* Messages List */}
-      <Card className="p-0">
+      <Card className="bg-purple-50/10 p-0">
         <div className="relative">
           {/* Progress indicator */}
           {messages.length > 0 && (
-            <div className="sticky top-0 z-10 bg-white border-b px-4 py-2 flex items-center justify-between">
+            <div className="sticky top-0 z-10 bg-purple-50/20 border-purple-200/60-b px-4 py-2 flex items-center justify-between">
               <span className="text-sm text-gray-600">
                 Показано {messages.length} сообщений
               </span>
@@ -458,18 +458,18 @@ export function TraderMessagesReal() {
               <>
                 {Object.entries(groupedMessages).map(([dateKey, dateMessages]) => (
                 <div key={dateKey}>
-                  <div className="sticky top-0 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-600 border-b">
+                  <div className="sticky top-0 bg-purple-50/30 px-4 py-2 text-sm font-medium text-gray-600 border-b">
                     {formatDateGroup(dateKey)}
                   </div>
                   {dateMessages.map((message) => {
                     const Icon = messageTypeIcons[message.type] || MessageSquare
-                    const colorClass = messageTypeColors[message.type] || 'bg-gray-100 text-gray-800'
+                    const colorClass = messageTypeColors[message.type] || 'bg-purple-100/40 text-gray-800'
                     
                     return (
                       <div
                         key={message.id}
                         className={cn(
-                          "flex items-start gap-4 p-4 border-b hover:bg-gray-50 cursor-pointer transition-colors",
+                          "flex items-start gap-4 p-4 border-b hover:bg-purple-50/30 cursor-pointer transition-colors",
                           !message.isRead && "bg-blue-50/50"
                         )}
                         onClick={() => openMessage(message)}
@@ -573,7 +573,7 @@ export function TraderMessagesReal() {
       {/* Message Detail Modal */}
       {selectedMessage && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <Card className="max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+          <Card className="bg-purple-50/10 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
@@ -609,7 +609,7 @@ export function TraderMessagesReal() {
                         href={getFileUrl(attachment.url)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 p-2 rounded hover:bg-gray-50"
+                        className="flex items-center gap-2 p-2 rounded hover:bg-purple-50/50"
                       >
                         <span className="text-sm">{attachment.filename}</span>
                         <span className="text-xs text-gray-500">

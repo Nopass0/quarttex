@@ -270,9 +270,9 @@ export function SupportChat({ variant }: SupportChatProps) {
       case 'RESOLVED':
         return 'bg-purple-100 text-purple-700'
       case 'CLOSED':
-        return 'bg-gray-100 text-gray-700'
+        return 'bg-purple-100/40 text-gray-700'
       default:
-        return 'bg-gray-100 text-gray-700'
+        return 'bg-purple-100/40 text-gray-700'
     }
   }
   
@@ -298,7 +298,7 @@ export function SupportChat({ variant }: SupportChatProps) {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 h-12 w-12 md:h-14 md:w-14 rounded-full bg-[purple-600] text-white shadow-lg hover:bg-[#3d0b80] transition-all hover:scale-110 flex items-center justify-center z-30"
+        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 h-12 w-12 md:h-14 md:w-14 rounded-full bg-[#530FAD] text-white shadow-lg hover:bg-purple-800/60 transition-all hover:scale-110 flex items-center justify-center z-30"
       >
         <MessageCircle className="h-6 w-6" />
         {tickets.some(t => t.unreadCount > 0) && (
@@ -344,14 +344,14 @@ export function SupportChat({ variant }: SupportChatProps) {
               <div className="flex-1 overflow-hidden">
                 {isLoading ? (
                   <div className="flex items-center justify-center h-full">
-                    <Loader2 className="h-8 w-8 animate-spin text-[purple-600]" />
+                    <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
                   </div>
                 ) : (
                   <ScrollArea className="h-full">
                     <div className="p-4 space-y-3">
                       <Button
                         onClick={() => setIsCreatingTicket(true)}
-                        className="w-full bg-[purple-600] hover:bg-[#3d0b80]"
+                        className="w-full bg-[#530FAD] hover:bg-purple-800/60"
                       >
                         <Plus className="mr-2 h-4 w-4" />
                         Создать новый тикет
@@ -365,7 +365,7 @@ export function SupportChat({ variant }: SupportChatProps) {
                         tickets.map(ticket => (
                           <Card
                             key={ticket.id}
-                            className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                            className="p-4 cursor-pointer hover:bg-purple-50/30 transition-colors"
                             onClick={() => fetchTicketDetails(ticket.id)}
                           >
                             <div className="flex items-start justify-between mb-2">
@@ -415,7 +415,7 @@ export function SupportChat({ variant }: SupportChatProps) {
                     size="icon"
                     onClick={() => setIsCreatingTicket(false)}
                   >
-                    <ChevronLeft className="h-4 w-4 text-[purple-600]" />
+                    <ChevronLeft className="h-4 w-4 text-[#006039]" />
                   </Button>
                   <DialogTitle>Новый тикет</DialogTitle>
                 </div>
@@ -450,7 +450,7 @@ export function SupportChat({ variant }: SupportChatProps) {
                 <Button
                   onClick={createTicket}
                   disabled={isSending || !newSubject.trim() || !newMessage.trim()}
-                  className="w-full bg-[purple-600] hover:bg-[#3d0b80]"
+                  className="w-full bg-[#530FAD] hover:bg-purple-800/60"
                 >
                   {isSending ? (
                     <>
@@ -479,7 +479,7 @@ export function SupportChat({ variant }: SupportChatProps) {
                       fetchTickets()
                     }}
                   >
-                    <ChevronLeft className="h-4 w-4 text-[purple-600]" />
+                    <ChevronLeft className="h-4 w-4 text-[#006039]" />
                   </Button>
                   <div className="flex-1">
                     <DialogTitle className="text-sm line-clamp-1">
@@ -510,7 +510,7 @@ export function SupportChat({ variant }: SupportChatProps) {
                           "max-w-[80%] rounded-lg p-3",
                           message.isFromSupport
                             ? "bg-gray-100"
-                            : "bg-[purple-600] text-white"
+                            : "bg-[#530FAD] text-white"
                         )}
                       >
                         {message.isFromSupport && (
@@ -551,10 +551,10 @@ export function SupportChat({ variant }: SupportChatProps) {
                     <Button
                       onClick={sendMessage}
                       disabled={isSending || !replyMessage.trim()}
-                      className="bg-[purple-600] hover:bg-[#3d0b80]"
+                      className="bg-[#530FAD] hover:bg-purple-800/60"
                     >
                       {isSending ? (
-                        <Loader2 className="h-4 w-4 animate-spin text-[purple-600]" />
+                        <Loader2 className="h-4 w-4 animate-spin text-[#006039]" />
                       ) : (
                         <Send className="h-4 w-4 text-white" />
                       )}

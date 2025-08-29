@@ -75,7 +75,7 @@ export default function TestApiPage() {
     <div className="p-8 max-w-6xl mx-auto space-y-4">
       <h1 className="text-2xl font-bold">Test Aggregator API</h1>
       
-      <Card className="p-4">
+      <Card className="bg-purple-50/10 p-4">
         <h2 className="font-semibold mb-2">Current Auth State:</h2>
         <div className="space-y-1 text-sm">
           <div>Session Token: <span className="font-mono">{auth.sessionToken ? auth.sessionToken.substring(0, 20) + "..." : "null"}</span></div>
@@ -93,24 +93,24 @@ export default function TestApiPage() {
       
       <div className="space-y-2">
         {results.map((result, index) => (
-          <Card key={index} className={`p-3 ${result.success ? 'border-purple-500' : 'border-red-500'}`}>
+          <Card key={index} className={`p-3 ${result.success ? 'border-[#530FAD]' : 'border-red-500'}`}>
             <div className="flex items-start justify-between">
               <div>
                 <div className="font-semibold">{result.name}</div>
                 <div className="text-xs text-gray-500">{result.timestamp}</div>
               </div>
-              <div className={`text-sm ${result.success ? 'text-purple-600' : 'text-red-600'}`}>
+              <div className={`text-sm ${result.success ? 'text-[#530FAD] dark:text-[#7c3aed]' : 'text-red-600'}`}>
                 {result.success ? 'SUCCESS' : 'FAILED'}
               </div>
             </div>
-            <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto max-h-40">
+            <pre className="mt-2 text-xs bg-purple-100/40 p-2 rounded overflow-auto max-h-40">
               {JSON.stringify(result.data, null, 2)}
             </pre>
           </Card>
         ))}
       </div>
       
-      <Card className="p-4">
+      <Card className="bg-purple-50/10 p-4">
         <h2 className="font-semibold mb-2">Instructions:</h2>
         <ol className="list-decimal list-inside space-y-1 text-sm">
           <li>Open browser console (F12) to see detailed logs</li>

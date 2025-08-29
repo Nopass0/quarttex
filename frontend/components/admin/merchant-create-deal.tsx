@@ -145,7 +145,7 @@ export function MerchantCreateDeal({
   };
 
   return (
-    <Card className="dark:bg-gray-800 dark:border-gray-700">
+    <Card className="bg-purple-50/10 dark:bg-gray-800 dark:border-gray-700">
       <CardHeader>
         <CardTitle className="text-lg">Создание тестовых сделок</CardTitle>
         <CardDescription className="dark:text-gray-400">
@@ -158,7 +158,7 @@ export function MerchantCreateDeal({
           <div className="md:col-span-2">
             <Label className="text-sm">Метод оплаты</Label>
             <Select value={methodId} onValueChange={setMethodId} disabled={isLoadingMethods}>
-              <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
+              <SelectTrigger className="dark:bg-purple-900/25 dark:border-gray-600">
                 {isLoadingMethods ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -168,7 +168,7 @@ export function MerchantCreateDeal({
                   <SelectValue placeholder="Выберите метод оплаты" />
                 )}
               </SelectTrigger>
-              <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+              <SelectContent className="dark:bg-purple-900/25 dark:border-gray-600">
                 {availableMethods.length > 0 ? (
                   availableMethods.map((method) => (
                     <SelectItem
@@ -185,7 +185,7 @@ export function MerchantCreateDeal({
                     </SelectItem>
                   ))
                 ) : (
-                  <SelectItem value="" disabled>
+                  <SelectItem value="none" disabled>
                     У мерчанта нет активных методов
                   </SelectItem>
                 )}
@@ -200,7 +200,7 @@ export function MerchantCreateDeal({
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="5000"
-              className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              className="dark:bg-purple-900/25 dark:border-gray-600 dark:text-white"
             />
           </div>
 
@@ -212,7 +212,7 @@ export function MerchantCreateDeal({
                 value={rate}
                 onChange={(e) => setRate(e.target.value)}
                 placeholder="Напр. 95.5"
-                className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="dark:bg-purple-900/25 dark:border-gray-600 dark:text-white"
               />
             </div>
           )}
@@ -223,7 +223,7 @@ export function MerchantCreateDeal({
               type="datetime-local"
               value={expiredAtLocal}
               onChange={(e) => setExpiredAtLocal(e.target.value)}
-              className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              className="dark:bg-purple-900/25 dark:border-gray-600 dark:text-white"
             />
           </div>
         </div>
@@ -236,7 +236,7 @@ export function MerchantCreateDeal({
               value={callbackUri}
               onChange={(e) => setCallbackUri(e.target.value)}
               placeholder="https://example.com/callback"
-              className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              className="dark:bg-purple-900/25 dark:border-gray-600 dark:text-white"
             />
           </div>
           <div className="md:col-span-2 flex items-end">
@@ -258,7 +258,7 @@ export function MerchantCreateDeal({
         </div>
 
         {result && (
-          <div className="mt-6 p-4 rounded-md border dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+          <div className="mt-6 p-4 rounded-md border dark:border-gray-700 bg-purple-50/30 dark:bg-gray-900">
             <div className="text-sm text-gray-700 dark:text-gray-300">
               Ответ сервера
             </div>

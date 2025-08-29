@@ -370,7 +370,7 @@ export function QuickTransactionCreate({
   }
 
   return (
-    <Card className="dark:bg-gray-800 dark:border-gray-700">
+    <Card className="bg-purple-50/10 dark:bg-gray-800 dark:border-gray-700">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Zap className="h-5 w-5 text-yellow-500" />
@@ -388,10 +388,10 @@ export function QuickTransactionCreate({
               value={transactionType}
               onValueChange={(v) => setTransactionType(v as "IN" | "OUT")}
             >
-              <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
+              <SelectTrigger className="dark:bg-purple-900/25 dark:border-gray-600">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+              <SelectContent className="dark:bg-purple-900/25 dark:border-gray-600">
                 <SelectItem
                   value="IN"
                   className="dark:text-gray-200 dark:hover:bg-gray-600"
@@ -411,10 +411,10 @@ export function QuickTransactionCreate({
           <div>
             <Label className="text-sm">Метод оплаты</Label>
             <Select value={methodId} onValueChange={setMethodId}>
-              <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
+              <SelectTrigger className="dark:bg-purple-900/25 dark:border-gray-600">
                 <SelectValue placeholder="Выберите" />
               </SelectTrigger>
-              <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+              <SelectContent className="dark:bg-purple-900/25 dark:border-gray-600">
                 {merchantMethods.map((mm) => (
                   <SelectItem
                     key={mm.method.id}
@@ -435,7 +435,7 @@ export function QuickTransactionCreate({
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="5000"
-              className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              className="dark:bg-purple-900/25 dark:border-gray-600 dark:text-white"
             />
           </div>
 
@@ -462,7 +462,7 @@ export function QuickTransactionCreate({
               size="sm"
               onClick={() => createBatchTransactions(5)}
               disabled={isBatchLoading}
-              className="dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:text-gray-200"
+              className="dark:bg-purple-900/25 dark:border-gray-600 dark:hover:bg-gray-600 dark:text-gray-200"
             >
               {isBatchLoading && (
                 <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
@@ -474,7 +474,7 @@ export function QuickTransactionCreate({
               size="sm"
               onClick={() => createBatchTransactions(10)}
               disabled={isBatchLoading}
-              className="dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:text-gray-200"
+              className="dark:bg-purple-900/25 dark:border-gray-600 dark:hover:bg-gray-600 dark:text-gray-200"
             >
               {isBatchLoading && (
                 <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
@@ -486,7 +486,7 @@ export function QuickTransactionCreate({
               size="sm"
               onClick={() => createBatchTransactions(20)}
               disabled={isBatchLoading}
-              className="dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:text-gray-200"
+              className="dark:bg-purple-900/25 dark:border-gray-600 dark:hover:bg-gray-600 dark:text-gray-200"
             >
               {isBatchLoading && (
                 <RefreshCw className="h-3 w-3 mr-1 animate-spin" />

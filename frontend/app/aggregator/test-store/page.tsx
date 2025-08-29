@@ -51,7 +51,7 @@ export default function TestStorePage() {
     <div className="p-8 max-w-4xl mx-auto space-y-4">
       <h1 className="text-2xl font-bold">Test Aggregator Store</h1>
       
-      <Card className="p-4">
+      <Card className="bg-purple-50/10 p-4">
         <h2 className="font-semibold mb-2">Current Store State:</h2>
         <div className="space-y-2 text-sm">
           <div>sessionToken: <span className="font-mono">{store.sessionToken || 'null'}</span></div>
@@ -70,7 +70,7 @@ export default function TestStorePage() {
         <Button onClick={() => router.push('/aggregator/login')} variant="outline">Go to Login</Button>
       </div>
       
-      <Card className="p-4">
+      <Card className="bg-purple-50/10 p-4">
         <h2 className="font-semibold mb-2">Instructions:</h2>
         <ol className="list-decimal list-inside space-y-1 text-sm">
           <li>Click "Test Direct Save" to save test data to store</li>

@@ -21,8 +21,8 @@ export default function Error({
   }, [error])
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0f0f0f] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 bg-white dark:bg-[#29382f] shadow-lg border-gray-200 dark:border-[#29382f]">
+    <div className="min-h-screen bg-purple-50/30 dark:bg-[#0f0f0f] flex items-center justify-center p-4">
+      <Card className="bg-purple-50/10 w-full max-w-md p-8 bg-purple-50/20 dark:bg-purple-900/15 dark:bg-purple-800/60 shadow-lg border-purple-200/60 dark:border-purple-700/60">
         <div className="flex flex-col items-center">
           <Logo size="lg" />
           
@@ -39,7 +39,7 @@ export default function Error({
           </p>
           
           {error.message && (
-            <div className="mt-4 p-3 bg-gray-100 dark:bg-[#0f0f0f] rounded-lg w-full">
+            <div className="mt-4 p-3 bg-purple-100/40 dark:bg-[#0f0f0f] rounded-lg w-full">
               <p className="text-xs text-gray-600 dark:text-gray-400 font-mono break-all">
                 {error.message}
               </p>
@@ -56,7 +56,7 @@ export default function Error({
               На главную
             </Button>
             <Button
-              className="flex-1 bg-[#006039] hover:bg-[#004d2e] dark:bg-[#2d6a42] dark:hover:bg-[#236035]"
+              className="flex-1 bg-[#530FAD] hover:bg-purple-700/80 dark:bg-purple-800/60 dark:hover:bg-purple-800/60"
               onClick={() => reset()}
             >
               <RefreshCw className="mr-2 h-4 w-4 text-white" />

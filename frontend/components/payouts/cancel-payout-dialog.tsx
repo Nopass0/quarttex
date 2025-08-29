@@ -216,7 +216,7 @@ export function CancelPayoutDialog({
           {/* File Upload */}
           <div>
             <Label>Подтверждающие документы (опционально)</Label>
-            <Card className="mt-2 p-4 border-dashed">
+            <Card className="bg-purple-50/10 mt-2 p-4 border-dashed">
               <div className="text-center">
                 <input
                   type="file"
@@ -231,7 +231,7 @@ export function CancelPayoutDialog({
                   htmlFor="file-upload"
                   className={cn(
                     "inline-flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-colors",
-                    "bg-gray-100 hover:bg-gray-200 text-gray-700",
+                    "bg-purple-100/40 hover:bg-gray-200 text-gray-700",
                     uploading && "opacity-50 cursor-not-allowed"
                   )}
                 >
@@ -260,7 +260,7 @@ export function CancelPayoutDialog({
                     return (
                       <div
                         key={file.id}
-                        className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg"
+                        className="flex items-center gap-3 p-2 bg-purple-50/30 rounded-lg"
                       >
                         <Icon className="h-4 w-4 text-gray-400 shrink-0" />
                         <div className="flex-1 min-w-0">
@@ -288,7 +288,7 @@ export function CancelPayoutDialog({
           </div>
 
           {/* Warning */}
-          <Card className="p-4 border-orange-200 bg-orange-50/50">
+          <Card className="bg-purple-50/10 p-4 border-orange-200 bg-orange-50/50">
             <div className="flex items-start gap-3">
               <AlertCircle className="h-4 w-4 text-orange-600 shrink-0 mt-0.5" />
               <div className="text-sm text-orange-800">

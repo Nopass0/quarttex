@@ -162,7 +162,7 @@ export default function AgentSettingsPage() {
             <Button
               onClick={saveSettings}
               disabled={isSaving}
-              className="w-full bg-[#006039] hover:bg-[#006039]/90"
+              className="w-full bg-[#530FAD] hover:bg-[#530FAD]/90"
             >
               {isSaving ? (
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin text-white" />
@@ -199,7 +199,7 @@ export default function AgentSettingsPage() {
             </div>
 
             {settings.trcWallet && (
-              <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+              <div className="p-3 bg-purple-50 border border-green-200 rounded-lg">
                 <p className="text-sm text-purple-800">
                   ✓ Кошелек для выплат настроен
                 </p>
@@ -226,19 +226,19 @@ export default function AgentSettingsPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
+            <div className="text-center p-4 bg-purple-50/30 rounded-lg">
               <div className="text-2xl font-bold text-[#006039]">
                 ${(settings.totalEarnings || 0).toFixed(2)}
               </div>
               <div className="text-sm text-gray-600">Общий заработок</div>
             </div>
             
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
+            <div className="text-center p-4 bg-purple-50/30 rounded-lg">
               <div className="text-2xl font-bold">{settings.teamSize}</div>
               <div className="text-sm text-gray-600">Размер команды</div>
             </div>
             
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
+            <div className="text-center p-4 bg-purple-50/30 rounded-lg">
               <div className="text-2xl font-bold">{settings.commissionRate}%</div>
               <div className="text-sm text-gray-600">Процент комиссии</div>
             </div>

@@ -152,6 +152,7 @@ model Merchant {
   /// Поля для аукционной системы
   isAuctionEnabled     Boolean              @default(false)
   auctionBaseUrl       String?
+  auctionCallbackUrl   String?
   rsaPublicKeyPem      String?
   rsaPrivateKeyPem     String?
   keysGeneratedAt      DateTime?

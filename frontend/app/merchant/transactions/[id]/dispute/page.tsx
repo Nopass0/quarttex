@@ -236,7 +236,7 @@ export default function DisputePage() {
             {files.length > 0 && (
               <div className="space-y-2 mt-3">
                 {files.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <div key={index} className="flex items-center justify-between p-2 bg-purple-50/30 rounded">
                     <span className="text-sm truncate">{file.name}</span>
                     <Button
                       variant="ghost"
@@ -276,7 +276,7 @@ export default function DisputePage() {
           Отмена
         </Button>
         <Button
-          className="bg-[#006039] hover:bg-[#006039]/90"
+          className="bg-[#530FAD] hover:bg-[#530FAD]/90"
           onClick={handleSubmit}
           disabled={isSubmitting || !message.trim()}
         >

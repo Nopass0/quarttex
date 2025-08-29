@@ -82,6 +82,7 @@ export class AuctionIntegrationService {
           name: true,
           isAuctionEnabled: true,
           auctionBaseUrl: true,
+          auctionCallbackUrl: true,
           rsaPublicKeyPem: true,
           rsaPrivateKeyPem: true,
           keysGeneratedAt: true,
@@ -98,6 +99,7 @@ export class AuctionIntegrationService {
         name: merchant.name,
         isAuctionEnabled: merchant.isAuctionEnabled,
         auctionBaseUrl: merchant.auctionBaseUrl || undefined,
+        auctionCallbackUrl: merchant.auctionCallbackUrl || undefined,
         rsaPublicKeyPem: merchant.rsaPublicKeyPem || undefined,
         rsaPrivateKeyPem: merchant.rsaPrivateKeyPem || undefined,
         keysGeneratedAt: merchant.keysGeneratedAt || undefined,
@@ -132,10 +134,18 @@ export class AuctionIntegrationService {
         return { success: false, error: "Конфигурация мерчанта не найдена" };
       }
 
+      // Определяем URL для callback'а
+      const callbackUrl = merchantConfig.auctionCallbackUrl || 
+                         (merchantConfig.auctionBaseUrl ? merchantConfig.auctionBaseUrl + "/callback" : null);
+      
+      if (!callbackUrl) {
+        return { success: false, error: "URL для callback'ов не настроен" };
+      }
+
       // Отправляем callback
       const result = await auctionCallbackSender.sendStatusUpdate(
         {
-          callbackUrl: merchantConfig.auctionBaseUrl + "/callback", // Предполагаемый endpoint
+          callbackUrl,
           externalSystemName: merchantConfig.externalSystemName || "default",
           privateKeyPem: merchantConfig.rsaPrivateKeyPem!,
         },
@@ -242,7 +252,7 @@ export class AuctionIntegrationService {
         allowedPaymentMethod: this.mapMethodToPaymentMethod(originalTransactionData.methodId),
         stopAuctionTimeUnix,
         cancelOrderTimeUnix,
-        callbackUrl: `${process.env.BASE_URL || "https://chasepay.pro"}/api/auction/callback/${merchantId}`,
+        callbackUrl: `${process.env.BASE_URL || "https://quattrex.pro"}/api/auction/callback/${merchantId}`,
         ...auctionParams,
       };
 

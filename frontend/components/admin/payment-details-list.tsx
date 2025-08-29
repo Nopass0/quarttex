@@ -307,18 +307,18 @@ export function PaymentDetailsList() {
             </p>
           </CardContent>
         </Card>
-        <Card className="border-purple-200">
+        <Card className="bg-purple-50/10 border-green-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium text-purple-600">Успешных</CardTitle>
+            <CardTitle className="text-base font-medium text-[#530FAD] dark:text-[#7c3aed]">Успешных</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-purple-600">{statistics.success.count}</p>
+            <p className="text-2xl font-bold text-[#530FAD] dark:text-[#7c3aed]">{statistics.success.count}</p>
             <p className="text-sm text-gray-600">
               {formatAmount(statistics.success.amount)} руб
             </p>
           </CardContent>
         </Card>
-        <Card className="border-orange-200">
+        <Card className="bg-purple-50/10 border-orange-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-medium text-orange-600">В процессе</CardTitle>
           </CardHeader>
@@ -329,7 +329,7 @@ export function PaymentDetailsList() {
             </p>
           </CardContent>
         </Card>
-        <Card className="border-red-200">
+        <Card className="bg-purple-50/10 border-red-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-medium text-red-600">Неудачных</CardTitle>
           </CardHeader>

@@ -97,8 +97,8 @@ export default function QuickLoginPage() {
   }
   
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-md p-6">
+    <div className="min-h-screen flex items-center justify-center bg-purple-50/30 p-4">
+      <Card className="bg-purple-50/10 w-full max-w-md p-6">
         <h1 className="text-2xl font-bold mb-6">Quick Aggregator Login</h1>
         
         <div className="space-y-4">

@@ -1,6 +1,8 @@
 import { Transaction } from "@prisma/client";
 import { db as prisma } from "../db";
 import { WellbitCallbackService } from "./WellbitCallbackService";
+import { auctionIntegrationService } from "./auction-integration.service";
+import { Status } from "@prisma/client";
 
 export interface CallbackPayload {
   id: string;
@@ -23,6 +25,44 @@ export class CallbackService {
       if (isWellbit) {
         console.log(`[CallbackService] Detected Wellbit merchant, using Wellbit callback format`);
         return await WellbitCallbackService.sendWellbitCallback(transaction, status);
+      }
+
+      // Проверяем, является ли мерчант аукционным
+      const isAuction = await auctionIntegrationService.isAuctionMerchant(transaction.merchantId);
+      if (isAuction) {
+        console.log(`[CallbackService] Detected auction merchant, sending auction callback`);
+        
+        // Маппим статус на аукционный
+        const statusMapping: Record<Status, number> = {
+          CREATED: 1,
+          IN_PROGRESS: 2,
+          READY: 6,
+          CANCELED: 9,
+          EXPIRED: 8,
+          DISPUTE: 7,
+          MILK: 1,
+        };
+
+        const auctionStatusId = statusMapping[status as Status] || statusMapping[transaction.status];
+        
+        try {
+          const result = await auctionIntegrationService.notifyExternalSystem(
+            transaction.merchantId,
+            transaction.id,
+            auctionStatusId,
+            transaction.amount
+          );
+          
+          if (result.success) {
+            console.log(`[CallbackService] Auction callback sent successfully`);
+          } else {
+            console.log(`[CallbackService] Auction callback failed: ${result.error}`);
+          }
+        } catch (error) {
+          console.error(`[CallbackService] Error sending auction callback:`, error);
+        }
+        
+        // Продолжаем с обычным callback'ом для мерчанта
       }
     }
 

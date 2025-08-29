@@ -151,7 +151,7 @@ export default function AggregatorDepositsPage() {
         );
       case "CONFIRMED":
         return (
-          <Badge variant="default" className="bg-purple-600">
+          <Badge variant="default" className="bg-[#530FAD]">
             <CheckCircle2 className="mr-1 h-3 w-3" />
             Подтверждено
           </Badge>
@@ -315,7 +315,7 @@ export default function AggregatorDepositsPage() {
                               <Button
                                 size="sm"
                                 variant="default"
-                                className="bg-purple-600 hover:bg-purple-700"
+                                className="bg-[#530FAD] hover:bg-purple-800/60"
                                 onClick={() => {
                                   setSelectedDeposit(deposit);
                                   setActionType("confirm");
@@ -422,7 +422,7 @@ export default function AggregatorDepositsPage() {
                 <Button
                   onClick={handleConfirm}
                   disabled={actionLoading}
-                  className="bg-purple-600 hover:bg-purple-700"
+                  className="bg-[#530FAD] hover:bg-purple-800/60"
                 >
                   {actionLoading ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

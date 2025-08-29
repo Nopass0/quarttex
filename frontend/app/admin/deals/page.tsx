@@ -155,6 +155,7 @@ interface TransactionAttempt {
   merchantName: string | null;
   methodId: string;
   methodName: string | null;
+  methodType?: string | null;
   amount: number;
   success: boolean;
   status: string | null;
@@ -186,7 +187,7 @@ const statusConfig: Record<
   },
   EXPIRED: {
     label: "Истекла",
-    color: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100",
+    color: "bg-purple-100/40 text-gray-800 dark:bg-gray-800 dark:text-gray-100",
     icon: XCircle,
   },
   READY: {
@@ -215,11 +216,12 @@ export default function AdminDealsPage() {
   const [idFilter, setIdFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [amountFilter, setAmountFilter] = useState("");
-  const [methodFilter, setMethodFilter] = useState("all");
+  const [methodFilter, setMethodFilter] = useState("");
   const [methodTypeFilter, setMethodTypeFilter] = useState("all");
   const [merchantFilter, setMerchantFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [attemptStatusFilter, setAttemptStatusFilter] = useState("all");
   const [methods, setMethods] = useState<{ id: string; name: string }[]>([]);
   const [merchants, setMerchants] = useState<{ id: string; name: string }[]>(
     []
@@ -297,13 +299,13 @@ export default function AdminDealsPage() {
         // Поиск по ID транзакции, numericId или orderId
         const searchValue = idFilter.trim();
         if (searchValue) {
-          // Проверяем, является ли это числом (numericId)
+          // Всегда используем общий поиск, который включает orderId, ID транзакции и другие поля
+          // Дополнительно, если это число, добавляем поиск по numericId
+          params.search = searchValue;
+          
           const numericId = parseInt(searchValue);
           if (!isNaN(numericId)) {
             params.numericId = numericId;
-          } else {
-            // Если не число, используем общий поиск для ID транзакции и orderId
-            params.search = searchValue;
           }
         }
       }
@@ -313,7 +315,7 @@ export default function AdminDealsPage() {
         if (!isNaN(n)) params.amount = n;
       }
 
-      if (methodFilter !== "all") {
+      if (methodFilter) {
         params.methodId = methodFilter;
       }
 
@@ -353,7 +355,7 @@ export default function AdminDealsPage() {
         const n = parseFloat(amountFilter);
         if (!isNaN(n)) params.amount = n;
       }
-      if (methodFilter !== "all") {
+      if (methodFilter) {
         params.methodId = methodFilter;
       }
       if (methodTypeFilter !== "all") {
@@ -459,7 +461,7 @@ export default function AdminDealsPage() {
   const getStatusBadge = (status: string) => {
     const config = statusConfig[status] || {
       label: status,
-      color: "bg-gray-100 text-gray-800",
+      color: "bg-purple-100/40 text-gray-800",
     };
     return (
       <Badge className={`${config.color} gap-1`}>
@@ -556,7 +558,7 @@ export default function AdminDealsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <DialogTitle className="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2">
-                  <div className="p-1.5 sm:p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                  <div className="p-1.5 sm:p-2 bg-purple-50/20 dark:bg-purple-900/10 rounded-lg shadow-sm">
                     <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   Сделка #{selectedTransaction.numericId}
@@ -574,7 +576,7 @@ export default function AdminDealsPage() {
 
           <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 sm:px-4 md:px-6 py-3 sm:py-4 space-y-3 sm:space-y-4 md:space-y-5">
             {/* Основные идентификаторы */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg md:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="bg-purple-50/20 dark:bg-purple-900/10 rounded-lg md:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm border border-purple-200/60 dark:border-gray-700">
               <h3 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4 flex items-center gap-2">
                 <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
                 Идентификаторы
@@ -585,13 +587,13 @@ export default function AdminDealsPage() {
                     ID транзакции
                   </Label>
                   <div className="flex items-center gap-2">
-                    <code className="flex-1 text-sm bg-gray-50 dark:bg-gray-900 px-3 py-2 rounded-lg font-mono text-gray-700 dark:text-gray-300 break-all">
+                    <code className="flex-1 text-sm bg-purple-50/30 dark:bg-gray-900 px-3 py-2 rounded-lg font-mono text-gray-700 dark:text-gray-300 break-all">
                       {selectedTransaction.id}
                     </code>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="hover:bg-purple-100/40 dark:hover:bg-gray-700"
                       onClick={() =>
                         copyToClipboard(selectedTransaction.id, "ID скопирован")
                       }
@@ -605,13 +607,13 @@ export default function AdminDealsPage() {
                     Order ID
                   </Label>
                   <div className="flex items-center gap-2">
-                    <code className="flex-1 text-sm bg-gray-50 dark:bg-gray-900 px-3 py-2 rounded-lg font-mono text-gray-700 dark:text-gray-300 break-all">
+                    <code className="flex-1 text-sm bg-purple-50/30 dark:bg-gray-900 px-3 py-2 rounded-lg font-mono text-gray-700 dark:text-gray-300 break-all">
                       {selectedTransaction.orderId}
                     </code>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="hover:bg-purple-100/40 dark:hover:bg-gray-700"
                       onClick={() =>
                         copyToClipboard(
                           selectedTransaction.orderId,
@@ -627,13 +629,13 @@ export default function AdminDealsPage() {
             </div>
 
             {/* Участники сделки */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg md:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="bg-purple-50/20 dark:bg-purple-900/10 rounded-lg md:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm border border-purple-200/60 dark:border-gray-700">
               <h3 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4 flex items-center gap-2">
                 <Users className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
                 Участники сделки
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3">
+                <div className="bg-purple-50/30 dark:bg-gray-900 rounded-lg p-3">
                   <Label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Мерчант
                   </Label>
@@ -646,7 +648,7 @@ export default function AdminDealsPage() {
                     </p>
                   )}
                 </div>
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3">
+                <div className="bg-purple-50/30 dark:bg-gray-900 rounded-lg p-3">
                   <Label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Трейдер
                   </Label>
@@ -666,7 +668,7 @@ export default function AdminDealsPage() {
                     </div>
                   )}
                 </div>
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3">
+                <div className="bg-purple-50/30 dark:bg-gray-900 rounded-lg p-3">
                   <Label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Клиент
                   </Label>
@@ -697,7 +699,7 @@ export default function AdminDealsPage() {
                 Финансовые детали
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                <div className="bg-purple-50/20 dark:bg-purple-900/10 rounded-lg p-3">
                   <Label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Сумма
                   </Label>
@@ -708,7 +710,7 @@ export default function AdminDealsPage() {
                     {selectedTransaction.currency || "RUB"}
                   </p>
                 </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                <div className="bg-purple-50/20 dark:bg-purple-900/10 rounded-lg p-3">
                   <Label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Тип
                   </Label>
@@ -727,7 +729,7 @@ export default function AdminDealsPage() {
                     </Badge>
                   </div>
                 </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                <div className="bg-purple-50/20 dark:bg-purple-900/10 rounded-lg p-3">
                   <Label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Курс
                   </Label>
@@ -735,7 +737,7 @@ export default function AdminDealsPage() {
                     {selectedTransaction.rate || "-"}
                   </p>
                 </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                <div className="bg-purple-50/20 dark:bg-purple-900/10 rounded-lg p-3">
                   <Label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Комиссия (ввод)
                   </Label>
@@ -753,7 +755,7 @@ export default function AdminDealsPage() {
             </div>
 
             {/* Метод оплаты */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg md:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="bg-purple-50/20 dark:bg-purple-900/10 rounded-lg md:rounded-xl p-3 sm:p-4 md:p-5 shadow-sm border border-purple-200/60 dark:border-gray-700">
               <h3 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4 flex items-center gap-2">
                 <Wallet className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
                 Метод оплаты
@@ -776,7 +778,7 @@ export default function AdminDealsPage() {
             </div>
 
             {selectedTransaction.requisites && (
-              <div className="bg-gray-50 p-3 rounded-md">
+              <div className="bg-purple-50/30 p-3 rounded-md">
                 <Label className="text-gray-600">Реквизиты</Label>
                 <div className="mt-2">
                   <p className="font-medium">
@@ -873,7 +875,7 @@ export default function AdminDealsPage() {
             <div className="space-y-3">
               <Label className="text-gray-600">Callback URLs</Label>
               <div className="grid grid-cols-1 gap-3">
-                <div className="bg-gray-50 p-3 rounded-md">
+                <div className="bg-purple-50/30 p-3 rounded-md">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="text-sm font-medium">Callback URI</div>
@@ -898,7 +900,7 @@ export default function AdminDealsPage() {
                     )}
                   </div>
                 </div>
-                <div className="bg-gray-50 p-3 rounded-md">
+                <div className="bg-purple-50/30 p-3 rounded-md">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="text-sm font-medium">Success URI</div>
@@ -923,7 +925,7 @@ export default function AdminDealsPage() {
                     )}
                   </div>
                 </div>
-                <div className="bg-gray-50 p-3 rounded-md">
+                <div className="bg-purple-50/30 p-3 rounded-md">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="text-sm font-medium">Fail URI</div>
@@ -988,7 +990,7 @@ export default function AdminDealsPage() {
                   {callbackHistory.map((callback) => (
                     <div
                       key={callback.id}
-                      className="bg-gray-50 p-3 rounded-md border"
+                      className="bg-purple-50/30 p-3 rounded-md border"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
@@ -1025,7 +1027,7 @@ export default function AdminDealsPage() {
                           <div className="text-xs font-medium text-gray-500 mb-1">
                             Отправлено:
                           </div>
-                          <pre className="text-xs bg-white p-2 rounded border overflow-x-auto max-h-48 overflow-y-auto">
+                          <pre className="text-xs bg-purple-50/20 dark:bg-purple-900/15 p-2 rounded border overflow-x-auto max-h-48 overflow-y-auto">
                             {JSON.stringify(callback.payload, null, 2)}
                           </pre>
                         </div>
@@ -1034,7 +1036,7 @@ export default function AdminDealsPage() {
                           <div className="text-xs font-medium text-gray-500 mb-1">
                             Ответ:
                           </div>
-                          <pre className="text-xs bg-white p-2 rounded border overflow-x-auto max-h-48 overflow-y-auto">
+                          <pre className="text-xs bg-purple-50/20 dark:bg-purple-900/15 p-2 rounded border overflow-x-auto max-h-48 overflow-y-auto">
                             {callback.response ||
                               (callback.error ? callback.error : "Нет ответа")}
                           </pre>
@@ -1051,13 +1053,13 @@ export default function AdminDealsPage() {
             </div>
 
             {/* Дополнительная информация */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="bg-purple-50/20 dark:bg-purple-900/10 rounded-xl p-5 shadow-sm border border-purple-200/60 dark:border-gray-700">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                 <Info className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
                 Дополнительная информация
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3">
+                <div className="bg-purple-50/30 dark:bg-gray-900 rounded-lg p-3">
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     User ID
                   </p>
@@ -1065,7 +1067,7 @@ export default function AdminDealsPage() {
                     {selectedTransaction.userId}
                   </p>
                 </div>
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3">
+                <div className="bg-purple-50/30 dark:bg-gray-900 rounded-lg p-3">
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     Тип
                   </p>
@@ -1078,7 +1080,7 @@ export default function AdminDealsPage() {
                     {selectedTransaction.isMock ? "Тестовая" : "Реальная"}
                   </Badge>
                 </div>
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3">
+                <div className="bg-purple-50/30 dark:bg-gray-900 rounded-lg p-3">
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     Актив/Банк
                   </p>
@@ -1086,7 +1088,7 @@ export default function AdminDealsPage() {
                     {selectedTransaction.assetOrBank}
                   </p>
                 </div>
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3">
+                <div className="bg-purple-50/30 dark:bg-gray-900 rounded-lg p-3">
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     Валюта
                   </p>
@@ -1137,13 +1139,13 @@ export default function AdminDealsPage() {
           </div>
 
           {/* Панель действий */}
-          <div className="flex-shrink-0 bg-gray-50 dark:bg-gray-900 border-t dark:border-gray-700 px-3 sm:px-4 md:px-6 py-3 sm:py-4">
+          <div className="flex-shrink-0 bg-purple-50/30 dark:bg-gray-900 border-t dark:border-gray-700 px-3 sm:px-4 md:px-6 py-3 sm:py-4">
             <div className="flex flex-wrap justify-end gap-2">
-              {/* Кнопка подтверждения сделки - доступна для всех статусов кроме READY и CANCELED */}
-              {!["READY", "CANCELED"].includes(selectedTransaction.status) && (
+              {/* Кнопка подтверждения сделки - доступна для всех статусов кроме READY, CANCELED и DISPUTE */}
+              {!["READY", "CANCELED", "DISPUTE"].includes(selectedTransaction.status) && (
                 <Button
                   variant="default"
-                  className="bg-[#530FAD] hover:bg-[#3d0b80] text-white shadow-sm"
+                  className="bg-[#530FAD] hover:bg-purple-800/60 text-white shadow-sm"
                   onClick={() =>
                     handleUpdateStatus(selectedTransaction.id, "READY")
                   }
@@ -1226,13 +1228,14 @@ export default function AdminDealsPage() {
                 <>
                   <Button
                     variant="default"
-                    className="bg-[#530FAD] hover:bg-[#3d0b80] text-white shadow-sm"
+                    className="bg-[#530FAD] hover:bg-purple-800/60 text-white shadow-sm"
                     onClick={() =>
                       handleUpdateStatus(selectedTransaction.id, "READY")
                     }
                     title="Разрешить спор в пользу мерчанта - завершить сделку"
                   >
-                    <CheckCircle className="h-4 w-4 text-white" />
+                    <CheckCircle className="h-4 w-4 mr-2 text-white" />
+                    В пользу мерчанта
                   </Button>
                   <Button
                     variant="outline"
@@ -1242,7 +1245,8 @@ export default function AdminDealsPage() {
                     }
                     title="Разрешить спор в пользу трейдера - отменить сделку"
                   >
-                    <XCircle className="h-4 w-4" />
+                    <XCircle className="h-4 w-4 mr-2" />
+                    В пользу трейдера
                   </Button>
                 </>
               )}
@@ -1299,7 +1303,7 @@ export default function AdminDealsPage() {
   };
 
   const TransactionsTable = () => (
-    <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="overflow-x-auto rounded-lg border border-purple-200/60 dark:border-gray-700">
       <Table>
         <TableHeader>
           <TableRow>
@@ -1372,7 +1376,7 @@ export default function AdminDealsPage() {
                     <Button
                       size="sm"
                       variant="default"
-                      className="bg-[#530FAD] hover:bg-[#3d0b80] text-white"
+                                               className="bg-[#530FAD] hover:bg-purple-800/60 text-white"
                       onClick={() =>
                         handleUpdateStatus(transaction.id, "READY")
                       }
@@ -1403,7 +1407,7 @@ export default function AdminDealsPage() {
                       <Button
                         size="sm"
                         variant="default"
-                        className="bg-[#530FAD] hover:bg-[#3d0b80] text-white"
+                        className="bg-[#530FAD] hover:bg-purple-800/60 text-white"
                         onClick={() =>
                           handleUpdateStatus(transaction.id, "READY")
                         }
@@ -1426,7 +1430,7 @@ export default function AdminDealsPage() {
                   )}
 
                   {/* Кнопка отмены сделки */}
-                  {["CREATED", "IN_PROGRESS", "DISPUTE"].includes(
+                  {["CREATED", "IN_PROGRESS"].includes(
                     transaction.status
                   ) && (
                     <Button
@@ -1478,38 +1482,162 @@ export default function AdminDealsPage() {
     </div>
   );
 
-  const AttemptsTable = () => (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Дата</TableHead>
-            <TableHead>Мерчант</TableHead>
-            <TableHead>Метод</TableHead>
-            <TableHead>Сумма</TableHead>
-            <TableHead>Статус</TableHead>
-            <TableHead>Ошибка</TableHead>
-            <TableHead>Сделка</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {attempts.map((a) => (
+  const getAttemptStatusBadge = (attempt: TransactionAttempt) => {
+    // Определяем статус запроса
+    if (!attempt.success) {
+      // Ошибка при создании сделки
+      return (
+        <div className="group relative inline-block">
+          <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 gap-1">
+            <XCircle className="h-3 w-3" />
+            Ошибка
+          </Badge>
+          {attempt.errorCode && (
+            <div className="absolute z-10 invisible group-hover:visible bg-gray-900 text-white text-xs rounded-md px-2 py-1 left-1/2 -translate-x-1/2 bottom-full mb-1 whitespace-nowrap">
+              {attempt.errorCode}: {attempt.message || "Ошибка создания сделки"}
+              <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-gray-900"></div>
+            </div>
+          )}
+        </div>
+      );
+    } else if (attempt.transactionNumericId) {
+      // Успешно создана сделка
+      return (
+        <div className="group relative inline-block">
+          <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100 gap-1">
+            <CheckCircle className="h-3 w-3" />
+            Успешная сделка
+          </Badge>
+          <div className="absolute z-10 invisible group-hover:visible bg-gray-900 text-white text-xs rounded-md px-2 py-1 left-1/2 -translate-x-1/2 bottom-full mb-1 whitespace-nowrap">
+            Сделка #{attempt.transactionNumericId} создана успешно
+            <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-gray-900"></div>
+          </div>
+        </div>
+      );
+    } else {
+      // Сделка создана, но без дополнительных данных
+      return (
+        <div className="group relative inline-block">
+          <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 gap-1">
+            <Clock className="h-3 w-3" />
+            Сделка
+          </Badge>
+          <div className="absolute z-10 invisible group-hover:visible bg-gray-900 text-white text-xs rounded-md px-2 py-1 left-1/2 -translate-x-1/2 bottom-full mb-1 whitespace-nowrap">
+            Запрос обработан, сделка создана
+            <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-gray-900"></div>
+          </div>
+        </div>
+      );
+    }
+  };
+
+  const AttemptsTable = () => {
+    // Фильтруем запросы по статусу
+    const filteredAttempts = attemptStatusFilter === "all" 
+      ? attempts
+      : attempts.filter(a => {
+          if (attemptStatusFilter === "error") return !a.success;
+          if (attemptStatusFilter === "success") return a.success && a.transactionNumericId;
+          if (attemptStatusFilter === "created") return a.success && !a.transactionNumericId;
+          return true;
+        });
+
+    return (
+      <div className="overflow-x-auto rounded-lg border border-purple-200/60 dark:border-gray-700">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Дата</TableHead>
+              <TableHead>Мерчант</TableHead>
+              <TableHead>Метод</TableHead>
+              <TableHead>Сумма</TableHead>
+              <TableHead>Статус запроса</TableHead>
+              <TableHead>Детали</TableHead>
+              <TableHead>Сделка</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredAttempts.map((a) => (
             <TableRow key={a.id}>
-              <TableCell>{formatDateTime(a.createdAt)}</TableCell>
-              <TableCell>{a.merchantName || a.merchantId}</TableCell>
-              <TableCell>{a.methodName || a.methodId}</TableCell>
-              <TableCell>{formatAmount(a.amount)} ₽</TableCell>
-              <TableCell>{a.success ? "Успех" : "Ошибка"}</TableCell>
-              <TableCell>{a.errorCode || "-"}</TableCell>
+              <TableCell className="text-sm">
+                {formatDateTime(a.createdAt)}
+              </TableCell>
               <TableCell>
-                {a.transactionNumericId ? `#${a.transactionNumericId}` : "-"}
+                <span className="font-medium">
+                  {a.merchantName || a.merchantId}
+                </span>
+              </TableCell>
+              <TableCell>
+                <Badge variant="outline">
+                  {a.methodName || a.methodId}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <span className="font-semibold text-gray-900 dark:text-gray-100">
+                  {formatAmount(a.amount)} ₽
+                </span>
+              </TableCell>
+              <TableCell>
+                {getAttemptStatusBadge(a)}
+              </TableCell>
+              <TableCell>
+                {a.errorCode ? (
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs font-medium text-red-600 dark:text-red-400">
+                      Код: {a.errorCode}
+                    </span>
+                    {a.message && (
+                      <span className="text-xs text-gray-600 dark:text-gray-400">
+                        {a.message}
+                      </span>
+                    )}
+                  </div>
+                ) : a.status ? (
+                  <span className="text-xs text-gray-600 dark:text-gray-400">
+                    {a.status}
+                  </span>
+                ) : (
+                  <span className="text-gray-400">-</span>
+                )}
+              </TableCell>
+              <TableCell>
+                {a.transactionNumericId ? (
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-medium text-blue-600 dark:text-blue-400">
+                      #{a.transactionNumericId}
+                    </span>
+                    {a.transactionId && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0"
+                        onClick={() => {
+                          // Найти и открыть детали транзакции
+                          const transaction = transactions.find(t => t.id === a.transactionId);
+                          if (transaction) {
+                            openTransactionDetails(transaction);
+                          } else {
+                            // Если транзакция не загружена, скопировать ID
+                            copyToClipboard(a.transactionId, "ID транзакции скопирован");
+                          }
+                        }}
+                        title="Открыть детали сделки"
+                      >
+                        <Eye className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-gray-400">-</span>
+                )}
               </TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
 
   return (
     <ProtectedRoute variant="admin">
@@ -1517,7 +1645,7 @@ export default function AdminDealsPage() {
         <div className="space-y-4 sm:space-y-6">
           <div className="mb-4 sm:mb-6">
             <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 sm:gap-3 text-gray-900 dark:text-gray-100">
-              <CreditCard className="h-6 w-6 sm:h-8 sm:w-8 text-[#530FAD] dark:text-purple-400" />
+              <CreditCard className="h-6 w-6 sm:h-8 sm:w-8 text-[#530FAD] dark:text-[#7c3aed]" />
               Управление сделками
             </h1>
             <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-2 leading-relaxed">
@@ -1525,10 +1653,10 @@ export default function AdminDealsPage() {
             </p>
           </div>
 
-          <Card className="shadow-sm border-gray-200 dark:border-gray-700">
+          <Card className="bg-purple-50/10 shadow-sm border-purple-200/60 dark:border-gray-700">
             <CardHeader className="pb-3 sm:pb-4">
               <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
-                <Search className="h-4 w-4 sm:h-5 sm:w-5 text-[#530FAD] dark:text-purple-400" />
+                <Search className="h-4 w-4 sm:h-5 sm:w-5 text-[#530FAD] dark:text-[#7c3aed]" />
                 Фильтры
               </CardTitle>
             </CardHeader>
@@ -1564,6 +1692,25 @@ export default function AdminDealsPage() {
                       </SelectContent>
                     </Select>
                   )}
+                  {activeTab === "requests" && (
+                    <Select
+                      value={attemptStatusFilter}
+                      onValueChange={(v) => {
+                        setAttemptStatusFilter(v);
+                        setCurrentPage(1);
+                      }}
+                    >
+                      <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectValue placeholder="Статус запроса" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Все статусы</SelectItem>
+                        <SelectItem value="success">Успешные сделки</SelectItem>
+                        <SelectItem value="created">Сделки</SelectItem>
+                        <SelectItem value="error">Ошибки</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
                   <Input
                     type="number"
                     placeholder="Сумма"
@@ -1585,7 +1732,6 @@ export default function AdminDealsPage() {
                       <SelectValue placeholder="Метод" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Все методы</SelectItem>
                       {methods.map((m) => (
                         <SelectItem key={m.id} value={m.id}>
                           {m.name}
@@ -1650,7 +1796,7 @@ export default function AdminDealsPage() {
                   />
                   <Button
                     type="submit"
-                    className="w-full sm:w-auto bg-[#530FAD] hover:bg-[#3d0b80] text-white"
+                                         className="w-full sm:w-auto bg-[#530FAD] hover:bg-purple-800/60 text-white"
                   >
                     <Search className="h-4 w-4 mr-2" />
                     Поиск
@@ -1665,16 +1811,16 @@ export default function AdminDealsPage() {
             onValueChange={setActiveTab}
             className="mt-4 sm:mt-6"
           >
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 p-1 bg-gray-100 dark:bg-gray-800">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 p-1 bg-purple-100/40 dark:bg-gray-800">
               <TabsTrigger
                 value="all"
-                className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
+                className="data-[state=active]:bg-purple-50/20 dark:bg-purple-900/15 dark:data-[state=active]:bg-gray-700"
               >
                 Все сделки
               </TabsTrigger>
               <TabsTrigger
                 value="active"
-                className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
+                className="data-[state=active]:bg-purple-50/20 dark:bg-purple-900/15 dark:data-[state=active]:bg-gray-700"
               >
                 <span className="flex items-center gap-2">
                   Активные
@@ -1691,7 +1837,7 @@ export default function AdminDealsPage() {
               </TabsTrigger>
               <TabsTrigger
                 value="disputes"
-                className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
+                className="data-[state=active]:bg-purple-50/20 dark:bg-purple-900/15 dark:data-[state=active]:bg-gray-700"
               >
                 <span className="flex items-center gap-2">
                   Споры
@@ -1708,7 +1854,7 @@ export default function AdminDealsPage() {
               </TabsTrigger>
               <TabsTrigger
                 value="requests"
-                className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
+                className="data-[state=active]:bg-purple-50/20 dark:bg-purple-900/15 dark:data-[state=active]:bg-gray-700"
               >
                 Запросы
               </TabsTrigger>
@@ -1776,7 +1922,36 @@ export default function AdminDealsPage() {
                 <CardHeader>
                   <CardTitle>Запросы на сделки</CardTitle>
                   <CardDescription>
-                    Всего найдено: {attempts.length} запросов
+                    <div className="flex flex-col gap-2">
+                      <span>
+                        Всего найдено: {attempts.length} запросов
+                        {attemptStatusFilter !== "all" && (
+                          <span className="text-xs text-gray-500 ml-2">
+                            (фильтр: {
+                              attemptStatusFilter === "success" ? "успешные сделки" :
+                              attemptStatusFilter === "created" ? "сделки" :
+                              attemptStatusFilter === "error" ? "ошибки" : "все"
+                            })
+                          </span>
+                        )}
+                      </span>
+                      {attempts.length > 0 && (
+                        <div className="flex gap-4 text-sm">
+                          <span className="flex items-center gap-1">
+                            <CheckCircle className="h-3 w-3 text-[#530FAD] dark:text-[#7c3aed] dark:drop-shadow-[0_0_6px_rgba(124,58,237,0.4)]" />
+                            Успешных: {attempts.filter(a => a.success && a.transactionNumericId).length}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3 text-blue-600" />
+                            Сделок: {attempts.filter(a => a.success && !a.transactionNumericId).length}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <XCircle className="h-3 w-3 text-red-600" />
+                            Ошибок: {attempts.filter(a => !a.success).length}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

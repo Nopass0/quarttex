@@ -62,7 +62,7 @@ export function PhoneCardInput({
     <div className={cn("space-y-4", className)}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Phone className={cn("h-4 w-4", type === 'phone' ? "text-[#006039]" : "text-gray-400")} />
+          <Phone className={cn("h-4 w-4", type === 'phone' ? "text-[#530FAD]" : "text-gray-400")} />
           <Label htmlFor="phone-switch">Телефон</Label>
         </div>
         <Switch
@@ -72,7 +72,7 @@ export function PhoneCardInput({
         />
         <div className="flex items-center gap-2">
           <Label htmlFor="card-switch">Карта</Label>
-          <CreditCard className={cn("h-4 w-4", type === 'card' ? "text-[#006039]" : "text-gray-400")} />
+          <CreditCard className={cn("h-4 w-4", type === 'card' ? "text-[#530FAD]" : "text-gray-400")} />
         </div>
       </div>
 

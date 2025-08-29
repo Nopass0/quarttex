@@ -187,7 +187,7 @@ export default function DisputeSettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="p-4 bg-purple-50/30 dark:bg-gray-800 rounded-lg">
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Ночная смена: с {settings.dayShiftEndHour}:00 до {settings.dayShiftStartHour}:00
                   </p>
@@ -216,7 +216,7 @@ export default function DisputeSettingsPage() {
           </div>
 
           {/* Информационная панель */}
-          <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-800">
+          <Card className="bg-purple-50/10 border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-800">
             <CardContent className="pt-6">
               <div className="flex gap-3">
                 <AlertCircle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
@@ -239,7 +239,7 @@ export default function DisputeSettingsPage() {
             <Button
               onClick={handleSave}
               disabled={loading}
-              className="bg-[#006039] hover:bg-[#006039]/90"
+              className="bg-[#530FAD] hover:bg-[#530FAD]/90"
             >
               <Save className="h-4 w-4 mr-2" />
               Сохранить настройки

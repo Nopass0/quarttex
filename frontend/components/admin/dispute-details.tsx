@@ -218,7 +218,7 @@ export function DisputeDetails({ type, disputeId }: DisputeDetailsProps) {
     } else if (msg.senderType === 'MERCHANT') {
       return { name: dispute?.merchant.name || 'Мерчант', color: 'text-blue-600', bg: 'bg-blue-50' }
     } else if (msg.senderType === 'TRADER') {
-      return { name: dispute?.trader.name || 'Трейдер', color: 'text-purple-600', bg: 'bg-purple-50' }
+      return { name: dispute?.trader.name || 'Трейдер', color: 'text-[#530FAD] dark:text-[#7c3aed]', bg: 'bg-purple-50' }
     }
     return { name: 'Система', color: 'text-gray-600', bg: 'bg-gray-50' }
   }
@@ -343,7 +343,7 @@ export function DisputeDetails({ type, disputeId }: DisputeDetailsProps) {
               {type === 'deal' && dispute.deal.method && (
                 <div>
                   <p className="text-sm text-gray-500 mb-2">Метод оплаты</p>
-                  <div className="p-3 bg-gray-50 rounded-lg">
+                  <div className="p-3 bg-purple-50/30 rounded-lg">
                     <p className="font-medium">{dispute.deal.method.name}</p>
                     <p className="text-sm text-gray-500">{dispute.deal.method.type}</p>
                   </div>
@@ -353,7 +353,7 @@ export function DisputeDetails({ type, disputeId }: DisputeDetailsProps) {
               {type === 'deal' && dispute.deal.requisites && (
                 <div>
                   <p className="text-sm text-gray-500 mb-2">Реквизиты</p>
-                  <div className="p-3 bg-gray-50 rounded-lg flex items-center gap-3">
+                  <div className="p-3 bg-purple-50/30 rounded-lg flex items-center gap-3">
                     <CreditCard className="h-5 w-5 text-gray-400" />
                     <div>
                       <p className="font-medium">{dispute.deal.requisites.recipientName}</p>
@@ -367,7 +367,7 @@ export function DisputeDetails({ type, disputeId }: DisputeDetailsProps) {
               {type === 'withdrawal' && dispute.payout.bankDetail && (
                 <div>
                   <p className="text-sm text-gray-500 mb-2">Реквизиты для выплаты</p>
-                  <div className="p-3 bg-gray-50 rounded-lg flex items-center gap-3">
+                  <div className="p-3 bg-purple-50/30 rounded-lg flex items-center gap-3">
                     <CreditCard className="h-5 w-5 text-gray-400" />
                     <div>
                       <p className="font-medium">{dispute.payout.bankDetail.recipientName}</p>
@@ -423,7 +423,7 @@ export function DisputeDetails({ type, disputeId }: DisputeDetailsProps) {
                   <User className="h-4 w-4" />
                   Трейдер
                 </div>
-                <div className="p-3 bg-gray-50 rounded-lg">
+                <div className="p-3 bg-purple-50/30 rounded-lg">
                   <p className="font-medium">{dispute.trader.name}</p>
                   <p className="text-sm text-gray-500">{dispute.trader.email}</p>
                 </div>
@@ -433,7 +433,7 @@ export function DisputeDetails({ type, disputeId }: DisputeDetailsProps) {
                   <Building2 className="h-4 w-4" />
                   Мерчант
                 </div>
-                <div className="p-3 bg-gray-50 rounded-lg">
+                <div className="p-3 bg-purple-50/30 rounded-lg">
                   <p className="font-medium">{dispute.merchant.name}</p>
                   {dispute.merchant.companyName && (
                     <p className="text-sm text-gray-500">{dispute.merchant.companyName}</p>

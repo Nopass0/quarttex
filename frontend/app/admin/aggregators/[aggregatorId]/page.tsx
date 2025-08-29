@@ -431,7 +431,7 @@ export default function AggregatorDetailPage() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-purple-600">
+                <div className="text-2xl font-bold text-[#530FAD] dark:text-[#7c3aed]">
                   {formatAmount(aggregator.balanceUsdt)}
                 </div>
               </CardContent>

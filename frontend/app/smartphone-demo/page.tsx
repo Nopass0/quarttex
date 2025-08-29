@@ -41,11 +41,11 @@ export default function SmartphoneDemoPage() {
             <Logo className="h-8 w-auto" />
           </div>
           
-          <Card className="mb-4">
+          <Card className="bg-purple-50/10 mb-4">
             <CardContent className="p-6">
               <p className="text-sm text-gray-500 mb-1">Общий баланс</p>
               <p className="text-3xl font-bold">₽245,680.50</p>
-              <p className="text-sm text-purple-600 mt-2">+12.5% за месяц</p>
+              <p className="text-sm text-[#530FAD] dark:text-[#7c3aed] mt-2">+12.5% за месяц</p>
             </CardContent>
           </Card>
 
@@ -85,19 +85,19 @@ export default function SmartphoneDemoPage() {
 
           <h2 className="text-lg font-semibold mb-3">Последние операции</h2>
           <div className="space-y-3">
-            <div className="flex justify-between items-center p-3 bg-white rounded-lg">
+            <div className="flex justify-between items-center p-3 bg-purple-50/20 dark:bg-purple-900/15 rounded-lg">
               <div>
                 <p className="font-medium">Супермаркет</p>
                 <p className="text-sm text-gray-500">Сегодня, 14:30</p>
               </div>
               <span className="font-medium text-red-600">-₽2,340</span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-white rounded-lg">
+            <div className="flex justify-between items-center p-3 bg-purple-50/20 dark:bg-purple-900/15 rounded-lg">
               <div>
                 <p className="font-medium">Перевод от Ивана</p>
                 <p className="text-sm text-gray-500">Вчера, 18:45</p>
               </div>
-              <span className="font-medium text-purple-600">+₽15,000</span>
+              <span className="font-medium text-[#530FAD] dark:text-[#7c3aed]">+₽15,000</span>
             </div>
           </div>
         </div>
@@ -173,7 +173,7 @@ export default function SmartphoneDemoPage() {
             </div>
             <div className="p-4 border rounded-lg">
               <p className="text-sm text-gray-500">Статус</p>
-              <p className="font-medium text-purple-600">Верифицирован</p>
+              <p className="font-medium text-[#530FAD] dark:text-[#7c3aed]">Верифицирован</p>
             </div>
           </div>
         </div>
@@ -317,7 +317,7 @@ export default function SmartphoneDemoPage() {
                     setCurrentScreen("cards")
                   }}
                 >
-                  <Check className="h-4 w-4 mr-2 text-purple-500" />
+                  <Check className="h-4 w-4 mr-2 text-[#530FAD] dark:text-[#7c3aed]" />
                   Идеальное состояние
                 </Button>
               </div>
@@ -339,7 +339,7 @@ export default function SmartphoneDemoPage() {
       </div>
 
       {/* Additional Examples */}
-      <Card className="mt-8">
+      <Card className="bg-purple-50/10 mt-8">
         <CardHeader>
           <CardTitle>Дополнительные примеры</CardTitle>
           <CardDescription>
@@ -399,7 +399,7 @@ export default function SmartphoneDemoPage() {
               >
                 <div className="h-full flex items-center justify-center">
                   <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
+                    <div className="w-16 h-16 border-4 border-purple-200/60 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
                     <p className="text-gray-500">Загрузка данных...</p>
                   </div>
                 </div>

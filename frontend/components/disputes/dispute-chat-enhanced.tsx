@@ -219,9 +219,9 @@ export function DisputeChatEnhanced({
       case "MERCHANT":
         return "bg-purple-100 text-purple-900 dark:bg-purple-900/20 dark:text-purple-300";
       case "ADMIN":
-        return "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-200";
+        return "bg-purple-100/40 text-gray-900 dark:bg-gray-800 dark:text-gray-200";
       default:
-        return "bg-purple-100 text-purple-900 dark:bg-purple-900/20 dark:text-purple-300";
+        return "bg-purple-100 text-green-900 dark:bg-purple-900/20 dark:text-purple-300";
     }
   };
 
@@ -247,7 +247,7 @@ export function DisputeChatEnhanced({
                 "px-3 py-1 rounded-full text-sm font-medium",
                 isActive 
                   ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-                  : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                  : "bg-purple-100/40 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
               )}>
                 {isActive ? "Активный" : "Закрыт"}
               </div>
@@ -283,7 +283,7 @@ export function DisputeChatEnhanced({
                       <AvatarFallback className={cn(
                         "text-xs",
                         message.senderType === "MERCHANT" && "bg-purple-100 dark:bg-purple-900/30",
-                        message.senderType === "ADMIN" && "bg-gray-100 dark:bg-gray-800",
+                        message.senderType === "ADMIN" && "bg-purple-100/40 dark:bg-gray-800",
                         message.senderType === "TRADER" && "bg-purple-100 dark:bg-purple-900/30"
                       )}>
                         {getSenderIcon(message.senderType)}

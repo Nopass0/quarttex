@@ -12,7 +12,7 @@ import {
 import ErrorSchema from "@/types/error";
 import { merchantGuard } from "@/middleware/merchantGuard";
 import { endOfDay, endOfMonth, startOfDay, startOfMonth } from "date-fns";
-import { truncate2 } from "@/utils/rounding";
+import { truncate2, roundDown2 } from "@/utils/rounding";
 import authRoutes from "./auth";
 import dashboardRoutes from "./dashboard";
 import apiDocsRoutes from "./api-docs";
@@ -959,8 +959,8 @@ export default (app: Elysia) =>
 
         // ВСЕГДА рассчитываем заморозку с курсом Рапиры с ККК
 
-        // Используем ceilUp2 для округления вверх до 2 знаков
-        const frozenUsdtAmount = ceilUp2(body.amount / transactionRate);
+        // Используем roundDown2 для обрезания до 2 знаков (как в BT-входе)
+        const frozenUsdtAmount = roundDown2(body.amount / transactionRate);
 
         // Комиссию и прибыль не замораживаем при создании сделки
         const calculatedCommission = 0;

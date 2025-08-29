@@ -117,7 +117,7 @@ export function DepositsTab() {
       case "CHECKING":
         return <Badge variant="secondary"><Loader2 className="mr-1 h-3 w-3 animate-spin" />Проверка</Badge>;
       case "CONFIRMED":
-        return <Badge variant="default" className="bg-purple-600"><CheckCircle2 className="mr-1 h-3 w-3" />Подтверждено</Badge>;
+        return <Badge variant="default" className="bg-[#530FAD]"><CheckCircle2 className="mr-1 h-3 w-3" />Подтверждено</Badge>;
       case "FAILED":
         return <Badge variant="destructive"><XCircle className="mr-1 h-3 w-3" />Ошибка</Badge>;
       case "EXPIRED":
@@ -255,7 +255,7 @@ export function DepositsTab() {
                           </div>
                         </div>
 
-                        <div className="flex justify-center p-4 bg-white rounded-lg">
+                        <div className="flex justify-center p-4 bg-purple-50/20 dark:bg-purple-900/15 rounded-lg">
                           <QRCode value={depositSettings.address} size={200} />
                         </div>
 
@@ -325,7 +325,7 @@ export function DepositsTab() {
                       )}
                       
                       {deposit.confirmedAt && (
-                        <p className="text-sm text-purple-600">
+                        <p className="text-sm text-[#530FAD] dark:text-[#7c3aed]">
                           Подтверждено: {formatDate(deposit.confirmedAt)}
                         </p>
                       )}

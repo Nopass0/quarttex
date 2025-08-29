@@ -1122,7 +1122,7 @@ export function ApiDocumentation() {
       case "PATCH":
         return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400";
       default:
-        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400";
+        return "bg-purple-100/40 text-gray-700 dark:bg-gray-800 dark:text-gray-400";
     }
   };
 
@@ -1211,7 +1211,7 @@ export function ApiDocumentation() {
       {/* Main Content */}
       <div className="grid gap-6 md:grid-cols-4">
         {/* Categories */}
-        <Card className="md:col-span-1">
+        <Card className="bg-purple-50/10 md:col-span-1">
           <CardHeader>
             <CardTitle className="text-lg">Категории</CardTitle>
           </CardHeader>
@@ -1767,7 +1767,7 @@ export function ApiDocumentation() {
 
             <div className="border rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
-                <Badge className="bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400">
+                <Badge className="bg-purple-100/40 text-gray-700 dark:bg-gray-800 dark:text-gray-400">
                   EXPIRED
                 </Badge>
                 <span className="text-xs text-muted-foreground">Истекла</span>
@@ -1829,7 +1829,7 @@ export function ApiDocumentation() {
                 </li>
                 <li>
                   Из статуса ACTIVE (если время истекло) →{" "}
-                  <Badge className="bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400 ml-1">
+                  <Badge className="bg-purple-100/40 text-gray-700 dark:bg-gray-800 dark:text-gray-400 ml-1">
                     EXPIRED
                   </Badge>
                 </li>
@@ -2333,7 +2333,7 @@ print(result)`,
           </Tabs>
         </CardContent>
       </Card>
-      <Card className="mt-6">
+      <Card className="bg-purple-50/10 mt-6">
         <CardHeader>
           <CardTitle>Коды банков</CardTitle>
           <CardDescription>

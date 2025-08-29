@@ -286,7 +286,7 @@ export function RequisitesAndDevices() {
                 className="flex items-center gap-2 text-sm font-normal hover:bg-black/5 transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-full bg-purple-100/40 flex items-center justify-center">
                     <User className="h-4 w-4 text-[#006039]" />
                   </div>
                   <span className="text-gray-700">{userEmail}</span>
@@ -297,7 +297,7 @@ export function RequisitesAndDevices() {
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem
                 onClick={handleLogout}
-                className="text-red-600 focus:text-red-600 hover:bg-gray-50 cursor-pointer"
+                className="text-red-600 focus:text-red-600 hover:bg-purple-50/30 cursor-pointer"
               >
                 <LogOut className="mr-2 h-4 w-4 text-[#006039]" />
                 Выйти
@@ -308,10 +308,10 @@ export function RequisitesAndDevices() {
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-fit grid grid-cols-2 gap-1 bg-gray-100 p-1">
+        <TabsList className="w-fit grid grid-cols-2 gap-1 bg-purple-100/40 p-1">
           <TabsTrigger 
             value="requisites" 
-            className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm px-4"
+            className="data-[state=active]:bg-purple-50/20 dark:bg-purple-900/15 data-[state=active]:text-gray-900 data-[state=active]:shadow-sm px-4"
           >
             <CreditCard className="mr-2 h-4 w-4" />
             Реквизиты
@@ -321,7 +321,7 @@ export function RequisitesAndDevices() {
           </TabsTrigger>
           <TabsTrigger 
             value="devices"
-            className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm px-4"
+            className="data-[state=active]:bg-purple-50/20 dark:bg-purple-900/15 data-[state=active]:text-gray-900 data-[state=active]:shadow-sm px-4"
           >
             <Smartphone className="mr-2 h-4 w-4" />
             Устройства
@@ -340,17 +340,17 @@ export function RequisitesAndDevices() {
               </p>
               <Button 
                 onClick={() => setRequisiteDialogOpen(true)}
-                className="bg-[#006039] hover:bg-[#006039]/90"
+                className="bg-[#530FAD] hover:bg-[#530FAD]/90"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Добавить реквизит
               </Button>
             </div>
             
-            <Card className="overflow-hidden">
+            <Card className="bg-purple-50/10 overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
+                  <TableRow className="bg-gray-50/50 hover:bg-purple-50/50/50">
                     <TableHead className="font-medium text-gray-600 text-sm">Название</TableHead>
                     <TableHead className="font-medium text-gray-600 text-sm">Банк</TableHead>
                     <TableHead className="font-medium text-gray-600 text-sm">Номер</TableHead>
@@ -362,7 +362,7 @@ export function RequisitesAndDevices() {
                 </TableHeader>
                 <TableBody>
                   {requisites.map((requisite) => (
-                    <TableRow key={requisite.id} className="hover:bg-gray-50/50">
+                    <TableRow key={requisite.id} className="hover:bg-purple-50/50/50">
                       <TableCell className="font-medium">{requisite.name}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -471,10 +471,10 @@ export function RequisitesAndDevices() {
               </Button>
             </div>
             
-            <Card className="overflow-hidden">
+            <Card className="bg-purple-50/10 overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
+                  <TableRow className="bg-gray-50/50 hover:bg-purple-50/50/50">
                     <TableHead className="font-medium text-gray-600 text-sm">Устройство</TableHead>
                     <TableHead className="font-medium text-gray-600 text-sm">Браузер</TableHead>
                     <TableHead className="font-medium text-gray-600 text-sm">ОС</TableHead>
@@ -494,7 +494,7 @@ export function RequisitesAndDevices() {
                     </TableRow>
                   ) : devices.length > 0 ? (
                     devices.map((device) => (
-                    <TableRow key={device.id} className="hover:bg-gray-50/50">
+                    <TableRow key={device.id} className="hover:bg-purple-50/50/50">
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
                           <Smartphone className="h-4 w-4 text-[#006039]" />
@@ -515,12 +515,12 @@ export function RequisitesAndDevices() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {device.isActive ? (
-                            <Badge className="bg-purple-50 text-purple-600 border-0">
+                            <Badge className="bg-purple-50 text-[#530FAD] dark:text-[#7c3aed] border-0">
                               <CheckCircle className="mr-1 h-3 w-3" />
                               Активно
                             </Badge>
                           ) : (
-                            <Badge className="bg-gray-50 text-gray-600 border-0">
+                            <Badge className="bg-purple-50/30 text-gray-600 border-0">
                               <XCircle className="mr-1 h-3 w-3" />
                               Неактивно
                             </Badge>
@@ -624,7 +624,7 @@ export function RequisitesAndDevices() {
             <Button variant="outline" onClick={() => setRequisiteDialogOpen(false)}>
               Отмена
             </Button>
-            <Button onClick={handleAddRequisite} className="bg-[#006039] hover:bg-[#006039]/90">
+            <Button onClick={handleAddRequisite} className="bg-[#530FAD] hover:bg-[#530FAD]/90">
               Добавить
             </Button>
           </DialogFooter>

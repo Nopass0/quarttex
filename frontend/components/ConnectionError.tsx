@@ -1,6 +1,6 @@
 import React from "react"
 import { AlertCircle, X } from "lucide-react"
-import { Logo } from "@/components/ui/logo"
+import QuatrexLogo from "@/components/ui/quattrex-logo"
 import { Button } from "@/components/ui/button"
 
 interface ConnectionErrorProps {
@@ -10,12 +10,12 @@ interface ConnectionErrorProps {
 
 export function ConnectionError({ onClose, onRetry }: ConnectionErrorProps) {
   return (
-    <div className="flex flex-col items-center justify-center h-full bg-white px-8 py-12">
+    <div className="flex flex-col items-center justify-center h-full bg-purple-50/20 dark:bg-purple-900/15 px-8 py-12">
       {/* Close button */}
       {onClose && (
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors"
+          className="absolute top-4 right-4 p-2 rounded-full hover:bg-purple-100/40 transition-colors"
         >
           <X className="w-5 h-5 text-gray-500" />
         </button>
@@ -23,7 +23,7 @@ export function ConnectionError({ onClose, onRetry }: ConnectionErrorProps) {
 
       {/* Logo */}
       <div className="mb-8">
-        <Logo className="h-16 w-auto" />
+        <QuatrexLogo className="h-16 w-auto" />
       </div>
 
       {/* Error Icon */}

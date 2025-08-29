@@ -5,7 +5,7 @@
 import { db } from "@/db";
 import { Prisma } from "@prisma/client";
 import { floorDown2 } from "./freezing";
-import { truncate2 } from "./rounding";
+import { truncate2, roundDown2 } from "./rounding";
 import {
   getFlexibleFeePercent,
   logFlexibleFeeApplication,
@@ -63,8 +63,8 @@ export async function calculateTransactionFreezing(
   );
 
   // Рассчитываем заморозку - только основная сумма (amount / rate)
-  // Используем floorDown2 для обрезания до 2 знаков после запятой
-  const frozenUsdtAmount = floorDown2(amount / rate);
+  // Используем roundDown2 для обрезания до 2 знаков после запятой
+  const frozenUsdtAmount = roundDown2(amount / rate);
   // НЕ рассчитываем комиссию при создании - только при подтверждении!
   const calculatedCommission = 0; // Будет рассчитана при смене статуса на READY
   const totalRequired = frozenUsdtAmount; // Замораживаем только основную сумму без комиссии

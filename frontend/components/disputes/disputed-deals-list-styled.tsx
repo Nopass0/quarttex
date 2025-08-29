@@ -70,7 +70,7 @@ const disputeStatusConfig = {
   },
   RESOLVED_SUCCESS: {
     label: "Решен в вашу пользу",
-    color: "bg-purple-100 text-purple-800 border-purple-200",
+    color: "bg-purple-100 text-purple-800 border-green-200",
     icon: CheckCircle,
   },
   RESOLVED_FAIL: {
@@ -80,7 +80,7 @@ const disputeStatusConfig = {
   },
   CANCELLED: {
     label: "Отменен",
-    color: "bg-gray-100 text-gray-800 border-gray-200",
+    color: "bg-purple-100/40 text-gray-800 border-gray-200",
     icon: XCircle,
   },
 };
@@ -276,25 +276,25 @@ export function DisputedDealsListStyled() {
 
       {/* Statistics */}
       <div className="grid grid-cols-4 gap-4">
-        <Card className="p-4">
+        <Card className="bg-purple-50/10 p-4">
           <div className="text-sm text-gray-600">Всего споров</div>
           <div className="text-2xl font-bold">{disputes.length}</div>
         </Card>
-        <Card className="p-4">
+        <Card className="bg-purple-50/10 p-4">
           <div className="text-sm text-gray-600">Открытых</div>
           <div className="text-2xl font-bold text-yellow-600">
             {disputes.filter((d) => d.disputeStatus === "OPEN").length}
           </div>
         </Card>
-        <Card className="p-4">
+        <Card className="bg-purple-50/10 p-4">
           <div className="text-sm text-gray-600">На рассмотрении</div>
           <div className="text-2xl font-bold text-blue-600">
             {disputes.filter((d) => d.disputeStatus === "IN_PROGRESS").length}
           </div>
         </Card>
-        <Card className="p-4">
+        <Card className="bg-purple-50/10 p-4">
           <div className="text-sm text-gray-600">Решенных</div>
-          <div className="text-2xl font-bold text-purple-600">
+          <div className="text-2xl font-bold text-[#530FAD] dark:text-[#7c3aed]">
             {
               disputes.filter((d) => d.disputeStatus.startsWith("RESOLVED"))
                 .length
@@ -306,7 +306,7 @@ export function DisputedDealsListStyled() {
       {/* Disputes List */}
       <div className="space-y-4">
         {sortedDisputes.length === 0 ? (
-          <Card className="p-8 text-center text-gray-500">
+          <Card className="bg-purple-50/10 p-8 text-center text-gray-500">
             Нет споров по заданным критериям
           </Card>
         ) : (
@@ -355,7 +355,7 @@ export function DisputedDealsListStyled() {
                     </div>
 
                     {dispute.disputeReason && (
-                      <div className="mt-3 p-2 bg-gray-50 rounded text-sm">
+                      <div className="mt-3 p-2 bg-purple-50/30 rounded text-sm">
                         <span className="text-gray-600">Причина спора:</span>{" "}
                         <span className="text-gray-900">
                           {dispute.disputeReason}
@@ -390,7 +390,7 @@ export function DisputedDealsListStyled() {
 
                   <Button
                     onClick={() => handleViewDispute(dispute)}
-                    className="bg-[#006039] hover:bg-[#006039]/90"
+                    className="bg-[#530FAD] hover:bg-[#530FAD]/90"
                   >
                     <MessageSquare className="h-4 w-4 mr-2" />
                     Открыть

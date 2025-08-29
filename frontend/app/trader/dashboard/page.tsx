@@ -70,7 +70,7 @@ const getBankIcon = (bankType: string, size: "sm" | "md" = "md") => {
 
   if (logoPath) {
     return (
-      <div className={`${sizeClasses} rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center p-1`}>
+      <div className={`${sizeClasses} rounded-lg bg-purple-50/20 dark:bg-purple-900/15 dark:bg-purple-900/25 border border-purple-200/60 dark:border-gray-600 flex items-center justify-center p-1`}>
         <img
           src={logoPath}
           alt={bankType}
@@ -90,7 +90,7 @@ const getBankIcon = (bankType: string, size: "sm" | "md" = "md") => {
 
   // Default neutral bank icon
   return (
-    <div className={`${sizeClasses} rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center`}>
+    <div className={`${sizeClasses} rounded-lg bg-purple-100/40 border border-purple-200/60 flex items-center justify-center`}>
       <CreditCard className="w-5 h-5 text-gray-600" />
     </div>
   );
@@ -116,7 +116,7 @@ const getDeviceStatusInfo = (device: any) => {
       description: "Устройство не в работе",
       badge: {
         text: "Онлайн, но не в работе",
-        className: "bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600",
+        className: "bg-purple-100/40 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600",
       },
       iconColor: "text-gray-600 dark:text-gray-400",
     };
@@ -127,7 +127,7 @@ const getDeviceStatusInfo = (device: any) => {
     description: "Устройство в работе",
     badge: {
       text: "В работе",
-      className: "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-900/50 dark:text-gray-400 dark:border-gray-700",
+      className: "bg-purple-50/30 text-gray-600 border-purple-200/60 dark:bg-gray-900/50 dark:text-gray-400 dark:border-gray-700",
     },
     iconColor: "text-gray-500 dark:text-gray-500",
   };
@@ -136,7 +136,7 @@ const getDeviceStatusInfo = (device: any) => {
 // Skeleton components for loading states
 const FinanceStatsSkeleton = () => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <Card className="p-6">
+    <Card className="bg-purple-50/10 p-6">
       <div className="flex items-center justify-between">
         <div>
           <Skeleton className="h-4 w-16 mb-2" />
@@ -149,7 +149,7 @@ const FinanceStatsSkeleton = () => (
         </div>
       </div>
     </Card>
-    <Card className="p-6">
+    <Card className="bg-purple-50/10 p-6">
       <div className="flex items-center justify-between">
         <div>
           <Skeleton className="h-4 w-20 mb-2" />
@@ -178,7 +178,7 @@ const EventSkeleton = () => (
 );
 
 const DeviceSkeleton = () => (
-  <Card className="p-4">
+  <Card className="bg-purple-50/10 p-4">
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-3">
         <Skeleton className="w-9 h-9 rounded-lg" />
@@ -283,7 +283,7 @@ export default function TraderDashboardPage() {
       case "device_stopped":
         return { color: "bg-orange-500", title: "Устройство остановлено" };
       case "device_started":
-        return { color: "bg-purple-500", title: "Устройство запущено" };
+        return { color: "bg-[#530FAD]", title: "Устройство запущено" };
       case "deal_failed":
         return { color: "bg-red-500", title: "Сделка не завершена" };
       case "dispute_opened":
@@ -313,7 +313,7 @@ export default function TraderDashboardPage() {
       },
       CANCELED: {
         label: "Отменено",
-        className: "bg-gray-100 text-gray-700 border-gray-200",
+        className: "bg-purple-100/40 text-gray-700 border-gray-200",
       },
       DISPUTE: {
         label: "Спор",
@@ -323,7 +323,7 @@ export default function TraderDashboardPage() {
 
     const config = statusConfig[status] || {
       label: status,
-      className: "bg-gray-100 text-gray-700",
+      className: "bg-purple-100/40 text-gray-700",
     };
     return (
       <Badge className={cn("text-xs", config.className)}>{config.label}</Badge>
@@ -347,7 +347,7 @@ export default function TraderDashboardPage() {
             {/* Stats Blocks */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6">
               {/* Deals Stats */}
-              <Card className="p-3 md:p-4 border border-gray-200 dark:border-[#29382f]">
+              <Card className="bg-purple-50/10 p-3 md:p-4 border border-purple-200/60 dark:border-purple-700/60">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div>
                     <h3 className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-1 md:mb-2">
@@ -371,15 +371,15 @@ export default function TraderDashboardPage() {
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="text-xs w-full sm:w-auto">
                         Период: {periodLabels[period]}
-                        <ChevronDown className="ml-1 h-3 w-3 text-[#006039] dark:text-[#2d6a42]" />
+                        <ChevronDown className="ml-1 h-3 w-3 text-[#530FAD] dark:text-[#7c3aed]" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-48 p-0 dark:bg-[#29382f] dark:border-gray-700" align="end">
+                    <DropdownMenuContent className="w-48 p-0 dark:bg-purple-800/60 dark:border-gray-700" align="end">
                       <div className="max-h-64 overflow-auto">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
+                          className="w-full justify-start dark:hover:bg-purple-800/60/50"
                           onClick={() => setPeriod("today")}
                         >
                           За сегодня
@@ -387,7 +387,7 @@ export default function TraderDashboardPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
+                          className="w-full justify-start dark:hover:bg-purple-800/60/50"
                           onClick={() => setPeriod("week")}
                         >
                           За неделю
@@ -395,7 +395,7 @@ export default function TraderDashboardPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
+                          className="w-full justify-start dark:hover:bg-purple-800/60/50"
                           onClick={() => setPeriod("month")}
                         >
                           За месяц
@@ -403,7 +403,7 @@ export default function TraderDashboardPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
+                          className="w-full justify-start dark:hover:bg-purple-800/60/50"
                           onClick={() => setPeriod("year")}
                         >
                           За год
@@ -415,7 +415,7 @@ export default function TraderDashboardPage() {
               </Card>
 
               {/* Profit Stats */}
-              <Card className="p-3 md:p-4 border border-gray-200 dark:border-[#29382f]">
+              <Card className="bg-purple-50/10 p-3 md:p-4 border border-purple-200/60 dark:border-purple-700/60">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div>
                     <h3 className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-1 md:mb-2">Прибыль</h3>
@@ -432,15 +432,15 @@ export default function TraderDashboardPage() {
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="text-xs w-full sm:w-auto">
                         Период: {periodLabels[period]}
-                        <ChevronDown className="ml-1 h-3 w-3 text-[#006039] dark:text-[#2d6a42]" />
+                        <ChevronDown className="ml-1 h-3 w-3 text-[#530FAD] dark:text-[#7c3aed]" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-48 p-0 dark:bg-[#29382f] dark:border-gray-700" align="end">
+                    <DropdownMenuContent className="w-48 p-0 dark:bg-purple-800/60 dark:border-gray-700" align="end">
                       <div className="max-h-64 overflow-auto">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
+                          className="w-full justify-start dark:hover:bg-purple-800/60/50"
                           onClick={() => setPeriod("today")}
                         >
                           За сегодня
@@ -448,7 +448,7 @@ export default function TraderDashboardPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
+                          className="w-full justify-start dark:hover:bg-purple-800/60/50"
                           onClick={() => setPeriod("week")}
                         >
                           За неделю
@@ -456,7 +456,7 @@ export default function TraderDashboardPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
+                          className="w-full justify-start dark:hover:bg-purple-800/60/50"
                           onClick={() => setPeriod("month")}
                         >
                           За месяц
@@ -464,7 +464,7 @@ export default function TraderDashboardPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
+                          className="w-full justify-start dark:hover:bg-purple-800/60/50"
                           onClick={() => setPeriod("year")}
                         >
                           За год
@@ -482,7 +482,7 @@ export default function TraderDashboardPage() {
             {/* Recent Events */}
             <section className="space-y-3 md:space-y-4">
               <h2 className="text-base md:text-lg font-medium">Последние события</h2>
-              <Card className="overflow-hidden border-gray-200">
+              <Card className="bg-purple-50/10 overflow-hidden border-gray-200">
                 <div className="divide-y divide-gray-100">
                   {loading ? (
                     <>
@@ -504,7 +504,7 @@ export default function TraderDashboardPage() {
                         return (
                           <div
                             key={event.id}
-                            className="p-4 hover:bg-gray-50/50 transition-colors"
+                            className="p-4 hover:bg-purple-50/50/50 transition-colors"
                           >
                             <div className="flex items-start gap-3">
                               <div
@@ -544,7 +544,7 @@ export default function TraderDashboardPage() {
                 className="flex items-center justify-between group"
               >
                 <h2 className="text-base md:text-lg font-medium">Устройства</h2>
-                <div className="flex items-center gap-1 text-[#006039]">
+                <div className="flex items-center gap-1 text-[#530FAD]">
                   <span className="text-xs md:text-sm">Показать все</span>
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -584,8 +584,8 @@ export default function TraderDashboardPage() {
                                 "p-2 rounded-lg",
                                 device.isRegistered 
                                   ? (device.isOnline || device.status === "working" 
-                                    ? "bg-gray-100 dark:bg-gray-800" 
-                                    : "bg-gray-50 dark:bg-gray-900/50")
+                                    ? "bg-purple-100/40 dark:bg-gray-800" 
+                                    : "bg-purple-50/30 dark:bg-gray-900/50")
                                   : "bg-red-100 dark:bg-red-900/20",
                               )}
                             >
@@ -636,12 +636,12 @@ export default function TraderDashboardPage() {
               className="flex items-center justify-between group"
             >
               <h2 className="text-lg font-medium">Открытые споры</h2>
-              <div className="flex items-center gap-1 text-[#006039]">
+              <div className="flex items-center gap-1 text-[#530FAD]">
                 <span className="text-sm">Показать все</span>
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </div>
             </Link>
-            <Card className="overflow-hidden border-gray-200">
+            <Card className="bg-purple-50/10 overflow-hidden border-gray-200">
               <div className="divide-y divide-gray-100">
                 {loading ? (
                   <>
@@ -661,7 +661,7 @@ export default function TraderDashboardPage() {
                       key={dispute.id}
                       href={`/trader/disputes/${dispute.id}`}
                     >
-                      <div className="p-4 hover:bg-gray-50/50 transition-colors cursor-pointer">
+                      <div className="p-4 hover:bg-purple-50/50/50 transition-colors cursor-pointer">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -707,7 +707,7 @@ export default function TraderDashboardPage() {
               className="flex items-center justify-between group"
             >
               <h2 className="text-lg font-medium">Последние сделки</h2>
-              <div className="flex items-center gap-1 text-[#006039]">
+              <div className="flex items-center gap-1 text-[#530FAD]">
                 <span className="text-sm">Показать все</span>
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </div>
@@ -750,7 +750,7 @@ export default function TraderDashboardPage() {
                       case "READY":
                         return (
                           <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                            <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                            <CheckCircle className="h-6 w-6 text-[#530FAD] dark:text-[#7c3aed]" />
                           </div>
                         );
                       case "CREATED":
@@ -903,7 +903,7 @@ export default function TraderDashboardPage() {
                               {deal.requisites?.bankType ? (
                                 getBankIcon(deal.requisites.bankType)
                               ) : (
-                                <div className="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center">
+                                <div className="w-10 h-10 rounded-lg bg-purple-100/40 border border-purple-200/60 flex items-center justify-center">
                                   <CreditCard className="w-5 h-5 text-gray-600" />
                                 </div>
                               )}

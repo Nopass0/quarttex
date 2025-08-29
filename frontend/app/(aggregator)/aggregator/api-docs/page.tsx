@@ -20,6 +20,7 @@ export default function AggregatorApiDocs() {
   const aggregator = useAggregatorAuth()
   const [apiEndpoints, setApiEndpoints] = useState<any>(null)
   const [callbackFormat, setCallbackFormat] = useState<any>(null)
+  const [callbacksDoc, setCallbacksDoc] = useState<any>(null)
   const [constants, setConstants] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("endpoints")
@@ -31,13 +32,15 @@ export default function AggregatorApiDocs() {
   const fetchApiDocs = async () => {
     try {
       setLoading(true)
-      const [endpointsData, callbackData, constantsData] = await Promise.all([
+      const [endpointsData, callbackData, callbacksDocData, constantsData] = await Promise.all([
         aggregatorApi.getApiEndpoints(),
         aggregatorApi.getCallbackFormat(),
+        aggregatorApi.getCallbacks(),
         aggregatorApi.getApiConstants(),
       ])
       setApiEndpoints(endpointsData)
       setCallbackFormat(callbackData)
+      setCallbacksDoc(callbacksDocData)
       setConstants(constantsData)
     } catch (error) {
       console.error("Error fetching API docs:", error)
@@ -60,7 +63,7 @@ export default function AggregatorApiDocs() {
       DELETE: "bg-red-100 text-red-800",
     }
     return (
-      <Badge className={colors[method] || "bg-gray-100 text-gray-800"}>
+      <Badge className={colors[method] || "bg-purple-100/40 text-gray-800"}>
         {method}
       </Badge>
     )
@@ -78,7 +81,7 @@ export default function AggregatorApiDocs() {
     <div className="space-y-6">
       {/* Заголовок */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-[#006039] mb-2 flex items-center justify-center gap-2">
+        <h1 className="text-3xl font-bold text-[#530FAD] mb-2 flex items-center justify-center gap-2">
           <BookOpen className="h-8 w-8" />
           API Документация для агрегаторов
         </h1>
@@ -88,10 +91,10 @@ export default function AggregatorApiDocs() {
       </div>
 
       {/* Конфигурация */}
-      <Card className="border-[#006039]/20">
+      <Card className="bg-purple-50/10 border-[#530FAD]/20">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Globe className="h-5 w-5 text-[#006039]" />
+            <Globe className="h-5 w-5 text-[#530FAD]" />
             Ваши данные для интеграции
           </CardTitle>
         </CardHeader>
@@ -130,12 +133,12 @@ export default function AggregatorApiDocs() {
             <p className="text-sm text-muted-foreground mb-2">URL для коллбеков (куда отправлять обновления):</p>
             <div className="flex items-center gap-2">
               <code className="flex-1 bg-muted px-3 py-2 rounded text-sm">
-                https://chasepay.pro/api/aggregators/callback
+                https://quattrex.pro/api/aggregators/callback
               </code>
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => copyToClipboard("https://chasepay.pro/api/aggregators/callback", "Callback URL")}
+                onClick={() => copyToClipboard("https://quattrex.pro/api/aggregators/callback", "Callback URL")}
               >
                 <Copy className="h-4 w-4" />
               </Button>
@@ -208,7 +211,7 @@ export default function AggregatorApiDocs() {
                       <h4 className="font-semibold mb-2">Тело ответа:</h4>
                       {endpoint.response.success && (
                         <div className="mb-3">
-                          <h5 className="font-medium mb-1 text-purple-600">✅ Успешный ответ (HTTP {endpoint.response.success.status || 200}):</h5>
+                          <h5 className="font-medium mb-1 text-[#530FAD] dark:text-[#7c3aed]">✅ Успешный ответ (HTTP {endpoint.response.success.status || 200}):</h5>
                           <div className="bg-muted p-3 rounded text-sm">
                             <pre>{JSON.stringify(endpoint.response.success.example || endpoint.response.success.body, null, 2)}</pre>
                           </div>
@@ -256,54 +259,297 @@ export default function AggregatorApiDocs() {
 
         {/* Callbacks */}
         <TabsContent value="callbacks" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Как отправлять callbacks</CardTitle>
-              <CardDescription>
-                Отправляйте обновления статуса сделок на наш endpoint
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h4 className="font-semibold mb-2">URL:</h4>
-                <code className="bg-muted px-3 py-2 rounded text-sm block">
-                  POST https://chspay.pro/api/aggregators/callback
-                </code>
-              </div>
-
-              {callbackFormat?.headers && (
-                <div>
-                  <h4 className="font-semibold mb-2">Заголовки:</h4>
-                  <div className="bg-muted p-3 rounded text-sm">
-                    <pre>{JSON.stringify(callbackFormat.headers, null, 2)}</pre>
+          {callbacksDoc && (
+            <>
+              {/* Обзор */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    📞 {callbacksDoc.title}
+                  </CardTitle>
+                  <CardDescription>
+                    {callbacksDoc.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <h4 className="font-semibold mb-2">Назначение:</h4>
+                      <p className="text-muted-foreground">{callbacksDoc.overview?.purpose}</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-2">Частота:</h4>
+                      <p className="text-muted-foreground">{callbacksDoc.overview?.frequency}</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-2">Надежность:</h4>
+                      <p className="text-muted-foreground">{callbacksDoc.overview?.reliability}</p>
+                    </div>
                   </div>
-                </div>
-              )}
+                </CardContent>
+              </Card>
 
-              {callbackFormat?.requestBody && (
-                <div>
-                  <h4 className="font-semibold mb-2">Тело запроса:</h4>
-                  <div className="bg-muted p-3 rounded text-sm">
-                    <pre>{JSON.stringify(callbackFormat.requestBody, null, 2)}</pre>
+              {/* Авторизация */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>🔐 Авторизация</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold mb-2">Метод:</h4>
+                    <Badge variant="outline">{callbacksDoc.authentication?.method}</Badge>
                   </div>
-                </div>
-              )}
+                  <div>
+                    <h4 className="font-semibold mb-2">Заголовок:</h4>
+                    <div className="flex items-center gap-2">
+                      <code className="bg-muted px-3 py-2 rounded text-sm flex-1">
+                        {callbacksDoc.authentication?.header}
+                      </code>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => copyToClipboard(callbacksDoc.authentication?.token, "Callback Token")}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Ваш Callback Token:</h4>
+                    <div className="flex items-center gap-2">
+                      <code className="bg-muted px-3 py-2 rounded text-sm flex-1 font-mono">
+                        {callbacksDoc.authentication?.token}
+                      </code>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => copyToClipboard(callbacksDoc.authentication?.token, "Callback Token")}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <p className="text-sm text-yellow-800">
+                      ⚠️ {callbacksDoc.authentication?.security}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
 
-              {callbackFormat?.examples && (
-                <div>
-                  <h4 className="font-semibold mb-2">Примеры:</h4>
-                  {callbackFormat.examples.map((example: any, index: number) => (
-                    <div key={index} className="mb-4">
-                      <p className="text-sm text-muted-foreground mb-2">{example.description}</p>
-                      <div className="bg-muted p-3 rounded text-sm">
-                        <pre>{JSON.stringify(example.data, null, 2)}</pre>
+              {/* Endpoints */}
+              {callbacksDoc.endpoints?.map((endpoint: any, index: number) => (
+                <Card key={index}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      {getMethodBadge(endpoint.method)}
+                      {endpoint.title}
+                    </CardTitle>
+                    <CardDescription>{endpoint.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <h4 className="font-semibold mb-2">URL:</h4>
+                      <div className="flex items-center gap-2">
+                        <code className="bg-muted px-3 py-2 rounded text-sm flex-1">
+                          {endpoint.method} {endpoint.url}
+                        </code>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => copyToClipboard(endpoint.url, "URL")}
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
-                  ))}
-                </div>
+
+                    {endpoint.headers && (
+                      <div>
+                        <h4 className="font-semibold mb-2">Заголовки:</h4>
+                        <div className="bg-muted p-3 rounded text-sm">
+                          <pre>{JSON.stringify(endpoint.headers, null, 2)}</pre>
+                        </div>
+                      </div>
+                    )}
+
+                    {endpoint.requestBody && (
+                      <div>
+                        <h4 className="font-semibold mb-2">Формат запроса:</h4>
+                        <div className="space-y-3">
+                          <p className="text-sm text-muted-foreground">{endpoint.requestBody.description}</p>
+                          
+                          <div className="space-y-2">
+                            <h5 className="text-sm font-medium">Поля:</h5>
+                            <div className="grid gap-2">
+                              {Object.entries(endpoint.requestBody.properties || {}).map(([key, prop]: [string, any]) => (
+                                <div key={key} className="flex items-start gap-3 p-2 bg-muted/50 rounded">
+                                  <code className="text-sm font-mono bg-purple-50/20 dark:bg-purple-900/15 px-2 py-1 rounded">{key}</code>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant={prop.required ? "default" : "secondary"} className="text-xs">
+                                        {prop.type}
+                                      </Badge>
+                                      {prop.required && <Badge variant="destructive" className="text-xs">обязательно</Badge>}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-1">{prop.description}</p>
+                                    {prop.example && (
+                                      <code className="text-xs bg-purple-50/20 dark:bg-purple-900/15 px-1 py-0.5 rounded mt-1 inline-block">
+                                        {typeof prop.example === 'string' ? prop.example : JSON.stringify(prop.example)}
+                                      </code>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {endpoint.requestBody.examples && (
+                            <div>
+                              <h5 className="text-sm font-medium mb-2">Примеры:</h5>
+                              <div className="space-y-3">
+                                {endpoint.requestBody.examples.map((example: any, exIndex: number) => (
+                                  <div key={exIndex} className="border rounded-lg p-3">
+                                    <h6 className="font-medium text-sm mb-1">{example.title}</h6>
+                                    <p className="text-xs text-muted-foreground mb-2">{example.description}</p>
+                                    <div className="bg-muted p-3 rounded text-sm">
+                                      <pre>{JSON.stringify(example.body, null, 2)}</pre>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {endpoint.responses && (
+                      <div>
+                        <h4 className="font-semibold mb-2">Ответы:</h4>
+                        <div className="space-y-3">
+                          {Object.entries(endpoint.responses).map(([type, response]: [string, any]) => (
+                            <div key={type} className="border rounded-lg p-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Badge variant={type === 'success' ? 'default' : type === 'error' ? 'destructive' : 'secondary'}>
+                                  {response.status}
+                                </Badge>
+                                <span className="text-sm font-medium">{response.description}</span>
+                              </div>
+                              <div className="bg-muted p-3 rounded text-sm">
+                                <pre>{JSON.stringify(response.body, null, 2)}</pre>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+
+              {/* Переходы статусов */}
+              {callbacksDoc.statusTransitions && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>🔄 {callbacksDoc.statusTransitions.title}</CardTitle>
+                    <CardDescription>{callbacksDoc.statusTransitions.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-3">
+                      {Object.entries(callbacksDoc.statusTransitions.transitions).map(([status, transition]: [string, any]) => (
+                        <div key={status} className="border rounded-lg p-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge>{status}</Badge>
+                            <span className="text-sm text-muted-foreground">{transition.description}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Можно изменить на:</span>
+                            {transition.allowed.length > 0 ? (
+                              <div className="flex gap-1 flex-wrap">
+                                {transition.allowed.map((allowedStatus: string) => (
+                                  <Badge key={allowedStatus} variant="outline" className="text-xs">
+                                    {allowedStatus}
+                                  </Badge>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground italic">Финальный статус</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               )}
-            </CardContent>
-          </Card>
+
+              {/* Лучшие практики */}
+              {callbacksDoc.bestPractices && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>✅ {callbacksDoc.bestPractices.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-3">
+                      {callbacksDoc.bestPractices.recommendations.map((practice: any, index: number) => (
+                        <div key={index} className="border rounded-lg p-3">
+                          <h5 className="font-medium text-sm mb-1">{practice.title}</h5>
+                          <p className="text-sm text-muted-foreground">{practice.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Решение проблем */}
+              {callbacksDoc.troubleshooting && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>🔧 {callbacksDoc.troubleshooting.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-3">
+                      {callbacksDoc.troubleshooting.commonIssues.map((issue: any, index: number) => (
+                        <div key={index} className="border rounded-lg p-3">
+                          <h5 className="font-medium text-sm mb-1 text-red-600">{issue.issue}</h5>
+                          <p className="text-sm text-muted-foreground">{issue.solution}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Тестирование */}
+              {callbacksDoc.testing && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>🧪 {callbacksDoc.testing.title}</CardTitle>
+                    <CardDescription>{callbacksDoc.testing.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {callbacksDoc.testing.tools.map((tool: any, index: number) => (
+                        <div key={index} className="border rounded-lg p-3">
+                          <h5 className="font-medium text-sm mb-2">{tool.name}</h5>
+                          {tool.example && (
+                            <div className="bg-muted p-3 rounded text-sm">
+                              <pre className="whitespace-pre-wrap">{tool.example}</pre>
+                            </div>
+                          )}
+                          {tool.description && (
+                            <p className="text-sm text-muted-foreground mt-2">{tool.description}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          )}
         </TabsContent>
 
         {/* Банки */}

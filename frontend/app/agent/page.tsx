@@ -138,7 +138,7 @@ export default function AgentDashboard() {
           {profileData.agent.trcWallet ? (
             <div className="space-y-2">
               <p className="text-sm text-gray-600">TRC-20 USDT адрес:</p>
-              <p className="font-mono text-sm bg-gray-100 p-3 rounded">{profileData.agent.trcWallet}</p>
+              <p className="font-mono text-sm bg-purple-100/40 p-3 rounded">{profileData.agent.trcWallet}</p>
             </div>
           ) : (
             <div className="space-y-2">

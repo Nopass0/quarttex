@@ -43,28 +43,28 @@
   }
   
   /* Green hover effect for all interactive elements */
-  button:not(.bg-\[\#006039\]):hover,
-  a:not(.bg-\[\#006039\]):hover,
-  [role="button"]:not(.bg-\[\#006039\]):hover {
-    background-color: rgba(0, 96, 57, 0.1);
-    color: #006039;
+  button:not(.bg-\[\#530FAD\]):hover,
+  a:not(.bg-\[\#530FAD\]):hover,
+  [role="button"]:not(.bg-\[\#530FAD\]):hover {
+    background-color: rgba(83, 15, 173, 0.1);
+    color: #530FAD;
     transition: all 0.2s ease;
   }
 
   /* Dark mode hover effect */
-  .dark button:not(.bg-\[\#006039\]):hover,
-  .dark a:not(.bg-\[\#006039\]):hover,
-  .dark [role="button"]:not(.bg-\[\#006039\]):hover {
-    background-color: #29382f;
+  .dark button:not(.bg-\[\#530FAD\]):hover,
+  .dark a:not(.bg-\[\#530FAD\]):hover,
+  .dark [role="button"]:not(.bg-\[\#530FAD\]):hover {
+    background-color: rgba(83, 15, 173, 0.2);
     color: #eeeeee;
   }
   
-  /* Special case for green buttons - darker green on hover */
-  .bg-\[\#006039\] {
+  /* Special case for purple buttons - darker purple on hover */
+  .bg-\[\#530FAD\] {
     transition: all 0.2s ease;
   }
   
-  .bg-\[\#006039\]:hover,
+  .bg-\[\#530FAD\]:hover,
   .hover\:bg-\[\#004d2e\]:hover {
     background-color: #004d2e !important;
   }
@@ -73,13 +73,13 @@
   
   /* Table row hover */
   tbody tr:hover {
-    background-color: rgba(0, 96, 57, 0.05);
+    background-color: rgba(83, 15, 173, 0.05);
     transition: background-color 0.2s ease;
   }
 
   /* Dark mode table row hover */
   .dark tbody tr:hover {
-    background-color: #29382f;
+    background-color: rgba(83, 15, 173, 0.2);
   }
   
   /* Card hover effect */
@@ -120,15 +120,15 @@
   .dark input,
   .dark textarea,
   .dark select {
-    background-color: #29382f !important;
-    border-color: #29382f !important;
+    background-color: rgba(83, 15, 173, 0.2) !important;
+    border-color: rgba(83, 15, 173, 0.2) !important;
     color: #eeeeee !important;
   }
 
   .dark input:focus,
   .dark textarea:focus,
   .dark select:focus {
-    border-color: #2d6a42 !important;
+    border-color: #7c3aed !important;
     outline-color: rgba(45, 106, 66, 0.3) !important;
   }
   
@@ -145,58 +145,58 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 160 100% 18.8%; /* #006039 */
+    --primary: 270 85% 35%; /* #530FAD */
     --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 160 50% 95%; /* Light green background */
-    --accent-foreground: 160 100% 18.8%; /* Dark green text */
+    --accent: 270 50% 95%; /* Light purple background */
+    --accent-foreground: 270 100% 35%; /* Dark purple text */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
-    --ring: 160 100% 18.8%; /* #006039 */
+    --ring: 270 85% 35%; /* #530FAD */
     --radius: 0.75rem;
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 240 5.3% 15%;
-    --sidebar-primary: 160 100% 18.8%;
+    --sidebar-primary: 270 85% 35%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 160 50% 95%;
-    --sidebar-accent-foreground: 160 100% 18.8%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 160 100% 18.8%;
+    --sidebar-accent: 270 50% 95%;
+    --sidebar-accent-foreground: 270 85% 35%;
+    --sidebar-border: 270 13% 91%;
+    --sidebar-ring: 270 85% 35%;
   }
 
   .dark {
     --background: 0 0% 5.88%; /* #0f0f0f */
     --foreground: 0 0% 93.33%; /* #eeeeee */
-    --card: 138 12.5% 19.8%; /* #29382f */
+    --card: 138 12.5% 19.8%; /* rgba(83, 15, 173, 0.2) */
     --card-foreground: 0 0% 93.33%; /* #eeeeee */
-    --popover: 138 12.5% 19.8%; /* #29382f */
+    --popover: 138 12.5% 19.8%; /* rgba(83, 15, 173, 0.2) */
     --popover-foreground: 0 0% 93.33%; /* #eeeeee */
-    --primary: 146 40% 30%; /* #2d6a42 */
+    --primary: 270 70% 60%; /* #7c3aed */
     --primary-foreground: 0 0% 93.33%; /* #eeeeee */
-    --secondary: 138 12.5% 19.8%; /* #29382f */
+    --secondary: 138 12.5% 19.8%; /* rgba(83, 15, 173, 0.2) */
     --secondary-foreground: 0 0% 93.33%; /* #eeeeee */
-    --muted: 138 12.5% 19.8%; /* #29382f */
+    --muted: 138 12.5% 19.8%; /* rgba(83, 15, 173, 0.2) */
     --muted-foreground: 0 0% 73%; /* lighter eeeeee */
-    --accent: 146 40% 35%; /* slightly lighter #2d6a42 */
+    --accent: 270 40% 35%; /* slightly lighter purple */
     --accent-foreground: 0 0% 93.33%; /* #eeeeee */
     --destructive: 0 51% 52%; /* #c64444 */
     --destructive-foreground: 0 0% 93.33%; /* #eeeeee */
-    --border: 138 12.5% 25%; /* lighter #29382f */
-    --input: 138 12.5% 25%; /* lighter #29382f */
-    --ring: 146 40% 30%; /* #2d6a42 */
+    --border: 138 12.5% 25%; /* lighter rgba(83, 15, 173, 0.2) */
+    --input: 138 12.5% 25%; /* lighter rgba(83, 15, 173, 0.2) */
+    --ring: 270 70% 60%; /* #7c3aed */
     --sidebar-background: 0 0% 5.88%; /* #0f0f0f */
     --sidebar-foreground: 0 0% 93.33%; /* #eeeeee */
-    --sidebar-primary: 146 40% 30%; /* #2d6a42 */
+    --sidebar-primary: 270 70% 60%; /* #7c3aed */
     --sidebar-primary-foreground: 0 0% 93.33%; /* #eeeeee */
-    --sidebar-accent: 138 12.5% 19.8%; /* #29382f */
-    --sidebar-accent-foreground: 146 40% 40%; /* lighter #2d6a42 */
-    --sidebar-border: 138 12.5% 25%; /* lighter #29382f */
-    --sidebar-ring: 146 40% 30%; /* #2d6a42 */
+    --sidebar-accent: 138 12.5% 19.8%; /* rgba(83, 15, 173, 0.2) */
+    --sidebar-accent-foreground: 146 40% 40%; /* lighter #7c3aed */
+    --sidebar-border: 138 12.5% 25%; /* lighter rgba(83, 15, 173, 0.2) */
+    --sidebar-ring: 270 70% 60%; /* #7c3aed */
   }
 }
 
@@ -254,19 +254,19 @@
 
 /* Dark mode card styles */
 .dark .bg-gray-50 {
-  background-color: #29382f;
+  background-color: rgba(83, 15, 173, 0.2);
 }
 
 .dark .bg-gray-100 {
-  background-color: #29382f;
+  background-color: rgba(83, 15, 173, 0.2);
 }
 
 .dark .border-gray-100 {
-  border-color: #29382f;
+  border-color: rgba(83, 15, 173, 0.2);
 }
 
 .dark .border-gray-200 {
-  border-color: #29382f;
+  border-color: rgba(83, 15, 173, 0.2);
 }
 
 .dark .text-gray-500 {
@@ -289,18 +289,18 @@
   color: #eeeeee;
 }
 
-/* Dark mode green button */
-.dark .bg-\[\#006039\] {
-  background-color: #2d6a42;
+/* Dark mode purple button */
+.dark .bg-\[\#530FAD\] {
+  background-color: #7c3aed;
 }
 
-.dark .bg-\[\#006039\]:hover,
-.dark .hover\:bg-\[\#006039\]\/90:hover {
-  background-color: #3a8755;
+.dark .bg-\[\#530FAD\]:hover,
+.dark .hover\:bg-\[\#530FAD\]\/90:hover {
+  background-color: #8b5cf6;
 }
 
-.dark .text-\[\#006039\] {
-  color: #2d6a42;
+.dark .text-\[\#530FAD\] {
+  color: #7c3aed;
 }
 
 /* Dark mode destructive/red */
@@ -402,17 +402,17 @@
   /* Glass effect for buttons */
   .btn-glass {
     @apply relative overflow-hidden;
-    background: rgba(0, 96, 57, 0.1);
+    background: rgba(83, 15, 173, 0.1);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(0, 96, 57, 0.2);
+    border: 1px solid rgba(83, 15, 173, 0.2);
     transition: all 0.3s ease;
   }
   
   .btn-glass:hover {
-    background: rgba(0, 96, 57, 0.2);
+    background: rgba(83, 15, 173, 0.2);
     transform: translateY(-1px);
-    box-shadow: 0 4px 20px rgba(0, 96, 57, 0.2);
+    box-shadow: 0 4px 20px rgba(83, 15, 173, 0.2);
   }
   
   /* Glass input fields */
@@ -450,8 +450,8 @@
   textarea:focus,
   select:focus {
     background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(0, 96, 57, 0.5);
-    box-shadow: 0 0 0 3px rgba(0, 96, 57, 0.1);
+    border-color: rgba(83, 15, 173, 0.5);
+    box-shadow: 0 0 0 3px rgba(83, 15, 173, 0.1);
   }
   
   .dark input:not([type="checkbox"]):not([type="radio"]),
@@ -632,7 +632,7 @@
   [role="menuitemradio"]:not([data-state="checked"]):hover,
   [data-highlighted]:not([data-state="checked"]) {
     background-color: rgba(0, 96, 57, 0.08) !important;
-    color: #006039 !important;
+    color: #530FAD !important;
   }
   
   /* Active/checked state for dropdown items */
@@ -640,7 +640,7 @@
   [role="menuitemcheckbox"][data-state="checked"],
   [role="menuitemradio"][data-state="checked"] {
     background-color: rgba(0, 96, 57, 0.12) !important;
-    color: #006039 !important;
+    color: #530FAD !important;
     font-weight: 600;
   }
 

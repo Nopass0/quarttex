@@ -162,7 +162,7 @@ export function AgentsList() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <div className="relative w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[purple-600]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#006039]" />
             <Input
               placeholder="Поиск по имени или email..."
               value={searchQuery}
@@ -176,12 +176,12 @@ export function AgentsList() {
             onClick={fetchAgents}
             disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 text-[purple-600] ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 text-[#006039] ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[purple-600] hover:bg-[#3d0b80]">
+            <Button className="bg-[#530FAD] hover:bg-purple-800/60">
               <UserPlus className="mr-2 h-4 w-4 text-white" />
               Добавить агента
             </Button>
@@ -249,7 +249,7 @@ export function AgentsList() {
             <DialogFooter>
               <Button
                 onClick={handleCreateAgent}
-                className="bg-[purple-600] hover:bg-[#3d0b80]"
+                className="bg-[#530FAD] hover:bg-purple-800/60"
                 disabled={isLoading || !formData.email || !formData.name}
               >
                 Создать
@@ -261,7 +261,7 @@ export function AgentsList() {
 
       {isLoading && agents.length === 0 ? (
         <div className="flex justify-center items-center py-8">
-          <RefreshCw className="h-8 w-8 animate-spin text-[purple-600]" />
+          <RefreshCw className="h-8 w-8 animate-spin text-[#006039]" />
         </div>
       ) : (
         <div className="w-full overflow-hidden rounded-lg border">
@@ -283,7 +283,7 @@ export function AgentsList() {
               {filteredAgents.map((agent) => (
                 <TableRow 
                   key={agent.id}
-                  className="cursor-pointer hover:bg-gray-50"
+                  className="cursor-pointer hover:bg-purple-50/50"
                   onClick={() => router.push(`/admin/agents/${agent.id}`)}
                 >
                   <TableCell>
@@ -330,7 +330,7 @@ export function AgentsList() {
                           className="h-8 w-8 p-0"
                           disabled={isLoading}
                         >
-                          <MoreHorizontal className="h-4 w-4 text-[purple-600]" />
+                          <MoreHorizontal className="h-4 w-4 text-[#006039]" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-48" align="end">
@@ -342,7 +342,7 @@ export function AgentsList() {
                             onClick={() => handleDeleteAgent(agent.id)}
                             disabled={isLoading}
                           >
-                            <Trash2 className="h-4 w-4 mr-2 text-[purple-600]" />
+                            <Trash2 className="h-4 w-4 mr-2 text-[#006039]" />
                             Удалить
                           </Button>
                         </div>
@@ -366,7 +366,7 @@ export function AgentsList() {
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <div className="bg-gray-100 p-4 rounded-lg font-mono text-lg text-center relative">
+            <div className="bg-purple-100/40 p-4 rounded-lg font-mono text-lg text-center relative">
               {generatedPassword}
               <Button
                 variant="outline"
@@ -374,7 +374,7 @@ export function AgentsList() {
                 className="absolute right-2 top-1/2 -translate-y-1/2"
                 onClick={() => copyToClipboard(generatedPassword)}
               >
-                <Copy className="h-4 w-4 text-[purple-600]" />
+                <Copy className="h-4 w-4 text-[#006039]" />
               </Button>
             </div>
           </div>
@@ -384,7 +384,7 @@ export function AgentsList() {
                 setShowPasswordDialog(false)
                 setGeneratedPassword('')
               }}
-              className="bg-[purple-600] hover:bg-[#3d0b80]"
+              className="bg-[#530FAD] hover:bg-purple-800/60"
             >
               Закрыть
             </Button>

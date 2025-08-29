@@ -208,7 +208,7 @@ export default function AggregatorDepositsPage() {
         );
       case "CONFIRMED":
         return (
-          <Badge variant="default" className="bg-purple-600">
+          <Badge variant="default" className="bg-[#530FAD]">
             <CheckCircle2 className="mr-1 h-3 w-3" />
             Подтверждено
           </Badge>
@@ -329,7 +329,7 @@ export default function AggregatorDepositsPage() {
                     <DialogTrigger asChild>
                       <Button
                         size="lg"
-                        className="w-full bg-[#006039] hover:bg-[#004d2e]"
+                        className="w-full bg-[#530FAD] hover:bg-purple-700/80"
                       >
                         <Plus className="mr-2 h-4 w-4" />
                         Создать заявку на пополнение
@@ -365,7 +365,7 @@ export default function AggregatorDepositsPage() {
                           </div>
                         </div>
 
-                        <div className="flex justify-center p-4 bg-white rounded-lg">
+                        <div className="flex justify-center p-4 bg-purple-50/20 dark:bg-purple-900/15 rounded-lg">
                           <QRCode value={depositSettings.address} size={200} />
                         </div>
 
@@ -401,7 +401,7 @@ export default function AggregatorDepositsPage() {
                         </Alert>
 
                         <Button
-                          className="w-full bg-[#006039] hover:bg-[#004d2e]"
+                          className="w-full bg-[#530FAD] hover:bg-purple-700/80"
                           onClick={handleCreateDeposit}
                           disabled={loading || !amount || !txHash}
                         >

@@ -244,7 +244,7 @@ export function TestToolsPanel() {
       case "running":
         return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
       case "success":
-        return <Check className="h-4 w-4 text-purple-500" />;
+        return <Check className="h-4 w-4 text-[#530FAD] dark:text-[#7c3aed]" />;
       case "error":
         return <X className="h-4 w-4 text-red-500" />;
     }
@@ -549,7 +549,7 @@ export function TestToolsPanel() {
                         <summary className="text-xs cursor-pointer text-primary">
                           Детали
                         </summary>
-                        <pre className="text-xs bg-gray-50 p-2 rounded mt-1 overflow-x-auto">
+                        <pre className="text-xs bg-purple-50/30 p-2 rounded mt-1 overflow-x-auto">
                           {JSON.stringify(result.details, null, 2)}
                         </pre>
                       </details>
