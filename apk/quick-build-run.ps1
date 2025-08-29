@@ -84,12 +84,12 @@ try {
     
     # Install APK
     Write-Host "`nInstalling APK..."
-    & $adb uninstall ru.chasepay.mobile 2>$null
+    & $adb uninstall ru.quattrexpay.mobile 2>$null
     & $adb install -r $apkPath.FullName
     
     # Launch app
     Write-Host "`nLaunching app..."
-    & $adb shell am start -n ru.chasepay.mobile/ru.chasepay.mobile.MainActivity
+    & $adb shell am start -n ru.quattrexpay.mobile/ru.quattrexpay.mobile.MainActivity
     
     Write-Host "`n[OK] Success! App is running on device."
     

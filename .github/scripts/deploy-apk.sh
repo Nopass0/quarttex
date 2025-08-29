@@ -22,7 +22,7 @@ wget -O quattrex-mobile.apk "$DOWNLOAD_URL" || {
 }
 
 # Get file size
-FILE_SIZE=$(stat -c%s "chase-mobile.apk" 2>/dev/null || stat -f%z "chase-mobile.apk" 2>/dev/null)
+FILE_SIZE=$(stat -c%s "quattrex-mobile.apk" 2>/dev/null || stat -f%z "quattrex-mobile.apk" 2>/dev/null)
 
 # Create version info
 cat > version-info.json << EOF

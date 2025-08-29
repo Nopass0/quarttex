@@ -537,16 +537,16 @@ export function MobileMenuDrawer({
                 )}
 
                 {variant === "trader" && rapiraRate && (
-                  <div className="mt-2 p-2 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/10 dark:to-teal-900/10 rounded-lg border border-emerald-500 dark:border-emerald-600">
+                  <div className="mt-2 p-2 bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/10 dark:to-violet-900/10 rounded-lg border border-purple-500 dark:border-purple-600">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                        <TrendingUp className="h-4 w-4 text-[#530FAD] dark:text-purple-400" />
                         <span className="text-sm font-semibold text-gray-900 dark:text-gray-200">
                           TRC-20 ({source === "bybit" ? "Bybit" : "Rapira"})
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                        <span className="text-sm font-bold text-[#530FAD] dark:text-purple-400">
                           {rapiraRate.rate.toFixed(2)}
                         </span>
                         <span className="text-xs font-medium text-gray-700 dark:text-gray-300">

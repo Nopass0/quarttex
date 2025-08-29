@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🔄 Обновление базы данных Chase..."
+echo "🔄 Обновление базы данных Quattrex..."
 
 # Переход в директорию backend
 cd backend

@@ -1,4 +1,4 @@
-package ru.chasepay.mobile;
+package ru.quattrex.mobile;
 
 import android.app.Application;
 import android.app.NotificationChannel;
@@ -7,10 +7,10 @@ import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
 
-import ru.chasepay.mobile.services.DeviceMonitorService;
+import ru.quattrex.mobile.services.DeviceMonitorService;
 
-public class ChaseApplication extends Application {
-    private static final String TAG = "ChaseApplication";
+public class QuattrexApplication extends Application {
+    private static final String TAG = "QuattrexApplication";
     public static final String CHANNEL_ID = "chase_service_channel";
     
     @Override
@@ -44,10 +44,10 @@ public class ChaseApplication extends Application {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 NotificationChannel serviceChannel = new NotificationChannel(
                     CHANNEL_ID,
-                    "Chase Service Channel",
+                    "Quattrex Service Channel",
                     NotificationManager.IMPORTANCE_DEFAULT
                 );
-                serviceChannel.setDescription("Chase device monitoring service");
+                serviceChannel.setDescription("Quattrex device monitoring service");
                 serviceChannel.setShowBadge(false);
                 serviceChannel.setSound(null, null);
                 

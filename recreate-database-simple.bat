@@ -10,7 +10,7 @@ set DB_USER=postgres
 set DB_PASS=postgres
 set DB_HOST=localhost
 set DB_PORT=5432
-set DB_NAME=chase
+set DB_NAME=quattrex
 
 echo.
 echo Используются следующие параметры:

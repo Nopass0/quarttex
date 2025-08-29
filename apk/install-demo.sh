@@ -31,7 +31,7 @@ echo "   • Packaging resources..."
 sleep 1
 echo "   • Creating APK file..."
 sleep 1
-echo -e "${GREEN}✓ APK built: chase-app-debug.apk (15.2 MB)${NC}"
+echo -e "${GREEN}✓ APK built: quattrex-app-debug.apk (15.2 MB)${NC}"
 
 echo ""
 echo -e "${BLUE}Installing application...${NC}"

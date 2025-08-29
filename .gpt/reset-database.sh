@@ -5,7 +5,7 @@ echo "🔄 Resetting database..."
 echo "⚠️  This will delete all data! Press Ctrl+C to cancel."
 sleep 3
 
-cd /home/user/projects/chase/backend
+cd /home/user/projects/quattrex/backend
 
 # Drop all tables
 echo "Dropping existing schema..."

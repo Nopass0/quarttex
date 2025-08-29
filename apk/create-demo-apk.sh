@@ -7,14 +7,14 @@ mkdir -p ../build/apk
 
 # Create a simple APK structure
 cd /tmp
-mkdir -p chase-apk-demo
-cd chase-apk-demo
+mkdir -p quattrex-apk-demo
+cd quattrex-apk-demo
 
 # Create a minimal valid APK (using zip format)
 cat > AndroidManifest.xml << 'EOF'
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.chase.mobile">
+    package="com.quattrex.mobile">
     <application android:label="Chase">
         <activity android:name=".MainActivity">
             <intent-filter>

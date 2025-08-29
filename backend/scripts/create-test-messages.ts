@@ -23,7 +23,7 @@ async function createTestMessages() {
 
     const messages = [
       {
-        subject: "Добро пожаловать в Chase!",
+        subject: "Добро пожаловать в Quattrex!",
         content: "Спасибо за регистрацию в нашей платформе. Мы рады видеть вас среди наших трейдеров. Если у вас есть вопросы, обращайтесь в поддержку.",
         type: MessageType.ANNOUNCEMENT,
         priority: MessagePriority.NORMAL,

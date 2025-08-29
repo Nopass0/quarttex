@@ -1,11 +1,11 @@
-package ru.chasepay.mobile.api;
+package ru.quattrex.mobile.api;
 
-import ru.chasepay.mobile.models.AppVersion;
-import ru.chasepay.mobile.models.ConnectRequest;
-import ru.chasepay.mobile.models.ConnectResponse;
-import ru.chasepay.mobile.models.DeviceInfoRequest;
-import ru.chasepay.mobile.models.NotificationRequest;
-import ru.chasepay.mobile.models.PingResponse;
+import ru.quattrex.mobile.models.AppVersion;
+import ru.quattrex.mobile.models.ConnectRequest;
+import ru.quattrex.mobile.models.ConnectResponse;
+import ru.quattrex.mobile.models.DeviceInfoRequest;
+import ru.quattrex.mobile.models.NotificationRequest;
+import ru.quattrex.mobile.models.PingResponse;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
