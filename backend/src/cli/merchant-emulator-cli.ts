@@ -19,7 +19,7 @@ const formatAmount = (amount: number, currency: string = "RUB") => {
 // Helper to print results
 const printResults = (results: any) => {
   if (results.success || results.deal || results.payout) {
-    console.log(chalk.green("✅ Transaction created successfully"));
+    console.log(chalk.magenta("✅ Transaction created successfully"));
     console.log(JSON.stringify(results, null, 2));
   } else {
     console.log(chalk.red("❌ Transaction failed"));
@@ -144,9 +144,9 @@ program
 
       const duration = (Date.now() - startTime) / 1000;
 
-      console.log(chalk.green(`\n✅ Batch completed in ${duration.toFixed(2)}s`));
+      console.log(chalk.magenta(`\n✅ Batch completed in ${duration.toFixed(2)}s`));
       console.log(`Batch ID: ${result.batchId}`);
-      console.log(`Successful: ${chalk.green(result.successful)}`);
+      console.log(`Successful: ${chalk.magenta(result.successful)}`);
       console.log(`Failed: ${chalk.red(result.failed)}`);
       console.log(`Success rate: ${((result.successful / options.count) * 100).toFixed(2)}%`);
     } catch (error: any) {
@@ -198,7 +198,7 @@ program
           timestamp: new Date(log.timestamp).toLocaleString("ru-RU"),
           merchant: log.merchantName.substring(0, 20),
           type: log.transactionType,
-          status: log.status === "success" ? chalk.green("✓") : chalk.red("✗"),
+          status: log.status === "success" ? chalk.magenta("✓") : chalk.red("✗"),
           error: log.error || "-",
         });
       });
@@ -229,7 +229,7 @@ program
       const table = new Table({
         columns: [
           { name: "type", title: "Transaction Type", alignment: "left" },
-          { name: "success", title: "Success", alignment: "right", color: "green" },
+          { name: "success", title: "Success", alignment: "right", color: "magenta" },
           { name: "error", title: "Error", alignment: "right", color: "red" },
           { name: "total", title: "Total", alignment: "right" },
           { name: "rate", title: "Success Rate", alignment: "right" },

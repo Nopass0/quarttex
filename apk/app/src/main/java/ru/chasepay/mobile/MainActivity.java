@@ -236,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
             
             if (enabled) {
                 // Show status in UI
-                updateConnectionStatus("Ready", Color.GREEN);
+                updateConnectionStatus("Ready", Color.parseColor("#530FAD"));
             } else {
                 // Show warning in UI
                 updateConnectionStatus("Notifications disabled", Color.rgb(255, 165, 0));
@@ -386,7 +386,7 @@ public class MainActivity extends AppCompatActivity {
                         if (response.isSuccessful() && response.body() != null) {
                             String token = response.body().token;
                             prefs.edit().putString(KEY_DEVICE_TOKEN, token).apply();
-                            updateConnectionStatus("Connected", Color.GREEN);
+                            updateConnectionStatus("Connected", Color.parseColor("#530FAD"));
                             Toast.makeText(MainActivity.this, "Device connected successfully", Toast.LENGTH_SHORT).show();
                             
                             // Start foreground service to keep connection alive
@@ -459,9 +459,9 @@ public class MainActivity extends AppCompatActivity {
                             if (deviceToken != null) {
                                 // Check if WebSocket ping is also running
                                 if (devicePingService != null && devicePingService.isRunning()) {
-                                    updateConnectionStatus("Connected (WS)", Color.GREEN);
+                                    updateConnectionStatus("Connected (WS)", Color.parseColor("#530FAD"));
                                 } else {
-                                    updateConnectionStatus("Connected (HTTP)", Color.GREEN);
+                                    updateConnectionStatus("Connected (HTTP)", Color.parseColor("#530FAD"));
                                 }
                             } else {
                                 updateConnectionStatus("Not registered", Color.YELLOW);
