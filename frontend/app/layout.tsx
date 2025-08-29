@@ -8,6 +8,19 @@ export const metadata: Metadata = {
   title: "Quattrex платформ",
   description: "Торговая и платежная платформа",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+  metadataBase: new URL('https://quattrex.pro'),
+  openGraph: {
+    title: "Quattrex платформ",
+    description: "Торговая и платежная платформа",
+    url: 'https://quattrex.pro',
+    siteName: 'Quattrex',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Quattrex платформ",
+    description: "Торговая и платежная платформа",
+  },
 };
 
 export default function RootLayout({

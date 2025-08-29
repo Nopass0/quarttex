@@ -43,7 +43,7 @@ This will output a device token that you'll use in the next step.
 
 ### 4. Monitor Device Status
 
-- **Connected (Green)**: Device is active and sending notifications
+- **Connected (Purple)**: Device is active and sending notifications
 - **Connecting (Yellow)**: Device is trying to connect (can take up to 60 seconds)
 - **Disconnected (Red)**: Device failed to connect (check logs)
 

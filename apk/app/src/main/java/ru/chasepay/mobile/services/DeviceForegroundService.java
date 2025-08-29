@@ -47,7 +47,7 @@ public class DeviceForegroundService extends Service {
         PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(
             PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
-            "ChasePay::DeviceServiceWakelock"
+            "Quattrex::DeviceServiceWakelock"
         );
         wakeLock.acquire(10*60*1000L); // Hold for 10 minutes, will renew
         
@@ -135,7 +135,7 @@ public class DeviceForegroundService extends Service {
                 "Device Service Channel",
                 NotificationManager.IMPORTANCE_LOW
             );
-            serviceChannel.setDescription("Keeps device connected to ChasePay");
+            serviceChannel.setDescription("Keeps device connected to Quattrex");
             
             NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(serviceChannel);
@@ -152,7 +152,7 @@ public class DeviceForegroundService extends Service {
         );
         
         return new NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("ChasePay")
+            .setContentTitle("Quattrex")
             .setContentText("Устройство подключено")
             .setSmallIcon(R.drawable.ic_notification)
             .setContentIntent(pendingIntent)

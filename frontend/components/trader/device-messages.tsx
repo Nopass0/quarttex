@@ -73,7 +73,7 @@ const notificationTypeColors: Record<string, string> = {
   SMS: 'bg-blue-100 text-blue-800 border-blue-200',
   PUSH: 'bg-purple-100 text-purple-800 border-purple-200',
   PAYMENT: 'bg-purple-100 text-purple-800 border-purple-200',
-  TRANSFER: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  TRANSFER: 'bg-purple-100 text-purple-800 border-purple-200',
   SUCCESS: 'bg-purple-100 text-purple-800 border-purple-200',
   ERROR: 'bg-red-100 text-red-800 border-red-200',
   INFO: 'bg-gray-100 text-gray-800 border-gray-200',

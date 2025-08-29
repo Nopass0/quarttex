@@ -45,8 +45,8 @@
 ### 6. МКБ (Moscow Credit Bank)
 - **Logo**: Custom SVG (text-based)
 - **Brand Colors**:
-  - Primary: #003F2D (Dark Green)
-  - Secondary: #00A651 (Green)
+  - Primary: #3d0b80 (Dark Purple)
+  - Secondary: #530FAD (Purple)
   - Text: #FFFFFF (White)
 - **BIN Codes**: 426740, 543298, 523003
 
@@ -85,7 +85,7 @@
 ### 11. Ак Барс Банк
 - **Official Logo URL**: https://upload.wikimedia.org/wikipedia/commons/0/0f/Ak_Bars_Bank_Logo.svg
 - **Brand Colors**:
-  - Primary: #00954F (Green)
+  - Primary: #530FAD (Purple)
   - Secondary: #00A65D
   - Text: #FFFFFF (White)
 - **BIN Codes**: 415669, 548601, 518901

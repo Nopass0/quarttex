@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Colors for output
-GREEN='\033[0;32m'
+PURPLE='\033[0;35m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
@@ -102,7 +102,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 # Start backend
-echo -e "${GREEN}Starting backend on port 3001...${NC}"
+echo -e "${PURPLE}Starting backend on port 3001...${NC}"
 (cd backend && bun run dev) &
 BACKEND_PID=$!
 
@@ -121,13 +121,13 @@ else
 fi
 
 # Start frontend
-echo -e "${GREEN}Starting frontend on port 3000...${NC}"
+echo -e "${PURPLE}Starting frontend on port 3000...${NC}"
 (cd frontend && npm run dev) &
 FRONTEND_PID=$!
 
 echo -e "${BLUE}Development environment is running!${NC}"
-echo -e "${GREEN}Backend: http://localhost:3001${NC}"
-echo -e "${GREEN}Frontend: http://localhost:3000${NC}"
+echo -e "${PURPLE}Backend: http://localhost:3001${NC}"
+echo -e "${PURPLE}Frontend: http://localhost:3000${NC}"
 echo -e "${YELLOW}Press Ctrl+C to stop all services${NC}"
 
 # Wait for background processes

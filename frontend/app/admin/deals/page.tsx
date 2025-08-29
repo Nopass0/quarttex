@@ -1143,7 +1143,7 @@ export default function AdminDealsPage() {
               {!["READY", "CANCELED"].includes(selectedTransaction.status) && (
                 <Button
                   variant="default"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                  className="bg-[#530FAD] hover:bg-[#3d0b80] text-white shadow-sm"
                   onClick={() =>
                     handleUpdateStatus(selectedTransaction.id, "READY")
                   }
@@ -1226,7 +1226,7 @@ export default function AdminDealsPage() {
                 <>
                   <Button
                     variant="default"
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                    className="bg-[#530FAD] hover:bg-[#3d0b80] text-white shadow-sm"
                     onClick={() =>
                       handleUpdateStatus(selectedTransaction.id, "READY")
                     }
@@ -1372,7 +1372,7 @@ export default function AdminDealsPage() {
                     <Button
                       size="sm"
                       variant="default"
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                      className="bg-[#530FAD] hover:bg-[#3d0b80] text-white"
                       onClick={() =>
                         handleUpdateStatus(transaction.id, "READY")
                       }
@@ -1403,7 +1403,7 @@ export default function AdminDealsPage() {
                       <Button
                         size="sm"
                         variant="default"
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                        className="bg-[#530FAD] hover:bg-[#3d0b80] text-white"
                         onClick={() =>
                           handleUpdateStatus(transaction.id, "READY")
                         }
@@ -1517,7 +1517,7 @@ export default function AdminDealsPage() {
         <div className="space-y-4 sm:space-y-6">
           <div className="mb-4 sm:mb-6">
             <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 sm:gap-3 text-gray-900 dark:text-gray-100">
-              <CreditCard className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-600 dark:text-emerald-500" />
+              <CreditCard className="h-6 w-6 sm:h-8 sm:w-8 text-[#530FAD] dark:text-[#7c3aed]" />
               Управление сделками
             </h1>
             <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-2 leading-relaxed">
@@ -1528,7 +1528,7 @@ export default function AdminDealsPage() {
           <Card className="shadow-sm border-gray-200 dark:border-gray-700">
             <CardHeader className="pb-3 sm:pb-4">
               <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
-                <Search className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 dark:text-emerald-500" />
+                <Search className="h-4 w-4 sm:h-5 sm:w-5 text-[#530FAD] dark:text-[#7c3aed]" />
                 Фильтры
               </CardTitle>
             </CardHeader>
@@ -1650,7 +1650,7 @@ export default function AdminDealsPage() {
                   />
                   <Button
                     type="submit"
-                    className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white"
+                    className="w-full sm:w-auto bg-[#530FAD] hover:bg-[#3d0b80] text-white"
                   >
                     <Search className="h-4 w-4 mr-2" />
                     Поиск
