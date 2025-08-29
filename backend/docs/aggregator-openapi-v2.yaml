@@ -1,0 +1,508 @@
+openapi: 3.0.3
+info:
+  title: Aggregator Integration API v2
+  description: API для интеграции с платежными агрегаторами
+  version: 2.0.0
+  contact:
+    email: support@chase.com
+
+servers:
+  - url: https://chspay.pro/api
+    description: Production server
+  - url: https://staging.chspay.pro/api
+    description: Staging server
+
+security:
+  - BearerAuth: []
+
+paths:
+  /api/aggregators/callback:
+    post:
+      summary: Callback для обновления статуса сделки
+      description: Endpoint для приема уведомлений об изменении статуса или суммы сделки
+      tags:
+        - Callbacks (наша сторона)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallbackRequest'
+            examples:
+              statusUpdate:
+                summary: Обновление статуса
+                value:
+                  ourDealId: "deal-123-456"
+                  status: "READY"
+                  partnerDealId: "AGG-2024-001"
+              amountChange:
+                summary: Изменение суммы
+                value:
+                  ourDealId: "deal-123-456"
+                  amount: 9500
+                  reason: "Partial payment"
+      responses:
+        '200':
+          description: Callback успешно обработан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallbackResponse'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/aggregators/callback/batch:
+    post:
+      summary: Массовый callback
+      description: Обработка до 100 callback'ов одним запросом
+      tags:
+        - Callbacks (наша сторона)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              minItems: 1
+              maxItems: 100
+              items:
+                $ref: '#/components/schemas/CallbackRequest'
+      responses:
+        '200':
+          description: Callbacks обработаны
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchCallbackResponse'
+
+  /deals:
+    post:
+      summary: Создание сделки у агрегатора
+      description: Создание новой сделки в системе агрегатора (endpoint на вашей стороне)
+      tags:
+        - Deals (ваша сторона)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          schema:
+            type: string
+            format: uuid
+          required: false
+          description: Ключ идемпотентности для предотвращения дублирования
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDealRequest'
+      responses:
+        '200':
+          description: Ответ на запрос создания сделки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateDealResponse'
+
+  /deals/{partnerDealId}:
+    get:
+      summary: Получение информации о сделке
+      description: Получение актуальной информации о сделке (endpoint на вашей стороне)
+      tags:
+        - Deals (ваша сторона)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: partnerDealId
+          required: true
+          schema:
+            type: string
+          description: ID сделки в системе агрегатора
+      responses:
+        '200':
+          description: Информация о сделке
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DealInfoResponse'
+        '404':
+          description: Сделка не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /deals/{partnerDealId}/disputes:
+    post:
+      summary: Создание спора по сделке
+      description: Инициация спора по существующей сделке (endpoint на вашей стороне)
+      tags:
+        - Disputes (ваша сторона)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: partnerDealId
+          required: true
+          schema:
+            type: string
+          description: ID сделки в системе агрегатора
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDisputeRequest'
+      responses:
+        '200':
+          description: Спор создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateDisputeResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Используйте соответствующий токен:
+        - Для callback'ов к нам: CALLBACK_TOKEN
+        - Для запросов к вам: API_TOKEN
+
+  schemas:
+    CallbackRequest:
+      type: object
+      required:
+        - ourDealId
+      properties:
+        ourDealId:
+          type: string
+          description: ID сделки в нашей системе
+          example: "deal-123-456"
+        status:
+          type: string
+          enum: [CREATED, IN_PROGRESS, READY, CANCELED, EXPIRED, DISPUTE, MILK]
+          description: Новый статус сделки
+          example: "READY"
+        amount:
+          type: number
+          description: Новая сумма транзакции (в копейках/центах)
+          example: 10000
+        partnerDealId:
+          type: string
+          description: ID сделки в системе агрегатора
+          example: "AGG-2024-001"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Время обновления в формате ISO-8601
+          example: "2024-01-29T12:00:00Z"
+        reason:
+          type: string
+          description: Причина изменения статуса
+          example: "User cancelled payment"
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Дополнительные данные
+
+    CallbackResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "accepted"
+        ourDealId:
+          type: string
+          example: "deal-123-456"
+        message:
+          type: string
+          example: "Callback processed successfully"
+
+    BatchCallbackResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "accepted"
+        processed:
+          type: integer
+          example: 10
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              ourDealId:
+                type: string
+              status:
+                type: string
+              message:
+                type: string
+
+    CreateDealRequest:
+      type: object
+      required:
+        - ourDealId
+        - status
+        - amount
+        - merchantRate
+        - paymentMethod
+        - callbackUrl
+      properties:
+        ourDealId:
+          type: string
+          description: ID сделки в нашей системе
+          example: "deal-123-456"
+        status:
+          type: string
+          description: Начальный статус (обычно NEW)
+          example: "NEW"
+        amount:
+          type: number
+          description: Сумма в копейках/центах
+          example: 10000
+        merchantRate:
+          type: number
+          description: Курс для мерчанта
+          example: 100.5
+        paymentMethod:
+          type: string
+          enum: ["SBP", "C2C"]
+          description: Метод платежа
+          example: "SBP"
+        bankType:
+          type: string
+          description: Код банка из справочника
+          example: "SBERBANK"
+        partnerDealId:
+          type: string
+          description: Предварительно сгенерированный ID сделки (опционально)
+        callbackUrl:
+          type: string
+          format: uri
+          description: URL для отправки callback'ов
+          example: "https://chspay.pro/api/aggregators/callback"
+        metadata:
+          type: object
+          properties:
+            methodType:
+              type: string
+              example: "sbp"
+            bankType:
+              type: string
+              example: "SBERBANK"
+            merchantName:
+              type: string
+              example: "Example Merchant"
+
+    CreateDealResponse:
+      type: object
+      required:
+        - accepted
+      properties:
+        accepted:
+          type: boolean
+          description: Принята ли сделка
+          example: true
+        partnerDealId:
+          type: string
+          description: ID сделки в системе агрегатора
+          example: "AGG-2024-001"
+        message:
+          type: string
+          description: Сообщение о результате
+          example: "Deal created successfully"
+        requisites:
+          type: object
+          description: Реквизиты для оплаты (ОБЯЗАТЕЛЬНО при accepted=true)
+          required:
+            - bankName
+          properties:
+            bankName:
+              type: string
+              description: Название банка
+              example: "Сбербанк"
+            bankCode:
+              type: string
+              description: Код банка
+              example: "SBERBANK"
+            cardNumber:
+              type: string
+              description: Номер карты (для C2C)
+              example: "4111111111111111"
+            phoneNumber:
+              type: string
+              description: Номер телефона (для SBP)
+              example: "+79001234567"
+            recipientName:
+              type: string
+              description: Имя получателя
+              example: "Иван Иванов"
+            additionalInfo:
+              type: string
+              description: Дополнительная информация
+        dealDetails:
+          type: object
+          description: Полная информация о сделке
+          properties:
+            id:
+              type: string
+              example: "AGG-2024-001"
+            amount:
+              type: number
+              example: 10000
+            status:
+              type: string
+              example: "NEW"
+            createdAt:
+              type: string
+              format: date-time
+            expiresAt:
+              type: string
+              format: date-time
+            paymentMethod:
+              type: string
+              example: "SBP"
+            metadata:
+              type: object
+
+    CreateDisputeRequest:
+      type: object
+      required:
+        - ourDealId
+        - message
+        - attachments
+      properties:
+        ourDealId:
+          type: string
+          description: ID сделки в нашей системе
+          example: "deal-123-456"
+        message:
+          type: string
+          description: Текст спора
+          example: "Payment not received by customer"
+        attachments:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: Массив URL файлов-вложений
+          example:
+            - "https://example.com/screenshot1.jpg"
+            - "https://example.com/receipt.pdf"
+
+    CreateDisputeResponse:
+      type: object
+      properties:
+        accepted:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Dispute created successfully"
+
+    DealInfoResponse:
+      type: object
+      required:
+        - id
+        - ourDealId
+        - status
+        - amount
+        - paymentMethod
+      properties:
+        id:
+          type: string
+          description: ID сделки в системе агрегатора
+          example: "AGG-2024-001"
+        ourDealId:
+          type: string
+          description: ID сделки в системе ChsPay
+          example: "deal-123-456"
+        status:
+          type: string
+          enum: [CREATED, IN_PROGRESS, READY, CANCELED, EXPIRED, DISPUTE, MILK]
+          description: Текущий статус сделки
+          example: "IN_PROGRESS"
+        amount:
+          type: number
+          description: Сумма транзакции
+          example: 10000
+        paymentMethod:
+          type: string
+          enum: [SBP, C2C]
+          description: Метод платежа
+          example: "SBP"
+        requisites:
+          type: object
+          description: Реквизиты для оплаты
+          properties:
+            bankName:
+              type: string
+              example: "Сбербанк"
+            bankCode:
+              type: string
+              example: "SBERBANK"
+            cardNumber:
+              type: string
+              example: "4111111111111111"
+            phoneNumber:
+              type: string
+              example: "+79001234567"
+            recipientName:
+              type: string
+              example: "Иван Иванов"
+        createdAt:
+          type: string
+          format: date-time
+          description: Время создания сделки
+        updatedAt:
+          type: string
+          format: date-time
+          description: Время последнего обновления
+        expiresAt:
+          type: string
+          format: date-time
+          description: Время истечения сделки
+        metadata:
+          type: object
+          description: Дополнительные данные
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Код ошибки
+          example: "INVALID_TOKEN"
+        message:
+          type: string
+          description: Описание ошибки
+          example: "The provided authentication token is invalid"
+
+tags:
+  - name: Callbacks (наша сторона)
+    description: Endpoints на нашей стороне для приема callback'ов от агрегаторов
+  - name: Deals (ваша сторона)
+    description: Endpoints на стороне агрегатора для управления сделками
+  - name: Disputes (ваша сторона)
+    description: Endpoints на стороне агрегатора для управления спорами

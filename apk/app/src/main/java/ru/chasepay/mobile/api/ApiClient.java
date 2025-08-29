@@ -1,7 +1,7 @@
-package ru.chasepay.mobile.api;
+package ru.quattrex.mobile.api;
 
 import android.util.Log;
-import ru.chasepay.mobile.BuildConfig;
+import ru.quattrex.mobile.BuildConfig;
 
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;

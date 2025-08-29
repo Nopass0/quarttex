@@ -97,7 +97,7 @@ const PaymentSystemIcon = ({ cardNumber }: { cardNumber: string }) => {
           ></path>
           <path
             d="M21.645 9.038v4.654h2.803v-2.467h2.468c1.345 0 2.523-.954 2.915-2.187h-8.186ZM11.776 5v8.636h2.467s.617 0 .953-.617C16.88 9.71 17.383 8.7 17.383 8.7h.337v4.935h2.803V5h-2.467s-.617.056-.953.617c-1.402 2.86-2.187 4.318-2.187 4.318h-.336V5h-2.804ZM0 13.692V5.056h2.804s.785 0 1.233 1.234c1.122 3.252 1.234 3.7 1.234 3.7s.224-.784 1.234-3.7c.448-1.234 1.233-1.234 1.233-1.234h2.804v8.636H7.738V9.037h-.336l-1.57 4.655H4.598l-1.57-4.655h-.336v4.655H0Z"
-            fill="#4FAD50"
+            fill="#8b5cf6"
           ></path>
           <defs>
             <linearGradient
@@ -274,12 +274,12 @@ export function RequisiteInfoModal({
         <div className="flex items-center justify-between p-4 border-b md:hidden flex-shrink-0">
           <button
             onClick={() => onOpenChange(false)}
-            className="flex items-center gap-1 text-[purple-600] font-medium"
+            className="flex items-center gap-1 text-[#006039] font-medium"
           >
             <ChevronLeft className="h-4 w-4" />
             Назад
           </button>
-          <button className="flex items-center gap-1 text-[purple-600] font-medium">
+          <button className="flex items-center gap-1 text-[#006039] font-medium">
             Поделиться
             <Share2 className="h-4 w-4" />
           </button>
@@ -294,7 +294,7 @@ export function RequisiteInfoModal({
           {/* Card Info */}
           <div className="relative rounded-xl overflow-hidden">
             {/* Gradient Background */}
-            <div className="absolute inset-0 bg-gradient-to-b from-purple-500/20 via-purple-300/10 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-b from-purple-500/20 via-green-300/10 to-transparent" />
 
             {/* Card Content */}
             <div className="relative p-4 space-y-3 bg-white/10 backdrop-blur-sm">
@@ -468,8 +468,8 @@ export function RequisiteInfoModal({
               >
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[purple-600]/10 rounded-lg flex items-center justify-center">
-                      <Smartphone className="h-5 w-5 text-[purple-600]" />
+                    <div className="w-10 h-10 bg-[#006039]/10 rounded-lg flex items-center justify-center">
+                      <Smartphone className="h-5 w-5 text-[#006039]" />
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">
@@ -493,10 +493,10 @@ export function RequisiteInfoModal({
             <div className="space-y-2">
               <Button
                 variant="outline"
-                className="w-full justify-start h-12 text-[purple-600] hover:text-[purple-600] hover:bg-purple-50"
+                className="w-full justify-start h-12 text-[#006039] hover:text-[#006039] hover:bg-purple-50"
                 onClick={() => setShowEditDialog(true)}
               >
-                <Edit className="h-4 w-4 mr-2 text-[purple-600]" />
+                <Edit className="h-4 w-4 mr-2 text-[#006039]" />
                 Редактировать
               </Button>
               

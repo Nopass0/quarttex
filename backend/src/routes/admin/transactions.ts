@@ -456,14 +456,37 @@ export default (app: Elysia) =>
           where.method = { type: query.methodType as MethodType };
 
         // Поиск по numericId, orderId или ID транзакции
+        const searchConditions = [];
+
         if (query.numericId) {
           const num = Number(query.numericId);
-          if (!Number.isNaN(num)) where.numericId = num;
+          if (!Number.isNaN(num)) {
+            searchConditions.push({ numericId: num });
+          }
         }
 
         if (query.id) {
           // Поиск по ID транзакции (UUID) - не пытаемся парсить как число
-          where.id = { contains: query.id, mode: "insensitive" };
+          searchConditions.push({
+            id: { contains: query.id, mode: "insensitive" as const },
+          });
+        }
+
+        if (query.search) {
+          const s = query.search;
+          searchConditions.push(
+            { id: { contains: s, mode: "insensitive" as const } },
+            { orderId: { contains: s, mode: "insensitive" as const } },
+            { assetOrBank: { contains: s, mode: "insensitive" as const } },
+            { clientName: { contains: s, mode: "insensitive" as const } },
+            { currency: { contains: s, mode: "insensitive" as const } },
+            { userIp: { contains: s, mode: "insensitive" as const } }
+          );
+        }
+
+        // Если есть условия поиска, объединяем их через OR
+        if (searchConditions.length > 0) {
+          where.OR = searchConditions;
         }
 
         if (query.isMock !== undefined) where.isMock = query.isMock === "true";
@@ -482,18 +505,6 @@ export default (app: Elysia) =>
             ...where.createdAt,
             lte: new Date(query.createdTo),
           };
-
-        if (query.search) {
-          const s = query.search;
-          where.OR = [
-            { id: { contains: s, mode: "insensitive" } },
-            { orderId: { contains: s, mode: "insensitive" } },
-            { assetOrBank: { contains: s, mode: "insensitive" } },
-            { clientName: { contains: s, mode: "insensitive" } },
-            { currency: { contains: s, mode: "insensitive" } },
-            { userIp: { contains: s, mode: "insensitive" } },
-          ];
-        }
 
         const orderBy: Record<string, "asc" | "desc"> = {};
         if (query.sortBy)
@@ -869,7 +880,45 @@ export default (app: Elysia) =>
                     frozenUsdt: {
                       decrement: truncate2(existing.frozenUsdtAmount),
                     },
+                    // Добавляем сумму заморозки к trustBalance при отмене сделки "В работе"
+                    trustBalance: {
+                      increment: truncate2(existing.frozenUsdtAmount),
+                    },
                   },
+                });
+              }
+            } else if (existing.status === Status.READY) {
+              // Для готовых сделок при отмене списываем с trustBalance и убираем прибыль
+              const usdtAmount = existing.rate
+                ? existing.amount / existing.rate
+                : 0;
+
+              if (usdtAmount > 0) {
+                console.log(
+                  `[Admin PUT Cancel] Processing READY->CANCELED: trader=${existing.traderId}, usdtAmount=${usdtAmount}`
+                );
+
+                const updateFields: any = {
+                  // Списываем сумму в USDT с trustBalance
+                  trustBalance: { decrement: truncate2(usdtAmount) },
+                };
+
+                // Если у сделки была прибыль, убираем её
+                if (existing.traderProfit && existing.traderProfit > 0) {
+                  updateFields.profitFromDeals = {
+                    decrement: truncate2(existing.traderProfit),
+                  };
+                }
+
+                console.log(`[Admin PUT Cancel] READY balance deduction:`, {
+                  usdtAmount,
+                  traderProfit: existing.traderProfit,
+                  updateFields,
+                });
+
+                await db.user.update({
+                  where: { id: existing.traderId },
+                  data: updateFields,
                 });
               }
             }
@@ -1853,6 +1902,235 @@ export default (app: Elysia) =>
       }
     )
 
+    /* ─────────── POST /admin/transactions/mock/in ─────────── */
+    .post(
+      "/mock/in",
+      async ({ body, set, error }) => {
+        try {
+          // 1) Проверяем мерчанта
+          const merchant = await db.merchant.findUnique({
+            where: { id: body.merchantId },
+          });
+          if (!merchant) return error(404, { error: "Мерчант не найден" });
+
+          // 2) Проверяем метод
+          const method = await db.method.findUnique({
+            where: { id: body.methodId },
+          });
+          if (!method) return error(404, { error: "Метод не найден" });
+
+          const amount = body.amount;
+          const orderId = body.orderId || `MOCK_IN_${Date.now()}`;
+          const expiredAt = body.expired_at
+            ? new Date(body.expired_at)
+            : new Date(Date.now() + 60 * 60 * 1000);
+          const userIp = body.userIp || "127.0.0.1";
+          const callbackUri = body.callbackUri || "";
+          const rate = body.rate ?? null;
+
+          // 3) Подбираем подходящий реквизит как в /test/in
+          const pool = await db.bankDetail.findMany({
+            where: {
+              isArchived: false,
+              methodType: method.type,
+              user: {
+                banned: false,
+                deposit: { gte: 1000 },
+                trafficEnabled: true,
+              },
+              OR: [
+                { deviceId: null },
+                { device: { isWorking: true, isOnline: true } },
+              ],
+            },
+            orderBy: { updatedAt: "asc" },
+            include: { user: true },
+          });
+
+          let chosen: any = null;
+          for (const bd of pool) {
+            if (amount < bd.minAmount || amount > bd.maxAmount) continue;
+            if (
+              amount < bd.user.minAmountPerRequisite ||
+              amount > bd.user.maxAmountPerRequisite
+            )
+              continue;
+
+            const existing = await db.transaction.findFirst({
+              where: {
+                bankDetailId: bd.id,
+                amount,
+                status: { in: [Status.CREATED, Status.IN_PROGRESS] },
+                type: TransactionType.IN,
+              },
+            });
+            if (existing) continue;
+
+            if (bd.maxCountTransactions && bd.maxCountTransactions > 0) {
+              const todayStart = new Date();
+              todayStart.setHours(0, 0, 0, 0);
+              const todayEnd = new Date();
+              todayEnd.setHours(23, 59, 59, 999);
+              const todayCount = await db.transaction.count({
+                where: {
+                  bankDetailId: bd.id,
+                  createdAt: { gte: todayStart, lte: todayEnd },
+                  status: { not: Status.CANCELED },
+                },
+              });
+              if (todayCount + 1 > bd.maxCountTransactions) continue;
+            }
+            chosen = bd;
+            break;
+          }
+
+          if (!chosen)
+            return error(409, {
+              error: "NO_REQUISITE: подходящий реквизит не найден",
+            });
+
+          // 4) Получаем текущие курсы Rapira
+          const rapiraBaseRate = await rapiraService.getUsdtRubRate();
+          const rateSettingRecord = await db.rateSetting.findFirst({
+            where: { id: 1 },
+          });
+          const rapiraKkk = rateSettingRecord?.rapiraKkk || 0;
+          const rapiraRateWithKkk = await rapiraService.getRateWithKkk(
+            rapiraKkk
+          );
+          const merchantRate = merchant.countInRubEquivalent
+            ? rapiraBaseRate
+            : rate ?? rapiraBaseRate;
+
+          // 5) Транзакция с заморозкой
+          const trx = await db.$transaction(async (prisma) => {
+            const freezingParams = await calculateTransactionFreezing(
+              amount,
+              rapiraRateWithKkk,
+              chosen.userId,
+              merchant.id,
+              body.methodId
+            );
+            await freezeTraderBalance(prisma, chosen.userId, freezingParams);
+            await prisma.bankDetail.update({
+              where: { id: chosen.id },
+              data: { updatedAt: new Date() },
+            });
+            return await prisma.transaction.create({
+              data: {
+                merchantId: merchant.id,
+                amount,
+                assetOrBank: chosen.cardNumber,
+                orderId,
+                methodId: body.methodId,
+                currency: "RUB",
+                userId: body.userId || `mock_user_${Date.now()}`,
+                userIp,
+                callbackUri,
+                successUri: body.successUri || "",
+                failUri: body.failUri || "",
+                type: "IN",
+                expired_at: expiredAt,
+                commission: 0,
+                clientName: body.clientName || "Mock User",
+                status: "IN_PROGRESS",
+                rate: rapiraRateWithKkk,
+                merchantRate,
+                adjustedRate: rapiraRateWithKkk,
+                isMock: true,
+                bankDetailId: chosen.id,
+                traderId: chosen.userId,
+                frozenUsdtAmount: freezingParams.frozenUsdtAmount,
+                calculatedCommission: freezingParams.calculatedCommission,
+                kkkPercent: freezingParams.kkkPercent,
+                feeInPercent: freezingParams.feeInPercent,
+                metadata: body.metadata ?? { isMock: true },
+              },
+              include: {
+                merchant: true,
+                method: {
+                  select: {
+                    id: true,
+                    code: true,
+                    name: true,
+                    type: true,
+                    currency: true,
+                    commissionPayin: true,
+                  },
+                },
+                requisites: {
+                  select: {
+                    id: true,
+                    bankType: true,
+                    cardNumber: true,
+                    recipientName: true,
+                    user: { select: { id: true, name: true } },
+                  },
+                },
+              },
+            });
+          });
+
+          set.status = 201;
+          return {
+            success: true,
+            transaction: {
+              id: trx.id,
+              numericId: trx.numericId,
+              amount: trx.amount,
+              status: trx.status,
+              traderId: trx.traderId,
+              requisites: trx.requisites && {
+                id: trx.requisites.id,
+                bankType: trx.requisites.bankType,
+                cardNumber: trx.requisites.cardNumber,
+                recipientName: trx.requisites.recipientName,
+                traderName: trx.requisites.user.name,
+              },
+              createdAt: trx.createdAt.toISOString(),
+              updatedAt: trx.updatedAt.toISOString(),
+              expired_at: trx.expired_at.toISOString(),
+              method: trx.method,
+            },
+          };
+        } catch (e: any) {
+          console.error("Mock transaction creation error:", e);
+          return error(500, {
+            error: "Ошибка создания моковой транзакции",
+            details: e.message,
+          });
+        }
+      },
+      {
+        tags: ["admin"],
+        detail: {
+          summary: "Создать моковую IN транзакцию для выбранного мерчанта",
+        },
+        headers: AuthHeaderSchema,
+        body: t.Object({
+          merchantId: t.String(),
+          methodId: t.String(),
+          amount: t.Number(),
+          orderId: t.Optional(t.String()),
+          rate: t.Optional(t.Number()),
+          expired_at: t.Optional(t.String()),
+          userId: t.Optional(t.String()),
+          userIp: t.Optional(t.String()),
+          callbackUri: t.Optional(t.String()),
+          successUri: t.Optional(t.String()),
+          failUri: t.Optional(t.String()),
+          clientName: t.Optional(t.String()),
+          metadata: t.Optional(t.Unknown()),
+        }),
+        response: {
+          201: t.Object({ success: t.Boolean(), transaction: t.Any() }),
+          404: ErrorSchema,
+          409: ErrorSchema,
+          500: ErrorSchema,
+        },
+      }
+    )
+
     /* ─────────── PATCH /admin/transactions/:id/recalc ─────────── */
     .patch(
       "/:id/recalc",
@@ -2251,7 +2529,45 @@ export default (app: Elysia) =>
                     frozenUsdt: {
                       decrement: truncate2(existing.frozenUsdtAmount),
                     },
+                    // Добавляем сумму заморозки к trustBalance при отмене сделки "В работе"
+                    trustBalance: {
+                      increment: truncate2(existing.frozenUsdtAmount),
+                    },
                   },
+                });
+              }
+            } else if (existing.status === Status.READY) {
+              // Для готовых сделок при отмене списываем с trustBalance и убираем прибыль
+              const usdtAmount = existing.rate
+                ? existing.amount / existing.rate
+                : 0;
+
+              if (usdtAmount > 0) {
+                console.log(
+                  `[Admin Cancel] Processing READY->CANCELED: trader=${existing.traderId}, usdtAmount=${usdtAmount}`
+                );
+
+                const updateFields: any = {
+                  // Списываем сумму в USDT с trustBalance
+                  trustBalance: { decrement: truncate2(usdtAmount) },
+                };
+
+                // Если у сделки была прибыль, убираем её
+                if (existing.traderProfit && existing.traderProfit > 0) {
+                  updateFields.profitFromDeals = {
+                    decrement: truncate2(existing.traderProfit),
+                  };
+                }
+
+                console.log(`[Admin Cancel] READY balance deduction:`, {
+                  usdtAmount,
+                  traderProfit: existing.traderProfit,
+                  updateFields,
+                });
+
+                await db.user.update({
+                  where: { id: existing.traderId },
+                  data: updateFields,
                 });
               }
             }

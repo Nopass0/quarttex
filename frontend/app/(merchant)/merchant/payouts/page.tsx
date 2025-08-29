@@ -1,27 +1,27 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { PayoutsList } from "@/components/merchant/payouts-list"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
+import { useState } from "react";
+import { PayoutsList } from "@/components/merchant/payouts-list";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { DatePickerWithRange } from "@/components/ui/date-picker-range"
-import { Search, Filter, Download, Loader2 } from "lucide-react"
-import { exportPayoutsToExcel, type ExportPayout } from "@/lib/excel-export"
-import { API_URL } from "@/lib/utils"
-import { useMerchantAuth } from "@/stores/merchant-auth"
-import { toast } from "sonner"
+} from "@/components/ui/select";
+import { DatePickerWithRange } from "@/components/ui/date-picker-range";
+import { Search, Filter, Download, Loader2 } from "lucide-react";
+import { exportPayoutsToExcel, type ExportPayout } from "@/lib/excel-export";
+import { API_URL } from "@/lib/utils";
+import { useMerchantAuth } from "@/stores/merchant-auth";
+import { toast } from "sonner";
 
 export default function MerchantPayoutsPage() {
-  const { sessionToken } = useMerchantAuth()
+  const { sessionToken } = useMerchantAuth();
   const [filters, setFilters] = useState({
     status: "ALL",
     dateFrom: "",
@@ -30,15 +30,15 @@ export default function MerchantPayoutsPage() {
     amountTo: "",
     search: "",
     sortBy: "createdAt",
-    sortOrder: "desc" as "asc" | "desc"
-  })
+    sortOrder: "desc" as "asc" | "desc",
+  });
 
-  const [showFilters, setShowFilters] = useState(false)
-  const [isExporting, setIsExporting] = useState(false)
+  const [showFilters, setShowFilters] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleFilterChange = (key: string, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }))
-  }
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
 
   const handleResetFilters = () => {
     setFilters({
@@ -49,64 +49,64 @@ export default function MerchantPayoutsPage() {
       amountTo: "",
       search: "",
       sortBy: "createdAt",
-      sortOrder: "desc"
-    })
-  }
+      sortOrder: "desc",
+    });
+  };
 
   const handleExport = async () => {
     try {
-      setIsExporting(true)
+      setIsExporting(true);
 
-      const allPayouts: ExportPayout[] = []
+      const allPayouts: ExportPayout[] = [];
 
       const buildParams = (page: number) => {
         const params = new URLSearchParams({
           page: page.toString(),
           limit: "100",
-        })
-        if (filters.status && filters.status !== "ALL") params.append("status", filters.status)
-        if (filters.dateFrom) params.append("dateFrom", filters.dateFrom)
-        if (filters.dateTo) params.append("dateTo", filters.dateTo)
-        if (filters.amountFrom) params.append("amountFrom", filters.amountFrom)
-        if (filters.amountTo) params.append("amountTo", filters.amountTo)
-        if (filters.search) params.append("search", filters.search)
-        if (filters.sortBy) params.append("sortBy", filters.sortBy)
-        if (filters.sortOrder) params.append("sortOrder", filters.sortOrder)
-        return params
+        });
+        if (filters.status && filters.status !== "ALL")
+          params.append("status", filters.status);
+        if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
+        if (filters.dateTo) params.append("dateTo", filters.dateTo);
+        if (filters.amountFrom) params.append("amountFrom", filters.amountFrom);
+        if (filters.amountTo) params.append("amountTo", filters.amountTo);
+        if (filters.search) params.append("search", filters.search);
+        if (filters.sortBy) params.append("sortBy", filters.sortBy);
+        if (filters.sortOrder) params.append("sortOrder", filters.sortOrder);
+        return params;
+      };
 
-      }
-
-      let page = 1
-      let totalPages = 1
+      let page = 1;
+      let totalPages = 1;
 
       do {
         const response = await fetch(
           `${API_URL}/merchant/payouts?${buildParams(page)}`,
           { headers: { Authorization: `Bearer ${sessionToken}` } }
-        )
+        );
         if (!response.ok) {
-          throw new Error("Failed to fetch payouts for export")
+          throw new Error("Failed to fetch payouts for export");
         }
-        const data = await response.json()
-        const payouts: ExportPayout[] = data.data || []
-        allPayouts.push(...payouts)
-        const meta = data.meta || data.pagination
-        totalPages = meta?.totalPages || meta?.pages || 1
-        page++
-      } while (page <= totalPages)
+        const data = await response.json();
+        const payouts: ExportPayout[] = data.data || [];
+        allPayouts.push(...payouts);
+        const meta = data.meta || data.pagination;
+        totalPages = meta?.totalPages || meta?.pages || 1;
+        page++;
+      } while (page <= totalPages);
 
       if (allPayouts.length === 0) {
-        toast.warning("Нет выплат для экспорта")
-        return
+        toast.warning("Нет выплат для экспорта");
+        return;
       }
-      exportPayoutsToExcel(allPayouts, "merchant_payouts")
+      exportPayoutsToExcel(allPayouts, "merchant_payouts");
     } catch (error) {
-      console.error("Failed to export payouts:", error)
-      toast.error("Не удалось экспортировать выплаты")
+      console.error("Failed to export payouts:", error);
+      toast.error("Не удалось экспортировать выплаты");
     } finally {
-      setIsExporting(false)
+      setIsExporting(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -118,7 +118,7 @@ export default function MerchantPayoutsPage() {
             Управляйте своими выплатами и отслеживайте их статус
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -196,7 +196,9 @@ export default function MerchantPayoutsPage() {
                 type="number"
                 placeholder="0"
                 value={filters.amountFrom}
-                onChange={(e) => handleFilterChange("amountFrom", e.target.value)}
+                onChange={(e) =>
+                  handleFilterChange("amountFrom", e.target.value)
+                }
               />
             </div>
 
@@ -210,15 +212,37 @@ export default function MerchantPayoutsPage() {
                 onChange={(e) => handleFilterChange("amountTo", e.target.value)}
               />
             </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label>Период</Label>
+              <DatePickerWithRange
+                date={
+                  filters.dateFrom && filters.dateTo
+                    ? {
+                        from: new Date(filters.dateFrom),
+                        to: new Date(filters.dateTo),
+                      }
+                    : null
+                }
+                onDateChange={(range) => {
+                  handleFilterChange(
+                    "dateFrom",
+                    range?.from?.toISOString().split("T")[0] || ""
+                  );
+                  handleFilterChange(
+                    "dateTo",
+                    range?.to?.toISOString().split("T")[0] || ""
+                  );
+                }}
+              />
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={handleResetFilters}>
               Сбросить
             </Button>
-            <Button>
-              Применить фильтры
-            </Button>
+            <Button>Применить фильтры</Button>
           </div>
         </Card>
       )}
@@ -226,5 +250,5 @@ export default function MerchantPayoutsPage() {
       {/* Payouts List */}
       <PayoutsList filters={filters} />
     </div>
-  )
+  );
 }

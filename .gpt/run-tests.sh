@@ -6,7 +6,7 @@ echo ""
 
 # Backend tests
 echo "📦 Backend Tests:"
-cd /home/user/projects/chase/backend
+cd /home/user/projects/quattrex/backend
 
 # TypeScript check
 echo -n "  TypeScript: "
@@ -39,7 +39,7 @@ echo ""
 
 # Frontend tests
 echo "📱 Frontend Tests:"
-cd /home/user/projects/chase/frontend
+cd /home/user/projects/quattrex/frontend
 
 # TypeScript check
 echo -n "  TypeScript: "
@@ -62,7 +62,7 @@ echo ""
 
 # API tests
 echo "🌐 API Tests:"
-cd /home/user/projects/chase
+cd /home/user/projects/quattrex
 
 # Health check
 echo -n "  Health Check: "

@@ -21,6 +21,16 @@ import {
 import ErrorSchema from "@/types/error";
 import { roundDown2 } from "@/utils/rounding";
 import { randomBytes } from "node:crypto";
+import {
+  endOfDay,
+  endOfMonth,
+  endOfYear,
+  startOfDay,
+  startOfMonth,
+  startOfYear,
+  subDays,
+  subHours,
+} from "date-fns";
 
 /* ─────────── Общие схемы ─────────── */
 
@@ -37,6 +47,13 @@ const MerchantBase = t.Object({
   createdAt: t.String(),
   balanceUsdt: t.Number(),
   countInRubEquivalent: t.Boolean(),
+  // Поля аукционной системы
+  isAuctionEnabled: t.Boolean(),
+  auctionBaseUrl: t.Nullable(t.String()),
+  rsaPublicKeyPem: t.Nullable(t.String()),
+  rsaPrivateKeyPem: t.Nullable(t.String()),
+  keysGeneratedAt: t.Nullable(t.String()),
+  externalSystemName: t.Nullable(t.String()),
 });
 
 const MerchantWithCounters = t.Intersect([
@@ -50,8 +67,11 @@ const MerchantWithCounters = t.Intersect([
 
 /* ─────────── Утилиты ─────────── */
 
-const toISO = <T extends { createdAt: Date }>(obj: T) =>
-  ({ ...obj, createdAt: obj.createdAt.toISOString() } as any);
+const toISO = <T extends { createdAt: Date; keysGeneratedAt?: Date | null }>(obj: T) => ({
+  ...obj,
+  createdAt: obj.createdAt.toISOString(),
+  keysGeneratedAt: obj.keysGeneratedAt ? obj.keysGeneratedAt.toISOString() : obj.keysGeneratedAt,
+} as any);
 
 /* ─────────── Роутер ─────────── */
 
@@ -75,6 +95,13 @@ export default (app: Elysia) =>
               disabled: true,
               banned: true,
               countInRubEquivalent: true,
+              // Поля аукционной системы
+              isAuctionEnabled: true,
+              auctionBaseUrl: true,
+              rsaPublicKeyPem: true,
+              rsaPrivateKeyPem: true,
+              keysGeneratedAt: true,
+              externalSystemName: true,
             },
           });
           return new Response(JSON.stringify(toISO(m)), {
@@ -218,6 +245,13 @@ export default (app: Elysia) =>
             disabled: true,
             banned: true,
             countInRubEquivalent: true,
+            // Поля аукционной системы
+            isAuctionEnabled: true,
+            auctionBaseUrl: true,
+            rsaPublicKeyPem: true,
+            rsaPrivateKeyPem: true,
+            keysGeneratedAt: true,
+            externalSystemName: true,
           },
         });
 
@@ -344,6 +378,13 @@ export default (app: Elysia) =>
               apiKeyPublic: true,
               apiKeyPrivate: true,
               countInRubEquivalent: true,
+              // Поля аукционной системы
+              isAuctionEnabled: true,
+              auctionBaseUrl: true,
+              rsaPublicKeyPem: true,
+              rsaPrivateKeyPem: true,
+              keysGeneratedAt: true,
+              externalSystemName: true,
             },
           });
           return toISO(merchant);
@@ -1472,6 +1513,350 @@ export default (app: Elysia) =>
             }),
           }),
           404: ErrorSchema,
+        },
+      }
+    )
+
+    /* ───────── GET /admin/merchant/:id/statistics ───────── */
+    .get(
+      "/:id/statistics",
+      async ({ params, query, error }) => {
+        try {
+          const { id } = params;
+          const period = query.period || "all";
+          
+          let dateFrom: Date;
+          let dateTo: Date = new Date();
+
+          switch (period) {
+            case "24h":
+              dateFrom = subHours(new Date(), 24);
+              break;
+            case "today":
+              dateFrom = startOfDay(new Date());
+              dateTo = endOfDay(new Date());
+              break;
+            case "yesterday":
+              dateFrom = startOfDay(subDays(new Date(), 1));
+              dateTo = endOfDay(subDays(new Date(), 1));
+              break;
+            case "week":
+              dateFrom = subDays(new Date(), 7);
+              break;
+            case "month":
+              dateFrom = startOfMonth(new Date());
+              dateTo = endOfMonth(new Date());
+              break;
+            case "year":
+              dateFrom = startOfYear(new Date());
+              dateTo = endOfYear(new Date());
+              break;
+            case "all":
+              dateFrom = new Date(0);
+              break;
+            default:
+              dateFrom = startOfDay(new Date());
+          }
+
+          // Получаем мерчанта
+          const merchant = await db.merchant.findUnique({
+            where: { id },
+            select: {
+              id: true,
+              name: true,
+              countInRubEquivalent: true,
+              balanceUsdt: true,
+            },
+          });
+
+          if (!merchant) {
+            return error(404, { error: "Мерчант не найден" });
+          }
+
+          // Получаем все успешные сделки для расчета баланса
+          const successfulDealsForBalance = await db.transaction.findMany({
+            where: {
+              merchantId: merchant.id,
+              type: TransactionType.IN,
+              status: Status.READY,
+            },
+            select: {
+              amount: true,
+              methodId: true,
+              merchantRate: true,
+              rate: true,
+            },
+          });
+
+          // Получаем все завершенные выплаты для расчета баланса
+          const completedPayoutsForBalance = await db.payout.findMany({
+            where: {
+              merchantId: merchant.id,
+              status: PayoutStatus.COMPLETED,
+            },
+            select: {
+              amount: true,
+              methodId: true,
+              merchantRate: true,
+              rate: true,
+              feePercent: true,
+              method: {
+                select: {
+                  commissionPayin: true,
+                },
+              },
+            },
+          });
+
+          // Получаем все завершенные запросы на settle для вычета из баланса
+          const completedSettles = await db.settleRequest.findMany({
+            where: {
+              merchantId: merchant.id,
+              status: SettleRequestStatus.COMPLETED,
+            },
+            select: {
+              amount: true,
+              amountUsdt: true,
+            },
+          });
+
+          // Получаем информацию о методах с комиссиями
+          const methodIds = [
+            ...new Set(
+              [
+                ...successfulDealsForBalance.map((d) => d.methodId),
+                ...completedPayoutsForBalance.map((p) => p.methodId),
+              ].filter((id): id is string => Boolean(id))
+            ),
+          ];
+
+          const methodsForBalance = await db.method.findMany({
+            where: { id: { in: methodIds } },
+            select: {
+              id: true,
+              commissionPayin: true,
+              commissionPayout: true,
+            },
+          });
+
+          const methodCommissionsMap = new Map(
+            methodsForBalance.map((m) => [m.id, m])
+          );
+
+          // Получаем настройки ККК для всех методов сразу
+          const rateSettings = await db.rateSettings.findMany({
+            where: { methodId: { in: methodIds } },
+            select: {
+              id: true,
+              methodId: true,
+              kkkPercent: true,
+            },
+          });
+          const rateSettingsMap = new Map(
+            rateSettings.map((rs) => [rs.methodId, rs])
+          );
+
+          // Рассчитываем итоговый баланс с учетом комиссий
+          let calculatedBalance = 0;
+          let totalDealsAmount = 0;
+          let totalPayoutsAmount = 0;
+          let totalDealsCommission = 0;
+          let totalPayoutsCommission = 0;
+          let balanceUsdt = 0;
+
+          // Для USDT формулы
+          let totalDealsUsdt = 0;
+          let totalDealsCommissionUsdt = 0;
+          let totalPayoutsUsdt = 0;
+          let totalPayoutsCommissionUsdt = 0;
+          let totalSettledAmount = 0;
+          let totalSettledUsdt = 0;
+
+          // Обрабатываем успешные сделки (входящие платежи)
+          for (const deal of successfulDealsForBalance) {
+            const method = methodCommissionsMap.get(deal.methodId);
+            if (method) {
+              const commissionAmount =
+                deal.amount * (method.commissionPayin / 100);
+              const netAmount = deal.amount - commissionAmount;
+
+              calculatedBalance += netAmount;
+              totalDealsAmount += deal.amount;
+              totalDealsCommission += commissionAmount;
+
+              // Если countInRubEquivalent = false, считаем USDT по merchantRate
+              const rateSetting = rateSettingsMap.get(deal.methodId);
+
+              // Определяем эффективный курс
+              let effectiveRate = deal.merchantRate;
+              if (!deal.merchantRate && deal.rate) {
+                const kkkPercent = rateSetting?.kkkPercent || 0;
+                effectiveRate = deal.rate / (1 + kkkPercent / 100);
+              }
+
+              if (
+                !merchant.countInRubEquivalent &&
+                effectiveRate &&
+                effectiveRate > 0
+              ) {
+                const dealUsdt = deal.amount / effectiveRate;
+                const commissionUsdt = dealUsdt * (method.commissionPayin / 100);
+                const netUsdt = dealUsdt - commissionUsdt;
+
+                const truncatedUsdt = roundDown2(netUsdt);
+                const truncatedDealUsdt = roundDown2(dealUsdt);
+                const truncatedCommissionUsdt = roundDown2(commissionUsdt);
+
+                balanceUsdt += truncatedUsdt;
+                totalDealsUsdt += truncatedDealUsdt;
+                totalDealsCommissionUsdt += truncatedCommissionUsdt;
+              }
+            }
+          }
+
+          // Обрабатываем завершенные выплаты (исходящие платежи)
+          for (const payout of completedPayoutsForBalance) {
+            const commissionPercent =
+              payout.method?.commissionPayout ?? payout.feePercent ?? 0;
+            const commissionAmount = payout.amount * (commissionPercent / 100);
+            const totalAmount = payout.amount + commissionAmount;
+
+            calculatedBalance -= totalAmount;
+            totalPayoutsAmount += payout.amount;
+            totalPayoutsCommission += commissionAmount;
+
+            const payoutRateSetting = rateSettingsMap.get(payout.methodId);
+
+            let effectiveRate = payout.merchantRate;
+            if (!payout.merchantRate && payout.rate) {
+              const kkkPercent = payoutRateSetting?.kkkPercent || 0;
+              effectiveRate = payout.rate / (1 + kkkPercent / 100);
+            }
+
+            if (
+              !merchant.countInRubEquivalent &&
+              effectiveRate &&
+              effectiveRate > 0
+            ) {
+              const payoutUsdt = payout.amount / effectiveRate;
+              const commissionUsdt = payoutUsdt * (commissionPercent / 100);
+              const totalUsdt = payoutUsdt + commissionUsdt;
+
+              const truncatedTotalUsdt = roundDown2(totalUsdt);
+              const truncatedPayoutUsdt = roundDown2(payoutUsdt);
+              const truncatedCommissionUsdt = roundDown2(commissionUsdt);
+
+              balanceUsdt -= truncatedTotalUsdt;
+              totalPayoutsUsdt += truncatedPayoutUsdt;
+              totalPayoutsCommissionUsdt += truncatedCommissionUsdt;
+            }
+          }
+
+          // Вычитаем суммы из завершенных запросов на settle
+          totalSettledAmount = completedSettles.reduce(
+            (sum, s) => sum + s.amount,
+            0
+          );
+          calculatedBalance -= totalSettledAmount;
+
+          if (!merchant.countInRubEquivalent) {
+            for (const settle of completedSettles) {
+              if (settle.amountUsdt) {
+                totalSettledUsdt += roundDown2(settle.amountUsdt);
+              }
+            }
+            balanceUsdt -= totalSettledUsdt;
+          }
+
+          return {
+            period,
+            dateFrom: dateFrom.toISOString(),
+            dateTo: dateTo.toISOString(),
+            balance: {
+              total: calculatedBalance,
+              totalUsdt: !merchant.countInRubEquivalent ? balanceUsdt : undefined,
+              formula: {
+                dealsTotal: totalDealsAmount,
+                dealsCommission: totalDealsCommission,
+                payoutsTotal: totalPayoutsAmount,
+                payoutsCommission: totalPayoutsCommission,
+                settledAmount: totalSettledAmount,
+                calculation: `${totalDealsAmount} - ${totalDealsCommission} - ${totalPayoutsAmount} - ${totalPayoutsCommission} - ${totalSettledAmount} = ${calculatedBalance}`,
+              },
+              formulaUsdt: !merchant.countInRubEquivalent
+                ? {
+                    dealsTotal: totalDealsUsdt,
+                    dealsCommission: totalDealsCommissionUsdt,
+                    payoutsTotal: totalPayoutsUsdt,
+                    payoutsCommission: totalPayoutsCommissionUsdt,
+                    settledAmount: totalSettledUsdt,
+                                         calculation: `${totalDealsUsdt.toFixed(
+                       2
+                     )} - ${totalDealsCommissionUsdt.toFixed(
+                       2
+                     )} - ${totalPayoutsUsdt.toFixed(
+                       2
+                     )} - ${totalPayoutsCommissionUsdt.toFixed(
+                       2
+                     )} - ${totalSettledUsdt.toFixed(2)} = ${balanceUsdt.toFixed(
+                       2
+                     )}`,
+                  }
+                : undefined,
+            },
+            merchant: {
+              id: merchant.id,
+              name: merchant.name,
+              countInRubEquivalent: merchant.countInRubEquivalent,
+              balanceUsdt: merchant.balanceUsdt,
+            },
+          };
+        } catch (e) {
+          console.error("Error getting merchant statistics:", e);
+          return error(500, { error: "Внутренняя ошибка сервера" });
+        }
+      },
+      {
+        tags: ["admin"],
+        detail: { summary: "Получить статистику мерчанта" },
+        params: t.Object({ id: t.String() }),
+        query: t.Object({
+          period: t.Optional(t.String()),
+        }),
+        response: {
+          200: t.Object({
+            period: t.String(),
+            dateFrom: t.String(),
+                         dateTo: t.String(),
+            balance: t.Object({
+              total: t.Number(),
+              totalUsdt: t.Optional(t.Number()),
+              formula: t.Object({
+                dealsTotal: t.Number(),
+                dealsCommission: t.Number(),
+                payoutsTotal: t.Number(),
+                payoutsCommission: t.Number(),
+                settledAmount: t.Number(),
+                calculation: t.String(),
+              }),
+              formulaUsdt: t.Optional(t.Object({
+                dealsTotal: t.Number(),
+                dealsCommission: t.Number(),
+                payoutsTotal: t.Number(),
+                payoutsCommission: t.Number(),
+                settledAmount: t.Number(),
+                calculation: t.String(),
+              })),
+            }),
+            merchant: t.Object({
+              id: t.String(),
+              name: t.String(),
+              countInRubEquivalent: t.Boolean(),
+              balanceUsdt: t.Number(),
+            }),
+          }),
+          404: ErrorSchema,
+          500: ErrorSchema,
         },
       }
     )

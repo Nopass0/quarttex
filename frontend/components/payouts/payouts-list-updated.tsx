@@ -1051,7 +1051,7 @@ export function PayoutsList() {
                 {payout.status === "created" ? (
                   <Button
                     size="sm"
-                    className="h-9 px-4 bg-[purple-600] hover:bg-[purple-700] text-white"
+                    className="h-9 px-4 bg-[#006039] hover:bg-[#004d2e] text-white"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleAcceptPayout(payout.id);
@@ -1206,13 +1206,13 @@ export function PayoutsList() {
               >
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
-                    <User className="h-4 w-4 text-[purple-600]" />
+                    <User className="h-4 w-4 text-[#006039]" />
                   </div>
                   <span className="text-gray-700 font-medium">
                     ${traderProfile?.numericId || "0000"}
                   </span>
                 </div>
-                <ChevronDown className="h-4 w-4 text-[purple-600]" />
+                <ChevronDown className="h-4 w-4 text-[#006039]" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -1220,7 +1220,7 @@ export function PayoutsList() {
                 onClick={handleLogout}
                 className="text-red-600 focus:text-red-600 hover:bg-gray-50 cursor-pointer"
               >
-                <LogOut className="mr-2 h-4 w-4 text-[purple-600]" />
+                <LogOut className="mr-2 h-4 w-4 text-[#006039]" />
                 Выйти
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -1630,7 +1630,7 @@ export function PayoutsList() {
                 </AnimatePresence>
                 {loadingMore && (
                   <div className="flex items-center justify-center py-4">
-                    <Loader2 className="h-6 w-6 animate-spin text-[purple-600]" />
+                    <Loader2 className="h-6 w-6 animate-spin text-[#006039]" />
                     <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                       Загрузка...
                     </span>

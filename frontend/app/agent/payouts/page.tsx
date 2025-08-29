@@ -103,7 +103,7 @@ export default function AgentPayoutsPage() {
           </Button>
           <Button
             onClick={requestPayout}
-            className="bg-[purple-600] hover:bg-[purple-600]/90"
+            className="bg-[#006039] hover:bg-[#006039]/90"
           >
             <Download className="h-4 w-4 mr-2" />
             Запросить выплату
@@ -120,7 +120,7 @@ export default function AgentPayoutsPage() {
             <CardContent>
               <div className="flex items-center gap-2">
                 <Wallet className="h-5 w-5 text-gray-400" />
-                <span className="text-2xl font-bold text-[purple-600]">
+                <span className="text-2xl font-bold text-[#006039]">
                   ${formatAmount(stats.totalPaid)}
                 </span>
               </div>

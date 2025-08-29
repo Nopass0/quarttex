@@ -142,22 +142,22 @@ export function TraderHeader() {
             className="flex items-center gap-2 text-sm font-normal hover:bg-black/5 transition-colors"
           >
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-gray-100 dark:bg-purple-900/30 flex items-center justify-center">
-                <User className="h-4 w-4 text-[purple-600] dark:text-[purple-600]" />
+              <div className="h-8 w-8 rounded-full bg-gray-100 dark:bg-[#29382f] flex items-center justify-center">
+                <User className="h-4 w-4 text-[#006039] dark:text-[#2d6a42]" />
               </div>
               <span className="hidden sm:block text-gray-700 dark:text-gray-300 font-medium">
                 ID: {traderProfile?.numericId?.toString() || "0"}
               </span>
             </div>
-            <ChevronDown className="h-4 w-4 text-[purple-600] dark:text-[purple-600]" />
+            <ChevronDown className="h-4 w-4 text-[#006039] dark:text-[#2d6a42]" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem
             onClick={handleLogout}
-            className="text-red-600 dark:text-[#c64444] focus:text-red-600 dark:focus:text-[#c64444] hover:bg-gray-50 dark:hover:bg-[purple-900/30] cursor-pointer"
+            className="text-red-600 dark:text-[#c64444] focus:text-red-600 dark:focus:text-[#c64444] hover:bg-gray-50 dark:hover:bg-[#29382f] cursor-pointer"
           >
-            <LogOut className="mr-2 h-4 w-4 text-[purple-600] dark:text-[purple-600]" />
+            <LogOut className="mr-2 h-4 w-4 text-[#006039] dark:text-[#2d6a42]" />
             Выйти
           </DropdownMenuItem>
         </DropdownMenuContent>

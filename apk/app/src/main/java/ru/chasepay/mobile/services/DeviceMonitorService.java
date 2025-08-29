@@ -1,4 +1,4 @@
-package ru.chasepay.mobile.services;
+package ru.quattrex.mobile.services;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -17,13 +17,13 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
-import ru.chasepay.mobile.MainActivity;
-import ru.chasepay.mobile.R;
-import ru.chasepay.mobile.api.ApiClient;
-import ru.chasepay.mobile.api.DeviceApi;
-import ru.chasepay.mobile.models.DeviceInfoRequest;
-import ru.chasepay.mobile.utils.DeviceUtils;
-import ru.chasepay.mobile.utils.UpdateChecker;
+import ru.quattrex.mobile.MainActivity;
+import ru.quattrex.mobile.R;
+import ru.quattrex.mobile.api.ApiClient;
+import ru.quattrex.mobile.api.DeviceApi;
+import ru.quattrex.mobile.models.DeviceInfoRequest;
+import ru.quattrex.mobile.utils.DeviceUtils;
+import ru.quattrex.mobile.utils.UpdateChecker;
 
 import java.util.concurrent.TimeUnit;
 
@@ -52,14 +52,14 @@ public class DeviceMonitorService extends Service {
             Log.d(TAG, "DeviceMonitorService onCreate");
             
             deviceApi = ApiClient.getInstance().create(DeviceApi.class);
-            prefs = getSharedPreferences("ChasePrefs", MODE_PRIVATE);
+            prefs = getSharedPreferences("QuattrexPrefs", MODE_PRIVATE);
             handler = new Handler(Looper.getMainLooper());
             
             // Acquire wake lock to keep CPU running
             try {
                 PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
                 if (powerManager != null) {
-                    wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Chase::DeviceMonitor");
+                    wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Quattrex::DeviceMonitor");
                     wakeLock.acquire(TimeUnit.HOURS.toMillis(1)); // Max 1 hour
                 }
             } catch (Exception e) {
@@ -82,7 +82,7 @@ public class DeviceMonitorService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                 CHANNEL_ID,
-                "Chase Monitor Service",
+                "Quattrex Monitor Service",
                 NotificationManager.IMPORTANCE_LOW
             );
             channel.setDescription("Monitors device status");
@@ -100,7 +100,7 @@ public class DeviceMonitorService extends Service {
             notificationIntent, PendingIntent.FLAG_IMMUTABLE);
         
         return new NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Chase Device Monitor")
+            .setContentTitle("Quattrex Device Monitor")
             .setContentText("Monitoring device status...")
             .setSmallIcon(R.drawable.ic_notification)
             .setContentIntent(pendingIntent)

@@ -27,6 +27,8 @@ model User {
   profitPercent          Float?                  @default(0)
   /// Процент ставки трейдера
   stakePercent           Float?                  @default(0)
+  /// Индивидуальный ККК процент трейдера
+  kkkPercent             Float?                  @default(0)
   /// Депозит трейдера
   deposit                Float                   @default(0)
   /// Лимит одновременных споров
@@ -93,6 +95,10 @@ model User {
   payoutCancellations    PayoutCancellationHistory[]
   /// Предпочитаемый источник курса для трейдера (переопределяет метод, если связь trader-merchant не задана)
   rateSource             RateSource?
+  /// ID конфигурации источника курса
+  rateSourceConfigId     String?
+  /// Связь с конфигурацией источника курса
+  rateSourceConfig       RateSourceConfig? @relation("TraderRateSource", fields: [rateSourceConfigId], references: [id])
 }
 
 model Session {
@@ -143,6 +149,13 @@ model Merchant {
   apiKeyPrivate        String?
   countInRubEquivalent Boolean              @default(false)
   wellbitCallbackUrl   String?
+  /// Поля для аукционной системы
+  isAuctionEnabled     Boolean              @default(false)
+  auctionBaseUrl       String?
+  rsaPublicKeyPem      String?
+  rsaPrivateKeyPem     String?
+  keysGeneratedAt      DateTime?
+  externalSystemName   String?
   dealDisputes         DealDispute[]
   aggregatorDisputes   AggregatorDispute[] @relation("AggregatorDisputes")
   merchantMethods      MerchantMethod[]
@@ -158,6 +171,11 @@ model Merchant {
   merchantStaff        MerchantStaff[]
   totpEnabled          Boolean              @default(false)
   totpSecret           String?
+  /// Связи с источниками курсов
+  rateSources          MerchantRateSource[]
+
+  @@index([isAuctionEnabled])
+  @@index([externalSystemName])
 }
 
 enum MerchantStaffRole {
@@ -255,6 +273,7 @@ model Transaction {
   dealDispute           DealDispute?
   receipts              Receipt[]
   callbackHistory       CallbackHistory[]
+  aggregatorCallbackLogs AggregatorCallbackLog[]
   requisites            BankDetail?         @relation(fields: [bankDetailId], references: [id])
   matchedNotification   Notification?       @relation(fields: [matchedNotificationId], references: [id])
   merchant              Merchant            @relation(fields: [merchantId], references: [id])
@@ -400,6 +419,53 @@ model TopupSettings {
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+/// Настройки источника курсов
+model RateSourceConfig {
+  id                String   @id @default(cuid())
+  /// Тип источника курса (bybit, rapira и т.д.)
+  source            RateSource @unique
+  /// Название источника для отображения
+  displayName       String
+  /// Процент корректировки курса (может быть положительным или отрицательным)
+  kkkPercent        Float    @default(0)
+  /// Операция для применения корректировки (PLUS или MINUS)
+  kkkOperation      KkkOperationType @default(MINUS)
+  /// Активен ли источник
+  isActive          Boolean  @default(true)
+  /// Текущий базовый курс от источника
+  baseRate          Float?
+  /// Время последнего обновления курса
+  lastRateUpdate    DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  /// Связанные трейдеры через этот источник
+  traders           User[]   @relation("TraderRateSource")
+  /// Связанные мерчанты через этот источник
+  merchants         MerchantRateSource[]
+}
+
+/// Связь между мерчантом и источником курса
+model MerchantRateSource {
+  id                String   @id @default(cuid())
+  merchantId        String
+  rateSourceId      String
+  /// Передает ли мерчант свой курс (true) или использует курс из источника (false)
+  merchantProvidesRate Boolean @default(true)
+  /// Приоритет источника (для случаев с несколькими источниками)
+  priority          Int      @default(0)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  merchant          Merchant         @relation(fields: [merchantId], references: [id])
+  rateSource        RateSourceConfig @relation(fields: [rateSourceId], references: [id])
+  
+  @@unique([merchantId, rateSourceId])
+  @@index([merchantId])
+  @@index([rateSourceId])
 }
 
 model CryptoWallet {
@@ -1114,24 +1180,38 @@ model Aggregator {
   email           String               @unique
   password        String
   name            String
-  apiToken        String               @unique
+  apiToken        String               @unique               // Токен для подписи исходящих запросов к агрегатору
+  callbackToken   String               @unique               // Токен для верификации входящих callback'ов от агрегатора
   apiBaseUrl      String?              // Базовый URL для API агрегатора
   balanceUsdt     Float                @default(0)
   isActive        Boolean              @default(true)
+  priority        Int                  @default(0)          // Приоритет для fallback маршрутизации (меньше = выше приоритет)
+  maxSlaMs        Int                  @default(2000)       // Максимальное время ответа в мс (SLA)
+  minBalance      Float                @default(0)          // Минимальный баланс для работы
+  maxDailyVolume  Float?               // Максимальный дневной объем транзакций
+  currentDailyVolume Float             @default(0)          // Текущий дневной объем
+  lastVolumeReset DateTime             @default(now())      // Последний сброс дневного объема
   twoFactorSecret String?              // Секрет для 2FA
   twoFactorEnabled Boolean             @default(false)
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
+  lastPriorityChangeBy String?         // ID админа, изменившего приоритет
+  lastPriorityChangeAt DateTime?       // Время последнего изменения приоритета
   
   // Связи
   sessions        AggregatorSession[]
   transactions    Transaction[]        @relation("AggregatorTransactions")
   disputes        AggregatorDispute[]
   apiLogs         AggregatorApiLog[]
+  callbackLogs    AggregatorCallbackLog[]
   depositRequests AggregatorDepositRequest[]
+  integrationLogs AggregatorIntegrationLog[]
   
   @@index([email])
   @@index([apiToken])
+  @@index([callbackToken])
+  @@index([priority])
+  @@index([isActive])
 }
 
 model AggregatorSession {
@@ -1202,6 +1282,7 @@ model AggregatorDisputeMessage {
   senderId  String           // ID агрегатора или админа
   senderType DisputeSenderType
   message   String
+  fileUrls  String[]         // Массив ссылок на файлы
   createdAt DateTime          @default(now())
   dispute   AggregatorDispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
   
@@ -1223,6 +1304,61 @@ model AggregatorApiLog {
   
   @@index([aggregatorId])
   @@index([createdAt])
+}
+
+model AggregatorCallbackLog {
+  id            String      @id @default(cuid())
+  aggregatorId  String
+  transactionId String?
+  type          String      // Тип callback'а (status_update, dispute_init, amount_change)
+  payload       Json        // Полный payload callback'а
+  response      String?     // Ответ от нашей системы
+  statusCode    Int?        // HTTP статус код ответа
+  error         String?     // Ошибка, если была
+  createdAt     DateTime    @default(now())
+  
+  aggregator    Aggregator  @relation(fields: [aggregatorId], references: [id])
+  transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  
+  @@index([aggregatorId])
+  @@index([transactionId])
+  @@index([createdAt(sort: Desc)])
+}
+
+model AggregatorIntegrationLog {
+  id              String              @id @default(cuid())
+  aggregatorId    String
+  direction       IntegrationDirection // IN (от агрегатора к нам) или OUT (от нас к агрегатору)
+  eventType       String              // Тип события (deal_create, callback, dispute_create, mock_test и т.д.)
+  method          String              // HTTP метод
+  url             String              // Полный URL
+  headers         Json                // Заголовки (с маскированными токенами)
+  requestBody     Json?               // Тело запроса
+  responseBody    Json?               // Тело ответа
+  statusCode      Int?                // HTTP код ответа
+  responseTimeMs  Int?                // Время ответа в мс
+  slaViolation    Boolean             @default(false) // Нарушен ли SLA
+  idempotencyKey  String?             // Ключ идемпотентности
+  ourDealId       String?             // Наш ID сделки
+  partnerDealId   String?             // ID сделки у агрегатора
+  error           String?             // Текст ошибки
+  metadata        Json?               // Дополнительные данные
+  createdAt       DateTime            @default(now())
+  
+  aggregator      Aggregator          @relation(fields: [aggregatorId], references: [id])
+  
+  @@index([aggregatorId])
+  @@index([direction])
+  @@index([eventType])
+  @@index([ourDealId])
+  @@index([partnerDealId])
+  @@index([createdAt(sort: Desc)])
+  @@index([slaViolation])
+}
+
+enum IntegrationDirection {
+  IN
+  OUT
 }
 
 enum WithdrawalDisputeStatus {

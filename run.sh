@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Colors for output
-GREEN='\033[0;32m'
+PURPLE='\033[0;35m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
@@ -35,7 +35,7 @@ SUPER_ADMIN_KEY="local-admin-key"
 EOF
     else
         cat > backend/.env << 'EOF'
-DATABASE_URL="postgresql://postgres:password@localhost:5432/chase"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/quattrex"
 JWT_SECRET="local-jwt-secret-key-change-in-production"
 PORT=3001
 NODE_ENV=development
@@ -67,9 +67,9 @@ if grep -q "localhost\|127.0.0.1" backend/.env 2>/dev/null; then
 
     # Create database if not exists
     echo -e "${BLUE}Checking local database...${NC}"
-    psql -U postgres -h localhost -tc "SELECT 1 FROM pg_database WHERE datname = 'chase'" | grep -q 1 || {
-        echo -e "${YELLOW}Creating database 'chase'...${NC}"
-        psql -U postgres -h localhost -c "CREATE DATABASE chase"
+    psql -U postgres -h localhost -tc "SELECT 1 FROM pg_database WHERE datname = 'quattrex'" | grep -q 1 || {
+        echo -e "${YELLOW}Creating database 'quattrex'...${NC}"
+        psql -U postgres -h localhost -c "CREATE DATABASE quattrex"
     }
 else
     echo -e "${BLUE}Using external database${NC}"
@@ -102,7 +102,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 # Start backend
-echo -e "${GREEN}Starting backend on port 3001...${NC}"
+echo -e "${PURPLE}Starting backend on port 3001...${NC}"
 (cd backend && bun run dev) &
 BACKEND_PID=$!
 
@@ -121,13 +121,13 @@ else
 fi
 
 # Start frontend
-echo -e "${GREEN}Starting frontend on port 3000...${NC}"
+echo -e "${PURPLE}Starting frontend on port 3000...${NC}"
 (cd frontend && npm run dev) &
 FRONTEND_PID=$!
 
 echo -e "${BLUE}Development environment is running!${NC}"
-echo -e "${GREEN}Backend: http://localhost:3001${NC}"
-echo -e "${GREEN}Frontend: http://localhost:3000${NC}"
+echo -e "${PURPLE}Backend: http://localhost:3001${NC}"
+echo -e "${PURPLE}Frontend: http://localhost:3000${NC}"
 echo -e "${YELLOW}Press Ctrl+C to stop all services${NC}"
 
 # Wait for background processes

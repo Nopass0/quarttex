@@ -5,7 +5,7 @@ echo "🚀 Starting Chase services..."
 
 # Start backend
 echo "Starting backend..."
-cd /home/user/projects/chase/backend
+cd /home/user/projects/quattrex/backend
 nohup bun dev > /tmp/backend.log 2>&1 &
 BACKEND_PID=$!
 echo $BACKEND_PID > /tmp/backend.pid
@@ -23,7 +23,7 @@ done
 
 # Start frontend
 echo "Starting frontend..."
-cd /home/user/projects/chase/frontend
+cd /home/user/projects/quattrex/frontend
 nohup npm run dev > /tmp/frontend.log 2>&1 &
 FRONTEND_PID=$!
 echo $FRONTEND_PID > /tmp/frontend.pid

@@ -133,7 +133,7 @@ export default function AggregatorTransactions() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <CreditCard className="h-8 w-8 text-[purple-600]" />
+          <CreditCard className="h-8 w-8 text-[#006039]" />
           Транзакции
         </h1>
         <p className="text-muted-foreground">

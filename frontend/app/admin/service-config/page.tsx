@@ -224,14 +224,14 @@ export default function ServiceConfigPage() {
             <Tabs value={activeTab} onValueChange={handleTabChange}>
               <TabsList>
                 <TabsTrigger value="device_emulator" className="flex items-center gap-2">
-                  <Cpu className="h-4 w-4 text-[purple-600]" />
+                  <Cpu className="h-4 w-4 text-[#006039]" />
                   Device Emulator
                   <Badge variant={services.device_emulator.enabled ? "default" : "secondary"}>
                     {services.device_emulator.enabled ? "ON" : "OFF"}
                   </Badge>
                 </TabsTrigger>
                 <TabsTrigger value="notification_auto_processor" className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-[purple-600]" />
+                  <MessageSquare className="h-4 w-4 text-[#006039]" />
                   Notification Processor
                   <Badge variant={services.notification_auto_processor.enabled ? "default" : "secondary"}>
                     {services.notification_auto_processor.enabled ? "ON" : "OFF"}
@@ -271,19 +271,19 @@ export default function ServiceConfigPage() {
                             onClick={resetConfig}
                             disabled={isSaving}
                           >
-                            <RotateCcw className="h-4 w-4 mr-2 text-[purple-600]" />
+                            <RotateCcw className="h-4 w-4 mr-2 text-[#006039]" />
                             Сбросить
                           </Button>
                           <Button
                             size="sm"
                             onClick={handleSaveConfig}
                             disabled={isSaving || editorErrors.length > 0}
-                            className="bg-[#1B5E3F] hover:bg-[#1B5E3F]/90"
+                            className="bg-[#530FAD] hover:bg-[#3d0b80]"
                           >
                             {isSaving ? (
                               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                             ) : (
-                              <Save className="h-4 w-4 mr-2 text-[purple-600]" />
+                              <Save className="h-4 w-4 mr-2 text-[#006039]" />
                             )}
                             Сохранить
                           </Button>
@@ -293,7 +293,7 @@ export default function ServiceConfigPage() {
                       {editorErrors.length > 0 && (
                         <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                           <div className="flex items-center gap-2 text-red-600">
-                            <XCircle className="h-4 w-4 text-[purple-600]" />
+                            <XCircle className="h-4 w-4 text-[#006039]" />
                             <span className="text-sm font-medium">Ошибки валидации JSON:</span>
                           </div>
                           <ul className="mt-1 text-sm text-red-600 list-disc list-inside">
@@ -398,7 +398,7 @@ export default function ServiceConfigPage() {
                               toast.success("Статистика обновлена")
                             }}
                           >
-                            <RefreshCw className="h-4 w-4 mr-2 text-[purple-600]" />
+                            <RefreshCw className="h-4 w-4 mr-2 text-[#006039]" />
                             Обновить статистику
                           </Button>
                           <Button
@@ -407,19 +407,19 @@ export default function ServiceConfigPage() {
                             onClick={resetConfig}
                             disabled={isSaving}
                           >
-                            <RotateCcw className="h-4 w-4 mr-2 text-[purple-600]" />
+                            <RotateCcw className="h-4 w-4 mr-2 text-[#006039]" />
                             Сбросить
                           </Button>
                           <Button
                             size="sm"
                             onClick={handleSaveConfig}
                             disabled={isSaving || editorErrors.length > 0}
-                            className="bg-[#1B5E3F] hover:bg-[#1B5E3F]/90"
+                            className="bg-[#530FAD] hover:bg-[#3d0b80]"
                           >
                             {isSaving ? (
                               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                             ) : (
-                              <Save className="h-4 w-4 mr-2 text-[purple-600]" />
+                              <Save className="h-4 w-4 mr-2 text-[#006039]" />
                             )}
                             Сохранить
                           </Button>
@@ -429,7 +429,7 @@ export default function ServiceConfigPage() {
                       {editorErrors.length > 0 && (
                         <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                           <div className="flex items-center gap-2 text-red-600">
-                            <XCircle className="h-4 w-4 text-[purple-600]" />
+                            <XCircle className="h-4 w-4 text-[#006039]" />
                             <span className="text-sm font-medium">Ошибки валидации JSON:</span>
                           </div>
                           <ul className="mt-1 text-sm text-red-600 list-disc list-inside">

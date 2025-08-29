@@ -28,7 +28,7 @@
 -keep class com.google.gson.stream.** { *; }
 
 # Keep data models - CRITICAL for preventing crashes
--keep class ru.chasepay.mobile.data.models.** { *; }
+-keep class ru.quattrex.mobile.data.models.** { *; }
 -keep class ru.chasepay.mobile.data.remote.responses.** { *; }
 -keep class ru.chasepay.mobile.data.remote.requests.** { *; }
 

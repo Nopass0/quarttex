@@ -7,7 +7,7 @@ echo "    Deploying Chase with APK Build"
 echo "================================================"
 
 # Get server URL from environment or use default
-SERVER_URL=${SERVER_URL:-https://chase.example.com}
+SERVER_URL=${SERVER_URL:-https://quattrex.example.com}
 echo "Server URL: $SERVER_URL"
 
 # Build APK first
@@ -41,7 +41,7 @@ if [ -f app/build/outputs/apk/release/app-release-unsigned.apk ]; then
     
     # Copy APK to backend uploads directory
     mkdir -p ../backend/uploads/apk
-    cp app/build/outputs/apk/release/app-release-unsigned.apk ../backend/uploads/apk/chase-mobile.apk
+    cp app/build/outputs/apk/release/app-release-unsigned.apk ../backend/uploads/apk/quattrex-mobile.apk
     
     # Get file size
     FILE_SIZE=$(stat -c%s "app/build/outputs/apk/release/app-release-unsigned.apk" 2>/dev/null || stat -f%z "app/build/outputs/apk/release/app-release-unsigned.apk" 2>/dev/null)
@@ -79,5 +79,5 @@ docker-compose up -d --build
 echo ""
 echo "✅ Deployment complete!"
 echo "   APK Version: $VERSION_NAME"
-echo "   APK Location: /uploads/apk/chase-mobile.apk"
+echo "   APK Location: /uploads/apk/quattrex-mobile.apk"
 echo "   Server URL: $SERVER_URL"

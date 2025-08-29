@@ -21,6 +21,7 @@ async function createTestAggregator() {
     // Создаем нового агрегатора
     const hashedPassword = await bcrypt.hash('Test123!', 10)
     const apiToken = crypto.randomBytes(32).toString('hex')
+    const callbackToken = crypto.randomBytes(32).toString('hex')
     
     const aggregator = await db.aggregator.create({
       data: {
@@ -28,6 +29,7 @@ async function createTestAggregator() {
         password: hashedPassword,
         name: 'Test Aggregator',
         apiToken: apiToken,
+        callbackToken: callbackToken,
         balanceUsdt: 10000,
         isActive: true,
         twoFactorEnabled: false

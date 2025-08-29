@@ -56,13 +56,63 @@ echo "==================== RUNNING MIGRATIONS ===================="
 echo "Current migration status:"
 bunx prisma migrate status || true
 
-# Check for failed migrations
-echo -e "\nChecking for failed migrations..."
-if bunx prisma migrate status | grep -q "failed"; then
-    echo "Found failed migration, attempting to fix..."
-    # Mark failed migration as complete
-    bunx prisma db execute --schema=./prisma/schema.prisma --stdin <<< "UPDATE \"_prisma_migrations\" SET finished_at = NOW(), applied_steps_count = 1 WHERE finished_at IS NULL;" || true
-fi
+# Pre-fix known issues before attempting migrations
+echo -e "\nPre-fixing known migration issues..."
+
+# 1) Ensure AdminLog table exists (for 20250711000001_add_admin_log)
+cat <<'SQL' | bunx prisma db execute --schema=./prisma/schema.prisma --stdin || true
+DO $$
+BEGIN
+  IF to_regclass('"AdminLog"') IS NULL THEN
+    CREATE TABLE "AdminLog" (
+      "id" TEXT NOT NULL,
+      "adminId" TEXT NOT NULL,
+      "action" TEXT NOT NULL,
+      "details" TEXT,
+      "ip" TEXT NOT NULL,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "AdminLog_pkey" PRIMARY KEY ("id")
+    );
+    CREATE INDEX IF NOT EXISTS "AdminLog_adminId_idx" ON "AdminLog"("adminId");
+    CREATE INDEX IF NOT EXISTS "AdminLog_createdAt_idx" ON "AdminLog"("createdAt");
+  END IF;
+END $$;
+SQL
+
+# 2) Idempotently backfill Aggregator.callbackToken to avoid required column errors during db push
+cat <<'SQL' | bunx prisma db execute --schema=./prisma/schema.prisma --stdin || true
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+DO $$
+BEGIN
+  IF to_regclass('"Aggregator"') IS NOT NULL THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = 'Aggregator' AND column_name = 'callbackToken'
+    ) THEN
+      ALTER TABLE "Aggregator" ADD COLUMN "callbackToken" TEXT;
+    END IF;
+    UPDATE "Aggregator"
+    SET "callbackToken" = COALESCE(
+      "callbackToken",
+      md5(uuid_generate_v4()::text || '-' || now()::text)
+    )
+    WHERE "callbackToken" IS NULL;
+    BEGIN
+      ALTER TABLE "Aggregator" ALTER COLUMN "callbackToken" SET NOT NULL;
+    EXCEPTION WHEN others THEN NULL;
+    END;
+    CREATE UNIQUE INDEX IF NOT EXISTS "Aggregator_callbackToken_key" ON "Aggregator"("callbackToken");
+    CREATE INDEX IF NOT EXISTS "Aggregator_callbackToken_idx" ON "Aggregator"("callbackToken");
+  END IF;
+END $$;
+SQL
+
+# 3) Explicitly mark the known failed migration as finished to unblock migrate deploy
+cat <<'SQL' | bunx prisma db execute --schema=./prisma/schema.prisma --stdin || true
+UPDATE "_prisma_migrations"
+SET finished_at = NOW(), applied_steps_count = COALESCE(applied_steps_count, 1)
+WHERE migration_name = '20250711000001_add_admin_log' AND finished_at IS NULL;
+SQL
 
 echo -e "\nApplying migrations..."
 if bunx prisma migrate deploy; then

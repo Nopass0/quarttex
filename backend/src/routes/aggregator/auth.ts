@@ -428,7 +428,7 @@ export default (app: Elysia) =>
               email: t.String(),
               name: t.String(),
               balanceUsdt: t.Number(),
-              apiBaseUrl: t.Optional(t.String()),
+              apiBaseUrl: t.Union([t.String(), t.Null()]),
               twoFactorEnabled: t.Boolean(),
               createdAt: t.String(),
               statistics: t.Object({

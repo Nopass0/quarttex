@@ -1,12 +1,12 @@
-package ru.chasepay.mobile.services;
+package ru.quattrex.mobile.services;
 
 import android.content.SharedPreferences;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
 
-import ru.chasepay.mobile.api.ApiClient;
-import ru.chasepay.mobile.api.DeviceApi;
-import ru.chasepay.mobile.models.NotificationRequest;
+import ru.quattrex.mobile.api.ApiClient;
+import ru.quattrex.mobile.api.DeviceApi;
+import ru.quattrex.mobile.models.NotificationRequest;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -14,7 +14,7 @@ import retrofit2.Response;
 
 public class NotificationListenerService extends android.service.notification.NotificationListenerService {
     private static final String TAG = "NotificationListener";
-    private static final String PREFS_NAME = "ChasePrefs";
+    private static final String PREFS_NAME = "QuattrexPrefs";
     private static final String KEY_DEVICE_TOKEN = "device_token";
     
     private DeviceApi deviceApi;

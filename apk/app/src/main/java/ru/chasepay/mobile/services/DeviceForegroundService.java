@@ -1,4 +1,4 @@
-package ru.chasepay.mobile.services;
+package ru.quattrex.mobile.services;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -16,14 +16,14 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
-import ru.chasepay.mobile.MainActivity;
-import ru.chasepay.mobile.R;
+import ru.quattrex.mobile.MainActivity;
+import ru.quattrex.mobile.R;
 
 public class DeviceForegroundService extends Service {
     private static final String TAG = "DeviceForegroundService";
     private static final String CHANNEL_ID = "DeviceServiceChannel";
     private static final int NOTIFICATION_ID = 1;
-    private static final String PREFS_NAME = "ChasePrefs";
+    private static final String PREFS_NAME = "QuattrexPrefs";
     private static final String KEY_DEVICE_TOKEN = "device_token";
     
     private PowerManager.WakeLock wakeLock;
@@ -47,7 +47,7 @@ public class DeviceForegroundService extends Service {
         PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(
             PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
-            "ChasePay::DeviceServiceWakelock"
+            "QuattrexPay::DeviceServiceWakelock"
         );
         wakeLock.acquire(10*60*1000L); // Hold for 10 minutes, will renew
         
@@ -135,7 +135,7 @@ public class DeviceForegroundService extends Service {
                 "Device Service Channel",
                 NotificationManager.IMPORTANCE_LOW
             );
-            serviceChannel.setDescription("Keeps device connected to ChasePay");
+            serviceChannel.setDescription("Keeps device connected to QuattrexPay");
             
             NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(serviceChannel);
@@ -152,7 +152,7 @@ public class DeviceForegroundService extends Service {
         );
         
         return new NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("ChasePay")
+            .setContentTitle("QuattrexPay")
             .setContentText("Устройство подключено")
             .setSmallIcon(R.drawable.ic_notification)
             .setContentIntent(pendingIntent)

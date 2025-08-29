@@ -619,12 +619,22 @@ export const btEntranceRoutes = new Elysia({ prefix: "/bt-entrance" })
         return error(404, { error: "BT реквизит не найден" });
       }
 
+      // Запрещаем изменение номера телефона у существующих реквизитов
+      if (body.phoneNumber !== undefined && body.phoneNumber !== exists.phoneNumber) {
+        return error(400, { 
+          error: "Номер телефона нельзя изменить после создания реквизита" 
+        });
+      }
+
       // Map TINK to TBANK for consistency if bankType is being updated
       const updateData = {
         ...body,
         sumLimit: body.sumLimit ?? 0,
         operationLimit: body.operationLimit ?? 0,
       };
+
+      // Удаляем phoneNumber из данных обновления, чтобы гарантировать его неизменность
+      delete updateData.phoneNumber;
 
       if (updateData.bankType === "TINK") {
         updateData.bankType = "TBANK";

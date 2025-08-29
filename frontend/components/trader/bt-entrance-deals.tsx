@@ -742,7 +742,7 @@ export function BtEntranceDeals() {
                       onClick={() => setShowRequisiteDetails(false)}
                       className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 -ml-2"
                     >
-                      <ChevronDown className="h-4 w-4 mr-1 rotate-90 text-[purple-600]" />
+                      <ChevronDown className="h-4 w-4 mr-1 rotate-90 text-[#006039]" />
                       Назад
                     </Button>
                     <h3 className="font-medium dark:text-white">
@@ -769,7 +769,7 @@ export function BtEntranceDeals() {
                       }}
                       className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
                     >
-                      <X className="h-4 w-4 text-[purple-600]" />
+                      <X className="h-4 w-4 text-[#006039]" />
                     </Button>
                   </>
                 )}
@@ -850,8 +850,8 @@ export function BtEntranceDeals() {
                       onClick={() => setShowRequisiteDetails(true)}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-[92px] h-[62px] rounded-md bg-gradient-to-tr from-purple-800 via-purple-400 to-purple-400 relative overflow-hidden">
-                          <div className="absolute inset-0 bg-gradient-to-r from-purple-800  to-transparent"></div>
+                        <div className="w-[92px] h-[62px] rounded-md bg-gradient-to-tr from-green-800 via-purple-400 to-purple-400 relative overflow-hidden">
+                          <div className="absolute inset-0 bg-gradient-to-r from-green-800  to-transparent"></div>
                           <div className="absolute top-2 right-4">
                             <svg
                               viewBox="0 0 30 18"
@@ -887,7 +887,7 @@ export function BtEntranceDeals() {
                           </p>
                         </div>
                       </div>
-                      <ChevronDown className="h-5 w-5 text-[purple-600] -rotate-90" />
+                      <ChevronDown className="h-5 w-5 text-[#006039] -rotate-90" />
                     </Button>
                   </div>
 
@@ -940,7 +940,7 @@ export function BtEntranceDeals() {
                       selectedDeal.status === "IN_PROGRESS" ? (
                       <div className="flex flex-col gap-2">
                         <Button
-                          className="w-full bg-[purple-600] hover:bg-[purple-600]/90"
+                          className="w-full bg-[#006039] hover:bg-[#006039]/90"
                           onClick={() =>
                             handleStatusUpdate(selectedDeal.id, "READY")
                           }
@@ -967,7 +967,7 @@ export function BtEntranceDeals() {
                     ) : selectedDeal.status === "PENDING" ? (
                       <div className="flex flex-col gap-2">
                         <Button
-                          className="w-full bg-[purple-600] hover:bg-[purple-600]/90"
+                          className="w-full bg-[#006039] hover:bg-[#006039]/90"
                           onClick={() =>
                             handleStatusUpdate(selectedDeal.id, "ACCEPTED")
                           }

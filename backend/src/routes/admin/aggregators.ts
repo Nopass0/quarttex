@@ -47,7 +47,7 @@ const AggregatorResponseSchema = t.Object({
   email: t.String(),
   name: t.String(),
   apiToken: t.String(),
-  apiBaseUrl: t.Optional(t.String()),
+  apiBaseUrl: t.Union([t.String(), t.Null()]),
   balanceUsdt: t.Number(),
   isActive: t.Boolean(),
   twoFactorEnabled: t.Boolean(),
@@ -163,10 +163,11 @@ export default (app: Elysia) =>
             return error(409, { error: 'Агрегатор с таким email уже существует' })
           }
 
-          // Генерируем пароль и токен
+          // Генерируем пароль и токены
           const password = generatePassword()
           const hashedPassword = await bcrypt.hash(password, 10)
           const apiToken = generateApiToken()
+          const callbackToken = generateApiToken() // Генерируем callback токен
 
           const aggregator = await db.aggregator.create({
             data: {
@@ -174,6 +175,7 @@ export default (app: Elysia) =>
               name: body.name,
               password: hashedPassword,
               apiToken,
+              callbackToken, // Добавляем обязательное поле
               apiBaseUrl: body.apiBaseUrl,
               isActive: body.isActive ?? true,
               balanceUsdt: body.balanceUsdt || 0
@@ -202,7 +204,7 @@ export default (app: Elysia) =>
         body: t.Object({
           email: t.String({ format: 'email', description: 'Email агрегатора' }),
           name: t.String({ description: 'Название агрегатора' }),
-          apiBaseUrl: t.Optional(t.String({ description: 'Базовый URL API агрегатора' })),
+          apiBaseUrl: t.Optional(t.Union([t.String({ description: 'Базовый URL API агрегатора' }), t.Null()])),
           isActive: t.Optional(t.Boolean()),
           balanceUsdt: t.Optional(t.Number())
         }),
@@ -325,7 +327,7 @@ export default (app: Elysia) =>
         body: t.Partial(t.Object({
           email: t.String({ format: 'email' }),
           name: t.String(),
-          apiBaseUrl: t.String(),
+          apiBaseUrl: t.Union([t.String(), t.Null()]),
           isActive: t.Boolean(),
           balanceUsdt: t.Number()
         })),

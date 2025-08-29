@@ -407,7 +407,7 @@ export default function AggregatorDisputes() {
                   <CardContent>
                     <div className="space-y-4">
                       <div className="text-center py-4">
-                        <div className="text-4xl font-bold text-[purple-600]">
+                        <div className="text-4xl font-bold text-[#006039]">
                           {statistics.monthlyDisputes}
                         </div>
                         <p className="text-sm text-muted-foreground mt-2">

@@ -1,4 +1,4 @@
-package ru.chasepay.mobile.utils;
+package ru.quattrex.mobile.utils;
 
 import android.content.Context;
 import android.content.Intent;

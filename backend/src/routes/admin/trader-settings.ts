@@ -68,6 +68,13 @@ export default new Elysia({ prefix: "/traders" })
                 }
               }
             },
+            rateSourceConfig: {
+              select: {
+                id: true,
+                source: true,
+                displayName: true,
+              }
+            },
             _count: {
               select: {
                 tradedTransactions: {
@@ -107,6 +114,7 @@ export default new Elysia({ prefix: "/traders" })
         onlineDevices: trader.devices.filter(d => d.isOnline).length,
         teamName: trader.team?.name || null,
         agentName: trader.team?.agent?.name || null,
+        rateSourceConfig: trader.rateSourceConfig,
         createdAt: trader.createdAt,
       }));
       
@@ -185,6 +193,13 @@ export default new Elysia({ prefix: "/traders" })
                     name: true,
                   }
                 }
+              }
+            },
+            rateSourceConfig: {
+              select: {
+                id: true,
+                source: true,
+                displayName: true,
               }
             }
           }
@@ -280,6 +295,7 @@ export default new Elysia({ prefix: "/traders" })
             payoutRateDelta: body.payoutRateDelta,
             payoutFeePercent: body.payoutFeePercent,
             payoutAcceptanceTime: body.payoutAcceptanceTime,
+            rateSourceConfigId: body.rateSourceConfigId,
           }
         });
 
@@ -315,6 +331,7 @@ export default new Elysia({ prefix: "/traders" })
         payoutRateDelta: t.Number(),
         payoutFeePercent: t.Number(),
         payoutAcceptanceTime: t.Number(),
+        rateSourceConfigId: t.Optional(t.Nullable(t.String())),
       }),
       response: {
         200: t.Object({ 

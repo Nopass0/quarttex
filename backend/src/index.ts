@@ -34,6 +34,7 @@ import wellbitRoutes from "@/routes/wellbit";
 import wellbitBankMappingRoutes from "@/routes/admin/wellbit-bank-mapping";
 import { callbackTestRoute } from "@/routes/test/callback-test";
 import { callbackProxyRoutes } from "@/routes/callback-proxy";
+import auctionRoutes from "@/routes/auction";
 
 import { Glob } from "bun";
 import { pathToFileURL } from "node:url";
@@ -72,28 +73,32 @@ const additionalAdminIPs = parseAdminIPs(Bun.env.ADMIN_IPS);
 const ADMIN_IP_WHITELIST = [...baseAdminIPs, ...additionalAdminIPs];
 
 if (additionalAdminIPs.length > 0) {
-  console.info(`\u2713 Added ${additionalAdminIPs.length} admin IPs from environment: ${additionalAdminIPs.join(', ')}`);
+  console.info(
+    `\u2713 Added ${
+      additionalAdminIPs.length
+    } admin IPs from environment: ${additionalAdminIPs.join(", ")}`
+  );
 }
 
 // ── Auto-add server IP to whitelist ───────────────────────────
 (async () => {
   try {
     // Try to get server's public IP
-    const { stdout } = await execAsync('curl -s https://api.ipify.org');
+    const { stdout } = await execAsync("curl -s https://api.ipify.org");
     const serverIp = stdout.trim();
-    
+
     if (serverIp && /^(\d{1,3}\.){3}\d{1,3}$/.test(serverIp)) {
       // Check if already in database
       const existing = await db.adminIpWhitelist.findUnique({
-        where: { ip: serverIp }
+        where: { ip: serverIp },
       });
-      
+
       if (!existing) {
         await db.adminIpWhitelist.create({
           data: {
             ip: serverIp,
-            description: "Server IP (auto-detected)"
-          }
+            description: "Server IP (auto-detected)",
+          },
         });
         console.info(`✓ Added server IP to admin whitelist: ${serverIp}`);
       } else {
@@ -101,7 +106,7 @@ if (additionalAdminIPs.length > 0) {
       }
     }
   } catch (error) {
-    console.warn('⚠ Could not auto-detect server IP:', error);
+    console.warn("⚠ Could not auto-detect server IP:", error);
   }
 })();
 
@@ -115,7 +120,8 @@ console.info("🔍 Scanning for services...");
 
 // 2) просим Glob отдать абсолютные пути
 for await (const file of glob.scan({ cwd: scanRoot, absolute: true })) {
-  if (file.endsWith("BaseService.ts") || file.endsWith("ServiceRegistry.ts")) continue;
+  if (file.endsWith("BaseService.ts") || file.endsWith("ServiceRegistry.ts"))
+    continue;
 
   // 3) абсолютная строка → file:// URL → динамический import()
   const mod = await import(pathToFileURL(file).href);
@@ -127,33 +133,39 @@ for await (const file of glob.scan({ cwd: scanRoot, absolute: true })) {
   ) {
     const instance = new Service();
     serviceRegistry.register(instance);
-    
+
     // Register service endpoints if any
     const serviceApp = instance.getApp();
     if (serviceApp) {
       serviceApps.push(serviceApp);
-      console.info(`📡 Registered ${instance.getEndpoints().length} endpoints for ${Service.name}`);
+      console.info(
+        `📡 Registered ${instance.getEndpoints().length} endpoints for ${
+          Service.name
+        }`
+      );
     }
-    
+
     // Check if service should be auto-started based on database configuration
     try {
       // First check if service exists in database
       const dbService = await db.service.findUnique({
-        where: { name: Service.name }
+        where: { name: Service.name },
       });
-      
+
       // Only auto-start if:
       // 1. Service exists in DB and is enabled
       // 2. OR service doesn't exist in DB but has autoStart=true (for new services)
-      const shouldAutoStart = dbService 
-        ? dbService.enabled 
+      const shouldAutoStart = dbService
+        ? dbService.enabled
         : (instance as any).autoStart;
-      
+
       if (shouldAutoStart) {
         await serviceRegistry.startService(Service.name);
         console.info(`✅ Service ${Service.name} registered and auto-started`);
       } else {
-        console.info(`📝 Service ${Service.name} registered (auto-start disabled)`);
+        console.info(
+          `📝 Service ${Service.name} registered (auto-start disabled)`
+        );
       }
     } catch (error) {
       console.error(`❌ Failed to check/start service ${Service.name}:`, error);
@@ -163,33 +175,38 @@ for await (const file of glob.scan({ cwd: scanRoot, absolute: true })) {
 
 // Create root app for health endpoint
 const rootApp = new Elysia()
-  .get("/health", () => ({ status: "healthy", timestamp: new Date().toISOString() }))
+  .get("/health", () => ({
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+  }))
   // Custom static file serving for uploads
   .get("/uploads/*", async ({ params, set }) => {
     const filepath = decodeURIComponent(params["*"]);
     const fullPath = join(process.cwd(), "uploads", filepath);
-    
+
     console.log(`[Upload] Requested file: ${filepath}`);
     console.log(`[Upload] Full path: ${fullPath}`);
     console.log(`[Upload] File exists: ${existsSync(fullPath)}`);
-    
+
     if (!existsSync(fullPath)) {
       set.status = 404;
       return "File not found";
     }
-    
+
     try {
       const file = await readFile(fullPath);
-      
+
       // Set appropriate content type based on extension
-      const ext = fullPath.split('.').pop()?.toLowerCase();
-      if (ext === 'jpg' || ext === 'jpeg') set.headers['content-type'] = 'image/jpeg';
-      else if (ext === 'png') set.headers['content-type'] = 'image/png';
-      else if (ext === 'pdf') set.headers['content-type'] = 'application/pdf';
-      else if (ext === 'zip') set.headers['content-type'] = 'application/zip';
-      else if (ext === 'apk') set.headers['content-type'] = 'application/vnd.android.package-archive';
-      else set.headers['content-type'] = 'application/octet-stream';
-      
+      const ext = fullPath.split(".").pop()?.toLowerCase();
+      if (ext === "jpg" || ext === "jpeg")
+        set.headers["content-type"] = "image/jpeg";
+      else if (ext === "png") set.headers["content-type"] = "image/png";
+      else if (ext === "pdf") set.headers["content-type"] = "application/pdf";
+      else if (ext === "zip") set.headers["content-type"] = "application/zip";
+      else if (ext === "apk")
+        set.headers["content-type"] = "application/vnd.android.package-archive";
+      else set.headers["content-type"] = "application/octet-stream";
+
       return file;
     } catch (error) {
       set.status = 500;
@@ -200,28 +217,30 @@ const rootApp = new Elysia()
   .get("/api/uploads/*", async ({ params, set }) => {
     const filepath = decodeURIComponent(params["*"]);
     const fullPath = join(process.cwd(), "uploads", filepath);
-    
+
     console.log(`[API Upload] Requested file: ${filepath}`);
     console.log(`[API Upload] Full path: ${fullPath}`);
     console.log(`[API Upload] File exists: ${existsSync(fullPath)}`);
-    
+
     if (!existsSync(fullPath)) {
       set.status = 404;
       return "File not found";
     }
-    
+
     try {
       const file = await readFile(fullPath);
-      
+
       // Set appropriate content type based on extension
-      const ext = fullPath.split('.').pop()?.toLowerCase();
-      if (ext === 'jpg' || ext === 'jpeg') set.headers['content-type'] = 'image/jpeg';
-      else if (ext === 'png') set.headers['content-type'] = 'image/png';
-      else if (ext === 'pdf') set.headers['content-type'] = 'application/pdf';
-      else if (ext === 'zip') set.headers['content-type'] = 'application/zip';
-      else if (ext === 'apk') set.headers['content-type'] = 'application/vnd.android.package-archive';
-      else set.headers['content-type'] = 'application/octet-stream';
-      
+      const ext = fullPath.split(".").pop()?.toLowerCase();
+      if (ext === "jpg" || ext === "jpeg")
+        set.headers["content-type"] = "image/jpeg";
+      else if (ext === "png") set.headers["content-type"] = "image/png";
+      else if (ext === "pdf") set.headers["content-type"] = "application/pdf";
+      else if (ext === "zip") set.headers["content-type"] = "application/zip";
+      else if (ext === "apk")
+        set.headers["content-type"] = "application/vnd.android.package-archive";
+      else set.headers["content-type"] = "application/octet-stream";
+
       return file;
     } catch (error) {
       set.status = 500;
@@ -230,59 +249,99 @@ const rootApp = new Elysia()
   });
 
 // Main application instance
-const app = new Elysia({ prefix: "/api" })
+const app = new Elysia({
+  prefix: "/api",
+  // Увеличиваем таймауты для тяжелых операций
+  server: {
+    // Настройки для предотвращения 502 ошибок
+    requestTimeout: 60000, // 60 секунд
+    maxPayloadSize: 50 * 1024 * 1024, // 50MB
+  },
+})
   .derive(() => ({
     serviceRegistry,
   }))
+  // Глобальный обработчик ошибок для предотвращения 502
+  .onError(({ error, code, set }) => {
+    console.error(`[Global Error Handler] ${code}:`, error);
+
+    if (code === "TIMEOUT" || error.message?.includes("timeout")) {
+      set.status = 504; // Gateway Timeout instead of 502
+      return {
+        error: "Request timeout",
+        message: "Операция заняла слишком много времени",
+      };
+    }
+
+    if (code === "UNKNOWN") {
+      set.status = 500;
+      return {
+        error: "Internal server error",
+        message: "Внутренняя ошибка сервера",
+      };
+    }
+
+    // Для других ошибок возвращаем стандартную обработку
+    return {
+      error: String(error),
+      code,
+      timestamp: new Date().toISOString(),
+    };
+  })
   .use(ip())
-  .use(cors({
-    origin: (origin) => {
-      // Always allow requests without origin (like Postman, curl, etc.)
-      if (!origin) return true;
-      
-      // Convert to string if needed
-      const originStr = String(origin);
-      
-      // Always allow local development
-      if (originStr.startsWith('http://localhost') || originStr.startsWith('https://localhost')) {
+  .use(
+    cors({
+      origin: (origin) => {
+        // Always allow requests without origin (like Postman, curl, etc.)
+        if (!origin) return true;
+
+        // Convert to string if needed
+        const originStr = String(origin);
+
+        // Always allow local development
+        if (
+          originStr.startsWith("http://localhost") ||
+          originStr.startsWith("https://localhost")
+        ) {
+          return true;
+        }
+
+        // Allow any origin for callbacks (production domains can be restricted here)
         return true;
-      }
-      
-      // Allow any origin for callbacks (production domains can be restricted here)
-      return true;
-    },
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
-    allowedHeaders: [
-      "Content-Type", 
-      "Authorization", 
-      "authorization",
-      "x-trader-token", 
-      "x-admin-key", 
-      "x-device-token", 
-      "x-agent-token", 
-      "x-merchant-api-key", 
-      "x-api-key", 
-      "x-api-token",
-      "x-aggregator-session-token",
-      "Access-Control-Allow-Origin",
-      "Access-Control-Allow-Methods",
-      "Access-Control-Allow-Headers"
-    ],
-    exposedHeaders: [
-      "x-trader-token", 
-      "x-admin-key", 
-      "x-device-token", 
-      "x-agent-token", 
-      "x-merchant-api-key", 
-      "x-api-key", 
-      "x-api-token",
-      "x-aggregator-session-token"
-    ],
-    credentials: true,
-    preflight: true,
-    maxAge: 86400 // 24 hours
-  }))
-  
+      },
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
+      allowedHeaders: [
+        "Content-Type",
+        "Authorization",
+        "authorization",
+        "x-trader-token",
+        "x-admin-key",
+        "x-device-token",
+        "x-agent-token",
+        "x-merchant-api-key",
+        "x-api-key",
+        "x-api-token",
+        "x-aggregator-session-token",
+        "Access-Control-Allow-Origin",
+        "Access-Control-Allow-Methods",
+        "Access-Control-Allow-Headers",
+      ],
+      exposedHeaders: [
+        "x-trader-token",
+        "x-admin-key",
+        "x-device-token",
+        "x-agent-token",
+        "x-merchant-api-key",
+        "x-api-key",
+        "x-api-token",
+        "x-aggregator-session-token",
+      ],
+      credentials: true,
+      preflight: true,
+      maxAge: 86400, // 24 hours
+    })
+  )
+
   // Register all service endpoints
   .onBeforeHandle(({ request }) => {
     // Add service endpoint middleware if needed
@@ -319,7 +378,8 @@ const app = new Elysia({ prefix: "/api" })
           },
           {
             name: "device",
-            description: "Эндпоинты для устройств (защищенные токеном устройства)",
+            description:
+              "Эндпоинты для устройств (защищенные токеном устройства)",
           },
           {
             name: "agent",
@@ -327,27 +387,33 @@ const app = new Elysia({ prefix: "/api" })
           },
         ],
       },
-    }),
+    })
   )
   .use(
     jwt({
       name: "jwt",
       secret: Bun.env.JWT_SECRET!,
       exp: "24h",
-    }),
+    })
   )
   .use(loggerMiddleware)
   // Health check endpoint
-  .get("/health", () => ({ status: "healthy", timestamp: new Date().toISOString() }))
-  .get("/api/health", () => ({ status: "healthy", timestamp: new Date().toISOString() }))
+  .get("/health", () => ({
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+  }))
+  .get("/api/health", () => ({
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+  }))
   // Temporary endpoint to get client IP
   .use(ip())
   .get("/api/get-my-ip", ({ ip: clientIp }) => {
     console.log(`[GetMyIP] Client IP: ${clientIp}`);
-    return { 
+    return {
       ip: clientIp,
       message: `Your IP is: ${clientIp}`,
-      command: `cd backend && bun run src/scripts/add-ip-whitelist.ts "${clientIp}" "My IP"`
+      command: `cd backend && bun run src/scripts/add-ip-whitelist.ts "${clientIp}" "My IP"`,
     };
   })
   .get("/wellbit/openapi.yaml", async ({ set }) => {
@@ -358,16 +424,18 @@ const app = new Elysia({ prefix: "/api" })
   // ── Feature groups ────────────────────────────────────────────
   .group("/user", (app) => app.use(userRoutes))
   .group("/info", (app) => app.use(infoRoutes))
-  .group(
-    "/admin",
-    (g) => g.use(adminGuard(MASTER_KEY, ADMIN_IP_WHITELIST)).use(adminRoutes),
+  .group("/admin", (g) =>
+    g.use(adminGuard(MASTER_KEY, ADMIN_IP_WHITELIST)).use(adminRoutes)
   )
   .group("/merchant", (app) => app.use(merchantRoutes))
   .group("/aggregator", (app) => app.use(aggregatorRoutes))
   .group("/device", (app) => app.use(deviceRoutes))
   .group("/trader", (app) => app.use(traderRoutes))
   .group("/wellbit", (app) => app.use(wellbitRoutes))
-  .group("/app", (app) => app.use(appDownloadRoutes).use(appStaticRoutes).use(appPageRoutes))
+  .use(auctionRoutes)
+  .group("/app", (app) =>
+    app.use(appDownloadRoutes).use(appStaticRoutes).use(appPageRoutes)
+  )
   .group("/support", (app) => app.use(supportRoutes))
   .use(agentRoutes)
   .use(deviceHealthRoutes)

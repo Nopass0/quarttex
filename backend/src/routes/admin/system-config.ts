@@ -109,7 +109,8 @@ export default new Elysia({ prefix: "/system-config" })
         'disputeDayShiftStartHour',
         'disputeDayShiftEndHour',
         'disputeDayShiftTimeoutMinutes',
-        'disputeNightShiftTimeoutMinutes'
+        'disputeNightShiftTimeoutMinutes',
+        'site_base_url'
       ];
 
       if (!allowedKeys.includes(key)) {

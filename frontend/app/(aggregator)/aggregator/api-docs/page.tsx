@@ -1,82 +1,26 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
-import { toast } from "sonner"
-import { aggregatorApi } from "@/services/api"
+import { useEffect, useState } from "react"
 import { useAggregatorAuth } from "@/stores/aggregator-auth"
-import {
-  AlertCircle,
-  ArrowRight,
-  BookOpen,
-  CheckCircle,
+import { aggregatorApi } from "@/services/api"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { 
+  BookOpen, 
+  Copy, 
+  Globe, 
   Code,
-  Copy,
-  FileJson,
-  Globe,
-  Info,
-  Loader2,
-  Server,
-  Webhook,
+  Loader2
 } from "lucide-react"
-
-interface ApiEndpoint {
-  method: string
-  path: string
-  url: string
-  description: string
-  headers: Record<string, string>
-  requestBody?: any
-  responseBody?: any
-  errors?: Record<string, string>
-}
-
-interface ApiDocs {
-  baseUrl: string
-  description: string
-  endpoints: ApiEndpoint[]
-}
-
-interface ApiConstants {
-  description: string
-  bankTypes: { description: string; values: string[] }
-  methodTypes: { description: string; values: string[] }
-  transactionStatuses: { description: string; values: string[] }
-  currencies: { description: string; values: string[] }
-}
-
-interface CallbackFormat {
-  description: string
-  callbackUrl: string
-  method: string
-  headers: Record<string, string>
-  requestBody: any
-  expectedResponse: any
-  notes: string[]
-}
-
-interface IntegrationFlow {
-  description: string
-  steps: Array<{ step: number; title: string; description: string }>
-  errorHandling: Record<string, string>
-  bestPractices: string[]
-}
+import { toast } from "sonner"
 
 export default function AggregatorApiDocs() {
   const aggregator = useAggregatorAuth()
-  const [apiDocs, setApiDocs] = useState<ApiDocs | null>(null)
-  const [constants, setConstants] = useState<ApiConstants | null>(null)
-  const [callbackFormat, setCallbackFormat] = useState<CallbackFormat | null>(null)
-  const [integrationFlow, setIntegrationFlow] = useState<IntegrationFlow | null>(null)
+  const [apiEndpoints, setApiEndpoints] = useState<any>(null)
+  const [callbackFormat, setCallbackFormat] = useState<any>(null)
+  const [constants, setConstants] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("endpoints")
 
@@ -87,16 +31,14 @@ export default function AggregatorApiDocs() {
   const fetchApiDocs = async () => {
     try {
       setLoading(true)
-      const [endpointsData, constantsData, callbackData, flowData] = await Promise.all([
+      const [endpointsData, callbackData, constantsData] = await Promise.all([
         aggregatorApi.getApiEndpoints(),
-        aggregatorApi.getApiConstants(),
         aggregatorApi.getCallbackFormat(),
-        aggregatorApi.getIntegrationFlow(),
+        aggregatorApi.getApiConstants(),
       ])
-      setApiDocs(endpointsData)
-      setConstants(constantsData)
+      setApiEndpoints(endpointsData)
       setCallbackFormat(callbackData)
-      setIntegrationFlow(flowData)
+      setConstants(constantsData)
     } catch (error) {
       console.error("Error fetching API docs:", error)
       toast.error("Ошибка загрузки документации")
@@ -115,7 +57,6 @@ export default function AggregatorApiDocs() {
       GET: "bg-blue-100 text-blue-800",
       POST: "bg-purple-100 text-purple-800",
       PUT: "bg-yellow-100 text-yellow-800",
-      PATCH: "bg-orange-100 text-orange-800",
       DELETE: "bg-red-100 text-red-800",
     }
     return (
@@ -135,25 +76,41 @@ export default function AggregatorApiDocs() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <BookOpen className="h-8 w-8 text-[purple-600]" />
-          API Документация
+      {/* Заголовок */}
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-[#006039] mb-2 flex items-center justify-center gap-2">
+          <BookOpen className="h-8 w-8" />
+          API Документация для агрегаторов
         </h1>
         <p className="text-muted-foreground">
-          Документация для интеграции с нашей платформой
+          Техническая документация для интеграции
         </p>
       </div>
 
-      {/* Base URL Card */}
-      <Card className="border-[purple-600]/20 bg-gradient-to-r from-[purple-600]/5 to-transparent">
+      {/* Конфигурация */}
+      <Card className="border-[#006039]/20">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Globe className="h-5 w-5 text-[purple-600]" />
-            Конфигурация интеграции
+            <Globe className="h-5 w-5 text-[#006039]" />
+            Ваши данные для интеграции
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div>
+            <p className="text-sm text-muted-foreground mb-2">Ваш API токен (для исходящих запросов):</p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 bg-muted px-3 py-2 rounded text-sm font-mono">
+                {aggregator.apiToken}
+              </code>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => copyToClipboard(aggregator.apiToken, "API токен")}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
           <div>
             <p className="text-sm text-muted-foreground mb-2">Ваш базовый URL:</p>
             <div className="flex items-center gap-2">
@@ -170,15 +127,15 @@ export default function AggregatorApiDocs() {
             </div>
           </div>
           <div>
-            <p className="text-sm text-muted-foreground mb-2">API токен для авторизации:</p>
+            <p className="text-sm text-muted-foreground mb-2">URL для коллбеков (куда отправлять обновления):</p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 bg-muted px-3 py-2 rounded text-sm font-mono">
-                {aggregator.apiToken ? `${aggregator.apiToken.substring(0, 20)}...` : "Не установлен"}
+              <code className="flex-1 bg-muted px-3 py-2 rounded text-sm">
+                https://chasepay.pro/api/aggregators/callback
               </code>
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => copyToClipboard(aggregator.apiToken || "", "API токен")}
+                onClick={() => copyToClipboard("https://chasepay.pro/api/aggregators/callback", "Callback URL")}
               >
                 <Copy className="h-4 w-4" />
               </Button>
@@ -187,275 +144,219 @@ export default function AggregatorApiDocs() {
         </CardContent>
       </Card>
 
+      {/* Основные табы */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="endpoints">Эндпоинты</TabsTrigger>
-          <TabsTrigger value="constants">Константы</TabsTrigger>
-          <TabsTrigger value="callbacks">Колбэки</TabsTrigger>
-          <TabsTrigger value="flow">Схема работы</TabsTrigger>
+        <TabsList className="grid grid-cols-4 w-full">
+          <TabsTrigger value="endpoints">Endpoints</TabsTrigger>
+          <TabsTrigger value="callbacks">Callbacks</TabsTrigger>
+          <TabsTrigger value="banks">Банки</TabsTrigger>
+          <TabsTrigger value="statuses">Статусы</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="endpoints" className="space-y-4">
+        {/* Endpoints которые должен реализовать агрегатор */}
+        <TabsContent value="endpoints" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>API Эндпоинты</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Code className="h-5 w-5" />
+                Endpoints которые вы должны реализовать
+              </CardTitle>
               <CardDescription>
-                Эндпоинты, которые должен реализовать ваш агрегатор
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Accordion type="single" collapsible className="w-full">
-                {apiDocs?.endpoints.map((endpoint, index) => (
-                  <AccordionItem key={index} value={`endpoint-${index}`}>
-                    <AccordionTrigger>
-                      <div className="flex items-center gap-3">
-                        {getMethodBadge(endpoint.method)}
-                        <code className="text-sm font-mono">{endpoint.path}</code>
-                        <span className="text-sm text-muted-foreground">
-                          {endpoint.description}
-                        </span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="space-y-4 pt-4">
-                        <div>
-                          <h4 className="font-semibold mb-2">URL:</h4>
-                          <code className="block bg-muted p-3 rounded text-sm">
-                            {endpoint.url}
-                          </code>
-                        </div>
-
-                        <div>
-                          <h4 className="font-semibold mb-2">Headers:</h4>
-                          <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
-                            {JSON.stringify(endpoint.headers, null, 2)}
-                          </pre>
-                        </div>
-
-                        {endpoint.requestBody && (
-                          <div>
-                            <h4 className="font-semibold mb-2">Request Body:</h4>
-                            <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
-                              {JSON.stringify(endpoint.requestBody, null, 2)}
-                            </pre>
-                          </div>
-                        )}
-
-                        {endpoint.responseBody && (
-                          <div>
-                            <h4 className="font-semibold mb-2">Response Body:</h4>
-                            <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
-                              {JSON.stringify(endpoint.responseBody, null, 2)}
-                            </pre>
-                          </div>
-                        )}
-
-                        {endpoint.errors && (
-                          <div>
-                            <h4 className="font-semibold mb-2">Коды ошибок:</h4>
-                            <div className="space-y-2">
-                              {Object.entries(endpoint.errors).map(([code, message]) => (
-                                <div key={code} className="flex items-center gap-2">
-                                  <Badge variant="destructive">{code}</Badge>
-                                  <span className="text-sm">{message}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="constants" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Константы и справочники</CardTitle>
-              <CardDescription>
-                {constants?.description}
+                Все endpoints должны отвечать за ≤ 2 секунды и возвращать HTTP 2xx
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div>
-                <h3 className="font-semibold mb-3">Типы банков</h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  {constants?.bankTypes.description}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {constants?.bankTypes.values.map((bank) => (
-                    <Badge key={bank} variant="outline">
-                      {bank}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+              {apiEndpoints?.endpoints?.map((endpoint: any, index: number) => (
+                <div key={index} className="border rounded-lg p-4 space-y-4">
+                  <div className="flex items-center gap-2">
+                    {getMethodBadge(endpoint.method)}
+                    <code className="text-lg font-semibold">{endpoint.path}</code>
+                  </div>
+                  <p className="text-muted-foreground">{endpoint.description}</p>
+                  
+                  {/* Headers */}
+                  {endpoint.headers && (
+                    <div>
+                      <h4 className="font-semibold mb-2">Заголовки:</h4>
+                      <div className="bg-muted p-3 rounded text-sm">
+                        <pre>{JSON.stringify(endpoint.headers, null, 2)}</pre>
+                      </div>
+                    </div>
+                  )}
 
-              <div>
-                <h3 className="font-semibold mb-3">Типы методов платежа</h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  {constants?.methodTypes.description}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {constants?.methodTypes.values.map((method) => (
-                    <Badge key={method} variant="outline">
-                      {method}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+                  {/* Request Body */}
+                  {endpoint.request && (
+                    <div>
+                      <h4 className="font-semibold mb-2">Тело запроса:</h4>
+                      <div className="bg-muted p-3 rounded text-sm">
+                        <pre>{JSON.stringify(endpoint.request.example || endpoint.request.body, null, 2)}</pre>
+                      </div>
+                      {endpoint.request.body && (
+                        <div className="mt-2">
+                          <h5 className="font-medium mb-1">Описание полей:</h5>
+                          <div className="bg-muted p-3 rounded text-sm">
+                            <pre>{JSON.stringify(endpoint.request.body, null, 2)}</pre>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-              <div>
-                <h3 className="font-semibold mb-3">Статусы транзакций</h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  {constants?.transactionStatuses.description}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {constants?.transactionStatuses.values.map((status) => (
-                    <Badge key={status} variant="outline">
-                      {status}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+                  {/* Response Body */}
+                  {endpoint.response && (
+                    <div>
+                      <h4 className="font-semibold mb-2">Тело ответа:</h4>
+                      {endpoint.response.success && (
+                        <div className="mb-3">
+                          <h5 className="font-medium mb-1 text-purple-600">✅ Успешный ответ (HTTP {endpoint.response.success.status || 200}):</h5>
+                          <div className="bg-muted p-3 rounded text-sm">
+                            <pre>{JSON.stringify(endpoint.response.success.example || endpoint.response.success.body, null, 2)}</pre>
+                          </div>
+                        </div>
+                      )}
+                      {endpoint.response.error && (
+                        <div>
+                          <h5 className="font-medium mb-1 text-red-600">❌ Ошибка (HTTP {endpoint.response.error.status || 400}):</h5>
+                          <div className="bg-muted p-3 rounded text-sm">
+                            <pre>{JSON.stringify(endpoint.response.error.body, null, 2)}</pre>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-              <div>
-                <h3 className="font-semibold mb-3">Поддерживаемые валюты</h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  {constants?.currencies.description}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {constants?.currencies.values.map((currency) => (
-                    <Badge key={currency} variant="outline">
-                      {currency.toUpperCase()}
-                    </Badge>
-                  ))}
+                  {/* Requirements */}
+                  {endpoint.requirements && (
+                    <div>
+                      <h4 className="font-semibold mb-2">Требования:</h4>
+                      <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                        {endpoint.requirements.map((requirement: string, i: number) => (
+                          <li key={i}>{requirement}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Key Points */}
+                  {endpoint.keyPoints && (
+                    <div>
+                      <h4 className="font-semibold mb-2">Важные моменты:</h4>
+                      <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                        {endpoint.keyPoints.map((point: string, i: number) => (
+                          <li key={i}>{point}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
-              </div>
+              ))}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="callbacks" className="space-y-4">
+        {/* Callbacks */}
+        <TabsContent value="callbacks" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Формат колбэков</CardTitle>
+              <CardTitle>Как отправлять callbacks</CardTitle>
               <CardDescription>
-                {callbackFormat?.description}
+                Отправляйте обновления статуса сделок на наш endpoint
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h4 className="font-semibold mb-2">URL для колбэков:</h4>
-                <code className="block bg-muted p-3 rounded text-sm">
-                  {callbackFormat?.callbackUrl}
+                <h4 className="font-semibold mb-2">URL:</h4>
+                <code className="bg-muted px-3 py-2 rounded text-sm block">
+                  POST https://chspay.pro/api/aggregators/callback
                 </code>
               </div>
 
-              <div>
-                <h4 className="font-semibold mb-2">Метод:</h4>
-                <Badge className="bg-purple-100 text-purple-800">
-                  {callbackFormat?.method}
-                </Badge>
-              </div>
+              {callbackFormat?.headers && (
+                <div>
+                  <h4 className="font-semibold mb-2">Заголовки:</h4>
+                  <div className="bg-muted p-3 rounded text-sm">
+                    <pre>{JSON.stringify(callbackFormat.headers, null, 2)}</pre>
+                  </div>
+                </div>
+              )}
 
-              <div>
-                <h4 className="font-semibold mb-2">Headers:</h4>
-                <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
-                  {JSON.stringify(callbackFormat?.headers, null, 2)}
-                </pre>
-              </div>
+              {callbackFormat?.requestBody && (
+                <div>
+                  <h4 className="font-semibold mb-2">Тело запроса:</h4>
+                  <div className="bg-muted p-3 rounded text-sm">
+                    <pre>{JSON.stringify(callbackFormat.requestBody, null, 2)}</pre>
+                  </div>
+                </div>
+              )}
 
-              <div>
-                <h4 className="font-semibold mb-2">Request Body:</h4>
-                <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
-                  {JSON.stringify(callbackFormat?.requestBody, null, 2)}
-                </pre>
-              </div>
-
-              <div>
-                <h4 className="font-semibold mb-2">Ожидаемый ответ:</h4>
-                <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
-                  {JSON.stringify(callbackFormat?.expectedResponse, null, 2)}
-                </pre>
-              </div>
-
-              <div>
-                <h4 className="font-semibold mb-2 flex items-center gap-2">
-                  <Info className="h-4 w-4" />
-                  Важные замечания:
-                </h4>
-                <div className="space-y-2">
-                  {callbackFormat?.notes.map((note, index) => (
-                    <div key={index} className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-purple-600 mt-0.5" />
-                      <span className="text-sm">{note}</span>
+              {callbackFormat?.examples && (
+                <div>
+                  <h4 className="font-semibold mb-2">Примеры:</h4>
+                  {callbackFormat.examples.map((example: any, index: number) => (
+                    <div key={index} className="mb-4">
+                      <p className="text-sm text-muted-foreground mb-2">{example.description}</p>
+                      <div className="bg-muted p-3 rounded text-sm">
+                        <pre>{JSON.stringify(example.data, null, 2)}</pre>
+                      </div>
                     </div>
                   ))}
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="flow" className="space-y-4">
+        {/* Банки */}
+        <TabsContent value="banks" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Схема интеграции</CardTitle>
+              <CardTitle>Константы банков</CardTitle>
               <CardDescription>
-                {integrationFlow?.description}
+                Все доступные банки в системе
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <h3 className="font-semibold mb-4">Поток данных</h3>
-                <div className="space-y-4">
-                  {integrationFlow?.steps.map((step) => (
-                    <div key={step.step} className="flex gap-4">
-                      <div className="flex-shrink-0">
-                        <div className="w-8 h-8 rounded-full bg-[purple-600] text-white flex items-center justify-center text-sm font-semibold">
-                          {step.step}
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold">{step.title}</h4>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {step.description}
-                        </p>
-                      </div>
+            <CardContent>
+              {constants?.banks ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Object.entries(constants.banks).map(([key, bank]: [string, any]) => (
+                    <div key={key} className="border rounded p-3">
+                      <div className="font-semibold">{key}</div>
+                      <div className="text-sm text-muted-foreground">{bank.name}</div>
+                      {bank.code && (
+                        <div className="text-xs text-muted-foreground">Код: {bank.code}</div>
+                      )}
                     </div>
                   ))}
                 </div>
-              </div>
+              ) : (
+                <p className="text-muted-foreground">Загрузка констант банков...</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-              <div>
-                <h3 className="font-semibold mb-4">Обработка ошибок</h3>
-                <div className="space-y-2">
-                  {integrationFlow?.errorHandling &&
-                    Object.entries(integrationFlow.errorHandling).map(([code, description]) => (
-                      <div key={code} className="flex items-start gap-3">
-                        <Badge variant="destructive">{code}</Badge>
-                        <span className="text-sm">{description}</span>
-                      </div>
-                    ))}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-4">Лучшие практики</h3>
-                <div className="space-y-2">
-                  {integrationFlow?.bestPractices.map((practice, index) => (
-                    <div key={index} className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-purple-600 mt-0.5" />
-                      <span className="text-sm">{practice}</span>
+        {/* Статусы */}
+        <TabsContent value="statuses" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Статусы сделок</CardTitle>
+              <CardDescription>
+                Все возможные статусы сделок в системе
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {constants?.statuses ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(constants.statuses).map(([key, status]: [string, any]) => (
+                    <div key={key} className="border rounded p-3">
+                      <div className="font-semibold">{key}</div>
+                      <div className="text-sm text-muted-foreground">{status.description || status}</div>
                     </div>
                   ))}
                 </div>
-              </div>
+              ) : (
+                <p className="text-muted-foreground">Загрузка статусов...</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

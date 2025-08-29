@@ -109,7 +109,7 @@ export function EditRequisiteDialog({
     maxAmount: "",
     dailyLimit: "",
     monthlyLimit: "",
-    intervalMinutes: "",
+
   });
 
   useEffect(() => {
@@ -124,7 +124,6 @@ export function EditRequisiteDialog({
         maxAmount: requisite.maxAmount ? requisite.maxAmount.toString() : "",
         dailyLimit: requisite.dailyLimit ? requisite.dailyLimit.toString() : "",
         monthlyLimit: requisite.monthlyLimit ? requisite.monthlyLimit.toString() : "",
-        intervalMinutes: requisite.intervalMinutes ? requisite.intervalMinutes.toString() : "",
       };
       console.log('Setting formData from requisite:', newFormData);
       setFormData(newFormData);
@@ -141,8 +140,7 @@ export function EditRequisiteDialog({
         formData.minAmount === "" ||
         formData.maxAmount === "" ||
         formData.dailyLimit === "" ||
-        formData.monthlyLimit === "" ||
-        formData.intervalMinutes === ""
+        formData.monthlyLimit === ""
       ) {
         toast.error("Заполните все числовые поля");
         setLoading(false);
@@ -155,7 +153,6 @@ export function EditRequisiteDialog({
         maxAmount: Number(formData.maxAmount),
         dailyLimit: Number(formData.dailyLimit),
         monthlyLimit: Number(formData.monthlyLimit),
-        intervalMinutes: Number(formData.intervalMinutes),
       };
 
       await traderApi.updateRequisite(requisite.id, updateData);
@@ -346,20 +343,7 @@ export function EditRequisiteDialog({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="intervalMinutes">Интервал между транзакциями (минуты)</Label>
-            <Input
-              id="intervalMinutes"
-              type="text"
-              inputMode="numeric"
-              value={formData.intervalMinutes}
-              onChange={(e) => {
-                const digitsOnly = e.target.value.replace(/\D/g, "");
-                setFormData({ ...formData, intervalMinutes: digitsOnly });
-              }}
-              disabled={loading}
-            />
-          </div>
+
 
           {requisite.device && (
             <div className="p-4 bg-gray-50 rounded-lg">
@@ -387,10 +371,9 @@ export function EditRequisiteDialog({
                 formData.minAmount === "" ||
                 formData.maxAmount === "" ||
                 formData.dailyLimit === "" ||
-                formData.monthlyLimit === "" ||
-                formData.intervalMinutes === ""
+                formData.monthlyLimit === ""
               }
-              className="bg-[purple-600] hover:bg-[purple-600]/90"
+              className="bg-[#006039] hover:bg-[#006039]/90"
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Сохранить

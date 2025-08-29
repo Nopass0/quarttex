@@ -1,8 +1,29 @@
--- CreateEnum
-CREATE TYPE "WithdrawalDisputeStatus" AS ENUM ('OPEN', 'IN_PROGRESS', 'RESOLVED_SUCCESS', 'RESOLVED_FAIL', 'CANCELLED');
+-- CreateEnum (если не существует)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'WithdrawalDisputeStatus') THEN
+        CREATE TYPE "WithdrawalDisputeStatus" AS ENUM ('OPEN', 'IN_PROGRESS', 'RESOLVED_SUCCESS', 'RESOLVED_FAIL', 'CANCELLED');
+    END IF;
+END $$;
 
--- CreateEnum
-CREATE TYPE "DisputeSenderType" AS ENUM ('MERCHANT', 'TRADER', 'ADMIN');
+-- CreateEnum или расширение существующего
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'DisputeSenderType') THEN
+        CREATE TYPE "DisputeSenderType" AS ENUM ('MERCHANT', 'TRADER', 'ADMIN');
+    ELSE
+        -- Добавляем недостающие значения если enum уже существует
+        IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = 'DisputeSenderType') AND enumlabel = 'MERCHANT') THEN
+            ALTER TYPE "DisputeSenderType" ADD VALUE 'MERCHANT';
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = 'DisputeSenderType') AND enumlabel = 'TRADER') THEN
+            ALTER TYPE "DisputeSenderType" ADD VALUE 'TRADER';
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = 'DisputeSenderType') AND enumlabel = 'ADMIN') THEN
+            ALTER TYPE "DisputeSenderType" ADD VALUE 'ADMIN';
+        END IF;
+    END IF;
+END $$;
 
 -- CreateTable
 CREATE TABLE "WithdrawalDispute" (

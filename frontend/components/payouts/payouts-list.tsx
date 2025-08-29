@@ -370,7 +370,7 @@ export function PayoutsList() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-[purple-600]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
       </div>
     );
   }
@@ -388,7 +388,7 @@ export function PayoutsList() {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Wallet className="h-5 w-5 text-[purple-600]" />
+              <Wallet className="h-5 w-5 text-[#006039]" />
               <span className="text-sm text-gray-500 uppercase">Выплаты</span>
             </div>
             <DropdownMenu>
@@ -435,7 +435,7 @@ export function PayoutsList() {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-[purple-600]" />
+              <TrendingUp className="h-5 w-5 text-[#006039]" />
               <span className="text-sm text-gray-500 uppercase">Прибыль</span>
             </div>
             <DropdownMenu>
@@ -820,7 +820,7 @@ export function PayoutsList() {
             {/* Loading more indicator */}
             {loadingMore && (
               <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin text-[purple-600]" />
+                <Loader2 className="h-6 w-6 animate-spin text-[#006039]" />
                 <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                   Загрузка...
                 </span>

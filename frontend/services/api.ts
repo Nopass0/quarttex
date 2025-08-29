@@ -1663,10 +1663,22 @@ export const aggregatorApi = {
     return response.data;
   },
 
-  // API Docs endpoints
+  // API Docs endpoints - обновленные для v3
+  getApiDocs: async () => {
+    const response = await aggregatorApiInstance.get(
+      "/aggregator/api-docs/"
+    );
+    return response.data;
+  },
   getApiEndpoints: async () => {
     const response = await aggregatorApiInstance.get(
-      "/aggregator/api-docs/endpoints"
+      "/aggregator/api-docs/your-endpoints"
+    );
+    return response.data;
+  },
+  getApiSummary: async () => {
+    const response = await aggregatorApiInstance.get(
+      "/aggregator/api-docs/summary"
     );
     return response.data;
   },
@@ -1678,7 +1690,7 @@ export const aggregatorApi = {
   },
   getCallbackFormat: async () => {
     const response = await aggregatorApiInstance.get(
-      "/aggregator/api-docs/callback-format"
+      "/aggregator/api-docs/our-callbacks"
     );
     return response.data;
   },

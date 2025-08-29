@@ -37,7 +37,6 @@ const formSchema = z.object({
   maxAmount: numberField(0).optional(),
   dailyLimit: numberField(0).optional(),
   monthlyLimit: numberField(0).optional(),
-  intervalMinutes: numberField(0).optional(),
 });
 
 export interface EditRequisiteDialogProps {
@@ -63,7 +62,6 @@ export function EditRequisiteDialog({ open, onOpenChange, requisite, onSuccess }
       maxAmount: requisite?.maxAmount || 0,
       dailyLimit: requisite?.dailyLimit || 0,
       monthlyLimit: requisite?.monthlyLimit || 0,
-      intervalMinutes: requisite?.intervalMinutes || 0,
     },
   });
 
@@ -72,7 +70,7 @@ export function EditRequisiteDialog({ open, onOpenChange, requisite, onSuccess }
   const [maxAmountInput, setMaxAmountInput] = useState<string>("");
   const [dailyLimitInput, setDailyLimitInput] = useState<string>("");
   const [monthlyLimitInput, setMonthlyLimitInput] = useState<string>("");
-  const [intervalMinutesInput, setIntervalMinutesInput] = useState<string>("");
+
 
   useEffect(() => {
     const values = form.getValues();
@@ -80,22 +78,20 @@ export function EditRequisiteDialog({ open, onOpenChange, requisite, onSuccess }
     setMaxAmountInput(values.maxAmount !== undefined ? String(values.maxAmount) : "");
     setDailyLimitInput(values.dailyLimit !== undefined ? String(values.dailyLimit) : "");
     setMonthlyLimitInput(values.monthlyLimit !== undefined ? String(values.monthlyLimit) : "");
-    setIntervalMinutesInput(values.intervalMinutes !== undefined ? String(values.intervalMinutes) : "");
+
   }, [requisite, open]);
 
-  const [minAmount, maxAmount, dailyLimit, monthlyLimit, intervalMinutes] = form.watch([
+  const [minAmount, maxAmount, dailyLimit, monthlyLimit] = form.watch([
     "minAmount",
     "maxAmount",
     "dailyLimit",
     "monthlyLimit",
-    "intervalMinutes",
   ]);
   const hasEmptyRequiredNumbers =
     minAmount === undefined ||
     maxAmount === undefined ||
     dailyLimit === undefined ||
-    monthlyLimit === undefined ||
-    intervalMinutes === undefined;
+    monthlyLimit === undefined;
 
   // Reset form values whenever a new requisite is selected
   useEffect(() => {
@@ -109,7 +105,6 @@ export function EditRequisiteDialog({ open, onOpenChange, requisite, onSuccess }
         maxAmount: requisite.maxAmount || 0,
         dailyLimit: requisite.dailyLimit || 0,
         monthlyLimit: requisite.monthlyLimit || 0,
-        intervalMinutes: requisite.intervalMinutes || 0,
       });
     }
   }, [requisite, form]);
@@ -122,8 +117,7 @@ export function EditRequisiteDialog({ open, onOpenChange, requisite, onSuccess }
         data.minAmount === undefined ||
         data.maxAmount === undefined ||
         data.dailyLimit === undefined ||
-        data.monthlyLimit === undefined ||
-        data.intervalMinutes === undefined
+        data.monthlyLimit === undefined
       ) {
         toast.error("Заполните все числовые поля");
         return;
@@ -134,7 +128,6 @@ export function EditRequisiteDialog({ open, onOpenChange, requisite, onSuccess }
         maxAmount: Number(data.maxAmount),
         dailyLimit: Number(data.dailyLimit),
         monthlyLimit: Number(data.monthlyLimit),
-        intervalMinutes: Number(data.intervalMinutes),
       });
       toast.success("Реквизит обновлен");
       onOpenChange(false);
@@ -202,8 +195,16 @@ export function EditRequisiteDialog({ open, onOpenChange, requisite, onSuccess }
                 <FormItem>
                   <FormLabel>Номер телефона (опционально)</FormLabel>
                   <FormControl>
-                    <Input placeholder="+7 900 000 00 00" {...field} />
+                    <Input 
+                      placeholder="+7 900 000 00 00" 
+                      {...field} 
+                      disabled={true}
+                      title="Номер телефона нельзя изменить после создания реквизита"
+                    />
                   </FormControl>
+                  <FormDescription className="text-orange-500">
+                    Номер телефона нельзя изменить
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -300,34 +301,12 @@ export function EditRequisiteDialog({ open, onOpenChange, requisite, onSuccess }
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="intervalMinutes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Интервал, мин</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      inputMode="numeric"
-                      value={intervalMinutesInput}
-                      onChange={(e) => {
-                        const raw = e.target.value;
-                        const digitsOnly = raw.replace(/\D/g, "");
-                        setIntervalMinutesInput(digitsOnly);
-                        form.setValue("intervalMinutes", digitsOnly === "" ? undefined : Number(digitsOnly), { shouldValidate: false, shouldDirty: true });
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Отмена
               </Button>
-              <Button type="submit" disabled={loading || hasEmptyRequiredNumbers} className="bg-[purple-600] hover:bg-[purple-600]/90">
+              <Button type="submit" disabled={loading || hasEmptyRequiredNumbers} className="bg-[#006039] hover:bg-[#006039]/90">
                 Сохранить
               </Button>
             </DialogFooter>

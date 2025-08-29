@@ -239,7 +239,7 @@ export default function DisputeSettingsPage() {
             <Button
               onClick={handleSave}
               disabled={loading}
-              className="bg-[purple-600] hover:bg-[purple-600]/90"
+              className="bg-[#006039] hover:bg-[#006039]/90"
             >
               <Save className="h-4 w-4 mr-2" />
               Сохранить настройки

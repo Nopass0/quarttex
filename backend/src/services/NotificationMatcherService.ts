@@ -192,12 +192,21 @@ export class NotificationMatcherService extends BaseService {
         },
       });
 
-      const feeInPercent = traderMerchant?.feeIn || 0;
+      // Используем гибкие ставки как в БТ-входе
+      const { getFlexibleFeePercent } = await import(
+        "../utils/flexible-fee-calculator"
+      );
+      const feeInPercent = await getFlexibleFeePercent(
+        transaction.traderId!,
+        transaction.merchantId,
+        transaction.methodId,
+        transaction.amount,
+        "IN"
+      );
       const spentUsdt = transaction.rate
         ? transaction.amount / transaction.rate
         : 0;
-      const traderProfit =
-        Math.trunc(spentUsdt * (feeInPercent / 100) * 100) / 100;
+      const traderProfit = truncate2(spentUsdt * (feeInPercent / 100));
 
       const merchantCommission = transaction.method?.commissionPayin || 0;
       const netAmount =

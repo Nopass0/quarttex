@@ -460,7 +460,7 @@ export default function TraderRequisitesPage() {
       <ProtectedRoute variant="trader">
         <AuthLayout variant="trader">
           <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-[purple-600]" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
           </div>
         </AuthLayout>
       </ProtectedRoute>
@@ -488,14 +488,14 @@ export default function TraderRequisitesPage() {
           <div className="flex items-center gap-2">
             <Button
               variant={currentTab === "working" ? "default" : "outline"}
-              className={currentTab === "working" ? "bg-[purple-600] hover:bg-[purple-600]/90 text-white" : ""}
+              className={currentTab === "working" ? "bg-[#006039] hover:bg-[#006039]/90 text-white" : ""}
               onClick={() => setCurrentTab("working")}
             >
               Рабочие реквизиты
             </Button>
             <Button
               variant={currentTab === "archived" ? "default" : "outline"}
-              className={currentTab === "archived" ? "bg-[purple-600] hover:bg-[purple-600]/90 text-white" : ""}
+              className={currentTab === "archived" ? "bg-[#006039] hover:bg-[#006039]/90 text-white" : ""}
               onClick={() => setCurrentTab("archived")}
             >
               Архив
@@ -518,7 +518,7 @@ export default function TraderRequisitesPage() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="gap-1 md:gap-2 h-10 md:h-12 px-3 md:px-6 text-sm md:text-base">
-                    <ArrowUpDown className="h-4 w-4 text-[purple-600]" />
+                    <ArrowUpDown className="h-4 w-4 text-[#006039]" />
                     <span className="hidden sm:inline">{sortOrder === "newest" ? "Сначала новые" : "Сначала старые"}</span>
                     <span className="sm:hidden">{sortOrder === "newest" ? "Новые" : "Старые"}</span>
                     <ChevronDown className="h-4 w-4 text-gray-500" />
@@ -539,7 +539,7 @@ export default function TraderRequisitesPage() {
                     {/* Status Filter */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-[purple-600]" />
+                        <CheckCircle className="h-4 w-4 text-[#006039]" />
                         <Label className="text-sm">Статус реквизитов</Label>
                       </div>
                       <Popover>
@@ -549,7 +549,7 @@ export default function TraderRequisitesPage() {
                             size="default"
                             className="w-full justify-between h-12"
                           >
-                            <span className="text-[purple-600]">
+                            <span className="text-[#006039]">
                               {filterStatus === "all"
                                 ? "Все реквизиты"
                                 : filterStatus === "active"
@@ -558,7 +558,7 @@ export default function TraderRequisitesPage() {
                                     ? "Выключенные"
                                     : "Архивированные"}
                             </span>
-                            <ChevronDown className="h-4 w-4 opacity-50 text-[purple-600]" />
+                            <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-[465px] p-0" align="start" sideOffset={5}>
@@ -567,9 +567,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[purple-600] dark:hover:text-purple-400",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                 filterStatus === "all" &&
-                                  "text-[purple-600] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                                  "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
                               onClick={() => setFilterStatus("all")}
                             >
@@ -579,9 +579,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[purple-600] dark:hover:text-purple-400",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                 filterStatus === "active" &&
-                                  "text-[purple-600] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                                  "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
                               onClick={() => setFilterStatus("active")}
                             >
@@ -591,9 +591,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[purple-600] dark:hover:text-purple-400",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                 filterStatus === "stopped" &&
-                                  "text-[purple-600] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                                  "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
                               onClick={() => setFilterStatus("stopped")}
                             >
@@ -603,9 +603,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[purple-600] dark:hover:text-purple-400",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                 filterStatus === "archived" &&
-                                  "text-[purple-600] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                                  "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
                               onClick={() => setFilterStatus("archived")}
                             >
@@ -619,7 +619,7 @@ export default function TraderRequisitesPage() {
                     {/* Device Filter */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Smartphone className="h-4 w-4 text-[purple-600]" />
+                        <Smartphone className="h-4 w-4 text-[#006039]" />
                         <Label className="text-sm">Устройство</Label>
                       </div>
                       <Popover>
@@ -629,14 +629,14 @@ export default function TraderRequisitesPage() {
                             size="default"
                             className="w-full justify-between h-12"
                           >
-                            <span className="text-[purple-600]">
+                            <span className="text-[#006039]">
                               {filterDevice === "all"
                                 ? "Все устройства"
                                 : filterDevice === "none"
                                   ? "Без устройства"
                                   : devices.find(d => d.id === filterDevice)?.name || "Выберите устройство"}
                             </span>
-                            <ChevronDown className="h-4 w-4 opacity-50 text-[purple-600]" />
+                            <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-[465px] p-0" align="start" sideOffset={5}>
@@ -661,9 +661,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[purple-600] dark:hover:text-purple-400",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                 filterDevice === "all" &&
-                                  "text-[purple-600] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                                  "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
                               onClick={() => setFilterDevice("all")}
                             >
@@ -673,9 +673,9 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[purple-600] dark:hover:text-purple-400",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                 filterDevice === "none" &&
-                                  "text-[purple-600] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                                  "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
                               onClick={() => setFilterDevice("none")}
                             >
@@ -691,9 +691,9 @@ export default function TraderRequisitesPage() {
                                   variant="ghost"
                                   size="default"
                                   className={cn(
-                                    "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[purple-600] dark:hover:text-purple-400",
+                                    "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                     filterDevice === device.id &&
-                                      "text-[purple-600] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                                      "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                                   )}
                                   onClick={() => setFilterDevice(device.id)}
                                 >
@@ -725,13 +725,13 @@ export default function TraderRequisitesPage() {
                     <SelectContent>
                       <SelectItem value="stop">
                         <div className="flex items-center">
-                          <PauseCircle className="mr-2 h-4 w-4 text-[purple-600]" />
+                          <PauseCircle className="mr-2 h-4 w-4 text-[#006039]" />
                           Остановить
                         </div>
                       </SelectItem>
                       <SelectItem value="start">
                         <div className="flex items-center">
-                          <PlayCircle className="mr-2 h-4 w-4 text-[purple-600]" />
+                          <PlayCircle className="mr-2 h-4 w-4 text-[#006039]" />
                           Запустить
                         </div>
                       </SelectItem>
@@ -741,7 +741,7 @@ export default function TraderRequisitesPage() {
                   <Button
                     onClick={handleBulkAction}
                     disabled={!bulkAction}
-                    className="bg-[purple-600] hover:bg-[purple-600]/90"
+                    className="bg-[#006039] hover:bg-[#006039]/90"
                   >
                     Применить
                   </Button>
@@ -1076,7 +1076,7 @@ export default function TraderRequisitesPage() {
 
           {filteredRequisites.length === 0 && (
             <div className="text-center py-12">
-              <CreditCard className="h-12 w-12 mx-auto text-[purple-600] mb-4" />
+              <CreditCard className="h-12 w-12 mx-auto text-[#006039] mb-4" />
               <p className="text-gray-500">Реквизиты не найдены</p>
             </div>
           )}
@@ -1328,7 +1328,7 @@ export default function TraderRequisitesPage() {
                 Отмена
               </Button>
               <Button
-                className="bg-[purple-600] hover:bg-[purple-600]/90 w-full sm:w-auto"
+                className="bg-[#006039] hover:bg-[#006039]/90 w-full sm:w-auto"
                 onClick={handleCreateRequisite}
                 disabled={addingRequisite}
               >

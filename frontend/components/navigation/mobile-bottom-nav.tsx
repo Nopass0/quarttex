@@ -158,7 +158,7 @@ export function MobileBottomNav({ variant, onMoreClick }: MobileBottomNavProps) 
               className={cn(
                 "flex flex-col items-center justify-center gap-1 text-xs transition-colors",
                 isActive
-                  ? "text-[purple-600] dark:text-[purple-600]"
+                  ? "text-[#006039] dark:text-[#2d6a42]"
                   : "text-gray-600 dark:text-gray-400"
               )}
             >
@@ -170,7 +170,7 @@ export function MobileBottomNav({ variant, onMoreClick }: MobileBottomNavProps) 
         
         <button
           onClick={onMoreClick}
-          className="flex flex-col items-center justify-center gap-1 text-xs text-gray-600 dark:text-gray-400 transition-colors hover:text-[purple-600] dark:hover:text-[purple-600]"
+          className="flex flex-col items-center justify-center gap-1 text-xs text-gray-600 dark:text-gray-400 transition-colors hover:text-[#006039] dark:hover:text-[#2d6a42]"
         >
           <MoreHorizontal className="h-5 w-5" />
           <span>Ещё</span>

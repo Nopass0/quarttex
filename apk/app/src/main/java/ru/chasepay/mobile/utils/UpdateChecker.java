@@ -1,4 +1,4 @@
-package ru.chasepay.mobile.utils;
+package ru.quattrex.mobile.utils;
 
 import android.app.DownloadManager;
 import android.content.Context;
@@ -13,10 +13,10 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.FileProvider;
 
-import ru.chasepay.mobile.BuildConfig;
-import ru.chasepay.mobile.api.ApiClient;
-import ru.chasepay.mobile.api.DeviceApi;
-import ru.chasepay.mobile.models.AppVersion;
+import ru.quattrex.mobile.BuildConfig;
+import ru.quattrex.mobile.api.ApiClient;
+import ru.quattrex.mobile.api.DeviceApi;
+import ru.quattrex.mobile.models.AppVersion;
 
 import java.io.File;
 
@@ -98,7 +98,7 @@ public class UpdateChecker {
         }
         
         DownloadManager.Request request = new DownloadManager.Request(uri);
-        request.setTitle("Chase App Update");
+        request.setTitle("Quattrex App Update");
         request.setDescription("Downloading update...");
         request.setDestinationUri(Uri.fromFile(file));
         request.setNotificationVisibility(

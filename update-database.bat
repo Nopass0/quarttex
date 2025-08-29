@@ -1,5 +1,5 @@
 @echo off
-echo Обновление базы данных Chase...
+echo Обновление базы данных Quattrex...
 
 rem Переход в директорию backend
 cd backend

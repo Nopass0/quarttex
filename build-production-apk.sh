@@ -9,7 +9,7 @@ echo "================================================"
 # Check if SERVER_URL is provided
 if [ -z "$1" ]; then
     echo "Usage: ./build-production-apk.sh <SERVER_URL>"
-    echo "Example: ./build-production-apk.sh https://chase.example.com"
+    echo "Example: ./build-production-apk.sh https://quattrex.example.com"
     exit 1
 fi
 
@@ -57,15 +57,15 @@ fi
 
 # Sign the APK with debug key for now (in production, use proper signing)
 echo "Signing APK..."
-cp app/build/outputs/apk/release/app-release-unsigned.apk ../chase-mobile-$VERSION_NAME.apk
+cp app/build/outputs/apk/release/app-release-unsigned.apk ../quattrex-mobile-$VERSION_NAME.apk
 
 # Get file size
-FILE_SIZE=$(stat -c%s "../chase-mobile-$VERSION_NAME.apk" 2>/dev/null || stat -f%z "../chase-mobile-$VERSION_NAME.apk" 2>/dev/null)
+FILE_SIZE=$(stat -c%s "../quattrex-mobile-$VERSION_NAME.apk" 2>/dev/null || stat -f%z "../quattrex-mobile-$VERSION_NAME.apk" 2>/dev/null)
 FILE_SIZE_MB=$(echo "scale=2; $FILE_SIZE / 1048576" | bc)
 
 echo ""
 echo "✅ APK built successfully!"
-echo "   File: chase-mobile-$VERSION_NAME.apk"
+echo "   File: quattrex-mobile-$VERSION_NAME.apk"
 echo "   Size: ${FILE_SIZE_MB} MB"
 echo "   Version: $VERSION_NAME"
 echo "   Server URL: $SERVER_URL"
@@ -74,4 +74,4 @@ echo ""
 # Restore original build.gradle
 git checkout app/build.gradle
 
-echo "APK is ready for deployment: ../chase-mobile-$VERSION_NAME.apk"
+echo "APK is ready for deployment: ../quattrex-mobile-$VERSION_NAME.apk"

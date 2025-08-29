@@ -33,7 +33,7 @@ echo ""
 
 # Database health
 echo -n "Database: "
-if cd /home/user/projects/chase/backend && bun run src/scripts/test-db.ts 2>/dev/null; then
+if cd /home/user/projects/quattrex/backend && bun run src/scripts/test-db.ts 2>/dev/null; then
     echo -e "${GREEN}✓ Connected${NC}"
 else
     echo -e "${RED}✗ Connection failed${NC}"

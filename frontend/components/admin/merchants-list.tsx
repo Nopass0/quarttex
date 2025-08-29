@@ -438,7 +438,7 @@ export function MerchantsList() {
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[purple-600] hover:bg-[#005030]">
+            <Button className="bg-[purple-600] hover:bg-[#3d0b80]">
               <Plus className="mr-2 h-4 w-4 text-white" />
               Добавить мерчанта
             </Button>
@@ -467,7 +467,7 @@ export function MerchantsList() {
             <DialogFooter>
               <Button
                 onClick={handleCreateMerchant}
-                className="bg-[purple-600] hover:bg-[#005030]"
+                className="bg-[purple-600] hover:bg-[#3d0b80]"
                 disabled={isLoading || !formData.name}
               >
                 Создать
@@ -697,7 +697,7 @@ export function MerchantsList() {
                 setShowTokenDialog(false)
                 setSelectedMerchant(null)
               }}
-              className="bg-[purple-600] hover:bg-[#005030]"
+              className="bg-[purple-600] hover:bg-[#3d0b80]"
             >
               Закрыть
             </Button>
@@ -769,7 +769,7 @@ export function MerchantsList() {
           <DialogFooter>
             <Button
               onClick={handleEditMerchant}
-              className="bg-[purple-600] hover:bg-[#005030]"
+              className="bg-[purple-600] hover:bg-[#3d0b80]"
               disabled={isLoading || !editFormData.name}
             >
               Сохранить

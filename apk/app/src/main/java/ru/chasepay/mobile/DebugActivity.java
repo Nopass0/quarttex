@@ -1,4 +1,4 @@
-package ru.chasepay.mobile;
+package ru.quattrex.mobile;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -16,8 +16,8 @@ import android.content.pm.PackageManager;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 
-import ru.chasepay.mobile.databinding.ActivityDebugBinding;
-import ru.chasepay.mobile.utils.ApiLogManager;
+import ru.quattrex.mobile.databinding.ActivityDebugBinding;
+import ru.quattrex.mobile.utils.ApiLogManager;
 import android.os.Handler;
 import android.text.method.ScrollingMovementMethod;
 import java.util.List;
@@ -40,7 +40,7 @@ public class DebugActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
         
-        prefs = getSharedPreferences("ChasePrefs", MODE_PRIVATE);
+        prefs = getSharedPreferences("QuattrexPrefs", MODE_PRIVATE);
         handler = new Handler();
         
         // Make text scrollable

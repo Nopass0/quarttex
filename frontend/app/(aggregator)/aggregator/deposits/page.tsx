@@ -237,7 +237,7 @@ export default function AggregatorDepositsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Wallet className="h-8 w-8 text-[purple-600]" />
+            <Wallet className="h-8 w-8 text-[#006039]" />
             Пополнение баланса
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -255,7 +255,7 @@ export default function AggregatorDepositsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-[purple-600]">
+            <div className="text-2xl font-bold text-[#006039]">
               {formatAmount(stats.currentBalance)} USDT
             </div>
           </CardContent>
@@ -329,7 +329,7 @@ export default function AggregatorDepositsPage() {
                     <DialogTrigger asChild>
                       <Button
                         size="lg"
-                        className="w-full bg-[purple-600] hover:bg-[purple-700]"
+                        className="w-full bg-[#006039] hover:bg-[#004d2e]"
                       >
                         <Plus className="mr-2 h-4 w-4" />
                         Создать заявку на пополнение
@@ -401,7 +401,7 @@ export default function AggregatorDepositsPage() {
                         </Alert>
 
                         <Button
-                          className="w-full bg-[purple-600] hover:bg-[purple-700]"
+                          className="w-full bg-[#006039] hover:bg-[#004d2e]"
                           onClick={handleCreateDeposit}
                           disabled={loading || !amount || !txHash}
                         >

@@ -73,9 +73,13 @@ export function QuickTransactionCreate({
         const data: any = {
           methodId,
           amount: parseFloat(amount),
-          orderId: `QUICK_${transactionType}_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+          orderId: `QUICK_${transactionType}_${Date.now()}_${Math.random()
+            .toString(36)
+            .substring(7)}`,
           expired_at: new Date(Date.now() + 3600000).toISOString(),
-          userIp: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+          userIp: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(
+            Math.random() * 255
+          )}`,
         };
 
         // For OUT transactions, don't include rate - let backend handle it based on merchant settings
@@ -94,7 +98,7 @@ export function QuickTransactionCreate({
               "x-admin-key": adminToken || "",
             },
             body: JSON.stringify(data),
-          },
+          }
         );
 
         const result = await response.json();
@@ -113,54 +117,81 @@ export function QuickTransactionCreate({
           });
         }
       } else {
-        // Для обычных мерчантов используем их API endpoints
-        const endpoint =
-          transactionType === "IN" ? "transactions/in" : "payout";
-        const data =
-          transactionType === "IN"
-            ? {
-                amount: parseFloat(amount),
-                orderId: `QUICK_IN_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-                methodId,
-                rate: 95 + Math.random() * 10,
-                expired_at: new Date(Date.now() + 3600000).toISOString(),
-                userIp: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
-                callbackUri: "",
-              }
-            : {
-                amount: parseFloat(amount),
-                wallet: "5536 9137 5843 1234", // Пример номера карты
-                bank: "Сбербанк",
-                isCard: true,
-                rate: 95 + Math.random() * 10,
-                direction: "OUT",
-              };
+        if (transactionType === "IN") {
+          // Новый админский мок-эндпоинт для выбранного мерчанта
+          const payload = {
+            merchantId,
+            methodId,
+            amount: parseFloat(amount),
+            orderId: `MOCK_IN_${Date.now()}_${Math.random()
+              .toString(36)
+              .substring(7)}`,
+            rate: 95 + Math.random() * 10,
+            expired_at: new Date(Date.now() + 3600000).toISOString(),
+            userIp: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(
+              Math.random() * 255
+            )}`,
+          };
 
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/merchant/${endpoint}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-merchant-api-key": merchantToken,
-            },
-            body: JSON.stringify(data),
-          },
-        );
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/admin/transactions/mock/in`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-admin-key": adminToken || "",
+              },
+              body: JSON.stringify(payload),
+            }
+          );
 
-        const result = await response.json();
-
-        if (response.ok) {
-          toast.success(`Транзакция ${transactionType} создана`, {
-            description: `ID: ${result.id}, Сумма: ${result.amount || data.amount} ₽`,
-          });
-
-          // Reset form
-          setAmount("");
+          const result = await response.json();
+          if (response.ok) {
+            const trx = result.transaction || result;
+            toast.success(`Транзакция IN создана`, {
+              description: `ID: ${trx.id}, Сумма: ${trx.amount} ₽`,
+            });
+            setAmount("");
+          } else {
+            toast.error("Ошибка создания транзакции", {
+              description: result.error || "Неизвестная ошибка",
+            });
+          }
         } else {
-          toast.error("Ошибка создания транзакции", {
-            description: result.error || "Неизвестная ошибка",
-          });
+          // OUT как и раньше — через merchant API
+          const endpoint = "payout";
+          const data = {
+            amount: parseFloat(amount),
+            wallet: "5536 9137 5843 1234",
+            bank: "Сбербанк",
+            isCard: true,
+            rate: 95 + Math.random() * 10,
+            direction: "OUT",
+          };
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/merchant/${endpoint}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-merchant-api-key": merchantToken,
+              },
+              body: JSON.stringify(data),
+            }
+          );
+          const result = await response.json();
+          if (response.ok) {
+            toast.success(`Транзакция OUT создана`, {
+              description: `ID: ${result.id}, Сумма: ${
+                result.amount || data.amount
+              } ₽`,
+            });
+            setAmount("");
+          } else {
+            toast.error("Ошибка создания транзакции", {
+              description: result.error || "Неизвестная ошибка",
+            });
+          }
         }
       }
     } catch (error) {
@@ -205,7 +236,7 @@ export function QuickTransactionCreate({
         }
         console.log(
           `Creating transaction ${i + 1}/${count} with method:`,
-          selectedMethodId,
+          selectedMethodId
         );
 
         if (isTestMerchant) {
@@ -213,9 +244,13 @@ export function QuickTransactionCreate({
           const data: any = {
             methodId: selectedMethodId,
             amount: Math.floor(Math.random() * 9000) + 1000,
-            orderId: `BATCH_${transactionType}_${Date.now()}_${i}_${Math.random().toString(36).substring(7)}`,
+            orderId: `BATCH_${transactionType}_${Date.now()}_${i}_${Math.random()
+              .toString(36)
+              .substring(7)}`,
             expired_at: new Date(Date.now() + 3600000).toISOString(),
-            userIp: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+            userIp: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(
+              Math.random() * 255
+            )}`,
           };
 
           // For OUT transactions, don't include rate - let backend handle it based on merchant settings
@@ -234,7 +269,7 @@ export function QuickTransactionCreate({
                 "x-admin-key": adminToken || "",
               },
               body: JSON.stringify(data),
-            },
+            }
           );
 
           if (response.ok) {
@@ -246,7 +281,7 @@ export function QuickTransactionCreate({
             console.error(
               `Transaction ${i + 1} failed:`,
               response.status,
-              errorText,
+              errorText
             );
           }
         } else {
@@ -258,11 +293,15 @@ export function QuickTransactionCreate({
             transactionType === "IN"
               ? {
                   amount,
-                  orderId: `BATCH_IN_${Date.now()}_${i}_${Math.random().toString(36).substring(7)}`,
+                  orderId: `BATCH_IN_${Date.now()}_${i}_${Math.random()
+                    .toString(36)
+                    .substring(7)}`,
                   methodId: selectedMethodId,
                   rate: 95 + Math.random() * 10,
                   expired_at: new Date(Date.now() + 3600000).toISOString(),
-                  userIp: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+                  userIp: `192.168.${Math.floor(
+                    Math.random() * 255
+                  )}.${Math.floor(Math.random() * 255)}`,
                   callbackUri: "",
                 }
               : {
@@ -285,13 +324,13 @@ export function QuickTransactionCreate({
                 "x-merchant-api-key": merchantToken,
               },
               body: JSON.stringify(data),
-            },
+            }
           );
 
           if (response.ok) {
             successCount++;
             console.log(
-              `Transaction ${i + 1} created successfully (non-test merchant)`,
+              `Transaction ${i + 1} created successfully (non-test merchant)`
             );
           } else {
             errorCount++;
@@ -299,7 +338,7 @@ export function QuickTransactionCreate({
             console.error(
               `Transaction ${i + 1} failed (non-test merchant):`,
               response.status,
-              errorText,
+              errorText
             );
           }
         }
@@ -317,7 +356,7 @@ export function QuickTransactionCreate({
 
     if (successCount === 0 && errorCount === 0) {
       toast.error(
-        "Не удалось создать ни одной транзакции. Проверьте консоль для деталей.",
+        "Не удалось создать ни одной транзакции. Проверьте консоль для деталей."
       );
     } else {
       toast.success("Пакетное создание завершено", {

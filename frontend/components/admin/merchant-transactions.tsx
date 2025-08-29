@@ -142,10 +142,10 @@ export function MerchantTransactions({ merchantId }: MerchantTransactionsProps) 
     <div className="space-y-6">
       {/* Balance Formula Card */}
       {balanceFormula && (
-        <Card className="border-[purple-600] dark:border-purple-800">
+        <Card className="border-[#006039] dark:border-purple-800">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Calculator className="h-5 w-5 text-[purple-600] dark:text-purple-400" />
+              <Calculator className="h-5 w-5 text-[#006039] dark:text-purple-400" />
               Формула расчета баланса
             </CardTitle>
             <CardDescription>Расчет USDT баланса на основе merchantRate</CardDescription>
@@ -191,12 +191,12 @@ export function MerchantTransactions({ merchantId }: MerchantTransactionsProps) 
                 </div>
               </div>
               <div className="space-y-3">
-                <div className="p-4 bg-[purple-600]/10 dark:bg-purple-900/20 rounded-lg">
+                <div className="p-4 bg-[#006039]/10 dark:bg-purple-900/20 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Итоговый баланс:
                     </span>
-                    <span className="text-xl font-bold text-[purple-600] dark:text-purple-400">
+                    <span className="text-xl font-bold text-[#006039] dark:text-purple-400">
                       {formatAmount(balanceFormula.currentBalance)} USDT
                     </span>
                   </div>
@@ -327,7 +327,7 @@ export function MerchantTransactions({ merchantId }: MerchantTransactionsProps) 
                     <TableCell className="text-red-600 dark:text-red-400">
                       -{formatAmount(tx.commission)} USDT
                     </TableCell>
-                    <TableCell className="font-medium text-[purple-600] dark:text-purple-400">
+                    <TableCell className="font-medium text-[#006039] dark:text-purple-400">
                       {formatAmount(tx.merchantBalance)} USDT
                     </TableCell>
                     <TableCell>{getStatusBadge(tx.status)}</TableCell>

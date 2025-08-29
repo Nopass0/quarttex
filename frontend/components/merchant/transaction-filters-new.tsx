@@ -75,7 +75,7 @@ export function TransactionFiltersNew({ filters, onFiltersChange }: TransactionF
     <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
       {/* Поиск по всем полям */}
       <div className="flex-1 relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[purple-600]" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#006039]" />
         <Input
           placeholder="Поиск по ID, Order ID, методу, сумме..."
           value={filters.search}
@@ -90,7 +90,7 @@ export function TransactionFiltersNew({ filters, onFiltersChange }: TransactionF
         <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
         <PopoverTrigger asChild>
           <Button variant="outline" className="gap-2">
-            <Filter className="h-4 w-4 text-[purple-600]" />
+            <Filter className="h-4 w-4 text-[#006039]" />
             Фильтры
             {activeFiltersCount > 0 && (
               <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">
@@ -201,7 +201,7 @@ export function TransactionFiltersNew({ filters, onFiltersChange }: TransactionF
                 onClick={handleReset}
                 disabled={activeFiltersCount === 0}
               >
-                <X className="h-4 w-4 mr-2 text-[purple-600]" />
+                <X className="h-4 w-4 mr-2 text-[#006039]" />
                 Сбросить
               </Button>
               <Button
@@ -219,7 +219,7 @@ export function TransactionFiltersNew({ filters, onFiltersChange }: TransactionF
       <Popover open={isSortOpen} onOpenChange={setIsSortOpen}>
         <PopoverTrigger asChild>
           <Button variant="outline" className="gap-2">
-            <ArrowUpDown className="h-4 w-4 text-[purple-600]" />
+            <ArrowUpDown className="h-4 w-4 text-[#006039]" />
             Сортировка
           </Button>
         </PopoverTrigger>

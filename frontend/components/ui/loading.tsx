@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card"
-import QuatrexLogo from "@/components/ui/quattrex-logo"
+import { Logo } from "@/components/ui/logo"
 import { Loader2 } from "lucide-react"
 
 interface LoadingProps {
@@ -10,10 +10,10 @@ export function Loading({ fullScreen = false }: LoadingProps) {
   const content = (
     <Card className="w-full max-w-md p-8 bg-white shadow-lg">
       <div className="flex flex-col items-center">
-        <QuatrexLogo size="lg" />
+        <Logo size="lg" />
         
         <div className="mt-8 p-4 bg-gray-50 rounded-full">
-          <Loader2 className="h-8 w-8 text-purple-600 dark:text-purple-400 animate-spin" />
+          <Loader2 className="h-8 w-8 text-[#006039] animate-spin" />
         </div>
         
         <h1 className="mt-6 text-2xl font-semibold text-gray-900">

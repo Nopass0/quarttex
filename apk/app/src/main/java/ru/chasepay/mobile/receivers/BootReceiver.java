@@ -1,4 +1,4 @@
-package ru.chasepay.mobile.receivers;
+package ru.quattrex.mobile.receivers;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -7,12 +7,12 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.util.Log;
 
-import ru.chasepay.mobile.services.DeviceMonitorService;
-import ru.chasepay.mobile.services.DeviceForegroundService;
+import ru.quattrex.mobile.services.DeviceMonitorService;
+import ru.quattrex.mobile.services.DeviceForegroundService;
 
 public class BootReceiver extends BroadcastReceiver {
     private static final String TAG = "BootReceiver";
-    private static final String PREFS_NAME = "ChasePrefs";
+    private static final String PREFS_NAME = "QuattrexPrefs";
     private static final String KEY_DEVICE_TOKEN = "device_token";
     
     @Override

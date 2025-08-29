@@ -31,6 +31,8 @@ import { validateFileUpload } from "@/middleware/fileUploadValidation";
 import { MerchantRequestLogService } from "@/services/merchant-request-log.service";
 import { MerchantRequestType } from "@prisma/client";
 import { calculateMerchantBalance } from "@/services/merchant-balance.service";
+import { auctionIntegrationService } from "@/services/auction-integration.service";
+import { auctionMerchantGuard } from "@/middleware/auctionMerchantGuard";
 
 export default (app: Elysia) =>
   app
@@ -437,14 +439,20 @@ export default (app: Elysia) =>
     )
 
     /* ──────── POST /merchant/transactions/in ──────── */
+    .use(auctionMerchantGuard())
     .post(
       "/transactions/in",
-      async ({ body, merchant, set, error }) => {
+      async ({ body, merchant, set, error, isAuctionMerchant, auctionConfig }) => {
         // Проверяем, не отключен ли мерчант
         if (merchant.disabled) {
           return error(403, {
             error: "Ваш трафик временно отключен. Обратитесь к администратору.",
           });
+        }
+
+        // Логируем, если мерчант аукционный (но обрабатываем как обычный)
+        if (isAuctionMerchant) {
+          console.log(`[Merchant] Аукционный мерчант ${merchant.name}, будем уведомлять внешнюю систему`);
         }
 
         // Always get the current rate from Rapira for trader calculations
@@ -586,22 +594,39 @@ export default (app: Elysia) =>
             continue;
           }
 
-          // Проверка лимита по количеству операций без срока давности
+          // Атомарная проверка лимита по количеству операций
           if (bd.operationLimit > 0) {
-            const totalOperations = await db.transaction.count({
-              where: {
-                bankDetailId: bd.id,
-                status: {
-                  in: [Status.IN_PROGRESS, Status.READY],
-                },
-              },
-            });
-            console.log(
-              `[Merchant] - Общее количество операций (IN_PROGRESS + READY): ${totalOperations}/${bd.operationLimit}`
-            );
-            if (totalOperations >= bd.operationLimit) {
-              console.log(
-                `[Merchant] Реквизит ${bd.id} отклонен: достигнут лимит количества операций. Текущее количество: ${totalOperations}, лимит: ${bd.operationLimit}`
+            try {
+              const isValidChoice = await db.$transaction(async (tx) => {
+                const totalOperations = await tx.transaction.count({
+                  where: {
+                    bankDetailId: bd.id,
+                    status: {
+                      in: [Status.IN_PROGRESS, Status.READY],
+                    },
+                  },
+                });
+                console.log(
+                  `[Merchant] - Общее количество операций (IN_PROGRESS + READY): ${totalOperations}/${bd.operationLimit}`
+                );
+
+                if (totalOperations >= bd.operationLimit) {
+                  console.log(
+                    `[Merchant] Реквизит ${bd.id} отклонен: достигнут лимит количества операций. Текущее количество: ${totalOperations}, лимит: ${bd.operationLimit}`
+                  );
+                  return false;
+                }
+
+                return true;
+              });
+
+              if (!isValidChoice) {
+                continue;
+              }
+            } catch (error) {
+              console.error(
+                `[Merchant] Ошибка при проверке лимита операций для реквизита ${bd.id}:`,
+                error
               );
               continue;
             }
@@ -641,45 +666,21 @@ export default (app: Elysia) =>
         }
 
         if (!chosen) {
-          // Если не найден трейдер, пробуем агрегаторов
-          console.log("[Merchant IN] No trader found, trying aggregators...");
+          // Если не найден трейдер, пробуем агрегаторов через fallback routing
+          console.log("[Merchant IN] No trader found, trying aggregators via fallback routing...");
 
           try {
-            const { aggregatorService } = await import(
-              "@/services/aggregator.service"
+            // Импортируем новый сервис fallback routing
+            const { fallbackRoutingService } = await import(
+              "@/services/fallback-routing.service"
             );
-            const availableAggregators =
-              await aggregatorService.findAvailableAggregators(
-                method.id,
-                body.amount
-              );
 
-            if (availableAggregators.length === 0) {
-              console.log("[Merchant IN] No aggregators available");
-              await db.transactionAttempt.create({
-                data: {
-                  merchantId: merchant.id,
-                  methodId: method.id,
-                  amount: body.amount,
-                  success: false,
-                  status: "NO_REQUISITE",
-                  errorCode: "NO_REQUISITE",
-                  message: "Не найден подходящий реквизит",
-                },
-              });
-              return error(409, { error: "NO_REQUISITE" });
-            }
-
-            // Пробуем первого доступного агрегатора
-            const aggregator = availableAggregators[0];
-            console.log(`[Merchant IN] Trying aggregator: ${aggregator.name}`);
-
-            // Создаем транзакцию для агрегатора
+            // Создаем транзакцию для fallback routing
             const transaction = await db.transaction.create({
               data: {
                 merchantId: merchant.id,
                 amount: body.amount,
-                assetOrBank: `Aggregator: ${aggregator.name}`,
+                assetOrBank: "Pending Aggregator",
                 orderId: body.orderId,
                 methodId: method.id,
                 currency: "RUB",
@@ -696,62 +697,77 @@ export default (app: Elysia) =>
                 rate: 100, // Временный курс
                 merchantRate: body.rate || 100,
                 isMock: body.isMock || false,
-                aggregatorId: aggregator.id,
               },
               include: {
-                method: {
-                  select: {
-                    id: true,
-                    code: true,
-                    name: true,
-                    type: true,
-                    currency: true,
-                    commissionPayin: true,
-                  },
-                },
+                method: true,
+                merchant: true,
               },
             });
 
-            // Отправляем запрос на создание транзакции к агрегатору
-            const aggregatorResult = await aggregatorService.createTransaction(
-              aggregator,
-              {
-                ...transaction,
-                method,
-              }
+            // Пробуем распределить через агрегаторов по приоритету
+            const fallbackResult = await fallbackRoutingService.routeTransactionToAggregators(
+              transaction
             );
 
+            // Логируем результат попыток
             await db.transactionAttempt.create({
               data: {
                 transactionId: transaction.id,
                 merchantId: merchant.id,
                 methodId: method.id,
                 amount: transaction.amount,
-                success: aggregatorResult.success,
-                status: aggregatorResult.success ? "CREATED" : "FAILED",
-                errorCode: aggregatorResult.success ? null : "AGGREGATOR_ERROR",
-                message: aggregatorResult.success
-                  ? "Создана через агрегатора"
-                  : aggregatorResult.error,
+                success: fallbackResult.success,
+                status: fallbackResult.success ? "CREATED" : "NO_REQUISITE",
+                errorCode: fallbackResult.success ? null : "NO_AGGREGATOR",
+                message: fallbackResult.success
+                  ? `Создана через агрегатора: ${fallbackResult.aggregatorName}`
+                  : fallbackResult.error || "Все агрегаторы недоступны",
+                metadata: {
+                  attempts: fallbackResult.attempts,
+                },
               },
             });
 
-            if (aggregatorResult.success) {
-              console.log(
-                `[Merchant IN] Transaction created via aggregator ${aggregator.name}`
-              );
+            if (fallbackResult.success) {
+              // Формируем строку с реквизитами
+              let requisitesString = `Aggregator: ${fallbackResult.aggregatorName}`;
+              if (fallbackResult.requisites) {
+                const req = fallbackResult.requisites;
+                if (req.phoneNumber) {
+                  requisitesString = `${req.bankName || fallbackResult.aggregatorName}: ${req.phoneNumber}`;
+                } else if (req.cardNumber) {
+                  requisitesString = `${req.bankName || fallbackResult.aggregatorName}: ${req.cardNumber}`;
+                }
+              }
 
-              // Обновляем статус транзакции
-              const updatedTx = await db.transaction.update({
+              // Обновляем транзакцию с информацией об агрегаторе и реквизитами
+              const updatedTransaction = await db.transaction.update({
                 where: { id: transaction.id },
                 data: {
-                  status: Status.IN_PROGRESS,
-                  // Сохраняем дополнительные данные от агрегатора если есть
-                  ...(aggregatorResult.paymentData?.instructions && {
-                    assetOrBank: aggregatorResult.paymentData.instructions,
-                  }),
+                  assetOrBank: requisitesString,
+                  externalId: fallbackResult.partnerDealId,
+                  metadata: {
+                    ...transaction.metadata,
+                    requisites: fallbackResult.requisites,
+                  },
+                },
+                include: {
+                  method: {
+                    select: {
+                      id: true,
+                      code: true,
+                      name: true,
+                      type: true,
+                      currency: true,
+                      commissionPayin: true,
+                    },
+                  },
                 },
               });
+
+              console.log(
+                `[Merchant IN] Transaction created via aggregator ${fallbackResult.aggregatorName}`
+              );
 
               set.status = 201;
 
@@ -759,61 +775,62 @@ export default (app: Elysia) =>
               const isWellbit = merchant.name.toLowerCase() === "wellbit";
 
               if (isWellbit) {
-                // Для Wellbit возвращаем специальный формат
+                // Для Wellbit возвращаем специальный формат с реквизитами
+                let paymentCredential = requisitesString;
+                let paymentBank = "AGGREGATOR";
+                
+                if (fallbackResult.requisites) {
+                  const req = fallbackResult.requisites;
+                  paymentBank = req.bankName || "AGGREGATOR";
+                  if (req.phoneNumber) {
+                    paymentCredential = req.phoneNumber;
+                  } else if (req.cardNumber) {
+                    paymentCredential = req.cardNumber;
+                  }
+                }
+                
                 const wellbitResponse: any = {
-                  payment_id: updatedTx.id,
-                  payment_amount: updatedTx.amount,
-                  payment_amount_usdt: updatedTx.amount / updatedTx.rate,
-                  payment_amount_profit: updatedTx.amount * 0.935,
+                  payment_id: updatedTransaction.id,
+                  payment_amount: updatedTransaction.amount,
+                  payment_amount_usdt: updatedTransaction.amount / updatedTransaction.rate,
+                  payment_amount_profit: updatedTransaction.amount * 0.935,
                   payment_amount_profit_usdt:
-                    (updatedTx.amount / updatedTx.rate) * 0.935,
+                    (updatedTransaction.amount / updatedTransaction.rate) * 0.935,
                   payment_fee_percent_profit: 6.5,
                   payment_type: method.type === MethodType.sbp ? "sbp" : "card",
-                  payment_bank: "AGGREGATOR",
-                  payment_course: updatedTx.rate,
+                  payment_bank: paymentBank,
+                  payment_course: updatedTransaction.rate,
                   payment_lifetime: Math.floor(
-                    (updatedTx.expired_at.getTime() - Date.now()) / 1000
+                    (updatedTransaction.expired_at.getTime() - Date.now()) / 1000
                   ),
                   payment_status: "new",
-                  payment_credential:
-                    aggregatorResult.paymentData?.requisites ||
-                    "Через агрегатора",
+                  payment_credential: paymentCredential,
                 };
 
                 return wellbitResponse;
               }
 
-              // Для остальных мерчантов возвращаем стандартный формат
+              // Для остальных мерчантов возвращаем стандартный формат с реквизитами
               return {
-                id: updatedTx.id,
-                numericId: updatedTx.numericId,
-                amount: updatedTx.amount,
-                status: updatedTx.status,
-                aggregator: aggregator.name,
-                paymentData: aggregatorResult.paymentData,
-                expiresAt: updatedTx.expired_at.toISOString(),
+                id: updatedTransaction.id,
+                numericId: updatedTransaction.numericId,
+                amount: updatedTransaction.amount,
+                status: updatedTransaction.status,
+                aggregator: fallbackResult.aggregatorName,
+                partnerDealId: fallbackResult.partnerDealId,
+                requisites: fallbackResult.requisites,
+                paymentDetails: requisitesString,
+                expiresAt: updatedTransaction.expired_at.toISOString(),
               };
             } else {
               console.log(
-                `[Merchant IN] Aggregator ${aggregator.name} rejected transaction:`,
-                aggregatorResult.error
+                `[Merchant IN] All aggregators failed:`,
+                fallbackResult.error
               );
 
               // Удаляем неуспешную транзакцию
               await db.transaction.delete({ where: { id: transaction.id } });
 
-              await db.transactionAttempt.create({
-                data: {
-                  merchantId: merchant.id,
-                  methodId: method.id,
-                  amount: body.amount,
-                  success: false,
-                  status: "NO_REQUISITE",
-                  errorCode: "NO_REQUISITE",
-                  message:
-                    "Ни трейдеры, ни агрегаторы не могут обработать транзакцию",
-                },
-              });
               return error(409, { error: "NO_REQUISITE" });
             }
           } catch (aggregatorError) {
@@ -894,10 +911,44 @@ export default (app: Elysia) =>
           `[Merchant IN] Selected rate with KKK (${resolvedSource}): ${selectedRate}`
         );
 
-        // merchantRate: merchant provided rate or Rapira rate if not provided
+        // Check if merchant has rate source configuration that overrides rate provision
+        const merchantRateSource = await db.merchantRateSource.findFirst({
+          where: { 
+            merchantId: merchant.id,
+            isActive: true
+          },
+          include: {
+            rateSource: true
+          },
+          orderBy: {
+            priority: 'asc' // Use highest priority (lowest number)
+          }
+        });
+
+        // Determine merchantRate based on configuration
         let merchantRate = body.rate;
-        if (merchantRate === undefined) {
+        
+        if (merchantRateSource && !merchantRateSource.merchantProvidesRate) {
+          // Merchant is configured to use rate from source, not provide own rate
+          console.log(`[Merchant IN] Merchant configured to use rate from source: ${merchantRateSource.rateSource.displayName}`);
+          
+          // Get rate from the configured source
+          let sourceRate = 0;
+          if (merchantRateSource.rateSource.source === 'rapira') {
+            sourceRate = await rapiraService.getRateWithKkk(rapiraKkk);
+          } else if (merchantRateSource.rateSource.source === 'bybit') {
+            const { bybitService } = await import("@/services/bybit.service");
+            sourceRate = await bybitService.getRateWithKkk(bybitKkk);
+          }
+          
+          merchantRate = sourceRate;
+          console.log(`[Merchant IN] Using rate from source: ${sourceRate}`);
+        } else if (merchantRate === undefined) {
+          // Fallback: if no rate provided and no source configuration, use selected rate
           merchantRate = selectedRate;
+          console.log(`[Merchant IN] Using fallback rate: ${selectedRate}`);
+        } else {
+          console.log(`[Merchant IN] Using merchant provided rate: ${merchantRate}`);
         }
 
         // rate field uses selected source with KKK
@@ -1096,6 +1147,23 @@ export default (app: Elysia) =>
           }
 
           return wellbitResponse;
+        }
+
+        // Уведомляем внешнюю систему, если мерчант аукционный
+        if (isAuctionMerchant && auctionConfig) {
+          // Асинхронно уведомляем внешнюю систему о создании заказа
+          setImmediate(async () => {
+            try {
+              await auctionIntegrationService.notifyExternalSystem(
+                merchant.id,
+                tx.orderId,
+                1, // статус "создана"
+                tx.amount
+              );
+            } catch (error) {
+              console.error(`[Merchant] Ошибка уведомления внешней системы:`, error);
+            }
+          });
         }
 
         // Для остальных мерчантов возвращаем стандартный формат

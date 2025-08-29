@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { checkServerConnection } from "@/services/api"
-import QuatrexLogo from "@/components/ui/quattrex-logo"
+import { Logo } from "@/components/ui/logo"
 import { AlertTriangle, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -38,9 +38,9 @@ export function ServerCheck({ children }: ServerCheckProps) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background" suppressHydrationWarning>
         <div className="text-center space-y-4">
-          <QuatrexLogo size="xl" />
+          <Logo size="xl" />
           <div className="flex items-center gap-2">
-            <RefreshCw className="h-5 w-5 animate-spin text-[purple-600]" />
+            <RefreshCw className="h-5 w-5 animate-spin text-[#006039]" />
             <span className="text-lg">Подключение к серверу...</span>
           </div>
         </div>
@@ -52,7 +52,7 @@ export function ServerCheck({ children }: ServerCheckProps) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800" suppressHydrationWarning>
         <div className="text-center space-y-6 max-w-md p-8 bg-white/10 backdrop-blur-md rounded-xl border border-white/20">
-          <QuatrexLogo size="xl" variant="uppercase" />
+          <Logo size="xl" variant="uppercase" />
           <div className="space-y-4">
             <AlertTriangle className="h-16 w-16 text-yellow-500 mx-auto" />
             <h1 className="text-3xl font-bold text-white">Технические работы</h1>

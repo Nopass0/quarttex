@@ -347,7 +347,7 @@ export default function TraderDashboardPage() {
             {/* Stats Blocks */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6">
               {/* Deals Stats */}
-              <Card className="p-3 md:p-4 border border-gray-200 dark:border-purple-900/30">
+              <Card className="p-3 md:p-4 border border-gray-200 dark:border-[#29382f]">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div>
                     <h3 className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-1 md:mb-2">
@@ -371,15 +371,15 @@ export default function TraderDashboardPage() {
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="text-xs w-full sm:w-auto">
                         Период: {periodLabels[period]}
-                        <ChevronDown className="ml-1 h-3 w-3 text-[purple-600] dark:text-[purple-600]" />
+                        <ChevronDown className="ml-1 h-3 w-3 text-[#006039] dark:text-[#2d6a42]" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-48 p-0 dark:bg-purple-900/30 dark:border-gray-700" align="end">
+                    <DropdownMenuContent className="w-48 p-0 dark:bg-[#29382f] dark:border-gray-700" align="end">
                       <div className="max-h-64 overflow-auto">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[purple-900/30]/50"
+                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
                           onClick={() => setPeriod("today")}
                         >
                           За сегодня
@@ -387,7 +387,7 @@ export default function TraderDashboardPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[purple-900/30]/50"
+                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
                           onClick={() => setPeriod("week")}
                         >
                           За неделю
@@ -395,7 +395,7 @@ export default function TraderDashboardPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[purple-900/30]/50"
+                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
                           onClick={() => setPeriod("month")}
                         >
                           За месяц
@@ -403,7 +403,7 @@ export default function TraderDashboardPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[purple-900/30]/50"
+                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
                           onClick={() => setPeriod("year")}
                         >
                           За год
@@ -415,7 +415,7 @@ export default function TraderDashboardPage() {
               </Card>
 
               {/* Profit Stats */}
-              <Card className="p-3 md:p-4 border border-gray-200 dark:border-purple-900/30">
+              <Card className="p-3 md:p-4 border border-gray-200 dark:border-[#29382f]">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div>
                     <h3 className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-1 md:mb-2">Прибыль</h3>
@@ -432,15 +432,15 @@ export default function TraderDashboardPage() {
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="text-xs w-full sm:w-auto">
                         Период: {periodLabels[period]}
-                        <ChevronDown className="ml-1 h-3 w-3 text-[purple-600] dark:text-[purple-600]" />
+                        <ChevronDown className="ml-1 h-3 w-3 text-[#006039] dark:text-[#2d6a42]" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-48 p-0 dark:bg-purple-900/30 dark:border-gray-700" align="end">
+                    <DropdownMenuContent className="w-48 p-0 dark:bg-[#29382f] dark:border-gray-700" align="end">
                       <div className="max-h-64 overflow-auto">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[purple-900/30]/50"
+                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
                           onClick={() => setPeriod("today")}
                         >
                           За сегодня
@@ -448,7 +448,7 @@ export default function TraderDashboardPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[purple-900/30]/50"
+                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
                           onClick={() => setPeriod("week")}
                         >
                           За неделю
@@ -456,7 +456,7 @@ export default function TraderDashboardPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[purple-900/30]/50"
+                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
                           onClick={() => setPeriod("month")}
                         >
                           За месяц
@@ -464,7 +464,7 @@ export default function TraderDashboardPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start dark:hover:bg-[purple-900/30]/50"
+                          className="w-full justify-start dark:hover:bg-[#29382f]/50"
                           onClick={() => setPeriod("year")}
                         >
                           За год
@@ -544,7 +544,7 @@ export default function TraderDashboardPage() {
                 className="flex items-center justify-between group"
               >
                 <h2 className="text-base md:text-lg font-medium">Устройства</h2>
-                <div className="flex items-center gap-1 text-[purple-600]">
+                <div className="flex items-center gap-1 text-[#006039]">
                   <span className="text-xs md:text-sm">Показать все</span>
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -603,6 +603,9 @@ export default function TraderDashboardPage() {
                               <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
                                 {statusInfo.description}
                               </p>
+                              <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
+                                Реквизитов: {device.linkedBankDetails || 0}
+                              </p>
                             </div>
                           </div>
 
@@ -633,7 +636,7 @@ export default function TraderDashboardPage() {
               className="flex items-center justify-between group"
             >
               <h2 className="text-lg font-medium">Открытые споры</h2>
-              <div className="flex items-center gap-1 text-[purple-600]">
+              <div className="flex items-center gap-1 text-[#006039]">
                 <span className="text-sm">Показать все</span>
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </div>
@@ -704,7 +707,7 @@ export default function TraderDashboardPage() {
               className="flex items-center justify-between group"
             >
               <h2 className="text-lg font-medium">Последние сделки</h2>
-              <div className="flex items-center gap-1 text-[purple-600]">
+              <div className="flex items-center gap-1 text-[#006039]">
                 <span className="text-sm">Показать все</span>
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </div>

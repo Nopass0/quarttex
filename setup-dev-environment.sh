@@ -8,13 +8,13 @@ echo "===================================================="
 
 # Colors for output
 RED='\033[0;31m'
-GREEN='\033[0;32m'
+PURPLE='\033[0;35m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Function to print colored output
 print_success() {
-    echo -e "${GREEN}✓ $1${NC}"
+    echo -e "${PURPLE}✓ $1${NC}"
 }
 
 print_error() {
@@ -87,8 +87,8 @@ print_info "Setting up PostgreSQL database..."
 
 # Generate random password
 DB_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
-DB_NAME="chase_dev"
-DB_USER="chase_user"
+DB_NAME="quattrex_dev"
+DB_USER="quattrex_user"
 
 # Create user and database
 sudo -u postgres psql <<EOF
@@ -161,7 +161,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=
 SMTP_PASS=
-EMAIL_FROM=noreply@chase.local
+EMAIL_FROM=noreply@quattrex.local
 
 # Redis (optional)
 REDIS_URL=redis://localhost:6379

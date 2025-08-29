@@ -3,6 +3,7 @@ import { db } from "@/db";
 import ErrorSchema from "@/types/error";
 import { NotificationType } from "@prisma/client";
 import { truncate2 } from "@/utils/rounding";
+import { getFlexibleFeePercent } from "@/utils/flexible-fee-calculator";
 
 /* ---------- DTOs ---------- */
 const NotificationDTO = t.Object({
@@ -413,6 +414,27 @@ export const notificationRoutes = new Elysia({ prefix: "/notifications" })
 
         // Выполняем финансовые операции
         await db.$transaction(async (prisma) => {
+          // Рассчитываем прибыль трейдера с учетом гибких ставок (как в БТ-входе)
+          const spentUsdt = transaction.rate
+            ? transaction.amount / transaction.rate
+            : 0;
+          const commissionPercent = await getFlexibleFeePercent(
+            transaction.traderId,
+            transaction.merchantId,
+            transaction.methodId,
+            transaction.amount,
+            "IN"
+          );
+          const traderProfit = truncate2(spentUsdt * (commissionPercent / 100));
+
+          // Обновляем транзакцию с рассчитанной прибылью
+          await prisma.transaction.update({
+            where: { id: transaction.id },
+            data: {
+              traderProfit: traderProfit,
+            },
+          });
+
           // Начисляем мерчанту
           const method = await prisma.method.findUnique({
             where: { id: transaction.methodId },
@@ -442,12 +464,12 @@ export const notificationRoutes = new Elysia({ prefix: "/notifications" })
           }
 
           // Начисляем прибыль трейдеру
-          if (transaction.traderProfit && transaction.traderProfit > 0) {
+          if (traderProfit > 0) {
             await prisma.user.update({
               where: { id: trader.id },
               data: {
                 profitFromDeals: {
-                  increment: truncate2(transaction.traderProfit),
+                  increment: truncate2(traderProfit),
                 },
               },
             });

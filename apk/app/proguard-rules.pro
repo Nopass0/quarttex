@@ -6,28 +6,28 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Keep data models - CRITICAL for preventing crashes
--keep class ru.chasepay.mobile.data.models.** { *; }
--keep class ru.chasepay.mobile.data.remote.responses.** { *; }
--keep class ru.chasepay.mobile.data.remote.requests.** { *; }
+-keep class ru.quattrex.mobile.data.models.** { *; }
+-keep class ru.quattrex.mobile.data.remote.responses.** { *; }
+-keep class ru.quattrex.mobile.data.remote.requests.** { *; }
 
 # Keep all Retrofit interfaces
--keep interface ru.chasepay.mobile.data.remote.** { *; }
+-keep interface ru.quattrex.mobile.data.remote.** { *; }
 
 # Keep all Services
--keep class ru.chasepay.mobile.services.** { *; }
+-keep class ru.quattrex.mobile.services.** { *; }
 
 # Keep Activities
--keep class ru.chasepay.mobile.MainActivity { *; }
--keep class ru.chasepay.mobile.DebugActivity { *; }
+-keep class ru.quattrex.mobile.MainActivity { *; }
+-keep class ru.quattrex.mobile.DebugActivity { *; }
 
 # Keep Application class
--keep class ru.chasepay.mobile.ChaseApplication { *; }
+-keep class ru.quattrex.mobile.ChaseApplication { *; }
 
 # Keep Broadcast Receivers
--keep class ru.chasepay.mobile.receivers.** { *; }
+-keep class ru.quattrex.mobile.receivers.** { *; }
 
 # Keep BuildConfig
--keep class ru.chasepay.mobile.BuildConfig { *; }
+-keep class ru.quattrex.mobile.BuildConfig { *; }
 
 # Retrofit
 -keepattributes Signature
@@ -107,7 +107,7 @@
 -keep public class * extends android.content.ContentProvider
 
 # View binding
--keep class ru.chasepay.mobile.databinding.** { *; }
+-keep class ru.quattrex.mobile.databinding.** { *; }
 
 # Keep native methods
 -keepclasseswithmembernames class * {

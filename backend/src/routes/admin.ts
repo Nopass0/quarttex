@@ -26,6 +26,7 @@ import topupSettingsRoutes from "@/routes/admin/topup-settings";
 import { servicesRoutes } from "@/routes/admin/services";
 import traderMerchantsRoutes from "@/routes/admin/trader-merchants";
 import traderMerchantFeeRangesRoutes from "@/routes/admin/trader-merchant-fee-ranges";
+import merchantTradersRoutes from "@/routes/admin/merchant-traders";
 import agentsRoutes from "@/routes/admin/agents";
 import paymentDetailsRoutes from "@/routes/admin/payment-details";
 import devicesRoutes from "@/routes/admin/devices";
@@ -35,6 +36,7 @@ import appVersionsRoutes from "@/routes/admin/app-versions";
 import supportRoutes from "@/routes/admin/support";
 import rateSettingsRoutes from "@/routes/admin/rate-settings";
 import kkkSettingsRoutes from "@/routes/admin/kkk-settings";
+import rateSourceRoutes from "@/routes/admin/rate-sources";
 import processorRoutes from "@/routes/admin/processor";
 import deviceEmulatorRoutes from "@/routes/admin/device-emulator";
 import metricsRoutes from "@/routes/admin/metrics";
@@ -58,6 +60,7 @@ import { settleRequestsRoutes } from "@/routes/admin/settle-requests";
 import { merchantRequestLogsRoutes } from "@/routes/admin/merchant-request-logs";
 import { botDisputesRoutes } from "@/routes/admin/bot-disputes";
 import aggregatorsRoutes from "@/routes/admin/aggregators";
+import auctionRoutes from "@/routes/admin/auction";
 // import { testToolsRoutes } from "@/routes/admin/test-tools";
 
 const authHeader = t.Object({ "x-admin-key": t.String() });
@@ -129,6 +132,7 @@ export default (app: Elysia) =>
     .group("/devices", (a) => devicesRoutes(a))
     .use(databaseRoute)
     .use(traderMerchantsRoutes)
+    .use(merchantTradersRoutes)
     .use(traderMerchantFeeRangesRoutes)
     .use(agentsRoutes)
     .use(traderSettingsRoutes)
@@ -157,6 +161,7 @@ export default (app: Elysia) =>
     .use(merchantRequestLogsRoutes)
     .use(botDisputesRoutes)
     .group("/aggregators", (a) => aggregatorsRoutes(a))
+    .group("/auction", (a) => auctionRoutes(a))
     // .group("/test-tools", (a) => a.use(testToolsRoutes))
     .group("", (a) => metricsRoutes(a))
 
@@ -615,6 +620,191 @@ export default (app: Elysia) =>
         },
       }
     )
+
+    // Get all merchants
+    .get("/merchant", async () => {
+      const merchants = await db.merchant.findMany({
+        select: {
+          id: true,
+          name: true,
+          token: true,
+          balanceUsdt: true,
+          disabled: true,
+          banned: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: "desc"
+        }
+      });
+
+      return {
+        success: true,
+        merchants
+      };
+    })
+
+    // Get all traders
+    .get("/traders", async () => {
+      const traders = await db.user.findMany({
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          balanceUsdt: true,
+          balanceRub: true,
+          banned: true,
+          createdAt: true,
+          trafficEnabled: true,
+        },
+        orderBy: {
+          createdAt: "desc"
+        }
+      });
+
+      return {
+        success: true,
+        traders
+      };
+    })
+
+    // Rate sources endpoints
+    .get("/rate-sources", async () => {
+      const rateSources = await db.rateSourceConfig.findMany({
+        include: {
+          traders: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            }
+          },
+          merchants: {
+            include: {
+              merchant: {
+                select: {
+                  id: true,
+                  name: true,
+                }
+              }
+            }
+          },
+          _count: {
+            select: {
+              traders: true,
+              merchants: true,
+            }
+          }
+        },
+        orderBy: {
+          createdAt: 'asc'
+        }
+      })
+
+      // Получить текущие курсы от источников
+      const ratesPromises = rateSources.map(async (source) => {
+        let currentRate = null
+        
+        try {
+          if (source.source === 'bybit') {
+            const response = await fetch('https://api.bybit.com/v5/market/tickers?category=spot&symbol=USDTRUB')
+            const data = await response.json()
+            if (data.result?.list?.[0]?.lastPrice) {
+              currentRate = parseFloat(data.result.list[0].lastPrice)
+            }
+          } else if (source.source === 'rapira') {
+            currentRate = source.baseRate || 95.5
+          }
+        } catch (error) {
+          console.error(`Failed to fetch rate for ${source.source}:`, error)
+        }
+
+        return {
+          ...source,
+          currentRate,
+          adjustedRate: currentRate ? 
+            currentRate * (1 + (source.kkkPercent / 100) * (source.kkkOperation === 'MINUS' ? -1 : 1)) : 
+            null
+        }
+      })
+
+      const sourcesWithRates = await Promise.all(ratesPromises)
+
+      return {
+        success: true,
+        data: sourcesWithRates
+      }
+    })
+
+    // Update rate source settings
+    .put("/rate-sources/:id", async ({ params: { id }, body }) => {
+      const { displayName, kkkPercent, kkkOperation, isActive } = body as any
+
+      try {
+        const updated = await db.rateSourceConfig.update({
+          where: { id },
+          data: {
+            ...(displayName !== undefined && { displayName }),
+            ...(kkkPercent !== undefined && { kkkPercent }),
+            ...(kkkOperation !== undefined && { kkkOperation }),
+            ...(isActive !== undefined && { isActive }),
+          }
+        })
+
+        return {
+          success: true,
+          data: updated
+        }
+      } catch (error) {
+        return {
+          success: false,
+          error: 'Failed to update rate source'
+        }
+      }
+    })
+
+    // Update all rates
+    .post("/rate-sources/update-rates", async () => {
+      const sources = await db.rateSourceConfig.findMany({
+        where: { isActive: true }
+      })
+
+      const updates = []
+
+      for (const source of sources) {
+        let rate = null
+        
+        try {
+          if (source.source === 'bybit') {
+            const response = await fetch('https://api.bybit.com/v5/market/tickers?category=spot&symbol=USDTRUB')
+            const data = await response.json()
+            if (data.result?.list?.[0]?.lastPrice) {
+              rate = parseFloat(data.result.list[0].lastPrice)
+            }
+          } else if (source.source === 'rapira') {
+            rate = 95.5
+          }
+
+          if (rate) {
+            const updated = await db.rateSourceConfig.update({
+              where: { id: source.id },
+              data: {
+                baseRate: rate,
+                lastRateUpdate: new Date()
+              }
+            })
+            updates.push(updated)
+          }
+        } catch (error) {
+          console.error(`Failed to update rate for ${source.source}:`, error)
+        }
+      }
+
+      return {
+        success: true,
+        data: updates
+      }
+    })
 
     //get profits for trader
     .get("/traders/:id/profits", async ({ params }) => {

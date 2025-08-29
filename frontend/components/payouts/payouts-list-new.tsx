@@ -266,7 +266,7 @@ export function PayoutsList() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-[purple-600]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
       </div>
     )
   }
@@ -287,7 +287,7 @@ export function PayoutsList() {
               <p className="text-sm text-gray-500">Всего выплат</p>
               <p className="text-2xl font-bold">{stats.totalPayouts}</p>
             </div>
-            <Send className="h-8 w-8 text-[purple-600]" />
+            <Send className="h-8 w-8 text-[#006039]" />
           </div>
         </Card>
 
@@ -297,7 +297,7 @@ export function PayoutsList() {
               <p className="text-sm text-gray-500">Общая сумма</p>
               <p className="text-2xl font-bold">{stats.totalAmount.toFixed(2)} {stats.currency}</p>
             </div>
-            <DollarSign className="h-8 w-8 text-[purple-600]" />
+            <DollarSign className="h-8 w-8 text-[#006039]" />
           </div>
         </Card>
 
@@ -317,7 +317,7 @@ export function PayoutsList() {
               <p className="text-sm text-gray-500">Период</p>
               <p className="text-lg font-medium">{period === "24h" ? "24 часа" : "Неделя"}</p>
             </div>
-            <Calendar className="h-8 w-8 text-[purple-600]" />
+            <Calendar className="h-8 w-8 text-[#006039]" />
           </div>
         </Card>
       </div>
@@ -537,7 +537,7 @@ export function PayoutsList() {
                     </Button>
                     <Button
                       size="sm"
-                      className="flex-1 bg-[purple-600] hover:bg-[purple-600]/90"
+                      className="flex-1 bg-[#006039] hover:bg-[#006039]/90"
                       onClick={() => setFiltersOpen(false)}
                     >
                       Применить фильтры
@@ -641,7 +641,7 @@ export function PayoutsList() {
                 key={payout.id}
                 className={cn(
                   "p-6 hover:shadow-lg transition-all duration-300 cursor-pointer",
-                  payout.isNew && "border-[purple-600] bg-[purple-600]/5"
+                  payout.isNew && "border-[#006039] bg-[#006039]/5"
                 )}
                 onClick={() => setSelectedPayout(payout)}
               >
@@ -661,7 +661,7 @@ export function PayoutsList() {
                           {statusConfig[payout.status]?.label}
                         </Badge>
                         {payout.isNew && (
-                          <Badge className="bg-[purple-600] text-white">
+                          <Badge className="bg-[#006039] text-white">
                             Новая
                           </Badge>
                         )}

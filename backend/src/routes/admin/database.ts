@@ -151,6 +151,17 @@ export const databaseRoute = new Elysia({ prefix: '/database' })
       const updateData = { ...body }
       delete updateData.id
       
+      // Защита от изменения номера телефона в BankDetail
+      if (tableName === 'BankDetail' && updateData.phoneNumber !== undefined) {
+        const existing = await model.findUnique({ where: { id } })
+        if (existing && existing.phoneNumber !== updateData.phoneNumber) {
+          return {
+            success: false,
+            error: 'Номер телефона нельзя изменить после создания реквизита'
+          }
+        }
+      }
+      
       const data = await model.update({
         where: { id },
         data: updateData

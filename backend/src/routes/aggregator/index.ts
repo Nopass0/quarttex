@@ -2,25 +2,27 @@ import { Elysia } from "elysia";
 import { aggregatorSessionGuard } from "@/middleware/aggregatorGuard";
 import authRoutes from "@/routes/aggregator/auth";
 import dashboardRoutes from "@/routes/aggregator/dashboard";
-import apiDocsRoutes from "@/routes/aggregator/api-docs";
+import dashboardRoutesV2 from "@/routes/aggregator/dashboard-v2";
+import apiDocsRoutesV3 from "@/routes/aggregator/api-docs-v3";
 import disputesRoutes from "@/routes/aggregator/disputes";
 import settingsRoutes from "@/routes/aggregator/settings";
 import depositsRoutes from "@/routes/aggregator/deposits";
-import callbackRoutes from "@/routes/aggregator/callback";
+import callbackRoutes from "@/routes/aggregator/callback-v2";
+import callbackRoutesV3 from "@/routes/aggregator/callback-v3";
 
 export default (app: Elysia) =>
   app
     // Публичные маршруты аутентификации (без aggregatorSessionGuard)
     .group("/auth", (app) => app.use(authRoutes))
 
-    // Защищенные маршруты дашборда (с aggregatorSessionGuard)
+    // Защищенные маршруты дашборда v2 (с aggregatorSessionGuard)
     .group("/dashboard", (app) =>
-      app.use(aggregatorSessionGuard()).use(dashboardRoutes)
+      app.use(aggregatorSessionGuard()).use(dashboardRoutesV2)
     )
 
     // Защищенные маршруты API документации (с aggregatorSessionGuard)
     .group("/api-docs", (app) =>
-      app.use(aggregatorSessionGuard()).use(apiDocsRoutes)
+      app.use(aggregatorSessionGuard()).use(apiDocsRoutesV3)
     )
 
     // Защищенные маршруты споров (с aggregatorSessionGuard)
@@ -38,5 +40,8 @@ export default (app: Elysia) =>
       app.use(aggregatorSessionGuard()).use(depositsRoutes)
     )
 
-    // API маршруты для колбэков (с aggregatorApiGuard) - ОТДЕЛЬНАЯ группа чтобы не влиять на другие routes
+    // API маршруты для колбэков v3 - новая версия
+    .use(callbackRoutesV3)
+    
+    // Старые маршруты для обратной совместимости (deprecated)
     .use(callbackRoutes);

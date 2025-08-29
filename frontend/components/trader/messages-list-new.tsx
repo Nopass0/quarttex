@@ -977,7 +977,7 @@ export function MessagesListNew() {
                           size="sm"
                           onClick={() => setFilterAmountType("all")}
                           className={cn(
-                            filterAmountType === "all" && "bg-[purple-600] hover:bg-[#005030]"
+                            filterAmountType === "all" && "bg-[purple-600] hover:bg-[#3d0b80]"
                           )}
                         >
                           Любая
@@ -987,7 +987,7 @@ export function MessagesListNew() {
                           size="sm"
                           onClick={() => setFilterAmountType("exact")}
                           className={cn(
-                            filterAmountType === "exact" && "bg-[purple-600] hover:bg-[#005030]"
+                            filterAmountType === "exact" && "bg-[purple-600] hover:bg-[#3d0b80]"
                           )}
                         >
                           Точная
@@ -997,7 +997,7 @@ export function MessagesListNew() {
                           size="sm"
                           onClick={() => setFilterAmountType("range")}
                           className={cn(
-                            filterAmountType === "range" && "bg-[purple-600] hover:bg-[#005030]"
+                            filterAmountType === "range" && "bg-[purple-600] hover:bg-[#3d0b80]"
                           )}
                         >
                           Диапазон

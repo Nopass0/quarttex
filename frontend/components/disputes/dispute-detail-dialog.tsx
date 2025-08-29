@@ -371,7 +371,7 @@ export function DisputeDetailDialog({
                 <Button
                   onClick={handleSendMessage}
                   disabled={sendingMessage || (!newMessage.trim() && attachments.length === 0)}
-                  className="bg-[purple-600] hover:bg-[purple-600]/90"
+                  className="bg-[#006039] hover:bg-[#006039]/90"
                 >
                   {sendingMessage ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

@@ -138,9 +138,9 @@ export function ApiDocumentation({
                 className="h-8 w-8"
               >
                 {copiedEndpoint ? (
-                  <Check className="h-4 w-4 text-[purple-600]" />
+                  <Check className="h-4 w-4 text-[#006039]" />
                 ) : (
-                  <Copy className="h-4 w-4 text-[purple-600]" />
+                  <Copy className="h-4 w-4 text-[#006039]" />
                 )}
               </Button>
             </div>

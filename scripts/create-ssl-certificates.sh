@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Create SSL directory if it doesn't exist
-mkdir -p /root/chasepay/ssl
+mkdir -p /root/quattrexpay/ssl
 
 # Create certificate.crt
-cat > /root/chasepay/ssl/certificate.crt << 'EOF'
+cat > /root/quattrexpay/ssl/certificate.crt << 'EOF'
 -----BEGIN CERTIFICATE-----
 MIIHYjCCBkqgAwIBAgIMYPBT7nBojKeLroC4MA0GCSqGSIb3DQEBCwUAMFUxCzAJ
 BgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMSswKQYDVQQDEyJH
@@ -50,7 +50,7 @@ l5fCPi/rtF8vRKchZ9szNFRynV78Dg==
 EOF
 
 # Create certificate.key
-cat > /root/chasepay/ssl/certificate.key << 'EOF'
+cat > /root/quattrexpay/ssl/certificate.key << 'EOF'
 -----BEGIN RSA PRIVATE KEY-----
 MIIJKAIBAAKCAgEAqvOHFwOZQwy75nCn8MiS1SiEw+N2/9bns8GdHZER/ntQ28zc
 rN91c+dLK3A99MZM3zX6SBikT61YWOAv7E2qPprZI/W6aBLkHOM9d11Bxsgcsc0z
@@ -105,7 +105,7 @@ pi/aqJAx6Bd2X+GP0vSj4o4eaIRmceHWqJ+VNM5nCVYS5CpkzhYD+CzM4N0=
 EOF
 
 # Create certificate_ca.crt
-cat > /root/chasepay/ssl/certificate_ca.crt << 'EOF'
+cat > /root/quattrexpay/ssl/certificate_ca.crt << 'EOF'
 -----BEGIN CERTIFICATE-----
 MIIFjTCCA3WgAwIBAgIRAIN9TriekS/nLK07x2kt3CAwDQYJKoZIhvcNAQELBQAw
 TDEgMB4GA1UECxMXR2xvYmFsU2lnbiBSb290IENBIC0gUjYxEzARBgNVBAoTCkds
@@ -174,11 +174,11 @@ JJUEeKgDu+6B5dpffItKoZB0JaezPkvILFa9x8jvOOJckvB595yEunQtYQEgfn7R
 EOF
 
 # Set proper permissions
-chmod 600 /root/chasepay/ssl/certificate.key
-chmod 644 /root/chasepay/ssl/certificate.crt
-chmod 644 /root/chasepay/ssl/certificate_ca.crt
+chmod 600 /root/quattrexpay/ssl/certificate.key
+chmod 644 /root/quattrexpay/ssl/certificate.crt
+chmod 644 /root/quattrexpay/ssl/certificate_ca.crt
 
-echo "SSL certificates created successfully in /root/chasepay/ssl/"
+echo "SSL certificates created successfully in /root/quattrexpay/ssl/"
 echo "Files created:"
 echo "  - certificate.crt"
 echo "  - certificate.key"

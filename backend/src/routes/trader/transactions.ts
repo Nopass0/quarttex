@@ -920,7 +920,7 @@ export default (app: Elysia) =>
                 methodId: transaction.methodId,
               });
 
-              // Используем гибкие ставки для расчета комиссии
+              // Используем гибкие ставки для расчета комиссии (как в БТ-входе)
               const feeInPercent = await getFlexibleFeePercent(
                 transaction.traderId!,
                 transaction.merchantId,
@@ -938,10 +938,10 @@ export default (app: Elysia) =>
                 transaction.rate &&
                 transaction.rate > 0
               ) {
-                // Правильная формула прибыли: (amount / rate) * (feeInPercent / 100)
+                // Правильная формула прибыли как в БТ-входе: спенс в USDT * процент комиссии
                 const spentUsdt = transaction.amount / transaction.rate;
                 const profit = spentUsdt * (feeInPercent / 100);
-                // Truncate to 2 decimal places
+                // Обрезаем до 2 знаков после запятой
                 updateData.traderProfit = truncate2(profit);
                 console.log("[Trader Profit] Calculation details:", {
                   amount: transaction.amount,

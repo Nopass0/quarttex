@@ -37,7 +37,7 @@ export default (app: Elysia) =>
             email: t.String(),
             name: t.String(),
             apiToken: t.String(),
-            apiBaseUrl: t.Optional(t.String()),
+            apiBaseUrl: t.Union([t.String(), t.Null()]),
             balanceUsdt: t.Number(),
             twoFactorEnabled: t.Boolean(),
             isActive: t.Boolean(),
@@ -83,7 +83,7 @@ export default (app: Elysia) =>
         detail: { summary: "Обновление профиля агрегатора" },
         body: t.Object({
           name: t.Optional(t.String()),
-          apiBaseUrl: t.Optional(t.String())
+          apiBaseUrl: t.Optional(t.Union([t.String(), t.Null()]))
         }),
         response: {
           200: t.Object({
@@ -92,7 +92,7 @@ export default (app: Elysia) =>
               id: t.String(),
               email: t.String(),
               name: t.String(),
-              apiBaseUrl: t.Optional(t.String()),
+              apiBaseUrl: t.Union([t.String(), t.Null()]),
               updatedAt: t.String()
             })
           }),

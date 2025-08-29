@@ -1,4 +1,4 @@
-package ru.chasepay.mobile.services;
+package ru.quattrex.mobile.services;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -17,11 +17,11 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import ru.chasepay.mobile.utils.DeviceUtils;
+import ru.quattrex.mobile.utils.DeviceUtils;
 
 public class UniversalConnectionService {
     private static final String TAG = "UniversalConnection";
-    private static final String PREFS_NAME = "ChasePrefs";
+    private static final String PREFS_NAME = "QuattrexPrefs";
     private static final String KEY_DEVICE_TOKEN = "device_token";
     
     // Connection modes
@@ -174,7 +174,7 @@ public class UniversalConnectionService {
                     String deviceToken = prefs.getString(KEY_DEVICE_TOKEN, null);
                     if (deviceToken == null) break;
                     
-                    String baseUrl = ru.chasepay.mobile.BuildConfig.BASE_URL;
+                    String baseUrl = ru.quattrex.mobile.BuildConfig.BASE_URL;
                     String pollUrl = baseUrl.replace("/api", "") + "/api/device/long-poll";
                     
                     JSONObject data = new JSONObject();
@@ -248,7 +248,7 @@ public class UniversalConnectionService {
                 String deviceToken = prefs.getString(KEY_DEVICE_TOKEN, null);
                 if (deviceToken == null) return;
                 
-                String baseUrl = ru.chasepay.mobile.BuildConfig.BASE_URL;
+                String baseUrl = ru.quattrex.mobile.BuildConfig.BASE_URL;
                 String pingUrl = baseUrl.replace("/api", "") + "/api/device/health-check";
                 
                 JSONObject data = new JSONObject();

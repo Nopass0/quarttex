@@ -322,6 +322,13 @@ export default (app: Elysia) =>
           }
         }
 
+        // Запрещаем изменение номера телефона у существующих реквизитов
+        if (body.phoneNumber !== undefined && body.phoneNumber !== exists.phoneNumber) {
+          return error(400, { 
+            error: "Номер телефона нельзя изменить после создания реквизита" 
+          });
+        }
+
         // Проверяем лимиты трейдера если обновляются суммы
         if (body.minAmount !== undefined && body.minAmount < trader.minAmountPerRequisite) {
           return error(400, { 
@@ -360,18 +367,22 @@ export default (app: Elysia) =>
         
         const mappedBankType = body.bankType ? (bankTypeMap[body.bankType] || body.bankType) : exists.bankType;
 
+        // Создаем копию body без phoneNumber
+        const updateData = { ...body };
+        delete updateData.phoneNumber;
+
         console.log('[BankDetails] Updating requisite with data:', {
           id: params.id,
-          totalAmountLimit: body.totalAmountLimit,
-          operationLimit: body.operationLimit,
-          sumLimit: body.sumLimit,
-          fullBody: body,
+          totalAmountLimit: updateData.totalAmountLimit,
+          operationLimit: updateData.operationLimit,
+          sumLimit: updateData.sumLimit,
+          fullBody: updateData,
         });
 
         const bankDetail = await db.bankDetail.update({
           where: { id: params.id },
           data: {
-            ...body,
+            ...updateData,
             bankType: mappedBankType as BankType,
           },
           include: {
