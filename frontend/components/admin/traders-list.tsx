@@ -96,14 +96,14 @@ export function TradersList() {
   const fetchTraders = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch(`${API_URL}/admin/users`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/traders`, {
         headers: {
           'x-admin-key': adminToken || '',
         },
       })
       if (!response.ok) throw new Error('Failed to fetch traders')
       const data = await response.json()
-      setTraders(data)
+      setTraders(data.traders || [])
     } catch (error) {
       toast.error('Не удалось загрузить список трейдеров')
     } finally {

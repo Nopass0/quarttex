@@ -34,6 +34,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { safeName } from '@/lib/text-utils';
 
 // Bank icon component - copied from deals list
 const getBankIcon = (bankType: string, size: "sm" | "md" = "md") => {
@@ -596,7 +597,7 @@ export default function TraderDashboardPage() {
 
                             {/* Device Name and ID */}
                             <div>
-                              <h3 className="font-semibold text-sm md:text-base dark:text-[#eeeeee]">{device.name}</h3>
+                              <h3 className="font-semibold text-sm md:text-base dark:text-[#eeeeee]">{safeName(device.name)}</h3>
                               <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
                                 ID: {device.numericId || device.id || "N/A"}
                               </p>

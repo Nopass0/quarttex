@@ -117,7 +117,8 @@ export function MerchantsList() {
       })
       if (!response.ok) throw new Error('Failed to fetch merchants')
       const data = await response.json()
-      setMerchants(data)
+      console.log('Fetched merchants data:', data)
+      setMerchants(data.merchants || data || [])
     } catch (error) {
       toast.error('Не удалось загрузить список мерчантов')
     } finally {

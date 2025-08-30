@@ -27,6 +27,7 @@ import { BankCard } from "@/components/ui/bank-card";
 import Image from "next/image";
 import { traderApi } from "@/services/api";
 import { toast } from "sonner";
+import { safeName, safeCardNumber } from '@/lib/text-utils';
 import {
   Search,
   Filter,
@@ -699,7 +700,7 @@ export default function TraderRequisitesPage() {
                                 >
                                   <div className="flex items-center gap-2">
                                     <Smartphone className="h-4 w-4" />
-                                    <span>{device.name}</span>
+                                    <span>{safeName(device.name)}</span>
                                     {device.isOnline && (
                                       <div className="w-2 h-2 bg-purple-500 rounded-full" />
                                     )}
@@ -797,13 +798,13 @@ export default function TraderRequisitesPage() {
                             {/* Name and Device */}
                             <div className="flex-1 min-w-0">
                               <div className="font-medium text-gray-900 text-sm truncate">
-                                {requisite.recipientName}
+                                {safeName(requisite.recipientName)}
                               </div>
                               {requisite.device && (
                                 <div className="flex items-center gap-1 mt-1">
                                   <Smartphone className="h-3 w-3 text-purple-600" />
                                   <span className="text-xs text-purple-600 truncate">
-                                    {requisite.device.name}
+                                    {safeName(requisite.device.name)}
                                   </span>
                                 </div>
                               )}
@@ -949,13 +950,13 @@ export default function TraderRequisitesPage() {
                         <div className="space-y-1">
                           <div className="flex items-center gap-3">
                             <div className="font-medium text-gray-900">
-                              {requisite.recipientName}
+                              {safeName(requisite.recipientName)}
                             </div>
                             {requisite.device && (
                               <div className="flex items-center gap-1.5">
                                 <Smartphone className="h-3.5 w-3.5 text-purple-600" />
                                 <span className="text-sm text-purple-600">
-                                  {requisite.device.name}
+                                  {safeName(requisite.device.name)}
                                 </span>
                               </div>
                             )}
