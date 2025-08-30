@@ -208,7 +208,7 @@ export function PayoutsList() {
 
     if (diff <= 0) {
       return (
-        <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100/80 rounded-full">
+        <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100/80 rounded-full">
           <Clock className="h-3 w-3 text-gray-500" />
           <span className="text-xs text-gray-600 font-medium">Истекло</span>
         </div>
@@ -1465,7 +1465,7 @@ export function PayoutsList() {
                 value={balanceInput}
                 onChange={(e) => setBalanceInput(e.target.value)}
                 onBlur={saveFilters}
-                className="h-12 w-32 focus:ring-2 focus:ring-green-500 focus:border-[#530FAD]"
+                className="h-12 w-32 focus:ring-2 focus:ring-purple-500 focus:border-[#530FAD]"
               />
               <Button
                 variant="outline"

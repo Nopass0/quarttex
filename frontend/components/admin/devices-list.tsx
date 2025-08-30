@@ -274,7 +274,7 @@ export function DevicesList() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-purple-50/10 border-green-200">
+        <Card className="bg-purple-50/10 border-purple-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-medium text-[#530FAD] dark:text-[#7c3aed]">Активных</CardTitle>
           </CardHeader>

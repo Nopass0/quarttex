@@ -755,7 +755,7 @@ export function PayoutsList() {
   );
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="h-screen flex flex-col bg-purple-50/30">
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4 bg-white">
         <h1 className="text-2xl font-semibold">Выплаты</h1>
@@ -974,7 +974,7 @@ export function PayoutsList() {
                 placeholder="0.00"
                 value={balanceInput}
                 onChange={(e) => setBalanceInput(e.target.value)}
-                className="h-12 w-32 focus:ring-2 focus:ring-green-500 focus:border-[#530FAD]"
+                className="h-12 w-32 focus:ring-2 focus:ring-purple-500 focus:border-[#530FAD]"
               />
               <Button 
                 variant="outline" 
@@ -1141,7 +1141,7 @@ export function PayoutsList() {
               <Label htmlFor="cancel-reason">Причина отмены</Label>
               <textarea
                 id="cancel-reason"
-                className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
                 placeholder="Опишите причину отмены..."
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}

@@ -817,7 +817,7 @@ export default function TraderRequisitesPage() {
                                 <Badge className={cn(
                                   "text-xs px-2 py-1",
                                   (requisite.device.isWorking ?? requisite.device.isOnline)
-                                    ? "bg-purple-50 text-purple-700 border-green-200"
+                                    ? "bg-purple-50 text-purple-700 border-purple-200"
                                     : "bg-purple-100/40 text-gray-600 border-gray-300"
                                 )}>
                                   {(requisite.device.isWorking ?? requisite.device.isOnline)

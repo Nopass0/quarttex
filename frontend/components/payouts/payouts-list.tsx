@@ -98,7 +98,7 @@ const statusConfig = {
   },
   COMPLETED: {
     label: "Выполнено",
-    color: "bg-purple-50 text-[#530FAD] dark:text-[#7c3aed] border-green-200",
+    color: "bg-purple-50 text-[#530FAD] dark:text-[#7c3aed] border-purple-200",
   },
   FAILED: {
     label: "Ошибка",

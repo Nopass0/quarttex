@@ -724,7 +724,7 @@ export function PayoutsList() {
   );
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="h-screen flex flex-col bg-purple-50/30">
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4 bg-white">
         <h1 className="text-2xl font-semibold">Выплаты</h1>
@@ -798,12 +798,12 @@ export function PayoutsList() {
                     ) : (
                       <div className="flex gap-1">
                         {selectedTrafficType.includes(1) && (
-                          <Badge className="h-5 px-2 bg-purple-100 text-purple-700 border-green-200">
+                          <Badge className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200">
                             СБП
                           </Badge>
                         )}
                         {selectedTrafficType.includes(2) && (
-                          <Badge className="h-5 px-2 bg-purple-100 text-purple-700 border-green-200">
+                          <Badge className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200">
                             Карты
                           </Badge>
                         )}
@@ -871,13 +871,13 @@ export function PayoutsList() {
                         {selectedBanks.slice(0, 2).map((index) => (
                           <Badge
                             key={index}
-                            className="h-5 px-2 bg-purple-100 text-purple-700 border-green-200"
+                            className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200"
                           >
                             {Object.keys(bankLogos)[index]}
                           </Badge>
                         ))}
                         {selectedBanks.length > 2 && (
-                          <Badge className="h-5 px-2 bg-purple-100 text-purple-700 border-green-200">
+                          <Badge className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200">
                             +{selectedBanks.length - 2}
                           </Badge>
                         )}
@@ -939,14 +939,14 @@ export function PayoutsList() {
                           return (
                             <Badge
                               key={index}
-                              className="h-5 px-2 bg-purple-100 text-purple-700 border-green-200"
+                              className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200"
                             >
                               {banks[index]}
                             </Badge>
                           );
                         })}
                         {selectedCardBanks.length > 2 && (
-                          <Badge className="h-5 px-2 bg-purple-100 text-purple-700 border-green-200">
+                          <Badge className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200">
                             +{selectedCardBanks.length - 2}
                           </Badge>
                         )}
@@ -995,7 +995,7 @@ export function PayoutsList() {
                 placeholder="0.00"
                 value={balanceInput}
                 onChange={(e) => setBalanceInput(e.target.value)}
-                className="h-12 w-32 focus:ring-2 focus:ring-green-500 focus:border-[#530FAD]"
+                className="h-12 w-32 focus:ring-2 focus:ring-purple-500 focus:border-[#530FAD]"
               />
               <Button 
                 variant="outline" 
@@ -1382,7 +1382,7 @@ export function PayoutsList() {
               <Label htmlFor="cancel-reason">Причина отмены</Label>
               <textarea
                 id="cancel-reason"
-                className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
                 placeholder="Опишите причину отмены..."
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}

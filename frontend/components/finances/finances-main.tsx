@@ -305,7 +305,7 @@ export function FinancesMain() {
       case "completed":
         return (
           <Badge
-            className="bg-purple-100 border-green-200 dark:bg-purple-900/30 dark:border-purple-800"
+            className="bg-purple-100 border-purple-200 dark:bg-purple-900/30 dark:border-purple-800"
             style={{ color: "#530FAD" }}
           >
             Завершено

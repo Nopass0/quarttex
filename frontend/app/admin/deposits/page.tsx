@@ -191,7 +191,7 @@ export default function DepositsPage() {
     const variants: Record<string, { color: string; label: string }> = {
       PENDING: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', label: 'Ожидает' },
       CHECKING: { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Проверка' },
-      CONFIRMED: { color: 'bg-purple-100 text-purple-800 border-green-200', label: 'Подтвержден' },
+      CONFIRMED: { color: 'bg-purple-100 text-purple-800 border-purple-200', label: 'Подтвержден' },
       FAILED: { color: 'bg-red-100 text-red-800 border-red-200', label: 'Отклонен' },
       EXPIRED: { color: 'bg-purple-100/40 text-gray-800 border-gray-200', label: 'Истек' },
     }
@@ -313,7 +313,7 @@ export default function DepositsPage() {
                       deposit.status === 'CHECKING' ? 'bg-blue-100' :
                       deposit.status === 'CONFIRMED' ? 'bg-purple-100' :
                       deposit.status === 'FAILED' ? 'bg-red-100' :
-                      'bg-gray-100'
+                      'bg-purple-100'
                     }`}>
                       {getStatusIcon(deposit.status)}
                     </div>

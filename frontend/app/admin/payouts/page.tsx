@@ -634,7 +634,7 @@ export default function AdminPayoutsPage() {
             <div className="space-y-2">
               <Label>Причина отклонения</Label>
               <textarea
-                className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
                 placeholder="Укажите причину отклонения..."
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}

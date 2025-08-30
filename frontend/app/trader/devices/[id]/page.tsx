@@ -76,7 +76,7 @@ import { ru } from "date-fns/locale";
 import { cn, formatAmount } from "@/lib/utils";
 import { getBankIcon } from "@/lib/bank-utils";
 import QRCode from "qrcode";
-import { Logo } from "@/components/ui/logo";
+import QuatrexLogo from "@/components/ui/quattrex-logo";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DeviceRequisitesSheet } from "@/components/trader/device-requisites-sheet";
 import { getDeviceStatusWebSocket, DeviceStatusUpdate } from "@/services/device-status-ws";
@@ -1041,7 +1041,7 @@ export default function DeviceDetailsPage() {
                       {/* App Content */}
                       <div className="p-4 h-full bg-purple-50/30 dark:bg-[#0f0f0f] flex flex-col">
                         <div className="flex justify-center h-full flex-col items-center">
-                          <Logo size="lg" />
+                          <QuatrexLogo size="lg" />
                           {device.isOnline ? (
                             <>
                               <div className="mt-10 p-4 rounded-full bg-purple-100 dark:bg-purple-900/30">
@@ -1714,13 +1714,13 @@ export default function DeviceDetailsPage() {
                 <div className="space-y-4">
                   {/* Device Status Events */}
                   {device.isOnline && (
-                    <div className="border rounded-lg p-4 bg-purple-50 dark:bg-purple-900/20 border-green-200 dark:border-purple-800">
+                    <div className="border rounded-lg p-4 bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-full">
                           <CheckCircle className="h-5 w-5 text-[#530FAD] dark:text-[#7c3aed] dark:text-[#2d6a42]" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-medium text-green-900 dark:text-purple-100">
+                          <p className="font-medium text-purple-900 dark:text-purple-100">
                             Устройство в сети
                           </p>
                           <p className="text-sm text-purple-700 dark:text-purple-300">
