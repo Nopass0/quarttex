@@ -29,12 +29,12 @@
 @layer base {
   @keyframes flash {
     0%, 100% {
-      background-color: rgb(220 252 231);
-      border-color: rgb(134 239 172);
+      background-color: rgb(221 214 254);
+      border-color: rgb(196 181 253);
     }
     50% {
-      background-color: rgb(187 247 208);
-      border-color: rgb(74 222 128);
+      background-color: rgb(196 181 253);
+      border-color: rgb(168 162 158);
     }
   }
   
@@ -42,7 +42,7 @@
     animation: flash 0.5s ease-in-out;
   }
   
-  /* Green hover effect for all interactive elements */
+  /* Purple hover effect for all interactive elements */
   button:not(.bg-\[\#530FAD\]):hover,
   a:not(.bg-\[\#530FAD\]):hover,
   [role="button"]:not(.bg-\[\#530FAD\]):hover {
@@ -65,8 +65,8 @@
   }
   
   .bg-\[\#530FAD\]:hover,
-  .hover\:bg-\[\#004d2e\]:hover {
-    background-color: #004d2e !important;
+  .hover\:bg-\[\#6d28d9\]:hover {
+    background-color: #6d28d9 !important;
   }
   
   /* Dropdown menu items hover - handled in enhanced section below */
@@ -129,13 +129,13 @@
   .dark textarea:focus,
   .dark select:focus {
     border-color: #7c3aed !important;
-    outline-color: rgba(45, 106, 66, 0.3) !important;
+    outline-color: rgba(124, 58, 237, 0.3) !important;
   }
   
   /* Switch and checkbox hover */
   [role="switch"]:hover,
   [type="checkbox"]:hover {
-    box-shadow: 0 0 0 4px rgba(0, 96, 57, 0.1);
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
   }
   
   :root {
@@ -217,8 +217,8 @@
 
 /* Animation for new transactions */
 @keyframes flash {
-  0% { background-color: rgb(34 197 94 / 0.2); border-color: rgb(34 197 94 / 0.5); }
-  50% { background-color: rgb(34 197 94 / 0.4); border-color: rgb(34 197 94 / 0.8); }
+  0% { background-color: rgb(124 58 237 / 0.2); border-color: rgb(124 58 237 / 0.5); }
+  50% { background-color: rgb(124 58 237 / 0.4); border-color: rgb(124 58 237 / 0.8); }
   100% { background-color: transparent; border-color: transparent; }
 }
 
@@ -250,6 +250,19 @@
 .dark {
   /* Ensure text is readable in dark mode */
   color: #eeeeee;
+}
+
+/* Dark mode icon colors - make icons more visible */
+.dark .text-gray-400 {
+  color: #d1d5db;
+}
+
+.dark .text-gray-500 {
+  color: #e5e7eb;
+}
+
+.dark .text-gray-600 {
+  color: #f3f4f6;
 }
 
 /* Dark mode card styles */

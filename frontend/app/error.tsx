@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Logo } from "@/components/ui/logo"
+import QuatrexLogo from "@/components/ui/quattrex-logo"
 import { AlertCircle, RefreshCw, Home } from "lucide-react"
 import { useRouter } from "next/navigation"
 
@@ -24,7 +24,7 @@ export default function Error({
     <div className="min-h-screen bg-purple-50/30 dark:bg-[#0f0f0f] flex items-center justify-center p-4">
       <Card className="bg-purple-50/10 w-full max-w-md p-8 bg-purple-50/20 dark:bg-purple-900/15 dark:bg-purple-800/60 shadow-lg border-purple-200/60 dark:border-purple-700/60">
         <div className="flex flex-col items-center">
-          <Logo size="lg" />
+          <QuatrexLogo size="lg" />
           
           <div className="mt-8 p-4 bg-red-50 dark:bg-red-900/20 rounded-full">
             <AlertCircle className="h-8 w-8 text-red-600 dark:text-[#c64444]" />

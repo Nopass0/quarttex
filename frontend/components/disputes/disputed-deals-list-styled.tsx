@@ -70,7 +70,7 @@ const disputeStatusConfig = {
   },
   RESOLVED_SUCCESS: {
     label: "Решен в вашу пользу",
-    color: "bg-purple-100 text-purple-800 border-green-200",
+    color: "bg-purple-100 text-purple-800 border-purple-200",
     icon: CheckCircle,
   },
   RESOLVED_FAIL: {

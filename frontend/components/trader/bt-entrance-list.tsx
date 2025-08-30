@@ -150,8 +150,8 @@ const btRequisiteStatusConfig = {
   ACTIVE: {
     label: "Активен",
     description: "Реквизит активен",
-    color: "bg-purple-100 text-purple-800 border-green-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
-    badgeColor: "bg-purple-50 text-purple-700 border-green-200",
+    color: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
+    badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
     icon: CheckCircle
   },
   INACTIVE: {
@@ -174,8 +174,8 @@ const btDeviceStatusConfig = {
   ONLINE: {
     label: "Онлайн",
     description: "Устройство онлайн",
-    color: "bg-purple-100 text-purple-800 border-green-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
-    badgeColor: "bg-purple-50 text-purple-700 border-green-200",
+    color: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
+    badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
     icon: CheckCircle
   },
   OFFLINE: {
@@ -615,7 +615,7 @@ export function BtEntranceList() {
                           {/* Status Icon */}
                           <div className={cn(
                             "p-3 rounded-xl",
-                            statusConfig?.color?.split(" ")[0] || "bg-gray-100"
+                            statusConfig?.color?.split(" ")[0] || "bg-purple-100"
                           )}>
                             <StatusIcon className="h-6 w-6" />
                           </div>
@@ -708,7 +708,7 @@ export function BtEntranceList() {
                           {/* Status Icon */}
                           <div className={cn(
                             "p-3 rounded-xl",
-                            statusConfig?.color?.split(" ")[0] || "bg-gray-100"
+                            statusConfig?.color?.split(" ")[0] || "bg-purple-100"
                           )}>
                             <StatusIcon className="h-6 w-6" />
                           </div>

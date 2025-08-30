@@ -83,7 +83,7 @@ const statusConfig = {
   CREATED: { label: "Создана", color: "bg-yellow-50 text-yellow-600 border-yellow-200" },
   PENDING: { label: "Ожидает", color: "bg-blue-50 text-blue-600 border-blue-200" },
   PROCESSING: { label: "В обработке", color: "bg-blue-50 text-blue-600 border-blue-200" },
-  COMPLETED: { label: "Выполнено", color: "bg-purple-50 text-[#530FAD] dark:text-[#7c3aed] border-green-200" },
+  COMPLETED: { label: "Выполнено", color: "bg-purple-50 text-[#530FAD] dark:text-[#7c3aed] border-purple-200" },
   FAILED: { label: "Ошибка", color: "bg-red-50 text-red-600 border-red-200" },
   CANCELLED: { label: "Отменено", color: "bg-purple-50/30 text-gray-600 border-gray-200" },
 }

@@ -1738,7 +1738,7 @@ export function BtEntryList() {
               const getStatusBadgeColor = () => {
                 switch (transaction.status) {
                   case "READY":
-                    return "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-green-200 dark:border-purple-800";
+                    return "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800";
                   case "CREATED":
                   case "IN_PROGRESS":
                     return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800";

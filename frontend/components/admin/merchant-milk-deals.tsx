@@ -228,7 +228,7 @@ export function MerchantMilkDeals({ merchantId }: MerchantMilkDealsProps) {
             <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{statistics.failAggregator}</p>
           </CardContent>
         </Card>
-        <Card className="bg-purple-50/10 border-green-200 dark:border-purple-900 dark:bg-gray-800">
+        <Card className="bg-purple-50/10 border-purple-200 dark:border-purple-900 dark:bg-gray-800">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-medium text-[#530FAD] dark:text-[#7c3aed] dark:text-purple-400">Прочие</CardTitle>
             <CardDescription className="text-xs dark:text-gray-400">Другие проблемные платежи</CardDescription>

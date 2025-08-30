@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Logo } from "@/components/ui/logo"
+import QuatrexLogo from "@/components/ui/quattrex-logo"
 import BankCard from "@/components/BankCard"
 import { AlertCircle, Check, Home, CreditCard, Settings, User } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -38,7 +38,7 @@ export default function SmartphoneDemoPage() {
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold">Главная</h1>
-            <Logo className="h-8 w-auto" />
+            <QuatrexLogo size="sm" className="h-8 w-auto" />
           </div>
           
           <Card className="bg-purple-50/10 mb-4">
@@ -359,7 +359,7 @@ export default function SmartphoneDemoPage() {
                 className="scale-75 mx-auto"
               >
                 <div className="h-full bg-black text-white p-6">
-                  <Logo className="h-12 w-auto mb-6 filter invert" />
+                  <QuatrexLogo size="lg" className="h-12 w-auto mb-6 filter invert" />
                   <h2 className="text-2xl font-bold mb-4">Темный режим</h2>
                   <p className="text-gray-300">
                     Приложение поддерживает темную тему для комфортного использования в ночное время.
