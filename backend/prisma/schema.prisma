@@ -99,6 +99,10 @@ model User {
   rateSourceConfigId     String?
   /// Связь с конфигурацией источника курса
   rateSourceConfig       RateSourceConfig? @relation("TraderRateSource", fields: [rateSourceConfigId], references: [id])
+  /// Индивидуальный процент ККК для этого трейдера (если null, используется ККК источника)
+  traderKkkPercent       Float?
+  /// Индивидуальная операция ККК для этого трейдера (если null, используется операция источника)
+  traderKkkOperation     KkkOperationType?
 }
 
 model Session {
@@ -458,6 +462,10 @@ model MerchantRateSource {
   /// Приоритет источника (для случаев с несколькими источниками)
   priority          Int      @default(0)
   isActive          Boolean  @default(true)
+  /// Индивидуальный процент ККК для этого мерчанта (если null, используется ККК источника)
+  kkkPercent        Float?
+  /// Индивидуальная операция ККК для этого мерчанта (если null, используется операция источника)
+  kkkOperation      KkkOperationType?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   

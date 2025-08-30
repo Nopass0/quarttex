@@ -6,6 +6,45 @@ const authHeader = t.Object({ "x-admin-key": t.String() });
 
 export default (app: Elysia) =>
   app
+    // Тестовый эндпоинт для проверки ККК
+    .get(
+      "/rate-sources-test",
+      async () => {
+        const rateSources = await db.rateSourceConfig.findMany({
+          include: {
+            traders: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                traderKkkPercent: true,
+                traderKkkOperation: true,
+              },
+            },
+            merchants: {
+              include: {
+                merchant: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        return {
+          success: true,
+          data: rateSources,
+          message: "Test endpoint with KKK fields"
+        };
+      },
+      {
+        headers: authHeader,
+      }
+    )
+
     // Получить все источники курсов
     .get(
       "/rate-sources",
@@ -44,6 +83,7 @@ export default (app: Elysia) =>
           ]);
         }
 
+        // Загружаем источники курсов с полными данными
         const rateSources = await db.rateSourceConfig.findMany({
           include: {
             traders: {
@@ -51,6 +91,8 @@ export default (app: Elysia) =>
                 id: true,
                 name: true,
                 email: true,
+                traderKkkPercent: true,
+                traderKkkOperation: true,
               },
             },
             merchants: {
@@ -335,10 +377,12 @@ export default (app: Elysia) =>
     .put(
       "/rate-sources/merchants/:relationId",
       async ({ params: { relationId }, body }) => {
-        const { merchantProvidesRate, priority, isActive } = body as {
+        const { merchantProvidesRate, priority, isActive, kkkPercent, kkkOperation } = body as {
           merchantProvidesRate?: boolean;
           priority?: number;
           isActive?: boolean;
+          kkkPercent?: number | null;
+          kkkOperation?: 'PLUS' | 'MINUS' | null;
         };
 
         try {
@@ -350,6 +394,8 @@ export default (app: Elysia) =>
               }),
               ...(priority !== undefined && { priority }),
               ...(isActive !== undefined && { isActive }),
+              ...(kkkPercent !== undefined && { kkkPercent }),
+              ...(kkkOperation !== undefined && { kkkOperation }),
             },
           });
 
@@ -373,6 +419,52 @@ export default (app: Elysia) =>
           merchantProvidesRate: t.Optional(t.Boolean()),
           priority: t.Optional(t.Number()),
           isActive: t.Optional(t.Boolean()),
+          kkkPercent: t.Optional(t.Union([t.Number(), t.Null()])),
+          kkkOperation: t.Optional(t.Union([t.Enum({ PLUS: 'PLUS', MINUS: 'MINUS' }), t.Null()])),
+        }),
+      }
+    )
+
+    // Обновить индивидуальный ККК трейдера
+    .put(
+      "/rate-sources/traders/:traderId/kkk",
+      async ({ params: { traderId }, body }) => {
+        const { kkkPercent, kkkOperation } = body as {
+          kkkPercent?: number | null;
+          kkkOperation?: 'PLUS' | 'MINUS' | null;
+        };
+
+        try {
+          const updated = await db.user.update({
+            where: { id: traderId },
+            data: {
+              traderKkkPercent: kkkPercent,
+              traderKkkOperation: kkkOperation,
+            },
+            include: {
+              rateSourceConfig: true,
+            },
+          });
+
+          return {
+            success: true,
+            data: updated,
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: "Не удалось обновить настройки ККК трейдера",
+          };
+        }
+      },
+      {
+        headers: authHeader,
+        params: t.Object({
+          traderId: t.String(),
+        }),
+        body: t.Object({
+          kkkPercent: t.Optional(t.Union([t.Number(), t.Null()])),
+          kkkOperation: t.Optional(t.Union([t.Enum({ PLUS: 'PLUS', MINUS: 'MINUS' }), t.Null()])),
         }),
       }
     )

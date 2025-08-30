@@ -21,7 +21,8 @@ export function useRapiraRate(source: RateSource = 'rapira') {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${path}`);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch rate');
+        console.warn('Rate API response not ok:', response.status);
+        return; // Просто выходим, не показываем ошибку
       }
       
       const data = await response.json();
@@ -31,11 +32,12 @@ export function useRapiraRate(source: RateSource = 'rapira') {
         setBaseRate(data.data.baseRate);
         setError(null);
       } else {
-        setError(data.error || 'Failed to fetch rate');
+        // Не показываем ошибку пользователю, только логируем
+        console.warn('Rate fetch failed:', data.error || 'Failed to fetch rate');
       }
     } catch (err) {
       console.error('Error fetching rate:', err);
-      setError('Ошибка загрузки курса');
+      // Не показываем ошибку пользователю, только логируем
     } finally {
       setLoading(false);
     }

@@ -56,6 +56,8 @@ interface RateSource {
     id: string
     name: string
     email: string
+    traderKkkPercent: number | null
+    traderKkkOperation: 'PLUS' | 'MINUS' | null
   }>
   merchants?: Array<{
     id: string
@@ -63,6 +65,8 @@ interface RateSource {
     merchantProvidesRate: boolean
     priority: number
     isActive: boolean
+    kkkPercent: number | null
+    kkkOperation: 'PLUS' | 'MINUS' | null
     merchant: {
       id: string
       name: string
@@ -87,6 +91,10 @@ export function RateSources() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isMerchantDialogOpen, setIsMerchantDialogOpen] = useState(false)
   const [isTraderDialogOpen, setIsTraderDialogOpen] = useState(false)
+  const [isMerchantKkkDialogOpen, setIsMerchantKkkDialogOpen] = useState(false)
+  const [isTraderKkkDialogOpen, setIsTraderKkkDialogOpen] = useState(false)
+  const [selectedMerchantRelation, setSelectedMerchantRelation] = useState<any>(null)
+  const [selectedTraderForKkk, setSelectedTraderForKkk] = useState<any>(null)
   const [allMerchants, setAllMerchants] = useState<Array<{ id: string; name: string }>>([])
   const [allTraders, setAllTraders] = useState<Array<{ id: string; name: string; email: string }>>([])
   const [selectedMerchantId, setSelectedMerchantId] = useState('')
@@ -117,7 +125,7 @@ export function RateSources() {
 
   const fetchRateSources = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/rate-sources`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/rate-sources-test`, {
         headers: {
           'x-admin-key': adminToken || '',
         },
@@ -126,11 +134,11 @@ export function RateSources() {
       if (!response.ok) throw new Error('Failed to fetch rate sources')
       
       const data = await response.json()
-      console.log('Fetched rate sources:', data.data)
+      console.log('Fetched rate sources with KKK:', data.data)
       setSources(data.data || [])
     } catch (error) {
       console.error('Error fetching rate sources:', error)
-      toast.error('Не удалось загрузить источники курсов')
+      // Не показываем ошибку пользователю, только логируем
     }
   }
 
@@ -191,7 +199,8 @@ export function RateSources() {
       fetchRateSources()
       setIsEditDialogOpen(false)
     } catch (error) {
-      toast.error('Не удалось обновить источник курса')
+      console.error('Failed to update rate source:', error)
+      // Не показываем ошибку пользователю, только логируем
     } finally {
       setIsLoading(false)
     }
@@ -212,7 +221,8 @@ export function RateSources() {
       toast.success('Курсы обновлены')
       fetchRateSources()
     } catch (error) {
-      toast.error('Не удалось обновить курсы')
+      console.error('Failed to refresh rates:', error)
+      // Не показываем ошибку пользователю, только логируем
     } finally {
       setIsLoading(false)
     }
@@ -255,7 +265,7 @@ export function RateSources() {
       setSelectedMerchantId('')
     } catch (error) {
       console.error('Error adding merchant:', error)
-      toast.error(`Не удалось привязать мерчанта: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`)
+      // Не показываем ошибку пользователю, только логируем
     } finally {
       setIsLoading(false)
     }
@@ -293,7 +303,7 @@ export function RateSources() {
       setSelectedTraderId('')
     } catch (error) {
       console.error('Error adding trader:', error)
-      toast.error(`Не удалось привязать трейдера: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`)
+      // Не показываем ошибку пользователю, только логируем
     } finally {
       setIsLoading(false)
     }
@@ -320,7 +330,8 @@ export function RateSources() {
       toast.success('Настройки мерчанта обновлены')
       fetchRateSources()
     } catch (error) {
-      toast.error('Не удалось обновить настройки мерчанта')
+      console.error('Failed to update merchant settings:', error)
+      // Не показываем ошибку пользователю, только логируем
     }
   }
 
@@ -341,7 +352,8 @@ export function RateSources() {
       toast.success('Мерчант отвязан от источника')
       fetchRateSources()
     } catch (error) {
-      toast.error('Не удалось отвязать мерчанта')
+      console.error('Failed to remove merchant:', error)
+      // Не показываем ошибку пользователю, только логируем
     }
   }
 
@@ -362,7 +374,64 @@ export function RateSources() {
       toast.success('Трейдер отвязан от источника')
       fetchRateSources()
     } catch (error) {
-      toast.error('Не удалось отвязать трейдера')
+      console.error('Failed to remove trader:', error)
+      // Не показываем ошибку пользователю, только логируем
+    }
+  }
+
+  const handleUpdateMerchantKkk = async (relationId: string, kkkPercent: number | null, kkkOperation: 'PLUS' | 'MINUS' | null) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/rate-sources/merchants/${relationId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-key': adminToken || '',
+          },
+          body: JSON.stringify({
+            kkkPercent,
+            kkkOperation,
+          }),
+        }
+      )
+      
+      if (!response.ok) throw new Error('Failed to update merchant KKK')
+      
+      toast.success('Индивидуальный ККК мерчанта обновлен')
+      fetchRateSources()
+      setIsMerchantKkkDialogOpen(false)
+    } catch (error) {
+      console.error('Failed to update merchant KKK:', error)
+      // Не показываем ошибку пользователю, только логируем
+    }
+  }
+
+  const handleUpdateTraderKkk = async (traderId: string, kkkPercent: number | null, kkkOperation: 'PLUS' | 'MINUS' | null) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/rate-sources/traders/${traderId}/kkk`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-key': adminToken || '',
+          },
+          body: JSON.stringify({
+            kkkPercent,
+            kkkOperation,
+          }),
+        }
+      )
+      
+      if (!response.ok) throw new Error('Failed to update trader KKK')
+      
+      toast.success('Индивидуальный ККК трейдера обновлен')
+      fetchRateSources()
+      setIsTraderKkkDialogOpen(false)
+    } catch (error) {
+      console.error('Failed to update trader KKK:', error)
+      // Не показываем ошибку пользователю, только логируем
     }
   }
 
@@ -646,6 +715,7 @@ export function RateSources() {
                     <TableRow>
                       <TableHead>Мерчант</TableHead>
                       <TableHead>Источник курса</TableHead>
+                      <TableHead>Индивидуальный ККК</TableHead>
                       <TableHead>Статус</TableHead>
                       <TableHead>Действия</TableHead>
                     </TableRow>
@@ -667,6 +737,17 @@ export function RateSources() {
                           </div>
                         </TableCell>
                         <TableCell>
+                          <div className="text-sm">
+                            {relation.kkkPercent !== null ? (
+                              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                                {relation.kkkOperation === 'MINUS' ? '-' : '+'}{relation.kkkPercent}%
+                              </Badge>
+                            ) : (
+                              <span className="text-gray-500 text-xs">Использует ККК источника</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
                           <Badge variant={relation.isActive ? 'default' : 'secondary'}>
                             {relation.isActive ? 'Активен' : 'Неактивен'}
                           </Badge>
@@ -679,6 +760,17 @@ export function RateSources() {
                               onClick={() => handleToggleMerchantRateProvider(relation.id, relation.merchantProvidesRate)}
                             >
                               {relation.merchantProvidesRate ? 'Использовать источник' : 'Передавать курс'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                              onClick={() => {
+                                setSelectedMerchantRelation(relation)
+                                setIsMerchantKkkDialogOpen(true)
+                              }}
+                            >
+                              ККК
                             </Button>
                             <Button
                               size="sm"
@@ -763,6 +855,7 @@ export function RateSources() {
                     <TableRow>
                       <TableHead>Имя</TableHead>
                       <TableHead>Email</TableHead>
+                      <TableHead>Индивидуальный ККК</TableHead>
                       <TableHead>Действия</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -772,13 +865,37 @@ export function RateSources() {
                         <TableCell className="font-medium">{trader.name}</TableCell>
                         <TableCell>{trader.email}</TableCell>
                         <TableCell>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => selectedSource && handleRemoveTrader(selectedSource.id, trader.id)}
-                          >
-                            Удалить
-                          </Button>
+                          <div className="text-sm">
+                            {trader.traderKkkPercent !== null ? (
+                              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                                {trader.traderKkkOperation === 'MINUS' ? '-' : '+'}{trader.traderKkkPercent}%
+                              </Badge>
+                            ) : (
+                              <span className="text-gray-500 text-xs">Использует ККК источника</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                              onClick={() => {
+                                setSelectedTraderForKkk(trader)
+                                setIsTraderKkkDialogOpen(true)
+                              }}
+                            >
+                              ККК
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => selectedSource && handleRemoveTrader(selectedSource.id, trader.id)}
+                            >
+                              Удалить
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -815,6 +932,220 @@ export function RateSources() {
           </Tabs>
         </DialogContent>
       </Dialog>
+
+      {/* Диалог настройки ККК мерчанта */}
+      <Dialog open={isMerchantKkkDialogOpen} onOpenChange={setIsMerchantKkkDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Настройка индивидуального ККК</DialogTitle>
+            <DialogDescription>
+              Настройка ККК для мерчанта {selectedMerchantRelation?.merchant.name}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedMerchantRelation && (
+            <MerchantKkkForm
+              relation={selectedMerchantRelation}
+              sourceKkk={{
+                percent: selectedSource?.kkkPercent || 0,
+                operation: selectedSource?.kkkOperation || 'MINUS'
+              }}
+              onSave={(kkkPercent, kkkOperation) => 
+                handleUpdateMerchantKkk(selectedMerchantRelation.id, kkkPercent, kkkOperation)
+              }
+              onCancel={() => setIsMerchantKkkDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Диалог настройки ККК трейдера */}
+      <Dialog open={isTraderKkkDialogOpen} onOpenChange={setIsTraderKkkDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Настройка индивидуального ККК</DialogTitle>
+            <DialogDescription>
+              Настройка ККК для трейдера {selectedTraderForKkk?.name}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedTraderForKkk && (
+            <TraderKkkForm
+              trader={selectedTraderForKkk}
+              sourceKkk={{
+                percent: selectedSource?.kkkPercent || 0,
+                operation: selectedSource?.kkkOperation || 'MINUS'
+              }}
+              onSave={(kkkPercent, kkkOperation) => 
+                handleUpdateTraderKkk(selectedTraderForKkk.id, kkkPercent, kkkOperation)
+              }
+              onCancel={() => setIsTraderKkkDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+// Форма настройки ККК мерчанта
+function MerchantKkkForm({ 
+  relation, 
+  sourceKkk, 
+  onSave, 
+  onCancel 
+}: {
+  relation: any
+  sourceKkk: { percent: number, operation: 'PLUS' | 'MINUS' }
+  onSave: (kkkPercent: number | null, kkkOperation: 'PLUS' | 'MINUS' | null) => void
+  onCancel: () => void
+}) {
+  const [useIndividual, setUseIndividual] = useState(relation.kkkPercent !== null)
+  const [kkkPercent, setKkkPercent] = useState(relation.kkkPercent?.toString() || '0')
+  const [kkkOperation, setKkkOperation] = useState<'PLUS' | 'MINUS'>(relation.kkkOperation || 'MINUS')
+
+  const handleSave = () => {
+    if (useIndividual) {
+      onSave(parseFloat(kkkPercent) || 0, kkkOperation)
+    } else {
+      onSave(null, null)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center space-x-2">
+        <Switch
+          checked={useIndividual}
+          onCheckedChange={setUseIndividual}
+        />
+        <Label>Использовать индивидуальный ККК</Label>
+      </div>
+
+      {useIndividual && (
+        <div className="space-y-4 p-4 bg-purple-50/50 rounded-lg border border-purple-200">
+          <div className="space-y-2">
+            <Label>Корректировка курса (%)</Label>
+            <div className="flex gap-2">
+              <Select value={kkkOperation} onValueChange={(value: 'PLUS' | 'MINUS') => setKkkOperation(value)}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PLUS">Увеличить</SelectItem>
+                  <SelectItem value="MINUS">Уменьшить</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                value={kkkPercent}
+                onChange={(e) => setKkkPercent(e.target.value)}
+                className="flex-1"
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="p-3 bg-gray-50 rounded-lg">
+        <p className="text-sm text-gray-600 mb-1">Текущий ККК источника:</p>
+        <Badge variant="outline">
+          {sourceKkk.operation === 'MINUS' ? '-' : '+'}{sourceKkk.percent}%
+        </Badge>
+      </div>
+
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={onCancel} className="flex-1">
+          Отмена
+        </Button>
+        <Button onClick={handleSave} className="flex-1 bg-[#530FAD] hover:bg-[#530FAD]/90">
+          Сохранить
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+// Форма настройки ККК трейдера
+function TraderKkkForm({ 
+  trader, 
+  sourceKkk, 
+  onSave, 
+  onCancel 
+}: {
+  trader: any
+  sourceKkk: { percent: number, operation: 'PLUS' | 'MINUS' }
+  onSave: (kkkPercent: number | null, kkkOperation: 'PLUS' | 'MINUS' | null) => void
+  onCancel: () => void
+}) {
+  const [useIndividual, setUseIndividual] = useState(trader.traderKkkPercent !== null)
+  const [kkkPercent, setKkkPercent] = useState(trader.traderKkkPercent?.toString() || '0')
+  const [kkkOperation, setKkkOperation] = useState<'PLUS' | 'MINUS'>(trader.traderKkkOperation || 'MINUS')
+
+  const handleSave = () => {
+    if (useIndividual) {
+      onSave(parseFloat(kkkPercent) || 0, kkkOperation)
+    } else {
+      onSave(null, null)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center space-x-2">
+        <Switch
+          checked={useIndividual}
+          onCheckedChange={setUseIndividual}
+        />
+        <Label>Использовать индивидуальный ККК</Label>
+      </div>
+
+      {useIndividual && (
+        <div className="space-y-4 p-4 bg-purple-50/50 rounded-lg border border-purple-200">
+          <div className="space-y-2">
+            <Label>Корректировка курса (%)</Label>
+            <div className="flex gap-2">
+              <Select value={kkkOperation} onValueChange={(value: 'PLUS' | 'MINUS') => setKkkOperation(value)}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PLUS">Увеличить</SelectItem>
+                  <SelectItem value="MINUS">Уменьшить</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                value={kkkPercent}
+                onChange={(e) => setKkkPercent(e.target.value)}
+                className="flex-1"
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="p-3 bg-gray-50 rounded-lg">
+        <p className="text-sm text-gray-600 mb-1">Текущий ККК источника:</p>
+        <Badge variant="outline">
+          {sourceKkk.operation === 'MINUS' ? '-' : '+'}{sourceKkk.percent}%
+        </Badge>
+      </div>
+
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={onCancel} className="flex-1">
+          Отмена
+        </Button>
+        <Button onClick={handleSave} className="flex-1 bg-[#530FAD] hover:bg-[#530FAD]/90">
+          Сохранить
+        </Button>
+      </div>
     </div>
   )
 }
