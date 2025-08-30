@@ -424,7 +424,7 @@ model TopupSettings {
 
 /// Настройки источника курсов
 model RateSourceConfig {
-  id                String   @id @default(cuid())
+  id                String   @id
   /// Тип источника курса (bybit, rapira и т.д.)
   source            RateSource @unique
   /// Название источника для отображения

@@ -15,7 +15,7 @@ export class BybitService {
   private static instance: BybitService;
   private cachedRate: number | null = null;
   private lastUpdateTime = 0;
-  private cacheTimeMs = 30000; // 30s
+  private cacheTimeMs = 10000; // 10s
 
   static getInstance(): BybitService {
     if (!BybitService.instance) BybitService.instance = new BybitService();

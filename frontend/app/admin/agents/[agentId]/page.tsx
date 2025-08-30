@@ -474,8 +474,8 @@ function AgentProfileContent() {
             </div>
             <Dialog open={isAddTraderDialogOpen} onOpenChange={setIsAddTraderDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
-                  <UserPlus className="mr-2 h-4 w-4 text-[#006039]" />
+                <Button className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#7c3aed] dark:hover:bg-purple-800/60">
+                  <UserPlus className="mr-2 h-4 w-4 text-white" />
                   Добавить трейдера
                 </Button>
               </DialogTrigger>

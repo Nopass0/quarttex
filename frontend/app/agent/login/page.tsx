@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Logo } from '@/components/ui/logo'
+import QuatrexLogo from '@/components/ui/quattrex-logo'
 import { useAgentAuth } from '@/stores/agent-auth'
 import { toast } from 'sonner'
 import { Mail, Lock } from 'lucide-react'
@@ -46,7 +46,7 @@ export default function AgentLoginPage() {
       <Card className="w-full max-w-md bg-white dark:bg-[#29382f] border-gray-200 dark:border-[#29382f]">
         <CardHeader className="space-y-4">
           <div className="flex justify-center">
-            <Logo size="lg" animated />
+            <QuatrexLogo size="lg" />
           </div>
           <div>
             <CardTitle className="text-2xl text-center text-gray-900 dark:text-[#eeeeee]">Вход для агентов</CardTitle>

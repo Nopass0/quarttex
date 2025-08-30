@@ -53,7 +53,7 @@ import { ShimmerButton } from "@/components/magicui/shimmer-button"
 import { AnimatedGradientText } from "@/components/magicui/animated-gradient-text"
 import { Sparkles } from "@/components/magicui/sparkles"
 import { BentoGrid, BentoGridItem } from "@/components/magicui/bento-grid"
-import { Logo } from "@/components/ui/logo"
+import QuatrexLogo from "@/components/ui/quattrex-logo"
 import BankCard from "@/components/BankCard"
 import { Smartphone } from "@/components/Smartphone"
 import { ConnectionError } from "@/components/ConnectionError"
@@ -226,33 +226,33 @@ export default function ElementsTestPage() {
               <div>
                 <Label className="mb-4 block">Full Variant</Label>
                 <div className="flex flex-col gap-4">
-                  <Logo size="xs" />
-                  <Logo size="sm" />
-                  <Logo size="md" />
-                  <Logo size="lg" />
-                  <Logo size="xl" />
+                  <QuatrexLogo size="sm" />
+                  <QuatrexLogo size="sm" />
+                  <QuatrexLogo size="md" />
+                  <QuatrexLogo size="lg" />
+                  <QuatrexLogo size="lg" />
                 </div>
               </div>
               <Separator />
               <div>
                 <Label className="mb-4 block">Uppercase Variant</Label>
                 <div className="flex flex-col gap-4">
-                  <Logo variant="uppercase" size="xs" />
-                  <Logo variant="uppercase" size="sm" />
-                  <Logo variant="uppercase" size="md" />
-                  <Logo variant="uppercase" size="lg" />
-                  <Logo variant="uppercase" size="xl" />
+                  <QuatrexLogo size="sm" />
+                  <QuatrexLogo size="sm" />
+                  <QuatrexLogo size="md" />
+                  <QuatrexLogo size="lg" />
+                  <QuatrexLogo size="lg" />
                 </div>
               </div>
               <Separator />
               <div>
                 <Label className="mb-4 block">Mini Variant</Label>
                 <div className="flex items-center gap-4">
-                  <Logo variant="mini" size="xs" />
-                  <Logo variant="mini" size="sm" />
-                  <Logo variant="mini" size="md" />
-                  <Logo variant="mini" size="lg" />
-                  <Logo variant="mini" size="xl" />
+                  <QuatrexLogo size="sm" />
+                  <QuatrexLogo size="sm" />
+                  <QuatrexLogo size="md" />
+                  <QuatrexLogo size="lg" />
+                  <QuatrexLogo size="lg" />
                 </div>
               </div>
             </CardContent>
@@ -1910,7 +1910,7 @@ export default function ElementsTestPage() {
                   >
                     <div className="flex items-center justify-center h-full bg-gradient-to-br from-blue-50 to-purple-50">
                       <div className="text-center p-8">
-                        <Logo className="h-24 w-auto mx-auto mb-4" />
+                        <QuatrexLogo size="lg" className="mx-auto mb-4" />
                         <h3 className="text-2xl font-bold text-gray-900">Quattrex App</h3>
                         <p className="text-gray-600 mt-2">Добро пожаловать!</p>
                       </div>
@@ -2198,7 +2198,7 @@ export default function ElementsTestPage() {
                     >
                       <div className="h-full p-6">
                         <div className="h-full flex flex-col items-center justify-center">
-                          <Logo className="h-16 w-auto mb-6" />
+                          <QuatrexLogo size="lg" className="mb-6" />
                           <h3 className="text-2xl font-semibold mb-2">Минималистичный дизайн</h3>
                           <p className="text-gray-600 text-center">
                             Без динамического острова<br/>

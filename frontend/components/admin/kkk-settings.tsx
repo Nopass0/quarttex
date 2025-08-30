@@ -39,7 +39,7 @@ export function KkkSettings() {
       if (typeof br === 'number') setCurrentBybitRate(br)
     }
     run()
-    const interval = setInterval(run, 10000)
+    const interval = setInterval(run, 10000) // 10 seconds
     return () => clearInterval(interval)
   }, [refetchRapiraRate])
 

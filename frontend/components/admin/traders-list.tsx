@@ -351,7 +351,7 @@ export function TradersList() {
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#006039] hover:bg-[#005030]">
+            <Button className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#7c3aed] dark:hover:bg-purple-800/60">
               <UserPlus className="mr-2 h-4 w-4 text-white" />
               Добавить трейдера
             </Button>
@@ -421,7 +421,7 @@ export function TradersList() {
             <DialogFooter>
               <Button
                 onClick={handleCreateTrader}
-                className="bg-[#006039] hover:bg-[#005030]"
+                className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#7c3aed] dark:hover:bg-purple-800/60"
                 disabled={isLoading || !formData.email}
               >
                 Создать
@@ -716,7 +716,7 @@ export function TradersList() {
           <DialogFooter>
             <Button
               onClick={handleUpdateTrader}
-              className="bg-[#006039] hover:bg-[#005030]"
+              className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#7c3aed] dark:hover:bg-purple-800/60"
               disabled={isLoading}
             >
               Сохранить
@@ -752,7 +752,7 @@ export function TradersList() {
                 setShowPasswordDialog(false)
                 setGeneratedPassword('')
               }}
-              className="bg-[#006039] hover:bg-[#005030]"
+              className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#7c3aed] dark:hover:bg-purple-800/60"
             >
               Закрыть
             </Button>

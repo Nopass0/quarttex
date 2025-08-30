@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { RefreshCw, Users, Building2, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react'
+import { useRapiraRate } from '@/hooks/use-rapira-rate'
 import {
   Table,
   TableBody,
@@ -91,7 +92,9 @@ export function RateSources() {
   const [selectedMerchantId, setSelectedMerchantId] = useState('')
   const [selectedTraderId, setSelectedTraderId] = useState('')
   const [merchantProvidesRate, setMerchantProvidesRate] = useState(true)
+  const [currentBybitRate, setCurrentBybitRate] = useState<number | null>(null)
   const { token: adminToken } = useAdminAuth()
+  const { baseRate: currentRapiraRate, refetch: refetchRapiraRate } = useRapiraRate()
 
   useEffect(() => {
     fetchRateSources()
@@ -99,11 +102,18 @@ export function RateSources() {
     fetchTraders()
   }, [])
 
-  // Auto-refresh rates every 30 seconds
+  // Auto-refresh rates every 10 seconds (and fetch immediately)
   useEffect(() => {
-    const interval = setInterval(fetchRateSources, 30000)
+    const run = async () => {
+      refetchRapiraRate()
+      const br = await fetchBybitRate()
+      if (typeof br === 'number') setCurrentBybitRate(br)
+      fetchRateSources()
+    }
+    run()
+    const interval = setInterval(run, 10000) // 10 seconds
     return () => clearInterval(interval)
-  }, [])
+  }, [refetchRapiraRate])
 
   const fetchRateSources = async () => {
     try {
@@ -116,8 +126,10 @@ export function RateSources() {
       if (!response.ok) throw new Error('Failed to fetch rate sources')
       
       const data = await response.json()
+      console.log('Fetched rate sources:', data.data)
       setSources(data.data || [])
     } catch (error) {
+      console.error('Error fetching rate sources:', error)
       toast.error('Не удалось загрузить источники курсов')
     }
   }
@@ -211,29 +223,39 @@ export function RateSources() {
 
     try {
       setIsLoading(true)
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/rate-sources/${selectedSource.id}/merchants/${selectedMerchantId}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-admin-key': adminToken || '',
-          },
-          body: JSON.stringify({
-            merchantProvidesRate,
-            priority: 0,
-          }),
-        }
-      )
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/admin/rate-sources/${selectedSource.id}/merchants/${selectedMerchantId}`
+      console.log('Adding merchant to rate source:', {
+        sourceId: selectedSource.id,
+        merchantId: selectedMerchantId,
+        url,
+        source: selectedSource
+      })
       
-      if (!response.ok) throw new Error('Failed to add merchant')
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-key': adminToken || '',
+        },
+        body: JSON.stringify({
+          merchantProvidesRate,
+          priority: 0,
+        }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.text()
+        console.error('Failed to add merchant:', response.status, errorData)
+        throw new Error(`Failed to add merchant: ${response.status} ${errorData}`)
+      }
       
       toast.success('Мерчант привязан к источнику')
       fetchRateSources()
       setIsMerchantDialogOpen(false)
       setSelectedMerchantId('')
     } catch (error) {
-      toast.error('Не удалось привязать мерчанта')
+      console.error('Error adding merchant:', error)
+      toast.error(`Не удалось привязать мерчанта: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`)
     } finally {
       setIsLoading(false)
     }
@@ -244,24 +266,34 @@ export function RateSources() {
 
     try {
       setIsLoading(true)
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/rate-sources/${selectedSource.id}/traders/${selectedTraderId}`,
-        {
-          method: 'POST',
-          headers: {
-            'x-admin-key': adminToken || '',
-          },
-        }
-      )
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/admin/rate-sources/${selectedSource.id}/traders/${selectedTraderId}`
+      console.log('Adding trader to rate source:', {
+        sourceId: selectedSource.id,
+        traderId: selectedTraderId,
+        url,
+        source: selectedSource
+      })
       
-      if (!response.ok) throw new Error('Failed to add trader')
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'x-admin-key': adminToken || '',
+        },
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.text()
+        console.error('Failed to add trader:', response.status, errorData)
+        throw new Error(`Failed to add trader: ${response.status} ${errorData}`)
+      }
       
       toast.success('Трейдер привязан к источнику')
       fetchRateSources()
       setIsTraderDialogOpen(false)
       setSelectedTraderId('')
     } catch (error) {
-      toast.error('Не удалось привязать трейдера')
+      console.error('Error adding trader:', error)
+      toast.error(`Не удалось привязать трейдера: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`)
     } finally {
       setIsLoading(false)
     }
@@ -348,9 +380,15 @@ export function RateSources() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">
-          Управление источниками курсов и их настройками
-        </p>
+        <div>
+          <p className="text-sm text-muted-foreground">
+            Управление источниками курсов и их настройками
+          </p>
+          <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
+            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+            Курсы обновляются каждые 10 секунд
+          </p>
+        </div>
         <Button onClick={handleRefreshRates} disabled={isLoading} size="sm">
           <RefreshCw className="mr-2 h-4 w-4" />
           Обновить курсы
@@ -380,10 +418,22 @@ export function RateSources() {
               <div className="space-y-4">
                 {/* Курсы */}
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="text-sm text-gray-600">Базовый курс:</span>
-                    <span className="font-semibold">
-                      {source.currentRate ? `${source.currentRate.toFixed(2)} ₽/USDT` : 'Нет данных'}
+                  <div className="flex justify-between items-center p-3 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-200">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">Базовый курс:</span>
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                    </div>
+                    <span className="font-semibold text-emerald-700">
+                      {(() => {
+                        if (source.source === 'rapira' && currentRapiraRate) {
+                          return `${currentRapiraRate.toFixed(2)} ₽/USDT`
+                        } else if (source.source === 'bybit' && currentBybitRate) {
+                          return `${currentBybitRate.toFixed(2)} ₽/USDT`
+                        } else if (source.currentRate) {
+                          return `${source.currentRate.toFixed(2)} ₽/USDT`
+                        }
+                        return 'Нет данных'
+                      })()}
                     </span>
                   </div>
                   
@@ -403,11 +453,28 @@ export function RateSources() {
                     </div>
                   )}
 
-                  {source.adjustedRate && source.kkkPercent !== 0 && (
+                  {source.kkkPercent !== 0 && (
                     <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
                       <span className="text-sm text-gray-600">Итоговый курс:</span>
                       <span className="font-bold text-purple-700">
-                        {source.adjustedRate.toFixed(2)} ₽/USDT
+                        {(() => {
+                          let baseRate = 0
+                          if (source.source === 'rapira' && currentRapiraRate) {
+                            baseRate = currentRapiraRate
+                          } else if (source.source === 'bybit' && currentBybitRate) {
+                            baseRate = currentBybitRate
+                          } else if (source.currentRate) {
+                            baseRate = source.currentRate
+                          }
+                          
+                          if (baseRate > 0) {
+                            const multiplier = source.kkkOperation === 'PLUS' 
+                              ? (1 + source.kkkPercent / 100) 
+                              : (1 - source.kkkPercent / 100)
+                            return `${(baseRate * multiplier).toFixed(2)} ₽/USDT`
+                          }
+                          return 'Нет данных'
+                        })()}
                       </span>
                     </div>
                   )}
@@ -665,7 +732,7 @@ export function RateSources() {
                 </div>
               </div>
               
-              <Button onClick={handleAddMerchant} disabled={!selectedMerchantId || isLoading}>
+              <Button onClick={handleAddMerchant} disabled={!selectedMerchantId || isLoading} className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#7c3aed] dark:hover:bg-purple-800/60">
                 Добавить мерчанта
               </Button>
             </TabsContent>
@@ -741,7 +808,7 @@ export function RateSources() {
                 </Select>
               </div>
               
-              <Button onClick={handleAddTrader} disabled={!selectedTraderId || isLoading}>
+              <Button onClick={handleAddTrader} disabled={!selectedTraderId || isLoading} className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#7c3aed] dark:hover:bg-purple-800/60">
                 Добавить трейдера
               </Button>
             </TabsContent>
@@ -750,4 +817,15 @@ export function RateSources() {
       </Dialog>
     </div>
   )
+}
+
+async function fetchBybitRate() {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rapira-rate/bybit-rate`)
+    if (!res.ok) return null
+    const data = await res.json()
+    return data?.data?.baseRate as number
+  } catch {
+    return null
+  }
 }

@@ -43,8 +43,8 @@ export function useRapiraRate(source: RateSource = 'rapira') {
 
   useEffect(() => {
     fetchRate();
-    // Refresh rate every 30 seconds
-    const interval = setInterval(fetchRate, 30000);
+    // Refresh rate every 10 seconds
+    const interval = setInterval(fetchRate, 10000);
     return () => clearInterval(interval);
   }, [source]);
 

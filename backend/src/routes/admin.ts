@@ -141,6 +141,7 @@ export default (app: Elysia) =>
     .group("/support", (a) => supportRoutes(a))
     .group("/rate-settings", (a) => rateSettingsRoutes(a))
     .group("/kkk-settings", (a) => kkkSettingsRoutes(a))
+    .use(rateSourceRoutes)
     .use(processorRoutes)
     .use(deviceEmulatorRoutes)
     .use(payoutEmulatorRoutes)

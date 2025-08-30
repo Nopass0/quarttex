@@ -20,6 +20,7 @@ export default (app: Elysia) =>
             db.rateSourceConfig.upsert({
               where: { source: RateSource.bybit },
               create: {
+                id: "rate-source-bybit",
                 source: RateSource.bybit,
                 displayName: "Bybit",
                 kkkPercent: 0,
@@ -31,6 +32,7 @@ export default (app: Elysia) =>
             db.rateSourceConfig.upsert({
               where: { source: RateSource.rapira },
               create: {
+                id: "rate-source-rapira",
                 source: RateSource.rapira,
                 displayName: "Rapira",
                 kkkPercent: 0,
