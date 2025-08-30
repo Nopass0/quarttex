@@ -1,7 +1,6 @@
 'use client'
 
-import React from 'react'
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -200,13 +199,8 @@ export default function AgentSettingsPage() {
             </div>
 
             {settings.trcWallet && (
-<<<<<<< Current (Your changes)
-              <div className="p-3 bg-green-50 border border-purple-200 rounded-lg">
-                <p className="text-sm text-green-800">
-=======
               <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
                 <p className="text-sm text-purple-800">
->>>>>>> Incoming (Background Agent changes)
                   ✓ Кошелек для выплат настроен
                 </p>
               </div>

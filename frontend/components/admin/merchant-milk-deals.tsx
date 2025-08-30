@@ -1,7 +1,6 @@
 'use client'
 
-import React from 'react'
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -229,11 +228,7 @@ export function MerchantMilkDeals({ merchantId }: MerchantMilkDealsProps) {
             <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{statistics.failAggregator}</p>
           </CardContent>
         </Card>
-<<<<<<< Current (Your changes)
-        <Card className="border-purple-200 dark:border-green-900 dark:bg-gray-800">
-=======
         <Card className="bg-purple-50/10 border-purple-200 dark:border-purple-900 dark:bg-gray-800">
->>>>>>> Incoming (Background Agent changes)
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-medium text-purple-600 dark:text-purple-400">Прочие</CardTitle>
             <CardDescription className="text-xs dark:text-gray-400">Другие проблемные платежи</CardDescription>

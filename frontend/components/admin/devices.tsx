@@ -1,7 +1,6 @@
 'use client'
 
-import React from 'react'
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -241,11 +240,7 @@ export function DevicesManagement() {
             </div>
           </CardContent>
         </Card>
-<<<<<<< Current (Your changes)
-        <Card className="border-purple-200">
-=======
         <Card className="bg-purple-50/10 border-purple-200">
->>>>>>> Incoming (Background Agent changes)
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-medium text-purple-600">Онлайн</CardTitle>
           </CardHeader>
