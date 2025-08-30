@@ -281,7 +281,7 @@ export function TransactionsList() {
   const fetchMerchants = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/merchant/list`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/merchant`,
         {
           headers: {
             "x-admin-key": adminToken || "",
@@ -298,11 +298,7 @@ export function TransactionsList() {
         return;
       }
 
-      const merchantsList = Array.isArray(data.data)
-        ? data.data
-        : Array.isArray(data)
-        ? data
-        : [];
+      const merchantsList = data.merchants || [];
       setMerchants(merchantsList);
     } catch (error) {
       console.error("Failed to fetch merchants:", error);
@@ -313,7 +309,7 @@ export function TransactionsList() {
   const fetchTraders = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/users?role=trader`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/traders`,
         {
           headers: {
             "x-admin-key": adminToken || "",
@@ -330,15 +326,8 @@ export function TransactionsList() {
         return;
       }
 
-      const tradersList = Array.isArray(data.data)
-        ? data.data
-        : Array.isArray(data)
-        ? data
-        : [];
-      const filteredTraders = tradersList.filter(
-        (user: any) => user && user.trader
-      );
-      setTraders(filteredTraders);
+      const tradersList = data.traders || [];
+      setTraders(tradersList);
     } catch (error) {
       console.error("Failed to fetch traders:", error);
       setTraders([]);

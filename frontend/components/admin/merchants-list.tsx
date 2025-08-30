@@ -110,7 +110,7 @@ export function MerchantsList() {
   const fetchMerchants = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/merchant/list`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/merchant`, {
         headers: {
           'x-admin-key': adminToken || '',
         },
@@ -118,7 +118,7 @@ export function MerchantsList() {
       if (!response.ok) throw new Error('Failed to fetch merchants')
       const data = await response.json()
       console.log('Fetched merchants data:', data)
-      setMerchants(data.merchants || data || [])
+      setMerchants(data.merchants || [])
     } catch (error) {
       toast.error('Не удалось загрузить список мерчантов')
     } finally {
