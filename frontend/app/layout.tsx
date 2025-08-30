@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Quattrex платформ",
+  title: "Quattrex Platform",
   description: "Trading and payment platform",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1",
 };
@@ -17,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased bg-purple-50/20 dark:bg-purple-900/15 dark:bg-[#0f0f0f] text-gray-900 dark:text-[#eeeeee]">
+      <body className="antialiased bg-white dark:bg-[#0f0f0f] text-gray-900 dark:text-[#eeeeee]">
         <Providers>
           {children}
         </Providers>

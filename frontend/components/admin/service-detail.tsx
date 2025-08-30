@@ -92,7 +92,7 @@ type ServiceLog = {
 }
 
 const logLevelColors: Record<LogLevel, string> = {
-  DEBUG: 'bg-purple-100/40 text-gray-700',
+  DEBUG: 'bg-gray-100 text-gray-700',
   INFO: 'bg-blue-100 text-blue-700',
   WARN: 'bg-yellow-100 text-yellow-700',
   ERROR: 'bg-red-100 text-red-700',
@@ -388,29 +388,29 @@ export function ServiceDetail({ serviceName }: ServiceDetailProps) {
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <Card className="bg-purple-50/10 p-4">
+            <Card className="p-4">
               <div className="text-sm font-medium text-gray-500">Статус</div>
               <div className="text-2xl font-bold">{service.status}</div>
             </Card>
-            <Card className="bg-purple-50/10 p-4">
+            <Card className="p-4">
               <div className="text-sm font-medium text-gray-500">Интервал</div>
               <div className="text-2xl font-bold">{formatInterval(service.interval)}</div>
             </Card>
-            <Card className="bg-purple-50/10 p-4">
+            <Card className="p-4">
               <div className="text-sm font-medium text-gray-500">Ошибки</div>
               <div className="text-2xl font-bold text-red-600">{service.errorCount}</div>
             </Card>
-            <Card className="bg-purple-50/10 p-4">
+            <Card className="p-4">
               <div className="text-sm font-medium text-gray-500">Макс. логов</div>
               <div className="text-2xl font-bold">{service.maxLogs || 2500}</div>
             </Card>
-            <Card className="bg-purple-50/10 p-4">
+            <Card className="p-4">
               <div className="text-sm font-medium text-gray-500">Активен</div>
               <div className="text-2xl font-bold">{service.enabled ? 'Да' : 'Нет'}</div>
             </Card>
           </div>
 
-          <Card className="bg-purple-50/10 p-6">
+          <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Информация о сервисе</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
@@ -475,7 +475,7 @@ export function ServiceDetail({ serviceName }: ServiceDetailProps) {
           </div>
 
           {showFilters && (
-            <Card className="bg-purple-50/10 p-4 space-y-4">
+            <Card className="p-4 space-y-4">
               <div className="grid grid-cols-4 gap-4">
                 <div>
                   <Label>Уровень</Label>
@@ -598,7 +598,7 @@ export function ServiceDetail({ serviceName }: ServiceDetailProps) {
                       <div className="space-y-2">
                         <div className="text-sm">{log.message}</div>
                         {hasData && isExpanded && (
-                          <div className="bg-purple-50/30 p-2 rounded text-xs font-mono">
+                          <div className="bg-gray-50 p-2 rounded text-xs font-mono">
                             <pre className="whitespace-pre-wrap">{JSON.stringify(JSON.parse(log.data), null, 2)}</pre>
                           </div>
                         )}
@@ -659,7 +659,7 @@ export function ServiceDetail({ serviceName }: ServiceDetailProps) {
 
         <TabsContent value="fields" className="space-y-4">
           {service.publicFields && Object.keys(service.publicFields).length > 0 ? (
-            <Card className="bg-purple-50/10 p-6">
+            <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Публичные поля сервиса</h3>
                 <Button onClick={handleUpdatePublicFields}>
@@ -721,13 +721,13 @@ export function ServiceDetail({ serviceName }: ServiceDetailProps) {
                               className="max-w-md"
                             />
                           ) : isObject ? (
-                            <div className="bg-purple-50/30 p-3 rounded border">
+                            <div className="bg-gray-50 p-3 rounded border">
                               <pre className="text-xs whitespace-pre-wrap overflow-x-auto">
                                 {JSON.stringify(value, null, 2)}
                               </pre>
                             </div>
                           ) : (
-                            <div className="bg-purple-50/30 p-2 rounded border text-sm">
+                            <div className="bg-gray-50 p-2 rounded border text-sm">
                               {String(value)}
                             </div>
                           )}
@@ -739,7 +739,7 @@ export function ServiceDetail({ serviceName }: ServiceDetailProps) {
               </div>
             </Card>
           ) : (
-            <Card className="bg-purple-50/10 p-6 text-center">
+            <Card className="p-6 text-center">
               <p className="text-gray-500">У этого сервиса нет публичных полей для настройки</p>
             </Card>
           )}
@@ -802,7 +802,7 @@ export function ServiceDetail({ serviceName }: ServiceDetailProps) {
           <DialogFooter>
             <Button
               onClick={handleUpdateSettings}
-              className="bg-[#530FAD] hover:bg-purple-800/60"
+              className="bg-[#006039] hover:bg-[#005030]"
             >
               Сохранить
             </Button>

@@ -382,7 +382,7 @@ export default function BulkDeletePage() {
       </Card>
 
       {/* Delete Everything */}
-      <Card className="bg-purple-50/10 border-destructive">
+      <Card className="border-destructive">
         <CardHeader>
           <CardTitle className="text-destructive">Удалить все данные</CardTitle>
           <CardDescription>Удалить все транзакции, выплаты и сделки</CardDescription>

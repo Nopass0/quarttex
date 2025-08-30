@@ -140,7 +140,7 @@ export default function TelegramPage() {
           ) : (
             <div className="text-center space-y-4">
               <div className="bg-purple-50 p-6 rounded-lg">
-                <Check className="h-12 w-12 text-[#530FAD] dark:text-[#7c3aed] mx-auto mb-4" />
+                <Check className="h-12 w-12 text-purple-600 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">
                   Telegram подключен
                 </h3>
@@ -166,7 +166,7 @@ export default function TelegramPage() {
         </CardContent>
       </Card>
 
-      <Card className="bg-purple-50/10 mt-6">
+      <Card className="mt-6">
         <CardHeader>
           <CardTitle>Типы уведомлений</CardTitle>
         </CardHeader>

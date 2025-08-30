@@ -351,7 +351,7 @@ export function TradersList() {
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#530FAD] hover:bg-purple-800/60">
+            <Button className="bg-[#006039] hover:bg-[#005030]">
               <UserPlus className="mr-2 h-4 w-4 text-white" />
               Добавить трейдера
             </Button>
@@ -421,7 +421,7 @@ export function TradersList() {
             <DialogFooter>
               <Button
                 onClick={handleCreateTrader}
-                className="bg-[#530FAD] hover:bg-purple-800/60"
+                className="bg-[#006039] hover:bg-[#005030]"
                 disabled={isLoading || !formData.email}
               >
                 Создать
@@ -459,7 +459,7 @@ export function TradersList() {
               {filteredTraders.map((trader) => (
                 <TableRow 
                   key={trader.id}
-                  className="cursor-pointer hover:bg-purple-50/50"
+                  className="cursor-pointer hover:bg-gray-50"
                   onClick={() => router.push(`/admin/traders/${trader.id}`)}
                 >
                   <TableCell>
@@ -483,7 +483,7 @@ export function TradersList() {
                     <div className="text-sm font-medium">${formatAmount(trader.trustBalance)}</div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm font-medium text-[#530FAD] dark:text-[#7c3aed]">${formatAmount(trader.deposit || 0)}</div>
+                    <div className="text-sm font-medium text-purple-600">${formatAmount(trader.deposit || 0)}</div>
                   </TableCell>
                   <TableCell>₽{formatAmount(trader.turnover)}</TableCell>
                   <TableCell>
@@ -716,7 +716,7 @@ export function TradersList() {
           <DialogFooter>
             <Button
               onClick={handleUpdateTrader}
-              className="bg-[#530FAD] hover:bg-purple-800/60"
+              className="bg-[#006039] hover:bg-[#005030]"
               disabled={isLoading}
             >
               Сохранить
@@ -734,7 +734,7 @@ export function TradersList() {
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <div className="bg-purple-100/40 p-4 rounded-lg font-mono text-lg text-center relative">
+            <div className="bg-gray-100 p-4 rounded-lg font-mono text-lg text-center relative">
               {generatedPassword}
               <Button
                 variant="outline"
@@ -752,7 +752,7 @@ export function TradersList() {
                 setShowPasswordDialog(false)
                 setGeneratedPassword('')
               }}
-              className="bg-[#530FAD] hover:bg-purple-800/60"
+              className="bg-[#006039] hover:bg-[#005030]"
             >
               Закрыть
             </Button>

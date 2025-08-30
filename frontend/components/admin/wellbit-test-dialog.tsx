@@ -273,7 +273,7 @@ export function WellbitTestDialog({ open, onOpenChange, apiKeyPublic, apiKeyPriv
           {response && (
             <div>
               <Label>Response</Label>
-              <div className="mt-1 bg-purple-100/40 dark:bg-gray-800 rounded-lg p-4">
+              <div className="mt-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
                 <pre className="text-sm font-mono whitespace-pre-wrap break-all">{response}</pre>
               </div>
             </div>

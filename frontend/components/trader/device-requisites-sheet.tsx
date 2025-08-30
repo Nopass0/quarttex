@@ -491,7 +491,7 @@ export function DeviceRequisitesSheet({
                   <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
                 </div>
               ) : requisites.length === 0 ? (
-                <Card className="bg-purple-50/10 p-8 text-center">
+                <Card className="p-8 text-center">
                   <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500">Нет привязанных реквизитов</p>
                   <p className="text-sm text-gray-400 mt-2">
@@ -879,7 +879,7 @@ export function DeviceRequisitesSheet({
                   <Button
                     type="submit"
                     disabled={loading || hasEmptyRequiredNumbers}
-                    className="bg-[#530FAD] hover:bg-[#530FAD]/90"
+                    className="bg-[#006039] hover:bg-[#006039]/90"
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {editingRequisite ? "Сохранить" : "Добавить"}

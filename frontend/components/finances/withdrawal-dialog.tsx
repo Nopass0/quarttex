@@ -185,7 +185,7 @@ export function WithdrawalDialog({ open, onOpenChange, defaultBalanceType }: Wit
                   </div>
                   <div className="border-t pt-1 mt-1 flex justify-between">
                     <span className="font-medium">Общая прибыль:</span>
-                    <span className="font-bold text-[#006039] dark:text-[#2d6a42]">
+                    <span className="font-bold text-[#530FAD] dark:text-[#7c3aed]">
                       {(balances.PROFIT_DEALS + balances.PROFIT_PAYOUTS).toFixed(2)} USDT
                     </span>
                   </div>
@@ -210,7 +210,7 @@ export function WithdrawalDialog({ open, onOpenChange, defaultBalanceType }: Wit
                       key={type}
                       className={cn(
                         "flex items-center space-x-3 p-3 rounded-lg border",
-                        disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-purple-50/50"
+                        disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-gray-50"
                       )}
                     >
                       <RadioGroupItem value={type} disabled={disabled} />
@@ -220,7 +220,7 @@ export function WithdrawalDialog({ open, onOpenChange, defaultBalanceType }: Wit
                       >
                         <div className="flex justify-between items-center">
                           <span>{name}</span>
-                          <span className={cn("font-medium", balance > 0 ? "text-[#006039]" : "text-gray-400")}>
+                          <span className={cn("font-medium", balance > 0 ? "text-[#530FAD]" : "text-gray-400")}>
                             {balance.toFixed(2)} USDT
                           </span>
                         </div>
@@ -276,7 +276,7 @@ export function WithdrawalDialog({ open, onOpenChange, defaultBalanceType }: Wit
 
             {/* Fee Calculation - Show only if fees are enabled */}
             {amount && parseFloat(amount) > 0 && settings?.feeEnabled && (
-              <Card className="bg-purple-50/10 p-4 border-blue-200 bg-blue-50/50">
+              <Card className="p-4 border-blue-200 bg-blue-50/50">
                 <div className="flex items-start gap-3">
                   <Calculator className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
                   <div className="text-sm text-blue-800 space-y-1">
@@ -290,7 +290,7 @@ export function WithdrawalDialog({ open, onOpenChange, defaultBalanceType }: Wit
                     </div>
                     <div className="border-t pt-1 flex justify-between font-medium">
                       <span>К получению:</span>
-                      <span className="text-[#006039]">{amountAfterFees.toFixed(2)} USDT</span>
+                      <span className="text-[#530FAD]">{amountAfterFees.toFixed(2)} USDT</span>
                     </div>
                   </div>
                 </div>
@@ -298,7 +298,7 @@ export function WithdrawalDialog({ open, onOpenChange, defaultBalanceType }: Wit
             )}
 
             {/* Info */}
-            <Card className="bg-purple-50/10 p-4 border-orange-200 bg-orange-50/50">
+            <Card className="p-4 border-orange-200 bg-orange-50/50">
               <div className="flex items-start gap-3">
                 <Info className="h-4 w-4 text-orange-600 shrink-0 mt-0.5" />
                 <div className="text-sm text-orange-800">
@@ -330,7 +330,7 @@ export function WithdrawalDialog({ open, onOpenChange, defaultBalanceType }: Wit
         {step === 2 && (
           <div className="space-y-4 text-center">
             <div className="p-6 rounded-lg bg-purple-50">
-              <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-[#006039]" />
+              <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-[#530FAD]" />
               <h3 className="font-semibold text-lg mb-2">Заявка создана</h3>
               <p className="text-sm text-gray-600 mb-4">
                 Ваша заявка на вывод {parseFloat(amount).toFixed(2)} USDT успешно создана
@@ -350,7 +350,7 @@ export function WithdrawalDialog({ open, onOpenChange, defaultBalanceType }: Wit
               </Badge>
             </div>
 
-            <Card className="bg-purple-50/10 p-4 border-blue-200 bg-blue-50/50">
+            <Card className="p-4 border-blue-200 bg-blue-50/50">
               <div className="flex items-start gap-3">
                 <Clock className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
                 <div className="text-sm text-blue-800">

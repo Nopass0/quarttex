@@ -39,7 +39,7 @@ interface ApiDocumentationProps {
 
 const methodColors = {
   GET: 'bg-blue-500',
-  POST: 'bg-purple-500',
+  POST: 'bg-green-500',
   PUT: 'bg-orange-500',
   DELETE: 'bg-red-500',
   PATCH: 'bg-purple-500',
@@ -130,7 +130,7 @@ export function ApiDocumentation({
               {method}
             </Badge>
             <div className="flex-1 flex items-center gap-2">
-              <code className="text-sm bg-purple-100/40 px-3 py-1 rounded">{fullEndpoint}</code>
+              <code className="text-sm bg-gray-100 px-3 py-1 rounded">{fullEndpoint}</code>
               <Button
                 variant="ghost"
                 size="icon"
@@ -227,7 +227,7 @@ export function ApiDocumentation({
                 </div>
               </CardHeader>
               <CardContent>
-                <pre className="bg-purple-100/40 p-4 rounded overflow-x-auto">
+                <pre className="bg-gray-100 p-4 rounded overflow-x-auto">
                   <code className="text-sm">{JSON.stringify(res.example, null, 2)}</code>
                 </pre>
               </CardContent>
@@ -268,7 +268,7 @@ export function ApiDocumentation({
               {response && (
                 <div className="space-y-2">
                   <Label>Ответ</Label>
-                  <pre className="bg-purple-100/40 p-4 rounded overflow-x-auto">
+                  <pre className="bg-gray-100 p-4 rounded overflow-x-auto">
                     <code className="text-sm">{response}</code>
                   </pre>
                 </div>

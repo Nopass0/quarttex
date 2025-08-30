@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import QuatrexLogo from '@/components/ui/quattrex-logo'
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import QuatrexLogo from "@/components/ui/quattrex-logo";
 import {
   Users,
   Wallet,
@@ -16,57 +16,57 @@ import {
   X,
   TrendingUp,
   Receipt,
-} from 'lucide-react'
-import { useAgentAuth } from '@/stores/agent-auth'
-import { ThemeSwitcher } from '@/components/ui/theme-toggle'
+} from "lucide-react";
+import { useAgentAuth } from "@/stores/agent-auth";
+import { ThemeSwitcher } from "@/components/ui/theme-toggle";
 
 interface NavItem {
-  title: string
-  href: string
-  icon: React.ComponentType<{ className?: string }>
+  title: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 const navItems: NavItem[] = [
   {
-    title: 'Обзор',
-    href: '/agent',
+    title: "Обзор",
+    href: "/agent",
     icon: TrendingUp,
   },
   {
-    title: 'Команда',
-    href: '/agent/team',
+    title: "Команда",
+    href: "/agent/team",
     icon: Users,
   },
   {
-    title: 'Заработок',
-    href: '/agent/earnings',
+    title: "Заработок",
+    href: "/agent/earnings",
     icon: Wallet,
   },
   {
-    title: 'История выплат',
-    href: '/agent/payouts',
+    title: "История выплат",
+    href: "/agent/payouts",
     icon: Receipt,
   },
   {
-    title: 'Настройки',
-    href: '/agent/settings',
+    title: "Настройки",
+    href: "/agent/settings",
     icon: Settings,
   },
-]
+];
 
 export function AgentSidebar() {
-  const pathname = usePathname()
-  const router = useRouter()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { logout, agent } = useAgentAuth()
+  const pathname = usePathname();
+  const router = useRouter();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { logout, agent } = useAgentAuth();
 
   const handleLogout = () => {
-    logout()
-    router.push('/agent/login')
-  }
+    logout();
+    router.push("/agent/login");
+  };
 
   const renderNavItem = (item: NavItem) => {
-    const isActive = pathname === item.href
+    const isActive = pathname === item.href;
 
     return (
       <Link
@@ -74,33 +74,37 @@ export function AgentSidebar() {
         href={item.href}
         onClick={() => setMobileMenuOpen(false)}
         className={cn(
-          'flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200',
-          'text-gray-600 hover:text-gray-900',
-          isActive ? 'bg-[#530FAD]/10 text-[#530FAD] font-medium border-l-4 border-[#530FAD] -ml-[1px]' : 'hover:bg-purple-50/50'
+          "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200",
+          "text-gray-600 hover:text-gray-900",
+          isActive
+            ? "bg-[#530FAD]/10 text-[#530FAD] font-medium border-l-4 border-[#530FAD] -ml-[1px]"
+            : "hover:bg-gray-50"
         )}
       >
-        <div className={cn(
-          'flex items-center justify-center w-5 h-5',
-          isActive && 'text-[#530FAD]'
-        )}>
+        <div
+          className={cn(
+            "flex items-center justify-center w-5 h-5",
+            isActive && "text-[#530FAD]"
+          )}
+        >
           <item.icon className="h-5 w-5 text-[#530FAD]" />
         </div>
         <span className="text-sm">{item.title}</span>
       </Link>
-    )
-  }
+    );
+  };
 
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex h-screen w-64 sticky top-0 bg-purple-50/20 border-purple-200/60-r border-gray-100 flex-col">
+      <div className="hidden md:flex h-screen w-64 sticky top-0 bg-white border-r border-gray-100 flex-col">
         <div className="p-6 border-b border-gray-100">
           <div className="flex flex-col items-start">
-            <QuatrexLogo size="md" animated />
+            <QuatrexLogo size="md" />
             <span className="text-xs text-gray-500 mt-2">Кабинет агента</span>
           </div>
         </div>
-        
+
         {agent && (
           <div className="p-4 border-b border-gray-100">
             <div className="space-y-1">
@@ -121,7 +125,7 @@ export function AgentSidebar() {
           <ThemeSwitcher />
           <Button
             variant="ghost"
-            className="w-full justify-start text-gray-600 hover:text-gray-900 hover:bg-purple-50/50"
+            className="w-full justify-start text-gray-600 hover:text-gray-900 hover:bg-gray-50"
             onClick={handleLogout}
           >
             <LogOut className="h-5 w-5 mr-3 text-[#530FAD]" />
@@ -131,9 +135,9 @@ export function AgentSidebar() {
       </div>
 
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-purple-50/20 border-purple-200/60-b">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b">
         <div className="flex items-center justify-between p-4">
-          <QuatrexLogo size="sm" animated />
+          <QuatrexLogo size="sm" />
           <Button
             variant="ghost"
             size="icon"
@@ -149,7 +153,7 @@ export function AgentSidebar() {
         <div className="md:hidden fixed inset-0 z-50 bg-white">
           <div className="flex flex-col h-full">
             <div className="flex items-center justify-between p-4 border-b">
-              <QuatrexLogo size="md" animated />
+              <QuatrexLogo size="md" />
               <Button
                 variant="ghost"
                 size="icon"
@@ -158,7 +162,7 @@ export function AgentSidebar() {
                 <X className="h-5 w-5 text-[#530FAD]" />
               </Button>
             </div>
-            
+
             {agent && (
               <div className="p-4 border-b border-gray-100">
                 <div className="space-y-1">
@@ -174,7 +178,7 @@ export function AgentSidebar() {
             <nav className="flex-1 overflow-y-auto p-4 space-y-1">
               {navItems.map((item) => renderNavItem(item))}
             </nav>
-            
+
             <div className="p-4 border-t space-y-2">
               <ThemeSwitcher />
               <Button
@@ -190,5 +194,5 @@ export function AgentSidebar() {
         </div>
       )}
     </>
-  )
+  );
 }

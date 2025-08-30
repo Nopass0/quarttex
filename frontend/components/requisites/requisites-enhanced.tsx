@@ -379,14 +379,14 @@ export function RequisitesEnhanced() {
             </div>
             
             {activeTab !== "devices" && (
-              <Button onClick={() => setRequisiteDialogOpen(true)} className="bg-[#530FAD] hover:bg-[#530FAD]/90">
+              <Button onClick={() => setRequisiteDialogOpen(true)} className="bg-[#006039] hover:bg-[#006039]/90">
                 <Plus className="mr-2 h-4 w-4" />
                 Добавить реквизит
               </Button>
             )}
             
             {activeTab === "devices" && (
-              <Button onClick={() => setDeviceDialogOpen(true)} className="bg-[#530FAD] hover:bg-[#530FAD]/90">
+              <Button onClick={() => setDeviceDialogOpen(true)} className="bg-[#006039] hover:bg-[#006039]/90">
                 <Plus className="mr-2 h-4 w-4" />
                 Добавить устройство
               </Button>
@@ -506,7 +506,7 @@ export function RequisitesEnhanced() {
           ))}
           
           {filteredRequisites.length === 0 && (
-            <Card className="bg-purple-50/10 p-12 text-center">
+            <Card className="p-12 text-center">
               <CreditCard className="h-12 w-12 mx-auto text-[#006039] mb-4" />
               <p className="text-gray-500">Нет активных реквизитов</p>
             </Card>
@@ -548,7 +548,7 @@ export function RequisitesEnhanced() {
           ))}
           
           {filteredRequisites.length === 0 && (
-            <Card className="bg-purple-50/10 p-12 text-center">
+            <Card className="p-12 text-center">
               <Archive className="h-12 w-12 mx-auto text-[#006039] mb-4" />
               <p className="text-gray-500">Нет архивных реквизитов</p>
             </Card>
@@ -570,7 +570,7 @@ export function RequisitesEnhanced() {
                   )}>
                     <Smartphone className={cn(
                       "h-6 w-6",
-                      device.isOnline ? "text-[#530FAD] dark:text-[#7c3aed]" : "text-gray-600"
+                      device.isOnline ? "text-purple-600" : "text-gray-600"
                     )} />
                   </div>
                   <div>
@@ -598,7 +598,7 @@ export function RequisitesEnhanced() {
           ))}
           
           {devices.length === 0 && (
-            <Card className="bg-purple-50/10 p-12 text-center">
+            <Card className="p-12 text-center">
               <Smartphone className="h-12 w-12 mx-auto text-[#006039] mb-4" />
               <p className="text-gray-500">Нет подключенных устройств</p>
             </Card>
@@ -705,7 +705,7 @@ export function RequisitesEnhanced() {
             </Button>
             <Button 
               onClick={selectedRequisite ? handleUpdateRequisite : handleCreateRequisite}
-              className="bg-[#530FAD] hover:bg-[#530FAD]/90"
+              className="bg-[#006039] hover:bg-[#006039]/90"
             >
               {selectedRequisite ? "Сохранить" : "Добавить"}
             </Button>
@@ -742,7 +742,7 @@ export function RequisitesEnhanced() {
             </Button>
             <Button 
               onClick={createDevice}
-              className="bg-[#530FAD] hover:bg-[#530FAD]/90"
+              className="bg-[#006039] hover:bg-[#006039]/90"
               disabled={!deviceForm.name}
             >
               Создать
@@ -763,7 +763,7 @@ export function RequisitesEnhanced() {
           
           {selectedDevice && (
             <div className="space-y-4">
-              <div className="p-4 bg-purple-50/30 rounded-lg">
+              <div className="p-4 bg-gray-50 rounded-lg">
                 <p className="text-xs text-gray-500 mb-1">Токен устройства:</p>
                 <p className="font-mono text-sm break-all">{selectedDevice.token}</p>
               </div>
@@ -781,7 +781,7 @@ export function RequisitesEnhanced() {
                   Скопировать
                 </Button>
                 <Button
-                  className="flex-1 bg-[#530FAD] hover:bg-[#530FAD]/90"
+                  className="flex-1 bg-[#006039] hover:bg-[#006039]/90"
                   onClick={() => router.push(`/trader/devices/${selectedDevice.id}`)}
                 >
                   Перейти к устройству

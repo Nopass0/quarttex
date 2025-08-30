@@ -21,7 +21,7 @@ export default (app: Elysia) =>
         const siteBaseUrlConfig = await db.systemConfig.findUnique({
           where: { key: "site_base_url" }
         });
-        const ourBaseUrl = siteBaseUrlConfig?.value || "https://quattrex.pro/api";
+        const ourBaseUrl = siteBaseUrlConfig?.value || "https://chasepay.pro/api";
 
         return {
           baseUrl,
@@ -48,7 +48,7 @@ export default (app: Elysia) =>
                 methodType: "string (C2C | SBP - тип метода платежа)",
                 currency: "string (валюта: RUB)",
                 clientName: "string (имя клиента)",
-                callbackUrl: "string (URL для колбэков на quattrex.pro)",
+                callbackUrl: "string (URL для колбэков на chasepay.pro)",
                 successUrl: "string (URL успеха)",
                 failUrl: "string (URL ошибки)",
                 expiresAt: "string (ISO дата истечения)",
@@ -90,7 +90,7 @@ export default (app: Elysia) =>
                   methodType: "SBP",
                   currency: "RUB",
                   clientName: "Иван Иванов",
-                  callbackUrl: "https://quattrex.pro/api/aggregator/callback",
+                  callbackUrl: "https://chasepay.pro/api/aggregator/callback",
                   successUrl: "https://merchant.com/success",
                   failUrl: "https://merchant.com/fail",
                   expiresAt: "2024-01-15T11:30:00Z",
@@ -549,7 +549,7 @@ export default (app: Elysia) =>
               description:
                 "Настройте URL для получения коллбэков от нашей системы и используйте наш API для отправки обновлений.",
               important: [
-                "URL для коллбэков должен быть: https://quattrex.pro/api/aggregator/callback",
+                "URL для коллбэков должен быть: https://chasepay.pro/api/aggregator/callback",
                 "Используйте заголовок X-Aggregator-Api-Token для авторизации",
                 "Отправляйте callback'и сразу при изменении статуса",
                 "Для массовых обновлений используйте /callback/batch",

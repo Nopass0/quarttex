@@ -285,7 +285,7 @@ export default function MerchantDashboardPage() {
                           <span className="text-sm text-muted-foreground">
                             Эквивалент в USDT:
                           </span>
-                          <span className="text-xl font-bold text-[#530FAD] dark:text-[#7c3aed]">
+                          <span className="text-xl font-bold text-purple-600">
                             {truncateDecimals(
                               statistics.balance.total / currentRate,
                               2,
@@ -315,7 +315,7 @@ export default function MerchantDashboardPage() {
                             <span className="text-sm text-muted-foreground">
                               Баланс в USDT:
                             </span>
-                            <span className="text-xl font-bold text-[#530FAD] dark:text-[#7c3aed]">
+                            <span className="text-xl font-bold text-purple-600">
                               {truncateDecimals(
                                 statistics.balance.totalUsdt,
                                 2,
@@ -425,7 +425,7 @@ export default function MerchantDashboardPage() {
               !merchantProfile.countInRubEquivalent &&
               statistics.balance.totalUsdt !== undefined ? (
                 <>
-                  <div className="text-3xl font-bold text-[#530FAD] dark:text-[#7c3aed]">
+                  <div className="text-3xl font-bold text-purple-600">
                     {truncateDecimals(statistics.balance.totalUsdt, 2)} USDT
                   </div>
                   <div className="text-lg text-gray-600 mt-1">
@@ -433,7 +433,7 @@ export default function MerchantDashboardPage() {
                   </div>
                 </>
               ) : (
-                <div className="text-3xl font-bold text-[#530FAD] dark:text-[#7c3aed]">
+                <div className="text-3xl font-bold text-purple-600">
                   {formatAmount(statistics.balance.total)} ₽
                 </div>
               )}
@@ -450,7 +450,7 @@ export default function MerchantDashboardPage() {
               <div className="bg-muted/50 p-4 rounded-lg space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Сумма успешных сделок:</span>
-                  <span className="font-medium text-[#530FAD] dark:text-[#7c3aed]">
+                  <span className="font-medium text-purple-600">
                     +{truncateDecimals(statistics.balance.formulaUsdt.dealsTotal, 2)} USDT
                   </span>
                 </div>
@@ -475,7 +475,7 @@ export default function MerchantDashboardPage() {
                 <Separator className="my-2" />
                 <div className="flex justify-between text-sm font-medium">
                   <span>Итоговый баланс:</span>
-                  <span className="text-[#530FAD] dark:text-[#7c3aed]">
+                  <span className="text-purple-600">
                     {truncateDecimals(statistics.balance.totalUsdt, 2)} USDT
                   </span>
                 </div>
@@ -491,7 +491,7 @@ export default function MerchantDashboardPage() {
               <div className="bg-muted/50 p-4 rounded-lg space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Сумма успешных сделок:</span>
-                  <span className="font-medium text-[#530FAD] dark:text-[#7c3aed]">
+                  <span className="font-medium text-purple-600">
                     +{formatAmount(statistics.balance.formula.dealsTotal)} ₽
                   </span>
                 </div>
@@ -525,7 +525,7 @@ export default function MerchantDashboardPage() {
                 <Separator className="my-2" />
                 <div className="flex justify-between text-sm font-medium">
                   <span>Итоговый баланс:</span>
-                  <span className="text-[#530FAD] dark:text-[#7c3aed]">
+                  <span className="text-purple-600">
                     {formatAmount(statistics.balance.total)} ₽
                   </span>
                 </div>
@@ -557,7 +557,7 @@ export default function MerchantDashboardPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CardTitle>Сделки</CardTitle>
-                <ArrowUpRight className="h-4 w-4 text-[#530FAD] dark:text-[#7c3aed]" />
+                <ArrowUpRight className="h-4 w-4 text-purple-600" />
               </div>
               <Badge variant="outline">{statistics.deals.total}</Badge>
             </div>
@@ -573,8 +573,8 @@ export default function MerchantDashboardPage() {
                 {/* <div>
                   <p className="text-sm text-muted-foreground">Конверсия выдачи</p>
                   <div className="flex items-center gap-2">
-                    <Percent className="h-4 w-4 text-[#530FAD] dark:text-[#7c3aed]" />
-                    <p className="text-2xl font-bold text-[#530FAD] dark:text-[#7c3aed]">{statistics.deals.requisiteConversion?.rate || "0.00"}%</p>
+                    <Percent className="h-4 w-4 text-purple-600" />
+                    <p className="text-2xl font-bold text-purple-600">{statistics.deals.requisiteConversion?.rate || "0.00"}%</p>
                   </div>
                 </div> */}
               </div>
@@ -586,7 +586,7 @@ export default function MerchantDashboardPage() {
                     <span className="text-muted-foreground">
                       Успешных попыток:
                     </span>
-                    <span className="font-medium text-[#530FAD] dark:text-[#7c3aed]">
+                    <span className="font-medium text-purple-600">
                       {statistics.deals.requisiteConversion.successfulAttempts}
                     </span>
                   </div>
@@ -752,7 +752,7 @@ export default function MerchantDashboardPage() {
                   </TableCell>
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-1 text-sm">
-                      <span className="text-[#530FAD] dark:text-[#7c3aed]">
+                      <span className="text-purple-600">
                         {method.commissionPayin}%
                       </span>
                       <span className="text-muted-foreground">/</span>
@@ -771,7 +771,7 @@ export default function MerchantDashboardPage() {
                   </TableCell>
                   <TableCell className="text-center">
                     <div>
-                      <p className="font-medium text-[#530FAD] dark:text-[#7c3aed]">
+                      <p className="font-medium text-purple-600">
                         {method.deals.successful}
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -789,7 +789,7 @@ export default function MerchantDashboardPage() {
                   </TableCell>
                   <TableCell className="text-center">
                     <div>
-                      <p className="font-medium text-[#530FAD] dark:text-[#7c3aed]">
+                      <p className="font-medium text-purple-600">
                         {method.payouts.successful}
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -803,7 +803,7 @@ export default function MerchantDashboardPage() {
                         {method.total.transactions}
                       </span>
                       <span className="text-muted-foreground">/</span>
-                      <span className="font-medium text-[#530FAD] dark:text-[#7c3aed]">
+                      <span className="font-medium text-purple-600">
                         {method.total.successfulTransactions}
                       </span>
                     </div>

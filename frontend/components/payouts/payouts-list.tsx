@@ -98,7 +98,7 @@ const statusConfig = {
   },
   COMPLETED: {
     label: "Выполнено",
-    color: "bg-purple-50 text-[#530FAD] dark:text-[#7c3aed] border-green-200",
+color: "bg-purple-50 text-[#530FAD] dark:text-[#7c3aed] border-purple-200",
   },
   FAILED: {
     label: "Ошибка",
@@ -106,7 +106,7 @@ const statusConfig = {
   },
   CANCELLED: {
     label: "Отменено",
-    color: "bg-purple-50/30 text-gray-600 border-gray-200",
+    color: "bg-gray-50 text-gray-600 border-gray-200",
   },
 };
 
@@ -385,7 +385,7 @@ export function PayoutsList() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="bg-purple-50/10 p-6">
+        <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Wallet className="h-5 w-5 text-[#006039]" />
@@ -432,7 +432,7 @@ export function PayoutsList() {
           </div>
         </Card>
 
-        <Card className="bg-purple-50/10 p-6">
+        <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-[#006039]" />
@@ -478,7 +478,7 @@ export function PayoutsList() {
       </div>
 
       {/* Search and Filters */}
-      <Card className="bg-purple-50/10 p-4">
+      <Card className="p-4">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="flex-1">
@@ -686,7 +686,7 @@ export function PayoutsList() {
       {/* Payouts List */}
       <div className="space-y-4">
         {filteredAndSortedPayouts.length === 0 ? (
-          <Card className="bg-purple-50/10 p-12 text-center">
+          <Card className="p-12 text-center">
             <Send className="h-12 w-12 mx-auto text-gray-300 mb-4" />
             <p className="text-gray-500">Выплаты не найдены</p>
           </Card>
@@ -719,7 +719,7 @@ export function PayoutsList() {
                           className={cn(
                             "h-6 w-6",
                             payout.status === "COMPLETED"
-                              ? "text-[#530FAD] dark:text-[#7c3aed]"
+                              ? "text-purple-600"
                               : payout.status === "PROCESSING"
                                 ? "text-blue-600"
                                 : payout.status === "PENDING"
@@ -732,7 +732,7 @@ export function PayoutsList() {
                           className={cn(
                             "h-6 w-6",
                             payout.status === "COMPLETED"
-                              ? "text-[#530FAD] dark:text-[#7c3aed]"
+                              ? "text-purple-600"
                               : payout.status === "PROCESSING"
                                 ? "text-blue-600"
                                 : payout.status === "PENDING"
@@ -784,7 +784,7 @@ export function PayoutsList() {
                         {payout.completedAt && (
                           <>
                             <span>•</span>
-                            <span className="text-[#530FAD] dark:text-[#7c3aed]">
+                            <span className="text-purple-600">
                               Завершено{" "}
                               {format(
                                 new Date(payout.completedAt),
@@ -862,7 +862,7 @@ export function PayoutsList() {
           {selectedPayout && (
             <div className="space-y-6">
               {/* Status and Amount */}
-              <div className="flex items-center justify-between p-4 bg-purple-50/30 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <Badge
                     className={cn(
@@ -1030,7 +1030,7 @@ export function PayoutsList() {
                               href={file}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-2 p-3 border rounded-lg hover:bg-purple-50/30 transition-colors"
+                              className="flex items-center gap-2 p-3 border rounded-lg hover:bg-gray-50 transition-colors"
                             >
                               <FileText className="h-5 w-5 text-gray-500" />
                               <span className="text-sm truncate">
@@ -1053,9 +1053,9 @@ export function PayoutsList() {
                               href={file}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-2 p-3 border rounded-lg hover:bg-purple-50/30 transition-colors"
+                              className="flex items-center gap-2 p-3 border rounded-lg hover:bg-gray-50 transition-colors"
                             >
-                              <FileText className="h-5 w-5 text-[#530FAD] dark:text-[#7c3aed]" />
+                              <FileText className="h-5 w-5 text-purple-600" />
                               <span className="text-sm truncate">
                                 Документ {index + 1}
                               </span>
@@ -1120,3 +1120,4 @@ export function PayoutsList() {
     </div>
   );
 }
+

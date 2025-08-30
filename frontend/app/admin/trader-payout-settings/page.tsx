@@ -169,7 +169,7 @@ export default function TraderPayoutSettingsPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-purple-50/10 mt-6">
+          <Card className="mt-6">
             <CardHeader>
               <CardTitle>Трейдеры</CardTitle>
               <CardDescription>

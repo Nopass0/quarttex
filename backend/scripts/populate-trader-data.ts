@@ -509,7 +509,7 @@ async function populateTraderData() {
             title: folderNames[i],
             isActive: i === 0,
             metadata: {
-              color: ['blue', 'purple', 'violet'][i],
+              color: ['blue', 'green', 'purple'][i],
               icon: ['star', 'shield', 'crown'][i]
             }
           }

@@ -192,9 +192,9 @@ export default function WithdrawalsPage() {
     const variants: Record<string, { color: string; label: string }> = {
       PENDING: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', label: 'Ожидает' },
       PROCESSING: { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Обработка' },
-      COMPLETED: { color: 'bg-purple-100 text-purple-800 border-green-200', label: 'Выполнен' },
+      COMPLETED: { color: 'bg-purple-100 text-purple-800 border-purple-200', label: 'Выполнен' },
       FAILED: { color: 'bg-red-100 text-red-800 border-red-200', label: 'Ошибка' },
-      CANCELLED: { color: 'bg-purple-100/40 text-gray-800 border-gray-200', label: 'Отменен' },
+      CANCELLED: { color: 'bg-gray-100 text-gray-800 border-gray-200', label: 'Отменен' },
     }
     
     const variant = variants[status] || variants.PENDING
@@ -217,25 +217,25 @@ export default function WithdrawalsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-purple-50/10 p-6">
+        <Card className="p-6">
           <div className="space-y-2">
             <p className="text-sm text-gray-600">Всего заявок</p>
             <p className="text-2xl font-bold">{stats.totalWithdrawals}</p>
           </div>
         </Card>
-        <Card className="bg-purple-50/10 p-6">
+        <Card className="p-6">
           <div className="space-y-2">
             <p className="text-sm text-gray-600">Ожидают обработки</p>
             <p className="text-2xl font-bold text-yellow-600">{stats.pendingWithdrawals}</p>
           </div>
         </Card>
-        <Card className="bg-purple-50/10 p-6">
+        <Card className="p-6">
           <div className="space-y-2">
             <p className="text-sm text-gray-600">Выполнено</p>
-            <p className="text-2xl font-bold text-[#530FAD] dark:text-[#7c3aed]">{stats.completedWithdrawals}</p>
+            <p className="text-2xl font-bold text-purple-600">{stats.completedWithdrawals}</p>
           </div>
         </Card>
-        <Card className="bg-purple-50/10 p-6">
+        <Card className="p-6">
           <div className="space-y-2">
             <p className="text-sm text-gray-600">Общая сумма</p>
             <p className="text-2xl font-bold">${stats.totalAmount.toFixed(2)}</p>
@@ -244,7 +244,7 @@ export default function WithdrawalsPage() {
       </div>
 
       {/* Filters */}
-      <Card className="bg-purple-50/10 p-4">
+      <Card className="p-4">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Label>Фильтр по статусу:</Label>
@@ -318,7 +318,7 @@ export default function WithdrawalsPage() {
                       withdrawal.status === 'PROCESSING' ? 'bg-blue-100' :
                       withdrawal.status === 'COMPLETED' ? 'bg-purple-100' :
                       withdrawal.status === 'FAILED' ? 'bg-red-100' :
-                      'bg-gray-100'
+                      'bg-purple-100'
                     }`}>
                       {getStatusIcon(withdrawal.status)}
                     </div>
@@ -352,11 +352,11 @@ export default function WithdrawalsPage() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-5 w-5 hover:bg-purple-100/50"
+                          className="h-5 w-5 hover:bg-gray-100"
                           onClick={() => copyToClipboard(withdrawal.walletAddress, 'address')}
                         >
                           {copiedAddress === withdrawal.walletAddress ? (
-                            <Check className="h-3 w-3 text-[#530FAD] dark:text-[#7c3aed]" />
+                            <Check className="h-3 w-3 text-purple-600" />
                           ) : (
                             <Copy className="h-3 w-3 text-gray-400 hover:text-gray-600" />
                           )}
@@ -375,11 +375,11 @@ export default function WithdrawalsPage() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-5 w-5 hover:bg-purple-100/50"
+                          className="h-5 w-5 hover:bg-gray-100"
                           onClick={() => copyToClipboard(withdrawal.txHash!, 'txHash')}
                         >
                           {copiedTxHash === withdrawal.txHash ? (
-                            <Check className="h-3 w-3 text-[#530FAD] dark:text-[#7c3aed]" />
+                            <Check className="h-3 w-3 text-purple-600" />
                           ) : (
                             <Copy className="h-3 w-3 text-gray-400 hover:text-gray-600" />
                           )}
@@ -402,7 +402,7 @@ export default function WithdrawalsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-[#530FAD] dark:text-[#7c3aed] hover:text-purple-700"
+                          className="text-purple-600 hover:text-purple-700"
                           onClick={() => setConfirmDialog({ open: true, withdrawal })}
                         >
                           Обработать

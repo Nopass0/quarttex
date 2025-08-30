@@ -225,7 +225,7 @@ export function DisputeMessagesRealtime({
         return {
           name: "Мерчант",
           icon: Building2,
-          color: "bg-[#530FAD]",
+          color: "bg-purple-500",
           align: userType === "merchant" && isOwnMessage ? "right" : "left"
         };
       case "ADMIN":
@@ -265,8 +265,8 @@ export function DisputeMessagesRealtime({
         <div className="flex items-center gap-2 text-sm">
           {isConnected ? (
             <>
-              <Wifi className="h-4 w-4 text-[#530FAD] dark:text-[#7c3aed]" />
-              <span className="text-[#530FAD] dark:text-[#7c3aed] dark:text-purple-400">В сети</span>
+              <Wifi className="h-4 w-4 text-purple-500" />
+              <span className="text-purple-600 dark:text-purple-400">В сети</span>
             </>
           ) : (
             <>
@@ -331,10 +331,10 @@ export function DisputeMessagesRealtime({
                     className={cn(
                       "rounded-lg p-3",
                       senderInfo.align === "center"
-                        ? "bg-purple-100/40 dark:bg-gray-800 text-center"
+                        ? "bg-gray-100 dark:bg-gray-800 text-center"
                         : isOwnMessage
                         ? "bg-primary text-primary-foreground"
-                        : "bg-purple-100/40 dark:bg-gray-800"
+                        : "bg-gray-100 dark:bg-gray-800"
                     )}
                   >
                     {senderInfo.align === "center" && (
@@ -363,7 +363,7 @@ export function DisputeMessagesRealtime({
                               "flex items-center gap-2 p-2 rounded-lg text-sm hover:opacity-80 transition-opacity",
                               isOwnMessage
                                 ? "bg-primary/20"
-                                : "bg-purple-100/40 dark:bg-gray-800"
+                                : "bg-gray-100 dark:bg-gray-800"
                             )}
                           >
                             <FileIcon className="h-4 w-4 flex-shrink-0" />
@@ -402,7 +402,7 @@ export function DisputeMessagesRealtime({
             {attachments.map((file, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2 px-3 py-1.5 bg-purple-100/40 dark:bg-gray-800 rounded-full text-sm"
+                className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-full text-sm"
               >
                 <Paperclip className="h-3 w-3" />
                 <span className="max-w-[150px] truncate">{file.name}</span>

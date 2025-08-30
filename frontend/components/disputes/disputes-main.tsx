@@ -18,17 +18,17 @@ export function DisputesMain() {
 
       {/* Tabs */}
       <Tabs defaultValue="deals" className="w-full">
-        <TabsList className="grid w-fit grid-cols-2 gap-1 bg-purple-100/40 p-1">
+        <TabsList className="grid w-fit grid-cols-2 gap-1 bg-gray-100 p-1">
           <TabsTrigger 
             value="deals" 
-            className="data-[state=active]:bg-purple-50/20 dark:bg-purple-900/15 data-[state=active]:text-gray-900 data-[state=active]:shadow-sm px-6"
+            className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm px-6"
           >
             <CreditCard className="mr-2 h-4 w-4" />
             Сделки
           </TabsTrigger>
           <TabsTrigger 
             value="payouts" 
-            className="data-[state=active]:bg-purple-50/20 dark:bg-purple-900/15 data-[state=active]:text-gray-900 data-[state=active]:shadow-sm px-6"
+            className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm px-6"
           >
             <Send className="mr-2 h-4 w-4" />
             Выплаты

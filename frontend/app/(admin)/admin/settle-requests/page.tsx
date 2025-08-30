@@ -204,7 +204,7 @@ export default function SettleRequestsPage() {
                   <TableCell className="font-medium">
                     {formatAmount(request.amount)} ₽
                   </TableCell>
-                  <TableCell className="font-medium text-[#530FAD] dark:text-[#7c3aed]">
+                  <TableCell className="font-medium text-purple-600">
                     {request.amountUsdt.toFixed(2)} USDT
                   </TableCell>
                   <TableCell>{request.rate.toFixed(2)}</TableCell>
@@ -337,10 +337,10 @@ export default function SettleRequestsPage() {
                 <div className="space-y-3">
                   <div>
                     <p className="text-sm text-muted-foreground">Баланс на момент запроса</p>
-                    <p className="text-2xl font-bold text-[#530FAD] dark:text-[#7c3aed]">
+                    <p className="text-2xl font-bold text-purple-600">
                       {formatAmount(requestDetails.request.amount)} ₽
                     </p>
-                    <p className="text-lg font-medium text-[#530FAD] dark:text-[#7c3aed]">
+                    <p className="text-lg font-medium text-purple-600">
                       {requestDetails.request.amountUsdt.toFixed(2)} USDT
                     </p>
                   </div>
@@ -367,7 +367,7 @@ export default function SettleRequestsPage() {
                 <div className="bg-muted/50 p-4 rounded-lg space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span>Сумма успешных сделок:</span>
-                    <span className="font-medium text-[#530FAD] dark:text-[#7c3aed]">
+                    <span className="font-medium text-purple-600">
                       +{formatAmount(requestDetails.balanceFormula.dealsTotal)} ₽
                     </span>
                   </div>
@@ -400,7 +400,7 @@ export default function SettleRequestsPage() {
                   <Separator className="my-2" />
                   <div className="flex justify-between font-medium">
                     <span>Итого:</span>
-                    <span className="text-[#530FAD] dark:text-[#7c3aed]">
+                    <span className="text-purple-600">
                       {formatAmount(requestDetails.currentBalance)} ₽
                     </span>
                   </div>

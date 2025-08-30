@@ -36,7 +36,7 @@ export const getBankIcon = (bankType: string, size: "sm" | "md" = "md") => {
   if (logoPath) {
     return (
       <div
-        className={`${sizeClasses} rounded-lg bg-purple-50/20 dark:bg-purple-900/15 dark:bg-purple-900/25 border border-purple-200/60 dark:border-gray-600 flex items-center justify-center p-1`}
+        className={`${sizeClasses} rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center p-1`}
       >
         <img
           src={logoPath}
@@ -57,7 +57,7 @@ export const getBankIcon = (bankType: string, size: "sm" | "md" = "md") => {
 
   return (
     <div
-      className={`${sizeClasses} rounded-lg bg-purple-100/40 border border-purple-200/60 flex items-center justify-center`}
+      className={`${sizeClasses} rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center`}
     >
       <CreditCard className="w-5 h-5 text-gray-600" />
     </div>

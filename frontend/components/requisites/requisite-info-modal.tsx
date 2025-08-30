@@ -274,12 +274,12 @@ export function RequisiteInfoModal({
         <div className="flex items-center justify-between p-4 border-b md:hidden flex-shrink-0">
           <button
             onClick={() => onOpenChange(false)}
-            className="flex items-center gap-1 text-[#530FAD] dark:text-[#7c3aed] dark:drop-shadow-[0_0_6px_rgba(124,58,237,0.4)] font-medium"
+            className="flex items-center gap-1 text-[#006039] font-medium"
           >
             <ChevronLeft className="h-4 w-4" />
             Назад
           </button>
-          <button className="flex items-center gap-1 text-[#530FAD] dark:text-[#7c3aed] dark:drop-shadow-[0_0_6px_rgba(124,58,237,0.4)] font-medium">
+          <button className="flex items-center gap-1 text-[#006039] font-medium">
             Поделиться
             <Share2 className="h-4 w-4" />
           </button>
@@ -294,7 +294,7 @@ export function RequisiteInfoModal({
           {/* Card Info */}
           <div className="relative rounded-xl overflow-hidden">
             {/* Gradient Background */}
-            <div className="absolute inset-0 bg-gradient-to-b from-purple-500/20 via-purple-300/10 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-b from-green-500/20 via-green-300/10 to-transparent" />
 
             {/* Card Content */}
             <div className="relative p-4 space-y-3 bg-white/10 backdrop-blur-sm">
@@ -306,7 +306,7 @@ export function RequisiteInfoModal({
                     isWorking
                       ? "bg-purple-50 text-purple-700 border-purple-200"
                       : requisite.isArchived
-                      ? "bg-purple-100/40 text-gray-600 border-gray-300"
+                      ? "bg-gray-100 text-gray-600 border-gray-300"
                       : "bg-orange-50 text-orange-700 border-orange-200"
                   )}
                 >
@@ -346,7 +346,7 @@ export function RequisiteInfoModal({
                   <span
                     className={
                       requisite.verifications?.cardNumber
-                        ? "text-[#530FAD] dark:text-[#7c3aed] dark:drop-shadow-[0_0_6px_rgba(124,58,237,0.4)]"
+                        ? "text-purple-600"
                         : "text-gray-500"
                     }
                   >
@@ -360,7 +360,7 @@ export function RequisiteInfoModal({
                   <span
                     className={
                       requisite.verifications?.accountNumber
-                        ? "text-[#530FAD] dark:text-[#7c3aed] dark:drop-shadow-[0_0_6px_rgba(124,58,237,0.4)]"
+                        ? "text-purple-600"
                         : "text-gray-500"
                     }
                   >
@@ -374,7 +374,7 @@ export function RequisiteInfoModal({
                   <span
                     className={
                       requisite.verifications?.phoneNumber
-                        ? "text-[#530FAD] dark:text-[#7c3aed] dark:drop-shadow-[0_0_6px_rgba(124,58,237,0.4)]"
+                        ? "text-purple-600"
                         : "text-gray-500"
                     }
                   >
@@ -388,7 +388,7 @@ export function RequisiteInfoModal({
           </div>
 
           {/* Main Card Selection */}
-          <div className="flex justify-center items-center gap-2 p-3 bg-purple-50/30 rounded-lg">
+          <div className="flex justify-center items-center gap-2 p-3 bg-gray-50 rounded-lg">
             <Star className="h-5 w-5 text-gray-400 font-semibold" />
             <span className="text-[16px] font-semibold text-gray-400">
               Карта выбрана как основная
@@ -402,13 +402,13 @@ export function RequisiteInfoModal({
             </h4>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 bg-purple-50/30 rounded-lg">
+              <div className="p-4 bg-gray-50 rounded-lg">
                 <p className="text-sm text-gray-600 mb-1">Успешные сделки</p>
                 <p className="font-semibold">
                   {requisite.successfulDeals || 0}
                 </p>
               </div>
-              <div className="p-4 bg-purple-50/30 rounded-lg">
+              <div className="p-4 bg-gray-50 rounded-lg">
                 <p className="text-sm text-gray-600 mb-1">Всего сделок</p>
                 <p className="font-semibold">
                   {requisite.totalDeals || 0}
@@ -416,7 +416,7 @@ export function RequisiteInfoModal({
               </div>
             </div>
 
-            <div className="p-4 bg-purple-50/30 rounded-lg">
+            <div className="p-4 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-600 mb-1">Процент успешных</p>
               <p className="font-semibold">
                 {requisite.totalDeals && requisite.totalDeals > 0
@@ -427,7 +427,7 @@ export function RequisiteInfoModal({
 
             {requisite.stats && (
               <>
-                <div className="p-4 bg-purple-50/30 rounded-lg">
+                <div className="p-4 bg-gray-50 rounded-lg">
                   <p className="text-sm text-gray-600 mb-1">Оборот за 24 часа</p>
                   <p className="font-semibold">
                     {requisite.stats.turnover24h || 0} USDT ≈{" "}
@@ -439,13 +439,13 @@ export function RequisiteInfoModal({
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 bg-purple-50/30 rounded-lg">
+                  <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-sm text-gray-600 mb-1">Прибыль 24ч</p>
                     <p className="font-semibold">
                       {requisite.stats.profit24h || 0} USDT
                     </p>
                   </div>
-                  <div className="p-4 bg-purple-50/30 rounded-lg">
+                  <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-sm text-gray-600 mb-1">Конверсия 24ч</p>
                     <p className="font-semibold">
                       {requisite.stats.conversion24h || 0}%
@@ -466,10 +466,10 @@ export function RequisiteInfoModal({
                 href={`/trader/devices/${requisite.device.id}`}
                 className="block"
               >
-                <div className="flex items-center justify-between p-4 bg-purple-50/30 rounded-lg hover:bg-purple-100/40 transition-colors">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#530FAD]/10 rounded-lg flex items-center justify-center">
-                      <Smartphone className="h-5 w-5 text-[#530FAD] dark:text-[#7c3aed] dark:drop-shadow-[0_0_6px_rgba(124,58,237,0.4)]" />
+                    <div className="w-10 h-10 bg-[#006039]/10 rounded-lg flex items-center justify-center">
+                      <Smartphone className="h-5 w-5 text-[#006039]" />
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">
@@ -493,10 +493,10 @@ export function RequisiteInfoModal({
             <div className="space-y-2">
               <Button
                 variant="outline"
-                className="w-full justify-start h-12 text-[#530FAD] hover:text-[#530FAD] hover:bg-purple-50 dark:text-[#7c3aed] dark:hover:text-[#7c3aed] dark:hover:bg-purple-900/20 dark:drop-shadow-[0_0_6px_rgba(124,58,237,0.4)]"
+                className="w-full justify-start h-12 text-[#006039] hover:text-[#006039] hover:bg-purple-50"
                 onClick={() => setShowEditDialog(true)}
               >
-                <Edit className="h-4 w-4 mr-2 text-[#530FAD] dark:text-[#7c3aed] dark:drop-shadow-[0_0_6px_rgba(124,58,237,0.4)]" />
+                <Edit className="h-4 w-4 mr-2 text-[#006039]" />
                 Редактировать
               </Button>
               
@@ -517,7 +517,7 @@ export function RequisiteInfoModal({
                   (window.location.href = `/deals?material_id=${requisite.id}`)
                 }
               >
-                <Clock className="h-4 w-4 mr-2 text-[#530FAD] dark:text-[#7c3aed] dark:drop-shadow-[0_0_6px_rgba(124,58,237,0.4)]" />
+                <Clock className="h-4 w-4 mr-2 text-purple-700" />
                 Просмотр сделок по реквизиту
               </Button>
 
@@ -530,7 +530,7 @@ export function RequisiteInfoModal({
               >
                 {requisite.isArchived ? (
                   <>
-                    <AlertCircle className="h-4 w-4 mr-2 text-[#530FAD] dark:text-[#7c3aed] dark:drop-shadow-[0_0_6px_rgba(124,58,237,0.4)]" />
+                    <AlertCircle className="h-4 w-4 mr-2 text-purple-700" />
                     Запустить реквизит
                   </>
                 ) : (

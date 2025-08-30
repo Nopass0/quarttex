@@ -144,7 +144,7 @@ export default function MerchantSettlementsPage() {
           
           <Button
             onClick={() => setIsSettleDialogOpen(true)}
-            className="bg-[#530FAD] hover:bg-purple-800/60"
+            className="bg-[#006039] hover:bg-[#005030]"
             disabled={isLoading || pendingAmount === 0}
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -256,7 +256,7 @@ export default function MerchantSettlementsPage() {
           </DialogHeader>
           
           <div className="py-4">
-            <div className="bg-purple-50/30 rounded-lg p-4 space-y-2">
+            <div className="bg-gray-50 rounded-lg p-4 space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600">Мерчант:</span>
                 <span className="font-medium">{merchant.name}</span>
@@ -282,7 +282,7 @@ export default function MerchantSettlementsPage() {
             </Button>
             <Button
               onClick={handleCreateSettlement}
-              className="bg-[#530FAD] hover:bg-purple-800/60"
+              className="bg-[#006039] hover:bg-[#005030]"
               disabled={isLoading}
             >
               Подтвердить сеттл

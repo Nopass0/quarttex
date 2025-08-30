@@ -138,7 +138,7 @@ export default function MerchantDealsPage() {
   return (
     <div className="space-y-6">
       {/* Search and Filters */}
-      <Card className="bg-purple-50/10 p-4">
+      <Card className="p-4">
         <div className="space-y-4">
           {/* Search bar */}
           <div className="flex gap-2">

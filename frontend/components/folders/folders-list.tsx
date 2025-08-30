@@ -249,7 +249,7 @@ export function FoldersList() {
             Test Modal
           </Button>
           <Button 
-            className="bg-[#530FAD] hover:bg-[#530FAD]/90 text-white"
+            className="bg-[#006039] hover:bg-[#006039]/90 text-white"
             onClick={() => setCreateModalOpen(true)}
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -259,7 +259,7 @@ export function FoldersList() {
       </div>
 
       {/* Search and Filters */}
-      <Card className="bg-purple-50/10 p-4">
+      <Card className="p-4">
         <div className="space-y-4">
           <div>
             <Label className="text-sm font-medium">Поиск</Label>
@@ -293,7 +293,7 @@ export function FoldersList() {
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-[#530FAD]/10 text-[#006039] rounded-lg">
+                    <div className="p-2 bg-[#006039]/10 text-[#006039] rounded-lg">
                       <Folder className="h-5 w-5" />
                     </div>
                     <div>
@@ -398,7 +398,7 @@ export function FoldersList() {
 
       {/* Empty State */}
       {!loading && folders.length === 0 && (
-        <Card className="bg-purple-50/10 p-12">
+        <Card className="p-12">
           <div className="text-center">
             <Folder className="h-12 w-12 mx-auto mb-4 text-gray-400" />
             <h3 className="text-lg font-semibold mb-2">Папки не найдены</h3>
@@ -406,7 +406,7 @@ export function FoldersList() {
               Создайте первую папку для группировки реквизитов
             </p>
             <Button 
-              className="bg-[#530FAD] hover:bg-[#530FAD]/90 text-white"
+              className="bg-[#006039] hover:bg-[#006039]/90 text-white"
               onClick={() => setCreateModalOpen(true)}
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -485,7 +485,7 @@ export function FoldersList() {
                   {availableRequisites.map((requisite) => (
                     <label
                       key={requisite.id}
-                      className="flex items-center gap-3 p-3 hover:bg-purple-50/30 rounded-lg cursor-pointer"
+                      className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer"
                     >
                       <Checkbox
                         checked={selectedRequisites.includes(requisite.id)}
@@ -543,7 +543,7 @@ export function FoldersList() {
               Отмена
             </Button>
             <Button
-              className="bg-[#530FAD] hover:bg-[#530FAD]/90 text-white"
+              className="bg-[#006039] hover:bg-[#006039]/90 text-white"
               onClick={handleCreateFolder}
               disabled={!folderTitle.trim() || selectedRequisites.length === 0}
             >
@@ -598,7 +598,7 @@ export function FoldersList() {
                   {availableRequisites.map((requisite) => (
                     <label
                       key={requisite.id}
-                      className="flex items-center gap-3 p-3 hover:bg-purple-50/30 rounded-lg cursor-pointer"
+                      className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer"
                     >
                       <Checkbox
                         checked={selectedRequisites.includes(requisite.id)}
@@ -652,7 +652,7 @@ export function FoldersList() {
               Отмена
             </Button>
             <Button
-              className="bg-[#530FAD] hover:bg-[#530FAD]/90 text-white"
+              className="bg-[#006039] hover:bg-[#006039]/90 text-white"
               onClick={handleUpdateFolder}
               disabled={!folderTitle.trim() || selectedRequisites.length === 0}
             >

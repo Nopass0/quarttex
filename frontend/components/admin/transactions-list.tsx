@@ -161,7 +161,7 @@ const statusIcons: Record<Status, any> = {
 };
 
 const statusColors: Record<Status, string> = {
-  CREATED: "bg-purple-100/40 text-gray-700",
+  CREATED: "bg-gray-100 text-gray-700",
   IN_PROGRESS: "bg-blue-100 text-blue-700",
   READY: "bg-purple-100 text-purple-700",
   CANCELED: "bg-red-100 text-red-700",
@@ -741,7 +741,7 @@ export function TransactionsList() {
       return (
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <div className="bg-purple-100/40 rounded px-2 py-1 flex items-center gap-2">
+            <div className="bg-gray-100 rounded px-2 py-1 flex items-center gap-2">
               <CreditCard className="h-3 w-3 text-[#006039]" />
               <div>
                 <button
@@ -776,7 +776,7 @@ export function TransactionsList() {
       <div
         key={transaction.id}
         className={cn(
-          "bg-purple-50/20 dark:bg-purple-900/15 rounded-lg p-4 cursor-pointer hover:shadow-md transition-all duration-300 border border-gray-100",
+          "bg-white rounded-lg p-4 cursor-pointer hover:shadow-md transition-all duration-300 border border-gray-100",
           transaction.isNew && "flash-once"
         )}
         onClick={() => openTransactionDetailsDialog(transaction)}
@@ -896,7 +896,7 @@ export function TransactionsList() {
                 )}
               </div>
             ) : (
-              <div className="bg-purple-100/40 text-gray-500 px-3 py-2 rounded-md">
+              <div className="bg-gray-100 text-gray-500 px-3 py-2 rounded-md">
                 <div className="text-sm">Не назначено</div>
               </div>
             )}
@@ -931,7 +931,7 @@ export function TransactionsList() {
                 <Filter className="h-4 w-4 mr-2 text-[#006039]" />
                 Фильтры
                 {Object.values(filters).some((v) => v && v !== "all") && (
-                  <span className="ml-2 bg-[#530FAD] text-white rounded-full px-2 py-0.5 text-xs">
+                  <span className="ml-2 bg-[#006039] text-white rounded-full px-2 py-0.5 text-xs">
                     {
                       Object.values(filters).filter((v) => v && v !== "all")
                         .length
@@ -1188,7 +1188,7 @@ export function TransactionsList() {
                 <div>
                   <Label className="text-gray-500">ID транзакции</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    <code className="text-sm bg-purple-100/40 px-2 py-1 rounded">
+                    <code className="text-sm bg-gray-100 px-2 py-1 rounded">
                       {selectedTransaction.id}
                     </code>
                     <Button
@@ -1205,7 +1205,7 @@ export function TransactionsList() {
                 <div>
                   <Label className="text-gray-500">Numeric ID</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    <code className="text-sm bg-purple-100/40 px-2 py-1 rounded">
+                    <code className="text-sm bg-gray-100 px-2 py-1 rounded">
                       {selectedTransaction.numericId}
                     </code>
                     <Button
@@ -1225,7 +1225,7 @@ export function TransactionsList() {
                 <div>
                   <Label className="text-gray-500">Order ID</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    <code className="text-sm bg-purple-100/40 px-2 py-1 rounded">
+                    <code className="text-sm bg-gray-100 px-2 py-1 rounded">
                       {selectedTransaction.orderId}
                     </code>
                     <Button
@@ -1357,7 +1357,7 @@ export function TransactionsList() {
                     )}
                   </div>
                 ) : (
-                  <div className="mt-1 bg-purple-100/40 p-3 rounded-md text-gray-500">
+                  <div className="mt-1 bg-gray-100 p-3 rounded-md text-gray-500">
                     Не назначен
                   </div>
                 )}
@@ -1387,7 +1387,7 @@ export function TransactionsList() {
               <div className="space-y-3">
                 <Label className="text-gray-500">Callback URLs</Label>
                 <div className="grid grid-cols-1 gap-3">
-                  <div className="bg-purple-50/30 p-3 rounded-md">
+                  <div className="bg-gray-50 p-3 rounded-md">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="text-sm font-medium">Callback URI</div>
@@ -1412,7 +1412,7 @@ export function TransactionsList() {
                       )}
                     </div>
                   </div>
-                  <div className="bg-purple-50/30 p-3 rounded-md">
+                  <div className="bg-gray-50 p-3 rounded-md">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="text-sm font-medium">Success URI</div>
@@ -1437,7 +1437,7 @@ export function TransactionsList() {
                       )}
                     </div>
                   </div>
-                  <div className="bg-purple-50/30 p-3 rounded-md">
+                  <div className="bg-gray-50 p-3 rounded-md">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="text-sm font-medium">Fail URI</div>
@@ -1525,7 +1525,7 @@ export function TransactionsList() {
           <DialogFooter>
             <Button
               onClick={handleRecalcTransaction}
-              className="bg-[#530FAD] hover:bg-purple-800/60"
+              className="bg-[#006039] hover:bg-[#005030]"
               disabled={isLoading}
             >
               Перерасчитать
@@ -1546,7 +1546,7 @@ export function TransactionsList() {
                 <div>
                   <Label>ID транзакции</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    <code className="text-xs bg-purple-100/40 px-2 py-1 rounded">
+                    <code className="text-xs bg-gray-100 px-2 py-1 rounded">
                       {selectedTransaction.id}
                     </code>
                     <Button
@@ -1563,7 +1563,7 @@ export function TransactionsList() {
                 <div>
                   <Label>Numeric ID</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    <code className="text-xs bg-purple-100/40 px-2 py-1 rounded">
+                    <code className="text-xs bg-gray-100 px-2 py-1 rounded">
                       {selectedTransaction.numericId}
                     </code>
                     <Button
@@ -1583,7 +1583,7 @@ export function TransactionsList() {
                 <div>
                   <Label>Order ID</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    <code className="text-xs bg-purple-100/40 px-2 py-1 rounded">
+                    <code className="text-xs bg-gray-100 px-2 py-1 rounded">
                       {selectedTransaction.orderId}
                     </code>
                     <Button
@@ -1671,7 +1671,7 @@ export function TransactionsList() {
                 />
               </div>
 
-              <div className="bg-purple-50/30 p-4 rounded-lg">
+              <div className="bg-gray-50 p-4 rounded-lg">
                 <h4 className="font-medium mb-2">Дополнительная информация</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>Мерчант: {selectedTransaction.merchant.name}</div>
@@ -1700,7 +1700,7 @@ export function TransactionsList() {
           <DialogFooter>
             <Button
               onClick={handleUpdateTransaction}
-              className="bg-[#530FAD] hover:bg-purple-800/60"
+              className="bg-[#006039] hover:bg-[#005030]"
               disabled={isLoading}
             >
               Сохранить

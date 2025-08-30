@@ -431,7 +431,7 @@ export default function AggregatorDetailPage() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-[#530FAD] dark:text-[#7c3aed]">
+                <div className="text-2xl font-bold text-green-600">
                   {formatAmount(aggregator.balanceUsdt)}
                 </div>
               </CardContent>
@@ -508,7 +508,7 @@ export default function AggregatorDetailPage() {
                       <Label>Статус</Label>
                       <div className="flex items-center gap-2">
                         {aggregator.isActive ? (
-                          <Badge className="bg-purple-100 text-purple-800">
+                          <Badge className="bg-green-100 text-green-800">
                             <CheckCircle className="h-3 w-3 mr-1" />
                             Активен
                           </Badge>
@@ -526,7 +526,7 @@ export default function AggregatorDetailPage() {
                         {aggregator.twoFactorEnabled ? (
                           <Badge
                             variant="default"
-                            className="bg-purple-100 text-purple-800"
+                            className="bg-green-100 text-green-800"
                           >
                             <Shield className="h-3 w-3 mr-1" />
                             Включена

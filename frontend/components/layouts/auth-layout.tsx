@@ -13,7 +13,7 @@ interface AuthLayoutProps {
 export function AuthLayout({ children, variant }: AuthLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   return (
-    <div className="min-h-screen bg-purple-50/20 dark:bg-purple-900/15 dark:bg-[#0f0f0f]">
+    <div className="min-h-screen bg-white dark:bg-[#0f0f0f]">
       <div className="mx-auto max-w-[1920px] px-0 lg:px-6 xl:px-12 2xl:px-20">
         <div className="flex">
           {/* Desktop Sidebar */}

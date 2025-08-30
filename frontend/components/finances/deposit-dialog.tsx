@@ -144,7 +144,7 @@ export function DepositDialog({ open, onOpenChange, depositType = 'BALANCE' }: D
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <ArrowDownRight className="h-5 w-5" style={{ color: '#530FAD' }} />
+            <ArrowDownRight className="h-5 w-5" style={{ color: '#006039' }} />
             Пополнение {depositType === 'INSURANCE' ? 'депозитного' : ''} баланса
           </DialogTitle>
           <DialogDescription>
@@ -160,7 +160,7 @@ export function DepositDialog({ open, onOpenChange, depositType = 'BALANCE' }: D
                 <div className={cn(
                   "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
                   step >= stepNum
-                    ? "bg-[#530FAD] text-white"
+                    ? "bg-[#006039] text-white"
                     : "bg-gray-200 text-gray-600"
                 )}>
                   {stepNum}
@@ -168,7 +168,7 @@ export function DepositDialog({ open, onOpenChange, depositType = 'BALANCE' }: D
                 {stepNum < 3 && (
                   <div className={cn(
                     "w-16 h-0.5 mx-2",
-                    step > stepNum ? "bg-[#530FAD]" : "bg-gray-200"
+                    step > stepNum ? "bg-[#006039]" : "bg-gray-200"
                   )} />
                 )}
               </div>
@@ -200,7 +200,7 @@ export function DepositDialog({ open, onOpenChange, depositType = 'BALANCE' }: D
                 )}
               </div>
 
-              <Card className="bg-purple-50/10 p-4 border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-900/20">
+              <Card className="p-4 border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-900/20">
                 <div className="flex items-start gap-3">
                   <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                   <div className="text-sm text-blue-800 dark:text-blue-300">
@@ -215,7 +215,7 @@ export function DepositDialog({ open, onOpenChange, depositType = 'BALANCE' }: D
               <Button 
                 onClick={handleNextStep}
                 disabled={!amount || !!amountError}
-                className="w-full bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-purple-800/60 dark:hover:bg-purple-800/60/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-[#006039] hover:bg-[#006039]/90 dark:bg-[#2d6a42] dark:hover:bg-[#2d6a42]/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Продолжить
               </Button>
@@ -237,7 +237,7 @@ export function DepositDialog({ open, onOpenChange, depositType = 'BALANCE' }: D
               <div>
                 <Label>Адрес для пополнения</Label>
                 <div className="mt-2 flex items-center gap-2">
-                  <div className="flex-1 p-3 bg-purple-50/30 dark:bg-[#0f0f0f] rounded-lg font-mono text-sm break-all dark:text-[#eeeeee]">
+                  <div className="flex-1 p-3 bg-gray-50 dark:bg-[#0f0f0f] rounded-lg font-mono text-sm break-all dark:text-[#eeeeee]">
                     {depositSettings?.address || "Loading..."}
                   </div>
                   <Button
@@ -247,7 +247,7 @@ export function DepositDialog({ open, onOpenChange, depositType = 'BALANCE' }: D
                     className="shrink-0"
                   >
                     {copiedAddress ? (
-                      <CheckCircle2 className="h-4 w-4" style={{ color: '#530FAD' }} />
+                      <CheckCircle2 className="h-4 w-4" style={{ color: '#006039' }} />
                     ) : (
                       <Copy className="h-4 w-4" />
                     )}
@@ -282,7 +282,7 @@ export function DepositDialog({ open, onOpenChange, depositType = 'BALANCE' }: D
                 <Button
                   onClick={handleNextStep}
                   disabled={loading || !txHash}
-                  className="flex-1 bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-purple-800/60 dark:hover:bg-purple-800/60/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-[#006039] hover:bg-[#006039]/90 dark:bg-[#2d6a42] dark:hover:bg-[#2d6a42]/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <>
@@ -296,8 +296,8 @@ export function DepositDialog({ open, onOpenChange, depositType = 'BALANCE' }: D
               </div>
 
               {showQR && depositSettings && (
-                <Card className="bg-purple-50/10 p-4 text-center">
-                  <div className="bg-purple-50/20 dark:bg-purple-900/15 p-4 rounded-lg mx-auto mb-2 inline-block">
+                <Card className="p-4 text-center">
+                  <div className="bg-white p-4 rounded-lg mx-auto mb-2 inline-block">
                     <QRCode value={depositSettings.address} size={150} />
                   </div>
                   <div className="text-sm text-gray-600">
@@ -306,7 +306,7 @@ export function DepositDialog({ open, onOpenChange, depositType = 'BALANCE' }: D
                 </Card>
               )}
 
-              <Card className="bg-purple-50/10 p-4 border-orange-200 bg-orange-50/50 dark:border-orange-800 dark:bg-orange-900/20">
+              <Card className="p-4 border-orange-200 bg-orange-50/50 dark:border-orange-800 dark:bg-orange-900/20">
                 <div className="flex items-start gap-3">
                   <Shield className="h-4 w-4 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
                   <div className="text-sm text-orange-800 dark:text-orange-300">
@@ -323,8 +323,8 @@ export function DepositDialog({ open, onOpenChange, depositType = 'BALANCE' }: D
           {/* Step 3: Confirmation */}
           {step === 3 && (
             <div className="space-y-4 text-center">
-              <div className="p-6 rounded-lg" style={{ backgroundColor: 'rgba(83, 15, 173, 0.05)' }}>
-                <CheckCircle2 className="h-12 w-12 mx-auto mb-4" style={{ color: '#530FAD' }} />
+              <div className="p-6 rounded-lg" style={{ backgroundColor: 'rgba(0, 96, 57, 0.05)' }}>
+                <CheckCircle2 className="h-12 w-12 mx-auto mb-4" style={{ color: '#006039' }} />
                 <h3 className="font-semibold text-lg mb-2">Заявка создана</h3>
                 <p className="text-sm text-gray-600 mb-4">
                   Ваша заявка на пополнение {parseFloat(amount).toFixed(2)} USDT принята
@@ -334,7 +334,7 @@ export function DepositDialog({ open, onOpenChange, depositType = 'BALANCE' }: D
                 </Badge>
               </div>
 
-              <Card className="bg-purple-50/10 p-4 border-blue-200 bg-blue-50/50">
+              <Card className="p-4 border-blue-200 bg-blue-50/50">
                 <div className="flex items-start gap-3">
                   <Clock className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
                   <div className="text-sm text-blue-800">
@@ -355,7 +355,7 @@ export function DepositDialog({ open, onOpenChange, depositType = 'BALANCE' }: D
                 </Button>
                 <Button
                   onClick={handleReset}
-                  className="flex-1 bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-purple-800/60 dark:hover:bg-purple-800/60/90 text-white"
+                  className="flex-1 bg-[#006039] hover:bg-[#006039]/90 dark:bg-[#2d6a42] dark:hover:bg-[#2d6a42]/90 text-white"
                 >
                   Новое пополнение
                 </Button>

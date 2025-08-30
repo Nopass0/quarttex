@@ -305,7 +305,7 @@ export function FinancesMain() {
       case "completed":
         return (
           <Badge
-            className="bg-purple-100 border-green-200 dark:bg-purple-900/30 dark:border-purple-800"
+            className="bg-purple-100 border-purple-200 dark:bg-purple-900/30 dark:border-purple-800"
             style={{ color: "#530FAD" }}
           >
             Завершено
@@ -331,7 +331,7 @@ export function FinancesMain() {
         );
       default:
         return (
-          <Badge className="bg-purple-100/40 text-gray-800 border-gray-200">
+          <Badge className="bg-gray-100 text-gray-800 border-gray-200">
             Неизвестно
           </Badge>
         );
@@ -367,7 +367,7 @@ export function FinancesMain() {
 
       <div className="flex flex-wrap gap-3 md:gap-4">
         {/* Депозит */}
-        <Card className="bg-purple-50/10 p-4 md:p-6 flex-1 min-w-[150px] sm:min-w-[320px] dark:bg-purple-800/60 dark:border-gray-700">
+        <Card className="p-4 md:p-6 flex-1 min-w-[150px] sm:min-w-[320px] dark:bg-[#29382f] dark:border-gray-700">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
@@ -375,7 +375,7 @@ export function FinancesMain() {
               </span>
               <Button
                 size="sm"
-                className="bg-[#530FAD]/10 hover:bg-[#530FAD]/20 dark:bg-purple-800/60/10 dark:hover:bg-purple-800/60/20 text-gray-700 dark:text-gray-300 h-6 md:h-7 px-1.5 md:px-2 text-xs md:text-sm"
+                className="bg-[#530FAD]/10 hover:bg-[#530FAD]/20 dark:bg-[#7c3aed]/10 dark:hover:bg-[#7c3aed]/20 text-gray-700 dark:text-gray-300 h-6 md:h-7 px-1.5 md:px-2 text-xs md:text-sm"
                 onClick={() => {
                   setDepositType("INSURANCE");
                   depositModal.open();
@@ -404,7 +404,7 @@ export function FinancesMain() {
         </Card>
 
         {/* БАЛАНС */}
-        <Card className="bg-purple-50/10 p-4 md:p-6 flex-1 min-w-[150px] sm:min-w-[320px] dark:bg-purple-800/60 dark:border-gray-700">
+        <Card className="p-4 md:p-6 flex-1 min-w-[150px] sm:min-w-[320px] dark:bg-[#29382f] dark:border-gray-700">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
@@ -413,7 +413,7 @@ export function FinancesMain() {
               <div className="flex gap-2">
                 <Button
                   size="sm"
-                  className="bg-[#530FAD]/10 hover:bg-[#530FAD]/20 dark:bg-purple-800/60/10 dark:hover:bg-purple-800/60/20 text-gray-700 dark:text-gray-300 h-6 md:h-7 px-1.5 md:px-2 text-xs md:text-sm"
+                  className="bg-[#530FAD]/10 hover:bg-[#530FAD]/20 dark:bg-[#7c3aed]/10 dark:hover:bg-[#7c3aed]/20 text-gray-700 dark:text-gray-300 h-6 md:h-7 px-1.5 md:px-2 text-xs md:text-sm"
                   onClick={() => {
                     setDepositType("BALANCE");
                     depositModal.open();
@@ -428,7 +428,7 @@ export function FinancesMain() {
                 </Button>
                 <Button
                   size="sm"
-                  className="bg-[#530FAD]/10 hover:bg-[#530FAD]/20 dark:bg-purple-800/60/10 dark:hover:bg-purple-800/60/20 text-gray-700 dark:text-gray-300 h-6 md:h-7 px-1.5 md:px-2 text-xs md:text-sm"
+                  className="bg-[#530FAD]/10 hover:bg-[#530FAD]/20 dark:bg-[#7c3aed]/10 dark:hover:bg-[#7c3aed]/20 text-gray-700 dark:text-gray-300 h-6 md:h-7 px-1.5 md:px-2 text-xs md:text-sm"
                   onClick={() => {
                     setWithdrawalBalanceType("BALANCE");
                     withdrawalModal.open();
@@ -462,7 +462,7 @@ export function FinancesMain() {
         </Card>
 
         {/* Компенсация выплат */}
-        <Card className="bg-purple-50/10 p-4 md:p-6 flex-1 min-w-[150px] sm:min-w-[320px] dark:bg-purple-800/60 dark:border-gray-700">
+        <Card className="p-4 md:p-6 flex-1 min-w-[150px] sm:min-w-[320px] dark:bg-[#29382f] dark:border-gray-700">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
@@ -470,7 +470,7 @@ export function FinancesMain() {
               </span>
               <Button
                 size="sm"
-                className="bg-[#530FAD]/10 hover:bg-[#530FAD]/20 dark:bg-purple-800/60/10 dark:hover:bg-purple-800/60/20 text-gray-700 dark:text-gray-300 h-6 md:h-7 px-1.5 md:px-2 text-xs md:text-sm"
+                className="bg-[#530FAD]/10 hover:bg-[#530FAD]/20 dark:bg-[#7c3aed]/10 dark:hover:bg-[#7c3aed]/20 text-gray-700 dark:text-gray-300 h-6 md:h-7 px-1.5 md:px-2 text-xs md:text-sm"
                 onClick={() => {
                   setWithdrawalBalanceType("COMPENSATION");
                   withdrawalModal.open();
@@ -499,7 +499,7 @@ export function FinancesMain() {
         </Card>
 
         {/* Прибыль с приема */}
-        <Card className="bg-purple-50/10 p-4 md:p-6 flex-1 min-w-[150px] sm:min-w-[320px] dark:bg-purple-800/60 dark:border-gray-700">
+        <Card className="p-4 md:p-6 flex-1 min-w-[150px] sm:min-w-[320px] dark:bg-[#29382f] dark:border-gray-700">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
@@ -507,7 +507,7 @@ export function FinancesMain() {
               </span>
               <Button
                 size="sm"
-                className="bg-[#530FAD]/10 hover:bg-[#530FAD]/20 dark:bg-purple-800/60/10 dark:hover:bg-purple-800/60/20 text-gray-700 dark:text-gray-300 h-6 md:h-7 px-1.5 md:px-2 text-xs md:text-sm"
+                className="bg-[#530FAD]/10 hover:bg-[#530FAD]/20 dark:bg-[#7c3aed]/10 dark:hover:bg-[#7c3aed]/20 text-gray-700 dark:text-gray-300 h-6 md:h-7 px-1.5 md:px-2 text-xs md:text-sm"
                 onClick={() => {
                   setWithdrawalBalanceType("PROFIT_DEALS");
                   withdrawalModal.open();
@@ -540,7 +540,7 @@ export function FinancesMain() {
         </Card>
 
         {/* Прибыль с выплат */}
-        <Card className="bg-purple-50/10 p-4 md:p-6 flex-1 min-w-[150px] sm:min-w-[320px] dark:bg-purple-800/60 dark:border-gray-700">
+        <Card className="p-4 md:p-6 flex-1 min-w-[150px] sm:min-w-[320px] dark:bg-[#29382f] dark:border-gray-700">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
@@ -548,7 +548,7 @@ export function FinancesMain() {
               </span>
               <Button
                 size="sm"
-                className="bg-[#530FAD]/10 hover:bg-[#530FAD]/20 dark:bg-purple-800/60/10 dark:hover:bg-purple-800/60/20 text-gray-700 dark:text-gray-300 h-6 md:h-7 px-1.5 md:px-2 text-xs md:text-sm"
+                className="bg-[#530FAD]/10 hover:bg-[#530FAD]/20 dark:bg-[#7c3aed]/10 dark:hover:bg-[#7c3aed]/20 text-gray-700 dark:text-gray-300 h-6 md:h-7 px-1.5 md:px-2 text-xs md:text-sm"
                 onClick={() => {
                   setWithdrawalBalanceType("PROFIT_PAYOUTS");
                   withdrawalModal.open();
@@ -581,7 +581,7 @@ export function FinancesMain() {
         </Card>
 
         {/* РЕФЕРАЛЬНЫЙ БАЛАНС */}
-        <Card className="bg-purple-50/10 p-4 md:p-6 flex-1 min-w-[150px] sm:min-w-[320px] dark:bg-purple-800/60 dark:border-gray-700">
+        <Card className="p-4 md:p-6 flex-1 min-w-[150px] sm:min-w-[320px] dark:bg-[#29382f] dark:border-gray-700">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
@@ -589,7 +589,7 @@ export function FinancesMain() {
               </span>
               <Button
                 size="sm"
-                className="bg-[#530FAD]/10 hover:bg-[#530FAD]/20 dark:bg-purple-800/60/10 dark:hover:bg-purple-800/60/20 text-gray-700 dark:text-gray-300 h-6 md:h-7 px-1.5 md:px-2 text-xs md:text-sm"
+                className="bg-[#530FAD]/10 hover:bg-[#530FAD]/20 dark:bg-[#7c3aed]/10 dark:hover:bg-[#7c3aed]/20 text-gray-700 dark:text-gray-300 h-6 md:h-7 px-1.5 md:px-2 text-xs md:text-sm"
                 onClick={() => {
                   setWithdrawalBalanceType("REFERRAL");
                   withdrawalModal.open();
@@ -628,7 +628,7 @@ export function FinancesMain() {
       </h2>
       <div className="flex flex-wrap gap-3 md:gap-4">
         {/* Замороженные в сделках */}
-        <Card className="bg-purple-50/10 p-4 md:p-6 flex-1 min-w-[150px] sm:min-w-[240px] dark:bg-purple-800/60 dark:border-gray-700">
+        <Card className="p-4 md:p-6 flex-1 min-w-[150px] sm:min-w-[240px] dark:bg-[#29382f] dark:border-gray-700">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
@@ -651,7 +651,7 @@ export function FinancesMain() {
         </Card>
 
         {/* ЭСКРОУ-СЧЕТ */}
-        <Card className="bg-purple-50/10 p-4 md:p-6 flex-1 min-w-[150px] sm:min-w-[240px] dark:bg-purple-800/60 dark:border-gray-700">
+        <Card className="p-4 md:p-6 flex-1 min-w-[150px] sm:min-w-[240px] dark:bg-[#29382f] dark:border-gray-700">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
@@ -674,7 +674,7 @@ export function FinancesMain() {
         </Card>
 
         {/* СПОРНЫЕ СДЕЛКИ */}
-        <Card className="bg-purple-50/10 p-4 md:p-6 flex-1 min-w-[150px] sm:min-w-[240px] dark:bg-purple-800/60 dark:border-gray-700">
+        <Card className="p-4 md:p-6 flex-1 min-w-[150px] sm:min-w-[240px] dark:bg-[#29382f] dark:border-gray-700">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
@@ -699,10 +699,10 @@ export function FinancesMain() {
 
       {/* Tabs Section */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full sm:w-fit grid-cols-2 gap-1 bg-purple-50/30 dark:bg-[#0f0f0f] p-1">
+        <TabsList className="grid w-full sm:w-fit grid-cols-2 gap-1 bg-gray-50 dark:bg-[#0f0f0f] p-1">
           <TabsTrigger
             value="operations"
-            className="data-[state=active]:bg-[#530FAD]/10 dark:data-[state=active]:bg-purple-800/60/10 h-10 md:h-12 data-[state=active]:text-gray-900 dark:data-[state=active]:text-[#eeeeee] data-[state=active]:shadow-sm px-3 md:px-6 text-xs md:text-sm"
+            className="data-[state=active]:bg-[#530FAD]/10 dark:data-[state=active]:bg-[#7c3aed]/10 h-10 md:h-12 data-[state=active]:text-gray-900 dark:data-[state=active]:text-[#eeeeee] data-[state=active]:shadow-sm px-3 md:px-6 text-xs md:text-sm"
           >
             <WalletIcon
               className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1 md:mr-2"
@@ -713,7 +713,7 @@ export function FinancesMain() {
           </TabsTrigger>
           <TabsTrigger
             value="deposits"
-            className="data-[state=active]:bg-[#530FAD]/10 dark:data-[state=active]:bg-purple-800/60/10 h-10 md:h-12 data-[state=active]:text-gray-900 dark:data-[state=active]:text-[#eeeeee] data-[state=active]:shadow-sm px-3 md:px-6 text-xs md:text-sm"
+            className="data-[state=active]:bg-[#530FAD]/10 dark:data-[state=active]:bg-[#7c3aed]/10 h-10 md:h-12 data-[state=active]:text-gray-900 dark:data-[state=active]:text-[#eeeeee] data-[state=active]:shadow-sm px-3 md:px-6 text-xs md:text-sm"
           >
             <BanknoteIcon
               className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1 md:mr-2"
@@ -725,9 +725,9 @@ export function FinancesMain() {
         </TabsList>
 
         <TabsContent value="operations" className="mt-4 md:mt-6">
-          <Card className="bg-purple-50/10 p-4 md:p-6 dark:bg-purple-800/60 dark:border-gray-700">
+          <Card className="p-4 md:p-6 dark:bg-[#29382f] dark:border-gray-700">
             {/* Filters */}
-            <div className="sticky top-0 z-10 bg-purple-50/20 dark:bg-purple-900/15 dark:bg-purple-800/60 pb-4 md:pb-6 -mx-4 md:-mx-6 px-4 md:px-6 pt-4 md:pt-6 shadow-sm dark:shadow-none">
+            <div className="sticky top-0 z-10 bg-white dark:bg-[#29382f] pb-4 md:pb-6 -mx-4 md:-mx-6 px-4 md:px-6 pt-4 md:pt-6 shadow-sm dark:shadow-none">
               <div className="flex flex-col sm:flex-row flex-wrap gap-2 md:gap-3">
                 <div className="flex-1 min-w-0 sm:min-w-[200px]">
                   <div className="relative">
@@ -747,7 +747,7 @@ export function FinancesMain() {
                       <Filter className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1 md:mr-2 text-purple-700 dark:text-[#7c3aed]" />
                       <SelectValue placeholder="Тип" />
                     </SelectTrigger>
-                    <SelectContent className="dark:bg-purple-800/60 dark:border-gray-700">
+                    <SelectContent className="dark:bg-[#29382f] dark:border-gray-700">
                       <SelectItem value="all">Все операции</SelectItem>
                       <SelectItem value="deposit">Пополнения</SelectItem>
                       <SelectItem value="withdrawal">Выводы</SelectItem>
@@ -763,7 +763,7 @@ export function FinancesMain() {
                       <ArrowUpDown className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1 md:mr-2 text-purple-700 dark:text-[#7c3aed]" />
                       <SelectValue placeholder="Статус" />
                     </SelectTrigger>
-                    <SelectContent className="dark:bg-purple-800/60 dark:border-gray-700">
+                    <SelectContent className="dark:bg-[#29382f] dark:border-gray-700">
                       <SelectItem value="all">Все статусы</SelectItem>
                       <SelectItem value="completed">Завершено</SelectItem>
                       <SelectItem value="pending">Ожидает</SelectItem>
@@ -777,7 +777,7 @@ export function FinancesMain() {
                       <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1 md:mr-2 text-purple-700 dark:text-[#7c3aed]" />
                       <SelectValue placeholder="Период" />
                     </SelectTrigger>
-                    <SelectContent className="dark:bg-purple-800/60 dark:border-gray-700">
+                    <SelectContent className="dark:bg-[#29382f] dark:border-gray-700">
                       <SelectItem value="today">Сегодня</SelectItem>
                       <SelectItem value="week">Неделя</SelectItem>
                       <SelectItem value="month">Месяц</SelectItem>
@@ -794,12 +794,12 @@ export function FinancesMain() {
               {filteredOperations.map((operation) => (
                 <div
                   key={operation.id}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 md:p-4 bg-purple-50/30 dark:bg-purple-800/60/50 rounded-lg hover:bg-purple-100/40 dark:hover:bg-purple-800/60/70 transition-colors gap-3 sm:gap-0"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 md:p-4 bg-gray-50 dark:bg-[#29382f]/50 rounded-lg hover:bg-gray-100 dark:hover:bg-[#29382f]/70 transition-colors gap-3 sm:gap-0"
                 >
                   <div className="flex items-start sm:items-center gap-3 md:gap-4">
                     <div
                       className={cn(
-                        "p-1.5 md:p-2 bg-purple-50/20 dark:bg-purple-900/15 dark:bg-[#0f0f0f] rounded-lg flex-shrink-0",
+                        "p-1.5 md:p-2 bg-white dark:bg-[#0f0f0f] rounded-lg flex-shrink-0",
                         getOperationColor(operation.type),
                       )}
                     >
@@ -867,7 +867,7 @@ export function FinancesMain() {
         </TabsContent>
 
         <TabsContent value="deposits" className="mt-4 md:mt-6">
-          <Card className="bg-purple-50/10 p-4 md:p-6 dark:bg-purple-800/60 dark:border-gray-700">
+          <Card className="p-4 md:p-6 dark:bg-[#29382f] dark:border-gray-700">
             <div className="space-y-3 md:space-y-4"></div>
 
             {mockDepositRequests.length === 0 && (

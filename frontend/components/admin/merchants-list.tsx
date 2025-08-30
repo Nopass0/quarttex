@@ -478,7 +478,7 @@ export function MerchantsList() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <div className="relative w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#530FAD]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#006039]" />
             <Input
               placeholder="Поиск по названию..."
               value={searchQuery}
@@ -492,12 +492,12 @@ export function MerchantsList() {
             onClick={fetchMerchants}
             disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 text-[#530FAD] ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 text-[#006039] ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#530FAD] hover:bg-purple-800/60">
+            <Button className="bg-[#006039] hover:bg-[#005030]">
               <Plus className="mr-2 h-4 w-4 text-white" />
               Добавить мерчанта
             </Button>
@@ -526,7 +526,7 @@ export function MerchantsList() {
             <DialogFooter>
               <Button
                 onClick={handleCreateMerchant}
-                className="bg-[#530FAD] hover:bg-purple-800/60"
+                className="bg-[#006039] hover:bg-[#005030]"
                 disabled={isLoading || !formData.name}
               >
                 Создать
@@ -538,7 +538,7 @@ export function MerchantsList() {
 
       {isLoading && merchants.length === 0 ? (
         <div className="flex justify-center items-center py-8">
-          <RefreshCw className="h-8 w-8 animate-spin text-[#530FAD]" />
+          <RefreshCw className="h-8 w-8 animate-spin text-[#006039]" />
         </div>
       ) : (
         <Table>
@@ -561,7 +561,7 @@ export function MerchantsList() {
             {filteredMerchants.map((merchant) => (
               <TableRow 
                 key={merchant.id}
-                className="cursor-pointer hover:bg-purple-50/50"
+                className="cursor-pointer hover:bg-gray-50"
                 onClick={() => router.push(`/admin/merchants/${merchant.id}`)}
               >
                 <TableCell className="font-medium">
@@ -578,7 +578,7 @@ export function MerchantsList() {
                 <TableCell className="font-mono text-xs">{merchant.id.slice(0, 8)}...</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <code className="text-xs bg-purple-100/40 px-2 py-1 rounded">
+                    <code className="text-xs bg-gray-100 px-2 py-1 rounded">
                       {merchant.token.slice(0, 8)}...{merchant.token.slice(-8)}
                     </code>
                     <Button
@@ -589,7 +589,7 @@ export function MerchantsList() {
                         copyToClipboard(merchant.token)
                       }}
                     >
-                      <Copy className="h-3 w-3 text-[#530FAD]" />
+                      <Copy className="h-3 w-3 text-[#006039]" />
                     </Button>
                   </div>
                 </TableCell>
@@ -602,7 +602,7 @@ export function MerchantsList() {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-[#530FAD]" />
+                    <Activity className="h-4 w-4 text-[#006039]" />
                     <span className="text-sm font-medium">{getTrafficPercentage(merchant)}%</span>
                   </div>
                 </TableCell>
@@ -640,7 +640,7 @@ export function MerchantsList() {
                         className="h-8 w-8 p-0"
                         disabled={isLoading}
                       >
-                        <MoreHorizontal className="h-4 w-4 text-[#530FAD]" />
+                        <MoreHorizontal className="h-4 w-4 text-[#006039]" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-48" align="end">
@@ -654,7 +654,7 @@ export function MerchantsList() {
                             setShowTokenDialog(true)
                           }}
                         >
-                          <Copy className="h-4 w-4 mr-2 text-[#530FAD]" />
+                          <Copy className="h-4 w-4 mr-2 text-[#006039]" />
                           Показать ключ
                         </Button>
                         <Button
@@ -664,7 +664,7 @@ export function MerchantsList() {
                           onClick={() => openEditDialog(merchant)}
                           disabled={isLoading}
                         >
-                          <Edit className="h-4 w-4 mr-2 text-[#530FAD]" />
+                          <Edit className="h-4 w-4 mr-2 text-[#006039]" />
                           Редактировать
                         </Button>
                         <Button
@@ -674,7 +674,7 @@ export function MerchantsList() {
                           onClick={() => openMethodsDialog(merchant)}
                           disabled={isLoading}
                         >
-                          <Settings className="h-4 w-4 mr-2 text-[#530FAD]" />
+                          <Settings className="h-4 w-4 mr-2 text-[#006039]" />
                           Методы
                         </Button>
                         <Button
@@ -684,7 +684,7 @@ export function MerchantsList() {
                           onClick={() => router.push(`/admin/merchants/${merchant.id}/settlements`)}
                           disabled={isLoading}
                         >
-                          <DollarSign className="h-4 w-4 mr-2 text-[#530FAD]" />
+                          <DollarSign className="h-4 w-4 mr-2 text-[#006039]" />
                           Сеттлы
                         </Button>
                         <Button
@@ -694,7 +694,7 @@ export function MerchantsList() {
                           onClick={() => router.push(`/admin/merchants/${merchant.id}/settle-history`)}
                           disabled={isLoading}
                         >
-                          <History className="h-4 w-4 mr-2 text-[#530FAD]" />
+                          <History className="h-4 w-4 mr-2 text-[#006039]" />
                           История Settle
                         </Button>
                         {merchant.isAuctionEnabled && (
@@ -705,7 +705,7 @@ export function MerchantsList() {
                             onClick={() => handleAuctionKeys(merchant)}
                             disabled={isLoading}
                           >
-                            <Key className="h-4 w-4 mr-2 text-[#530FAD]" />
+                            <Key className="h-4 w-4 mr-2 text-[#006039]" />
                             Аукционные ключи
                           </Button>
                         )}
@@ -716,7 +716,7 @@ export function MerchantsList() {
                           onClick={() => handleDeleteMerchant(merchant.id)}
                           disabled={isLoading}
                         >
-                          <Trash2 className="h-4 w-4 mr-2 text-[#530FAD]" />
+                          <Trash2 className="h-4 w-4 mr-2 text-[#006039]" />
                           Удалить
                         </Button>
                       </div>
@@ -744,20 +744,20 @@ export function MerchantsList() {
               <div className="space-y-3">
                 <div>
                   <Label>ID мерчанта</Label>
-                  <div className="bg-purple-100/40 p-3 rounded-lg font-mono text-sm flex items-center justify-between">
+                  <div className="bg-gray-100 p-3 rounded-lg font-mono text-sm flex items-center justify-between">
                     {selectedMerchant.id}
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => copyToClipboard(selectedMerchant.id)}
                     >
-                      <Copy className="h-4 w-4 text-[#530FAD]" />
+                      <Copy className="h-4 w-4 text-[#006039]" />
                     </Button>
                   </div>
                 </div>
                 <div>
                   <Label>API ключ</Label>
-                  <div className="bg-purple-100/40 p-3 rounded-lg font-mono text-sm break-all relative">
+                  <div className="bg-gray-100 p-3 rounded-lg font-mono text-sm break-all relative">
                     {selectedMerchant.token}
                     <Button
                       variant="outline"
@@ -765,7 +765,7 @@ export function MerchantsList() {
                       className="absolute right-2 top-1/2 -translate-y-1/2"
                       onClick={() => copyToClipboard(selectedMerchant.token)}
                     >
-                      <Copy className="h-4 w-4 text-[#530FAD]" />
+                      <Copy className="h-4 w-4 text-[#006039]" />
                     </Button>
                   </div>
                 </div>
@@ -778,7 +778,7 @@ export function MerchantsList() {
                 setShowTokenDialog(false)
                 setSelectedMerchant(null)
               }}
-              className="bg-[#530FAD] hover:bg-purple-800/60"
+              className="bg-[#006039] hover:bg-[#005030]"
             >
               Закрыть
             </Button>
@@ -850,7 +850,7 @@ export function MerchantsList() {
           <DialogFooter>
             <Button
               onClick={handleEditMerchant}
-              className="bg-[#530FAD] hover:bg-purple-800/60"
+              className="bg-[#006039] hover:bg-[#005030]"
               disabled={isLoading || !editFormData.name}
             >
               Сохранить
@@ -963,7 +963,7 @@ export function MerchantsList() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-[#530FAD]" />
+              <Shield className="h-5 w-5 text-[#006039]" />
               Аукционные ключи
             </DialogTitle>
             <DialogDescription>
@@ -991,19 +991,19 @@ export function MerchantsList() {
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="flex items-center gap-1">
-                    <div className={`w-2 h-2 rounded-full ${auctionStatus.status.configurationSteps.auctionEnabled ? 'bg-[#530FAD]' : 'bg-gray-300'}`} />
+                    <div className={`w-2 h-2 rounded-full ${auctionStatus.status.configurationSteps.auctionEnabled ? 'bg-purple-500' : 'bg-gray-300'}`} />
                     Система включена
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className={`w-2 h-2 rounded-full ${auctionStatus.status.configurationSteps.baseUrlSet ? 'bg-[#530FAD]' : 'bg-gray-300'}`} />
+                    <div className={`w-2 h-2 rounded-full ${auctionStatus.status.configurationSteps.baseUrlSet ? 'bg-purple-500' : 'bg-gray-300'}`} />
                     URL настроен
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className={`w-2 h-2 rounded-full ${auctionStatus.status.configurationSteps.systemNameSet ? 'bg-[#530FAD]' : 'bg-gray-300'}`} />
+                    <div className={`w-2 h-2 rounded-full ${auctionStatus.status.configurationSteps.systemNameSet ? 'bg-purple-500' : 'bg-gray-300'}`} />
                     Имя системы
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className={`w-2 h-2 rounded-full ${auctionStatus.status.configurationSteps.keysGenerated ? 'bg-[#530FAD]' : 'bg-gray-300'}`} />
+                    <div className={`w-2 h-2 rounded-full ${auctionStatus.status.configurationSteps.keysGenerated ? 'bg-purple-500' : 'bg-gray-300'}`} />
                     Ключи созданы
                   </div>
                 </div>

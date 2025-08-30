@@ -63,7 +63,7 @@ export default function AggregatorApiDocs() {
       DELETE: "bg-red-100 text-red-800",
     }
     return (
-      <Badge className={colors[method] || "bg-purple-100/40 text-gray-800"}>
+      <Badge className={colors[method] || "bg-gray-100 text-gray-800"}>
         {method}
       </Badge>
     )
@@ -81,7 +81,7 @@ export default function AggregatorApiDocs() {
     <div className="space-y-6">
       {/* Заголовок */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-[#530FAD] mb-2 flex items-center justify-center gap-2">
+        <h1 className="text-3xl font-bold text-[#006039] mb-2 flex items-center justify-center gap-2">
           <BookOpen className="h-8 w-8" />
           API Документация для агрегаторов
         </h1>
@@ -91,10 +91,10 @@ export default function AggregatorApiDocs() {
       </div>
 
       {/* Конфигурация */}
-      <Card className="bg-purple-50/10 border-[#530FAD]/20">
+      <Card className="border-[#006039]/20">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Globe className="h-5 w-5 text-[#530FAD]" />
+            <Globe className="h-5 w-5 text-[#006039]" />
             Ваши данные для интеграции
           </CardTitle>
         </CardHeader>
@@ -133,12 +133,12 @@ export default function AggregatorApiDocs() {
             <p className="text-sm text-muted-foreground mb-2">URL для коллбеков (куда отправлять обновления):</p>
             <div className="flex items-center gap-2">
               <code className="flex-1 bg-muted px-3 py-2 rounded text-sm">
-                https://quattrex.pro/api/aggregators/callback
+                https://chasepay.pro/api/aggregators/callback
               </code>
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => copyToClipboard("https://quattrex.pro/api/aggregators/callback", "Callback URL")}
+                onClick={() => copyToClipboard("https://chasepay.pro/api/aggregators/callback", "Callback URL")}
               >
                 <Copy className="h-4 w-4" />
               </Button>
@@ -211,7 +211,7 @@ export default function AggregatorApiDocs() {
                       <h4 className="font-semibold mb-2">Тело ответа:</h4>
                       {endpoint.response.success && (
                         <div className="mb-3">
-                          <h5 className="font-medium mb-1 text-[#530FAD] dark:text-[#7c3aed]">✅ Успешный ответ (HTTP {endpoint.response.success.status || 200}):</h5>
+                          <h5 className="font-medium mb-1 text-purple-600">✅ Успешный ответ (HTTP {endpoint.response.success.status || 200}):</h5>
                           <div className="bg-muted p-3 rounded text-sm">
                             <pre>{JSON.stringify(endpoint.response.success.example || endpoint.response.success.body, null, 2)}</pre>
                           </div>
@@ -384,7 +384,7 @@ export default function AggregatorApiDocs() {
                             <div className="grid gap-2">
                               {Object.entries(endpoint.requestBody.properties || {}).map(([key, prop]: [string, any]) => (
                                 <div key={key} className="flex items-start gap-3 p-2 bg-muted/50 rounded">
-                                  <code className="text-sm font-mono bg-purple-50/20 dark:bg-purple-900/15 px-2 py-1 rounded">{key}</code>
+                                  <code className="text-sm font-mono bg-white px-2 py-1 rounded">{key}</code>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
                                       <Badge variant={prop.required ? "default" : "secondary"} className="text-xs">
@@ -394,7 +394,7 @@ export default function AggregatorApiDocs() {
                                     </div>
                                     <p className="text-xs text-muted-foreground mt-1">{prop.description}</p>
                                     {prop.example && (
-                                      <code className="text-xs bg-purple-50/20 dark:bg-purple-900/15 px-1 py-0.5 rounded mt-1 inline-block">
+                                      <code className="text-xs bg-white px-1 py-0.5 rounded mt-1 inline-block">
                                         {typeof prop.example === 'string' ? prop.example : JSON.stringify(prop.example)}
                                       </code>
                                     )}

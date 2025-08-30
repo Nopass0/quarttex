@@ -29,12 +29,12 @@
 @layer base {
   @keyframes flash {
     0%, 100% {
-      background-color: rgb(220 252 231);
-      border-color: rgb(134 239 172);
+      background-color: rgb(221 214 254);
+      border-color: rgb(196 181 253);
     }
     50% {
-      background-color: rgb(187 247 208);
-      border-color: rgb(74 222 128);
+      background-color: rgb(196 181 253);
+      border-color: rgb(168 162 158);
     }
   }
   
@@ -42,7 +42,7 @@
     animation: flash 0.5s ease-in-out;
   }
   
-  /* Green hover effect for all interactive elements */
+  /* Purple hover effect for all interactive elements */
   button:not(.bg-\[\#530FAD\]):hover,
   a:not(.bg-\[\#530FAD\]):hover,
   [role="button"]:not(.bg-\[\#530FAD\]):hover {
@@ -65,8 +65,8 @@
   }
   
   .bg-\[\#530FAD\]:hover,
-  .hover\:bg-\[\#004d2e\]:hover {
-    background-color: #004d2e !important;
+  .hover\:bg-\[\#6d28d9\]:hover {
+    background-color: #6d28d9 !important;
   }
   
   /* Dropdown menu items hover - handled in enhanced section below */
@@ -85,7 +85,7 @@
   /* Card hover effect */
   .hover\:shadow-sm:hover,
   .hover\:shadow:hover {
-    box-shadow: 0 0 0 1px rgba(0, 96, 57, 0.15), 0 4px 6px -1px rgba(0, 96, 57, 0.08);
+    box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.15), 0 4px 6px -1px rgba(124, 58, 237, 0.08);
     transition: box-shadow 0.2s ease;
   }
   
@@ -111,8 +111,8 @@
   select:focus,
   input:focus,
   textarea:focus {
-    border-color: rgba(0, 96, 57, 0.5);
-    outline: 2px solid rgba(0, 96, 57, 0.1);
+    border-color: rgba(124, 58, 237, 0.5);
+    outline: 2px solid rgba(124, 58, 237, 0.1);
     outline-offset: 2px;
   }
 
@@ -129,21 +129,21 @@
   .dark textarea:focus,
   .dark select:focus {
     border-color: #7c3aed !important;
-    outline-color: rgba(45, 106, 66, 0.3) !important;
+    outline-color: rgba(124, 58, 237, 0.3) !important;
   }
   
   /* Switch and checkbox hover */
   [role="switch"]:hover,
   [type="checkbox"]:hover {
-    box-shadow: 0 0 0 4px rgba(0, 96, 57, 0.1);
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
   }
   
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
+    --card: 270 50% 98%; /* Light purple for cards */
     --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
+    --popover: 270 50% 98%; /* Light purple for popovers */
     --popover-foreground: 222.2 84% 4.9%;
     --primary: 270 85% 35%; /* #530FAD */
     --primary-foreground: 0 0% 100%;
@@ -172,9 +172,9 @@
   .dark {
     --background: 0 0% 5.88%; /* #0f0f0f */
     --foreground: 0 0% 93.33%; /* #eeeeee */
-    --card: 138 12.5% 19.8%; /* rgba(83, 15, 173, 0.2) */
+    --card: 270 40% 15%; /* Darker purple for cards */
     --card-foreground: 0 0% 93.33%; /* #eeeeee */
-    --popover: 138 12.5% 19.8%; /* rgba(83, 15, 173, 0.2) */
+    --popover: 270 40% 15%; /* Darker purple for popovers */
     --popover-foreground: 0 0% 93.33%; /* #eeeeee */
     --primary: 270 70% 60%; /* #7c3aed */
     --primary-foreground: 0 0% 93.33%; /* #eeeeee */
@@ -217,8 +217,8 @@
 
 /* Animation for new transactions */
 @keyframes flash {
-  0% { background-color: rgb(34 197 94 / 0.2); border-color: rgb(34 197 94 / 0.5); }
-  50% { background-color: rgb(34 197 94 / 0.4); border-color: rgb(34 197 94 / 0.8); }
+  0% { background-color: rgb(124 58 237 / 0.2); border-color: rgb(124 58 237 / 0.5); }
+  50% { background-color: rgb(124 58 237 / 0.4); border-color: rgb(124 58 237 / 0.8); }
   100% { background-color: transparent; border-color: transparent; }
 }
 
@@ -252,6 +252,19 @@
   color: #eeeeee;
 }
 
+/* Dark mode icon colors - make icons more visible */
+.dark .text-gray-400 {
+  color: #d1d5db;
+}
+
+.dark .text-gray-500 {
+  color: #e5e7eb;
+}
+
+.dark .text-gray-600 {
+  color: #f3f4f6;
+}
+
 /* Dark mode card styles */
 .dark .bg-gray-50 {
   background-color: rgba(83, 15, 173, 0.2);
@@ -259,6 +272,19 @@
 
 .dark .bg-gray-100 {
   background-color: rgba(83, 15, 173, 0.2);
+}
+
+/* Dark mode purple containers - make them darker */
+.dark .bg-purple-50 {
+  background-color: rgba(83, 15, 173, 0.15) !important;
+}
+
+.dark .bg-purple-100 {
+  background-color: rgba(83, 15, 173, 0.25) !important;
+}
+
+.dark .bg-purple-50\/80 {
+  background-color: rgba(83, 15, 173, 0.2) !important;
 }
 
 .dark .border-gray-100 {
@@ -334,7 +360,7 @@
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 
-      0 8px 32px 0 rgba(0, 96, 57, 0.1),
+      0 8px 32px 0 rgba(124, 58, 237, 0.1),
       inset 0 0 0 1px rgba(255, 255, 255, 0.1);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -342,7 +368,7 @@
   .glass-card:hover {
     background: rgba(255, 255, 255, 0.15);
     box-shadow: 
-      0 8px 32px 0 rgba(0, 96, 57, 0.15),
+      0 8px 32px 0 rgba(124, 58, 237, 0.15),
       inset 0 0 0 1px rgba(255, 255, 255, 0.15);
     transform: translateY(-2px);
   }
@@ -375,7 +401,7 @@
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 
-      0 8px 32px 0 rgba(0, 96, 57, 0.1),
+      0 8px 32px 0 rgba(124, 58, 237, 0.1),
       inset 0 0 0 1px rgba(255, 255, 255, 0.1);
   }
   
@@ -450,8 +476,8 @@
   textarea:focus,
   select:focus {
     background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(83, 15, 173, 0.5);
-    box-shadow: 0 0 0 3px rgba(83, 15, 173, 0.1);
+    border-color: rgba(124, 58, 237, 0.5);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
   }
   
   .dark input:not([type="checkbox"]):not([type="radio"]),
@@ -465,7 +491,7 @@
   .dark textarea:focus,
   .dark select:focus {
     background: rgba(0, 0, 0, 0.3);
-    border-color: rgba(0, 96, 57, 0.5);
+    border-color: rgba(124, 58, 237, 0.5);
   }
   
   /* Smooth scrollbar */
@@ -479,12 +505,12 @@
   }
   
   ::-webkit-scrollbar-thumb {
-    background: rgba(0, 96, 57, 0.3);
+    background: rgba(124, 58, 237, 0.3);
     border-radius: 4px;
   }
   
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 96, 57, 0.5);
+    background: rgba(124, 58, 237, 0.5);
   }
   
   /* Animations */
@@ -524,7 +550,7 @@
 
   button[role="checkbox"]:hover {
     border-color: hsl(var(--primary)) !important;
-    box-shadow: 0 0 0 3px rgba(0, 96, 57, 0.1) !important;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1) !important;
   }
 
   /* Radio button styling */
@@ -537,7 +563,7 @@
 
   button[role="radio"]:hover {
     border-color: hsl(var(--primary)) !important;
-    box-shadow: 0 0 0 3px rgba(0, 96, 57, 0.1) !important;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1) !important;
   }
 
   button[role="radio"][data-state="checked"] {
@@ -558,8 +584,8 @@
   [data-sonner-toast] {
     background: rgba(255, 255, 255, 0.98) !important;
     backdrop-filter: blur(10px) !important;
-    border: 1px solid rgba(0, 96, 57, 0.2) !important;
-    box-shadow: 0 8px 32px rgba(0, 96, 57, 0.15) !important;
+    border: 1px solid rgba(124, 58, 237, 0.2) !important;
+    box-shadow: 0 8px 32px rgba(124, 58, 237, 0.15) !important;
     color: #000 !important;
   }
 
@@ -591,13 +617,13 @@
     @apply relative overflow-hidden;
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
     color: white;
-    box-shadow: 0 4px 15px rgba(0, 96, 57, 0.3);
+    box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .btn-glow:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 96, 57, 0.4);
+    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
   }
 
   .btn-outline-glow {
@@ -610,7 +636,7 @@
 
   .btn-outline-glow:hover {
     background: hsl(var(--primary) / 0.1);
-    box-shadow: 0 4px 15px rgba(0, 96, 57, 0.2);
+    box-shadow: 0 4px 15px rgba(124, 58, 237, 0.2);
     transform: translateY(-1px);
   }
 
@@ -631,7 +657,7 @@
   [role="menuitemcheckbox"]:not([data-state="checked"]):hover,
   [role="menuitemradio"]:not([data-state="checked"]):hover,
   [data-highlighted]:not([data-state="checked"]) {
-    background-color: rgba(0, 96, 57, 0.08) !important;
+    background-color: rgba(124, 58, 237, 0.08) !important;
     color: #530FAD !important;
   }
   
@@ -639,7 +665,7 @@
   [role="menuitem"][data-state="checked"],
   [role="menuitemcheckbox"][data-state="checked"],
   [role="menuitemradio"][data-state="checked"] {
-    background-color: rgba(0, 96, 57, 0.12) !important;
+    background-color: rgba(124, 58, 237, 0.12) !important;
     color: #530FAD !important;
     font-weight: 600;
   }
@@ -660,13 +686,13 @@
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
     color: white;
     border: none;
-    box-shadow: 0 2px 8px rgba(0, 96, 57, 0.3);
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
   }
 
   .badge-glass {
-    background: rgba(0, 96, 57, 0.1);
+    background: rgba(124, 58, 237, 0.1);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(0, 96, 57, 0.2);
+    border: 1px solid rgba(124, 58, 237, 0.2);
     color: hsl(var(--primary));
   }
 
@@ -674,7 +700,7 @@
     background: transparent;
     border: 1px solid hsl(var(--primary));
     color: hsl(var(--primary));
-    box-shadow: inset 0 0 0 1px rgba(0, 96, 57, 0.1);
+    box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.1);
   }
   
   /* Prevent badge hover state changes */
@@ -745,10 +771,10 @@
 
   @keyframes pulse-glow {
     0%, 100% {
-      box-shadow: 0 0 20px rgba(0, 96, 57, 0.5);
+      box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
     }
     50% {
-      box-shadow: 0 0 40px rgba(0, 96, 57, 0.8);
+      box-shadow: 0 0 40px rgba(124, 58, 237, 0.8);
     }
   }
 
@@ -771,19 +797,19 @@
   .glass-dollar {
     position: relative;
     background: linear-gradient(135deg, 
-      rgba(0, 96, 57, 0.9) 0%, 
-      rgba(0, 150, 80, 0.7) 50%, 
-      rgba(0, 96, 57, 0.9) 100%
+      rgba(124, 58, 237, 0.9) 0%, 
+      rgba(139, 92, 246, 0.7) 50%, 
+      rgba(124, 58, 237, 0.9) 100%
     );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     
     /* Стеклянные эффекты */
-    filter: drop-shadow(0 2px 4px rgba(0, 96, 57, 0.3));
+    filter: drop-shadow(0 2px 4px rgba(124, 58, 237, 0.3));
     text-shadow: 
       0 0 10px rgba(255, 255, 255, 0.3),
-      0 0 20px rgba(0, 96, 57, 0.2);
+      0 0 20px rgba(124, 58, 237, 0.2);
   }
 
   /* Блик на стекле */
@@ -807,18 +833,18 @@
   /* Темная тема */
   .dark .glass-dollar {
     background: linear-gradient(135deg, 
-      rgba(45, 106, 66, 0.9) 0%, 
-      rgba(58, 135, 85, 0.7) 50%, 
-      rgba(45, 106, 66, 0.9) 100%
+      rgba(124, 58, 237, 0.9) 0%, 
+      rgba(139, 92, 246, 0.7) 50%, 
+      rgba(124, 58, 237, 0.9) 100%
     );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     
-    filter: drop-shadow(0 2px 4px rgba(45, 106, 66, 0.4));
+    filter: drop-shadow(0 2px 4px rgba(124, 58, 237, 0.4));
     text-shadow: 
       0 0 10px rgba(255, 255, 255, 0.2),
-      0 0 20px rgba(45, 106, 66, 0.3);
+      0 0 20px rgba(124, 58, 237, 0.3);
   }
 
   /* Анимация блика при вращении */
@@ -893,7 +919,7 @@
     width: 100%;
     height: 8px;
     border-radius: 4px;
-    background: rgba(0, 96, 57, 0.1);
+    background: rgba(124, 58, 237, 0.1);
     outline: none;
     transition: all 0.3s ease;
   }
@@ -906,13 +932,13 @@
     border-radius: 6px;
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 96, 57, 0.3);
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
     transition: all 0.2s ease;
   }
 
   input[type="range"]::-webkit-slider-thumb:hover {
     transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(0, 96, 57, 0.4);
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
   }
 
   input[type="range"]::-moz-range-thumb {
@@ -921,7 +947,7 @@
     border-radius: 6px;
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 96, 57, 0.3);
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
     border: none;
     transition: all 0.2s ease;
   }
@@ -933,7 +959,7 @@
     position: relative;
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(0, 96, 57, 0.2);
+    border: 1px solid rgba(124, 58, 237, 0.2);
     border-radius: 8px;
     padding: 0.5rem 1rem;
     color: hsl(var(--foreground));
@@ -954,7 +980,7 @@
   input[type="date"]::-webkit-calendar-picker-indicator:hover,
   input[type="time"]::-webkit-calendar-picker-indicator:hover,
   input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
-    background: rgba(0, 96, 57, 0.1);
+    background: rgba(124, 58, 237, 0.1);
   }
 
   /* Style color input */
@@ -966,7 +992,7 @@
     border-radius: 8px;
     cursor: pointer;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 96, 57, 0.2);
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
     transition: all 0.3s ease;
   }
 
@@ -981,7 +1007,7 @@
 
   input[type="color"]:hover {
     transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(0, 96, 57, 0.3);
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
   }
 
   /* Calendar styling */
@@ -990,7 +1016,7 @@
   }
 
   [role="grid"] button:hover:not(:disabled) {
-    background: rgba(0, 96, 57, 0.1);
+    background: rgba(124, 58, 237, 0.1);
     transform: scale(1.05);
   }
 
@@ -998,11 +1024,11 @@
     background: hsl(var(--primary)) !important;
     color: white !important;
     font-weight: 600;
-    box-shadow: 0 2px 8px rgba(0, 96, 57, 0.3);
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
   }
 
   [role="grid"] button[data-today]:not([data-selected]) {
-    background: rgba(0, 96, 57, 0.05);
+    background: rgba(124, 58, 237, 0.05);
     color: hsl(var(--primary));
     font-weight: 600;
     position: relative;
@@ -1048,7 +1074,7 @@
   }
 
   .glow-on-hover:hover {
-    box-shadow: 0 0 20px rgba(0, 96, 57, 0.4);
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
   }
 
   /* Smooth dialog backdrop */
@@ -1109,7 +1135,7 @@
   /* File input styling */
   input[type="file"] {
     background: rgba(255, 255, 255, 0.05);
-    border: 2px dashed rgba(0, 96, 57, 0.3);
+    border: 2px dashed rgba(124, 58, 237, 0.3);
     border-radius: 8px;
     padding: 1rem;
     cursor: pointer;
@@ -1118,7 +1144,7 @@
 
   input[type="file"]:hover {
     border-color: hsl(var(--primary));
-    background: rgba(0, 96, 57, 0.05);
+    background: rgba(124, 58, 237, 0.05);
   }
 
   input[type="file"]::file-selector-button {

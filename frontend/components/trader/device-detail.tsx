@@ -231,7 +231,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
       CREATED: { color: 'bg-blue-100 text-blue-700', icon: Clock, text: 'Создана' },
       IN_PROGRESS: { color: 'bg-yellow-100 text-yellow-700', icon: Clock, text: 'В работе' },
       READY: { color: 'bg-purple-100 text-purple-700', icon: CheckCircle, text: 'Выполнена' },
-      EXPIRED: { color: 'bg-purple-100/40 text-gray-700', icon: XCircle, text: 'Истекла' },
+      EXPIRED: { color: 'bg-gray-100 text-gray-700', icon: XCircle, text: 'Истекла' },
       CANCELED: { color: 'bg-red-100 text-red-700', icon: XCircle, text: 'Отменена' },
     }
     
@@ -272,7 +272,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
           <div>
             <h1 className="text-2xl font-bold">Устройство {device.name}</h1>
             <div className="flex items-center gap-4 mt-1">
-              <Badge className={device.isOnline ? 'bg-purple-100 text-purple-700' : 'bg-purple-100/40 text-gray-700'}>
+              <Badge className={device.isOnline ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}>
                 {device.isOnline ? 'Онлайн' : 'Оффлайн'}
               </Badge>
               <Badge className={device.isWorking ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}>
@@ -305,7 +305,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Выполнено</p>
-                <p className="text-2xl font-bold text-[#530FAD] dark:text-[#7c3aed]">{completedTransactions}</p>
+                <p className="text-2xl font-bold text-purple-600">{completedTransactions}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-purple-400" />
             </div>
@@ -329,7 +329,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Комиссия</p>
-                <p className="text-2xl font-bold text-[#530FAD] dark:text-[#7c3aed]">{totalCommission.toLocaleString('ru-RU')} ₽</p>
+                <p className="text-2xl font-bold text-purple-600">{totalCommission.toLocaleString('ru-RU')} ₽</p>
               </div>
               <TrendingUp className="h-8 w-8 text-purple-400" />
             </div>
@@ -464,7 +464,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
                           <TableCell>
                             <div className="space-y-2 text-sm">
                               <div>
-                                <span className="text-gray-500">Готовых:</span> <span className="font-medium text-[#530FAD] dark:text-[#7c3aed]">{bank.transactionsReady || 0}</span>
+                                <span className="text-gray-500">Готовых:</span> <span className="font-medium text-purple-600">{bank.transactionsReady || 0}</span>
                               </div>
                               <div>
                                 <span className="text-gray-500">В процессе:</span> <span className="font-medium text-blue-600">{bank.transactionsInProgress || 0}</span>
@@ -529,7 +529,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
               {device.recentNotifications && device.recentNotifications.length > 0 ? (
                 <div className="divide-y">
                   {device.recentNotifications.map((notification) => (
-                    <div key={notification.id} className="p-4 hover:bg-purple-50/50">
+                    <div key={notification.id} className="p-4 hover:bg-gray-50">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
@@ -574,7 +574,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
               ) : transactions.length > 0 ? (
                 <div className="divide-y">
                   {transactions.map((transaction) => (
-                    <div key={transaction.id} className="p-4 hover:bg-purple-50/50">
+                    <div key={transaction.id} className="p-4 hover:bg-gray-50">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-4 mb-2">
@@ -605,7 +605,7 @@ export function DeviceDetail({ deviceId }: DeviceDetailProps) {
                           </div>
                           
                           {transaction.requisites && (
-                            <div className="mt-2 p-2 bg-purple-50/30 rounded text-sm">
+                            <div className="mt-2 p-2 bg-gray-50 rounded text-sm">
                               <CreditCard className="w-4 h-4 inline mr-2 text-gray-400" />
                               <span>{transaction.requisites.cardNumber}</span>
                               <span className="mx-2">•</span>

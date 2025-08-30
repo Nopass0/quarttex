@@ -180,7 +180,7 @@ export function CreateDisputeDialog({
         <ScrollArea className="flex-1 px-1">
           <div className="space-y-6">
             {/* Transaction info */}
-            <div className="bg-purple-50/30 dark:bg-gray-800 rounded-lg p-4 space-y-2">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-500 dark:text-gray-400">Транзакция</span>
                 <Badge variant="outline">#{transaction.numericId}</Badge>
@@ -282,7 +282,7 @@ export function CreateDisputeDialog({
                     {files.map((file, index) => (
                       <div
                         key={index}
-                        className="flex items-center gap-3 p-2 bg-purple-50/30 dark:bg-gray-800 rounded-lg"
+                        className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
                       >
                         {getFileIcon(file)}
                         <div className="flex-1 min-w-0">

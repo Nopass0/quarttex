@@ -97,7 +97,11 @@ const disputeStatusConfig = {
   },
   RESOLVED_SUCCESS: {
     label: "Решен в вашу пользу",
-    color: "bg-purple-100 text-purple-800 border-green-200",
+<<<<<<< Current (Your changes)
+    color: "bg-purple-100 text-purple-800 border-purple-200",
+=======
+    color: "bg-purple-100 text-purple-800 border-purple-200",
+>>>>>>> Incoming (Background Agent changes)
     icon: CheckCircle
   },
   RESOLVED_FAIL: {
@@ -107,7 +111,7 @@ const disputeStatusConfig = {
   },
   CANCELLED: {
     label: "Отменен",
-    color: "bg-purple-100/40 text-gray-800 border-gray-200",
+    color: "bg-gray-100 text-gray-800 border-gray-200",
     icon: XCircle
   }
 }
@@ -352,7 +356,7 @@ export function DisputesListEnhanced({ userType }: DisputesListEnhancedProps) {
       {/* Disputes List */}
       <div className="space-y-4">
         {sortedDisputes.length === 0 ? (
-          <Card className="bg-purple-50/10 p-8 text-center text-gray-500">
+          <Card className="p-8 text-center text-gray-500">
             Нет споров в данной категории
           </Card>
         ) : (
@@ -431,7 +435,7 @@ export function DisputesListEnhanced({ userType }: DisputesListEnhancedProps) {
                     </Button>
                     <Button
                       onClick={() => handleOpenMessages(dispute)}
-                      className="bg-[#530FAD] hover:bg-[#530FAD]/90"
+                      className="bg-[#006039] hover:bg-[#006039]/90"
                       size="sm"
                     >
                       <MessageSquare className="h-4 w-4 mr-1" />

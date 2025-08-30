@@ -15,7 +15,7 @@ export default (app: Elysia) =>
       "/",
       async ({ aggregator }) => {
         const baseUrl = aggregator.apiBaseUrl || "https://your-api.example.com";
-        const ourBaseUrl = "https://quattrex.pro/api";
+        const ourBaseUrl = "https://chasepay.pro/api";
 
         return {
           version: "2.1",
@@ -152,7 +152,7 @@ export default (app: Elysia) =>
             },
             step2: {
               title: "2. Настройте отправку callback'ов",
-              callbackUrl: "https://quattrex.pro/api/aggregators/callback",
+              callbackUrl: "https://chasepay.pro/api/aggregators/callback",
               authentication: `Bearer ${aggregator.callbackToken}`,
               format: "JSON с полями: ourDealId, status, amount, partnerDealId"
             },
@@ -249,7 +249,7 @@ export default (app: Elysia) =>
                     type: "string",
                     required: true,
                     description: "URL для отправки callback'ов",
-                    example: "https://quattrex.pro/api/aggregators/callback"
+                    example: "https://chasepay.pro/api/aggregators/callback"
                   },
                   metadata: {
                     type: "object",
@@ -264,7 +264,7 @@ export default (app: Elysia) =>
                   rate: 100.5,
                   status: "CREATED",
                   expiryDate: "2024-01-29T15:30:00Z",
-                  callbackUrl: "https://quattrex.pro/api/aggregators/callback",
+                  callbackUrl: "https://chasepay.pro/api/aggregators/callback",
                   metadata: {
                     merchantName: "Example Shop"
                   }
@@ -506,8 +506,8 @@ export default (app: Elysia) =>
                       description: "URL файла на сервере ChasePay"
                     },
                     example: [
-                      "https://quattrex.pro/files/dispute-screenshot-1.jpg",
-                      "https://quattrex.pro/files/dispute-document-2.pdf"
+                      "https://chasepay.pro/files/dispute-screenshot-1.jpg",
+                      "https://chasepay.pro/files/dispute-document-2.pdf"
                     ]
                   }
                 },
@@ -515,8 +515,8 @@ export default (app: Elysia) =>
                   ourDealId: "deal-123-456",
                   message: "Клиент не получил средства, прикладываю скриншоты",
                   attachments: [
-                    "https://quattrex.pro/files/dispute-screenshot-1.jpg",
-                    "https://quattrex.pro/files/dispute-document-2.pdf"
+                    "https://chasepay.pro/files/dispute-screenshot-1.jpg",
+                    "https://chasepay.pro/files/dispute-document-2.pdf"
                   ]
                 }
               },
@@ -561,7 +561,7 @@ export default (app: Elysia) =>
             {
               title: "1. Одиночный callback",
               method: "POST",
-              url: "https://quattrex.pro/api/aggregators/callback",
+              url: "https://chasepay.pro/api/aggregators/callback",
               headers: {
                 "Authorization": `Bearer ${aggregator.callbackToken}`,
                 "Content-Type": "application/json"
@@ -625,7 +625,7 @@ export default (app: Elysia) =>
             {
               title: "2. Массовый callback",
               method: "POST",
-              url: "https://quattrex.pro/api/aggregators/callback/batch",
+              url: "https://chasepay.pro/api/aggregators/callback/batch",
               description: "До 100 callback'ов одним запросом",
               headers: {
                 "Authorization": `Bearer ${aggregator.callbackToken}`,
@@ -705,7 +705,7 @@ export default (app: Elysia) =>
               id: "single-callback",
               title: "1. Одиночный коллбэк",
               method: "POST",
-              url: "https://quattrex.pro/api/aggregators/callback",
+              url: "https://chasepay.pro/api/aggregators/callback",
               description: "Отправка обновления для одной сделки",
               
               headers: {
@@ -858,7 +858,7 @@ export default (app: Elysia) =>
               id: "batch-callback",
               title: "2. Массовый коллбэк",
               method: "POST",
-              url: "https://quattrex.pro/api/aggregators/callback/batch",
+              url: "https://chasepay.pro/api/aggregators/callback/batch",
               description: "Отправка обновлений для нескольких сделок одним запросом (до 100 сделок)",
               
               headers: {
@@ -1016,7 +1016,7 @@ export default (app: Elysia) =>
             tools: [
               {
                 name: "curl",
-                example: `curl -X POST https://quattrex.pro/api/aggregators/callback \\
+                example: `curl -X POST https://chasepay.pro/api/aggregators/callback \\
   -H "Authorization: Bearer ${aggregator.callbackToken}" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -1165,7 +1165,7 @@ def create_deal():
               sendCallback: `import requests
 
 def send_callback(deal_id, status):
-    url = "https://quattrex.pro/api/aggregators/callback"
+    url = "https://chasepay.pro/api/aggregators/callback"
     headers = {
         "Authorization": "Bearer YOUR_CALLBACK_TOKEN",
         "Content-Type": "application/json"
@@ -1203,7 +1203,7 @@ def send_callback(deal_id, status):
 
 async function sendCallback(dealId, status) {
     const response = await axios.post(
-        'https://quattrex.pro/api/aggregators/callback',
+        'https://chasepay.pro/api/aggregators/callback',
         {
             ourDealId: dealId,
             status: status
@@ -1254,7 +1254,7 @@ async function sendCallback(dealId, status) {
                 paymentMethod: "string (required) - Метод платежа: 'SBP' или 'C2C'",
                 bankType: "string (optional) - Код банка для C2C операций",
                 partnerDealId: "string (optional) - Ваш ID сделки (если заранее известен)",
-                callbackUrl: "string (required) - URL для коллбеков: https://quattrex.pro/api/aggregators/callback"
+                callbackUrl: "string (required) - URL для коллбеков: https://chasepay.pro/api/aggregators/callback"
               },
               responseBody: {
                 accepted: "boolean (required) - Принята ли сделка",
@@ -1329,7 +1329,7 @@ async function sendCallback(dealId, status) {
       async ({ aggregator }) => {
         return {
           title: "Формат callback'ов в нашу систему",
-          callbackUrl: "https://quattrex.pro/api/aggregators/callback",
+          callbackUrl: "https://chasepay.pro/api/aggregators/callback",
           authentication: {
             header: "Authorization",
             value: `Bearer ${aggregator.callbackToken}`,
@@ -1340,7 +1340,7 @@ async function sendCallback(dealId, status) {
           },
           singleCallback: {
             method: "POST",
-            url: "https://quattrex.pro/api/aggregators/callback",
+            url: "https://chasepay.pro/api/aggregators/callback",
             headers: {
               "Authorization": `Bearer ${aggregator.callbackToken}`,
               "Content-Type": "application/json"
@@ -1362,7 +1362,7 @@ async function sendCallback(dealId, status) {
           },
           batchCallback: {
             method: "POST", 
-            url: "https://quattrex.pro/api/aggregators/callback",
+            url: "https://chasepay.pro/api/aggregators/callback",
             body: "array of callback objects",
             response: "array of result objects"
           },
@@ -1402,7 +1402,7 @@ async function sendCallback(dealId, status) {
               title: "Обновления статуса",
               description: "Вы отправляете callback'и при изменении статуса сделки",
               direction: "Агрегатор → Мы",
-              endpoint: "https://quattrex.pro/api/aggregators/callback",
+              endpoint: "https://chasepay.pro/api/aggregators/callback",
               data: "ourDealId, status, amount, partnerDealId"
             },
             {
@@ -1478,7 +1478,7 @@ async function sendCallback(dealId, status) {
               title: "Отправьте тестовый callback",
               description: "Проверьте отправку callback'ов в нашу систему",
               example: {
-                url: "https://quattrex.pro/api/aggregators/callback",
+                url: "https://chasepay.pro/api/aggregators/callback",
                 headers: {
                   "Authorization": `Bearer ${aggregator.callbackToken}`
                 },

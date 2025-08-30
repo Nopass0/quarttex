@@ -97,7 +97,7 @@ const getBankIcon = (bankType: string, size: "sm" | "md" = "md") => {
   if (logoPath) {
     return (
       <div
-        className={`${sizeClasses} rounded-lg bg-purple-50/20 dark:bg-purple-900/15 dark:bg-purple-900/25 border border-purple-200/60 dark:border-gray-600 flex items-center justify-center p-1`}
+        className={`${sizeClasses} rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center p-1`}
       >
         <img
           src={logoPath}
@@ -119,7 +119,7 @@ const getBankIcon = (bankType: string, size: "sm" | "md" = "md") => {
   // Default neutral bank icon
   return (
     <div
-      className={`${sizeClasses} rounded-lg bg-purple-100/40 border border-purple-200/60 flex items-center justify-center`}
+      className={`${sizeClasses} rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center`}
     >
       <CreditCard className="w-5 h-5 text-gray-600" />
     </div>
@@ -180,7 +180,7 @@ const dealStatusConfig = {
     label: "Готово",
     description: "Сделка выполнена",
     color:
-      "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
+      "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-green-800",
     badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
     icon: CheckCircle,
   },
@@ -196,8 +196,8 @@ const dealStatusConfig = {
     label: "Отменена",
     description: "Сделка отменена",
     color:
-      "bg-purple-100/40 text-gray-800 border-purple-200/60 dark:bg-purple-900/25 dark:text-gray-300 dark:border-gray-600",
-    badgeColor: "bg-purple-50/30 text-gray-700 border-gray-200",
+      "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600",
+    badgeColor: "bg-gray-50 text-gray-700 border-gray-200",
     icon: XCircle,
   },
 };
@@ -480,7 +480,7 @@ export function BtEntranceDeals() {
       {/* Deals List */}
       <div className="space-y-3">
         {filteredDeals.length === 0 ? (
-          <Card className="bg-purple-50/10 p-12 text-center text-gray-500 dark:text-gray-400 dark:bg-gray-800 dark:border-gray-700">
+          <Card className="p-12 text-center text-gray-500 dark:text-gray-400 dark:bg-gray-800 dark:border-gray-700">
             {searchQuery ? "Сделки не найдены" : "Нет сделок БТ-входа"}
           </Card>
         ) : (
@@ -499,7 +499,7 @@ export function BtEntranceDeals() {
                   case "READY":
                     return (
                       <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                        <CheckCircle className="h-6 w-6 text-[#530FAD] dark:text-[#7c3aed] dark:drop-shadow-[0_0_6px_rgba(124,58,237,0.4)]" />
+                        <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                       </div>
                     );
                   case "EXPIRED":
@@ -510,7 +510,7 @@ export function BtEntranceDeals() {
                     );
                   case "CANCELLED":
                     return (
-                      <div className="w-12 h-12 rounded-xl bg-purple-100/40 dark:bg-gray-900/30 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-900/30 flex items-center justify-center">
                         <XCircle className="h-6 w-6 text-gray-600 dark:text-gray-400" />
                       </div>
                     );
@@ -554,7 +554,7 @@ export function BtEntranceDeals() {
               const getStatusBadgeColor = () => {
                 switch (deal.status) {
                   case "READY":
-                    return "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800";
+                    return "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-green-800";
                   case "PENDING":
                   case "ACCEPTED":
                   case "IN_PROGRESS":
@@ -640,7 +640,7 @@ export function BtEntranceDeals() {
                       </div>
                       {/* Profit - показываем только для статуса READY */}
                       {deal.status === "READY" && deal.traderProfit != null && (
-                        <div className="text-xs text-[#530FAD] dark:text-[#7c3aed] dark:drop-shadow-[0_0_6px_rgba(124,58,237,0.4)] mt-0.5">
+                        <div className="text-xs text-purple-600 dark:text-purple-400 mt-0.5">
                           +{deal.traderProfit.toFixed(2)}
                         </div>
                       )}
@@ -731,7 +731,7 @@ export function BtEntranceDeals() {
                 ? "Информация о реквизите"
                 : "Детали сделки"}
             </DialogTitle>
-            <div className="bg-purple-50/20 dark:bg-purple-900/10">
+            <div className="bg-white dark:bg-gray-800">
               {/* Header */}
               <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
                 {showRequisiteDetails ? (
@@ -742,7 +742,7 @@ export function BtEntranceDeals() {
                       onClick={() => setShowRequisiteDetails(false)}
                       className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 -ml-2"
                     >
-                      <ChevronDown className="h-4 w-4 mr-1 rotate-90 text-[#530FAD] dark:text-[#7c3aed] dark:drop-shadow-[0_0_6px_rgba(124,58,237,0.4)]" />
+                      <ChevronDown className="h-4 w-4 mr-1 rotate-90 text-[#006039]" />
                       Назад
                     </Button>
                     <h3 className="font-medium dark:text-white">
@@ -767,9 +767,9 @@ export function BtEntranceDeals() {
                         setSelectedDeal(null);
                         setShowRequisiteDetails(false);
                       }}
-                      className="h-8 w-8 p-0 hover:bg-purple-100/40 dark:hover:bg-gray-700 rounded-full"
+                      className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
                     >
-                      <X className="h-4 w-4 text-[#530FAD] dark:text-[#7c3aed] dark:drop-shadow-[0_0_6px_rgba(124,58,237,0.4)]" />
+                      <X className="h-4 w-4 text-[#006039]" />
                     </Button>
                   </>
                 )}
@@ -783,7 +783,7 @@ export function BtEntranceDeals() {
                     <div className="mb-4 flex justify-center">
                       {selectedDeal.status === "READY" ? (
                         <div className="w-20 h-20 rounded-3xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                          <CheckCircle2 className="h-10 w-10 text-[#530FAD] dark:text-[#7c3aed] dark:drop-shadow-[0_0_8px_rgba(124,58,237,0.4)]" />
+                          <CheckCircle2 className="h-10 w-10 text-purple-600 dark:text-purple-400" />
                         </div>
                       ) : selectedDeal.status === "PENDING" ||
                         selectedDeal.status === "ACCEPTED" ||
@@ -832,7 +832,7 @@ export function BtEntranceDeals() {
 
                     {/* Amount */}
                     <div className="mb-1">
-                      <span className="text-3xl font-bold text-[#530FAD] dark:text-[#7c3aed] dark:text-purple-400">
+                      <span className="text-3xl font-bold text-purple-600 dark:text-purple-400">
                         {(selectedDeal.amount / selectedDeal.rate).toFixed(2)}{" "}
                         USDT
                       </span>
@@ -846,12 +846,12 @@ export function BtEntranceDeals() {
                   <div className="px-6 pb-4">
                     <Button
                       variant="outline"
-                      className="w-full p-4 h-auto justify-between hover:bg-purple-50/30 dark:hover:bg-gray-700 transition-colors dark:bg-gray-800 dark:border-gray-700"
+                      className="w-full p-4 h-auto justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors dark:bg-gray-800 dark:border-gray-700"
                       onClick={() => setShowRequisiteDetails(true)}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-[92px] h-[62px] rounded-md bg-gradient-to-tr from-purple-800 via-purple-400 to-purple-400 relative overflow-hidden">
-                          <div className="absolute inset-0 bg-gradient-to-r from-purple-800  to-transparent"></div>
+                        <div className="w-[92px] h-[62px] rounded-md bg-gradient-to-tr from-green-800 via-green-400 to-green-400 relative overflow-hidden">
+                          <div className="absolute inset-0 bg-gradient-to-r from-green-800  to-transparent"></div>
                           <div className="absolute top-2 right-4">
                             <svg
                               viewBox="0 0 30 18"
@@ -887,14 +887,14 @@ export function BtEntranceDeals() {
                           </p>
                         </div>
                       </div>
-                      <ChevronDown className="h-5 w-5 text-[#530FAD] dark:text-[#7c3aed] dark:drop-shadow-[0_0_6px_rgba(124,58,237,0.4)] -rotate-90" />
+                      <ChevronDown className="h-5 w-5 text-[#006039] -rotate-90" />
                     </Button>
                   </div>
 
                   {/* Deal Details */}
                   <div className="px-6 pb-4 space-y-3">
                     {/* Rate */}
-                    <div className="border border-purple-200/60 dark:border-gray-700 rounded-lg p-4">
+                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-500 dark:text-gray-400">
                           Ставка
@@ -908,12 +908,12 @@ export function BtEntranceDeals() {
                     {/* Profit */}
                     {selectedDeal.status === "READY" &&
                       selectedDeal.traderProfit != null && (
-                        <div className="border border-purple-200/60 dark:border-gray-700 rounded-lg p-4">
+                        <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500 dark:text-gray-400">
                               Прибыль
                             </span>
-                            <span className="text-lg font-semibold text-[#530FAD] dark:text-[#7c3aed] dark:text-purple-400">
+                            <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
                               + {selectedDeal.traderProfit.toFixed(2)} USDT
                             </span>
                           </div>
@@ -940,7 +940,7 @@ export function BtEntranceDeals() {
                       selectedDeal.status === "IN_PROGRESS" ? (
                       <div className="flex flex-col gap-2">
                         <Button
-                          className="w-full bg-[#530FAD] hover:bg-[#530FAD]/90"
+                          className="w-full bg-[#006039] hover:bg-[#006039]/90"
                           onClick={() =>
                             handleStatusUpdate(selectedDeal.id, "READY")
                           }
@@ -967,7 +967,7 @@ export function BtEntranceDeals() {
                     ) : selectedDeal.status === "PENDING" ? (
                       <div className="flex flex-col gap-2">
                         <Button
-                          className="w-full bg-[#530FAD] hover:bg-[#530FAD]/90"
+                          className="w-full bg-[#006039] hover:bg-[#006039]/90"
                           onClick={() =>
                             handleStatusUpdate(selectedDeal.id, "ACCEPTED")
                           }
@@ -1038,7 +1038,7 @@ export function BtEntranceDeals() {
                 <div className="">
                   {/* Requisite Header */}
                   <div className="px-6 py-6 text-center border-b dark:border-gray-700">
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-purple-100/40 dark:bg-purple-900/25 mb-4">
+                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
                       {selectedDeal.bankType && (
                         <div className="scale-125">
                           {getBankIcon(selectedDeal.bankType)}
@@ -1130,7 +1130,7 @@ export function BtEntranceDeals() {
                       <div className="space-y-2">
                         <Button
                           variant="outline"
-                          className="w-full justify-start dark:bg-purple-900/25 dark:border-gray-600 dark:hover:bg-gray-600"
+                          className="w-full justify-start dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
                           onClick={() => toast.info("Функция в разработке")}
                         >
                           <X className="h-4 w-4 mr-2 text-red-500" />

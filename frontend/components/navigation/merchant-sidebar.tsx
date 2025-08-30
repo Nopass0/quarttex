@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import { cn } from "@/lib/utils"
-import QuatrexLogo from "@/components/ui/quattrex-logo"
-import { Button } from "@/components/ui/button"
-import { useMerchantAuth } from "@/stores/merchant-auth"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+import QuatrexLogo from "@/components/ui/quattrex-logo";
+import { Button } from "@/components/ui/button";
+import { useMerchantAuth } from "@/stores/merchant-auth";
 import {
   FileText,
   BookOpen,
@@ -17,14 +17,14 @@ import {
   LogOut,
   BarChart3,
   AlertCircle,
-} from "lucide-react"
-import { ThemeSwitcher } from "@/components/ui/theme-toggle"
+} from "lucide-react";
+import { ThemeSwitcher } from "@/components/ui/theme-toggle";
 
 interface NavItem {
-  title: string
-  href?: string
-  icon: React.ComponentType<{ className?: string }>
-  children?: NavItem[]
+  title: string;
+  href?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  children?: NavItem[];
 }
 
 const merchantNavItems: NavItem[] = [
@@ -74,46 +74,48 @@ const merchantNavItems: NavItem[] = [
       },
     ],
   },
-]
+];
 
 export function MerchantSidebar() {
-  const pathname = usePathname()
-  const router = useRouter()
-  const [expandedItems, setExpandedItems] = useState<string[]>([])
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  
-  const merchantName = useMerchantAuth((state) => state.merchantName)
-  const logout = useMerchantAuth((state) => state.logout)
+  const pathname = usePathname();
+  const router = useRouter();
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const merchantName = useMerchantAuth((state) => state.merchantName);
+  const logout = useMerchantAuth((state) => state.logout);
 
   useEffect(() => {
     // Auto-expand items if current path is a child
     merchantNavItems.forEach((item) => {
       if (item.children) {
-        const hasActiveChild = item.children.some((child) => pathname === child.href)
+        const hasActiveChild = item.children.some(
+          (child) => pathname === child.href
+        );
         if (hasActiveChild && !expandedItems.includes(item.title)) {
-          setExpandedItems([...expandedItems, item.title])
+          setExpandedItems([...expandedItems, item.title]);
         }
       }
-    })
-  }, [pathname])
+    });
+  }, [pathname]);
 
   const handleLogout = () => {
-    logout()
-    router.push("/merchant/login")
-  }
+    logout();
+    router.push("/merchant/login");
+  };
 
   const toggleExpanded = (title: string) => {
     if (expandedItems.includes(title)) {
-      setExpandedItems(expandedItems.filter((item) => item !== title))
+      setExpandedItems(expandedItems.filter((item) => item !== title));
     } else {
-      setExpandedItems([...expandedItems, title])
+      setExpandedItems([...expandedItems, title]);
     }
-  }
+  };
 
   const renderNavItem = (item: NavItem, level = 0) => {
-    const isActive = pathname === item.href
-    const isExpanded = expandedItems.includes(item.title)
-    const Icon = item.icon
+    const isActive = pathname === item.href;
+    const isExpanded = expandedItems.includes(item.title);
+    const Icon = item.icon;
 
     if (item.children) {
       return (
@@ -122,7 +124,7 @@ export function MerchantSidebar() {
             onClick={() => toggleExpanded(item.title)}
             className={cn(
               "w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-              "hover:bg-purple-100/40 text-gray-700",
+              "hover:bg-gray-100 text-gray-700",
               level > 0 && "pl-9"
             )}
           >
@@ -140,7 +142,7 @@ export function MerchantSidebar() {
             </div>
           )}
         </div>
-      )
+      );
     }
 
     return (
@@ -151,7 +153,7 @@ export function MerchantSidebar() {
           "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
           isActive
             ? "bg-[#530FAD] text-white"
-            : "text-gray-700 hover:bg-purple-100/50",
+            : "text-gray-700 hover:bg-gray-100",
           level > 0 && "pl-9"
         )}
         onClick={() => setMobileMenuOpen(false)}
@@ -159,14 +161,14 @@ export function MerchantSidebar() {
         <Icon className="h-4 w-4" />
         <span>{item.title}</span>
       </Link>
-    )
-  }
+    );
+  };
 
   const sidebarContent = (
     <>
       <div className="px-3 py-5">
         <Link href="/merchant/transactions" className="flex items-center gap-2">
-          <QuatrexLogo size="sm" animated />
+          <QuatrexLogo size="sm" />
           <span className="text-lg font-semibold">Мерчант</span>
         </Link>
         {merchantName && (
@@ -188,13 +190,13 @@ export function MerchantSidebar() {
         </Button>
       </div>
     </>
-  )
+  );
 
   return (
     <>
       {/* Desktop sidebar */}
       <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
-        <div className="flex-1 flex flex-col min-h-0 bg-purple-50/20 border-purple-200/60-r">
+        <div className="flex-1 flex flex-col min-h-0 bg-white border-r">
           {sidebarContent}
         </div>
       </div>
@@ -217,12 +219,15 @@ export function MerchantSidebar() {
       {/* Mobile sidebar */}
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-40 flex">
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setMobileMenuOpen(false)} />
+          <div
+            className="fixed inset-0 bg-gray-600 bg-opacity-75"
+            onClick={() => setMobileMenuOpen(false)}
+          />
           <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
             {sidebarContent}
           </div>
         </div>
       )}
     </>
-  )
+  );
 }

@@ -712,7 +712,7 @@ export default function TestTransactionsPage() {
           <div className="space-y-4">
             <p>Будет создано уведомление для транзакции:</p>
             {selectedTransaction && (
-              <div className="bg-purple-50/30 p-4 rounded">
+              <div className="bg-gray-50 p-4 rounded">
                 <p>ID: {mockTransactions.find(t => t.id === selectedTransaction)?.numericId}</p>
                 <p>Сумма: {mockTransactions.find(t => t.id === selectedTransaction)?.amount} ₽</p>
               </div>

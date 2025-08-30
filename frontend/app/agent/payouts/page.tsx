@@ -32,7 +32,7 @@ type PayoutStats = {
 const statusColors: Record<PayoutStatus, string> = {
   PENDING: 'bg-yellow-100 text-yellow-800',
   PROCESSING: 'bg-blue-100 text-blue-800',
-  COMPLETED: 'bg-purple-100 text-purple-800',
+  COMPLETED: 'bg-green-100 text-purple-800',
   FAILED: 'bg-red-100 text-red-800',
 }
 
@@ -103,7 +103,7 @@ export default function AgentPayoutsPage() {
           </Button>
           <Button
             onClick={requestPayout}
-            className="bg-[#530FAD] hover:bg-[#530FAD]/90"
+            className="bg-[#006039] hover:bg-[#006039]/90"
           >
             <Download className="h-4 w-4 mr-2" />
             Запросить выплату
@@ -206,7 +206,7 @@ export default function AgentPayoutsPage() {
                     </div>
                   )}
                   {payout.adminNote && (
-                    <div className="text-xs text-gray-600 mt-2 p-2 bg-purple-50/30 rounded">
+                    <div className="text-xs text-gray-600 mt-2 p-2 bg-gray-50 rounded">
                       Примечание: {payout.adminNote}
                     </div>
                   )}

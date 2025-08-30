@@ -98,7 +98,7 @@ const getBankIcon = (bankType: string, size: "sm" | "md" = "md") => {
   if (logoPath) {
     return (
       <div
-        className={`${sizeClasses} rounded-lg bg-purple-50/20 dark:bg-purple-900/15 dark:bg-purple-900/25 border border-purple-200/60 dark:border-gray-600 flex items-center justify-center p-1`}
+        className={`${sizeClasses} rounded-lg bg-purple-50/80 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700/60 flex items-center justify-center p-1`}
       >
         <img
           src={logoPath}
@@ -120,7 +120,7 @@ const getBankIcon = (bankType: string, size: "sm" | "md" = "md") => {
   // Default neutral bank icon
   return (
     <div
-      className={`${sizeClasses} rounded-lg bg-purple-100/40 border border-purple-200/60 flex items-center justify-center`}
+      className={`${sizeClasses} rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center`}
     >
       <CreditCard className="w-5 h-5 text-gray-600" />
     </div>
@@ -187,15 +187,15 @@ const disputeStatusConfig = {
   RESOLVED_FAIL: {
     label: "Спор принят в сторону трейдера",
     description: "Решен в вашу пользу",
-    color: "bg-purple-100 text-purple-800 border-green-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
-    badgeColor: "bg-purple-50 text-purple-700 border-green-200",
+color: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
+    badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
     icon: CheckCircle
   },
   CANCELLED: {
     label: "Отменен",
     description: "Спор отменен",
-    color: "bg-purple-100/40 text-gray-800 border-purple-200/60 dark:bg-purple-900/25 dark:text-gray-300 dark:border-gray-600",
-    badgeColor: "bg-purple-50/30 text-gray-700 border-gray-200",
+    color: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600",
+    badgeColor: "bg-purple-50/80 text-gray-700 border-purple-200",
     icon: Ban
   }
 };
@@ -609,7 +609,7 @@ export function DealDisputesList() {
         <TabsContent value={activeTab} className="space-y-3 mt-4">
           
           {filteredDisputes.length === 0 ? (
-            <Card className="bg-purple-50/10 p-12 text-center">
+            <Card className="p-12 text-center">
               <p className="text-gray-500 dark:text-gray-400">
                 {searchQuery ? "Споры не найдены" : "Нет споров"}
               </p>
@@ -624,7 +624,7 @@ export function DealDisputesList() {
                 return (
                   <Card
                     key={dispute.id}
-                    className="group hover:shadow-lg transition-all cursor-pointer border-purple-200/60 dark:border-gray-700"
+                    className="group hover:shadow-lg transition-all cursor-pointer border-gray-200 dark:border-gray-700"
                     onClick={() => handleViewDetails(dispute)}
                   >
                     <div className="p-6">
@@ -634,7 +634,7 @@ export function DealDisputesList() {
                           {/* Status Icon */}
                           <div className={cn(
                             "p-3 rounded-xl",
-                            statusConfig?.color?.split(" ")[0] || "bg-gray-100"
+                            statusConfig?.color?.split(" ")[0] || "bg-purple-100"
                           )}>
                             <StatusIcon className="h-6 w-6" />
                           </div>
@@ -703,7 +703,7 @@ export function DealDisputesList() {
                             <Badge 
                               className={cn(
                                 "px-3 py-1.5",
-                                statusConfig?.badgeColor || "bg-purple-50/30 text-gray-700 border-gray-200"
+                                statusConfig?.badgeColor || "bg-purple-50/80 text-gray-700 border-purple-200"
                               )}
                             >
                               {dispute.status === 'RESOLVED_SUCCESS' ? 'Отклонен' : 
@@ -837,3 +837,4 @@ export function DealDisputesList() {
     </div>
   );
 }
+

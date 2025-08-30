@@ -23,7 +23,7 @@ export function AdminHeader() {
   }
 
   return (
-    <header className="h-16 border-b border-purple-200/60 dark:border-gray-800 bg-purple-50/20 dark:bg-purple-900/15 dark:bg-[#0f0f0f] px-6 flex items-center justify-between">
+    <header className="h-16 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0f0f0f] px-6 flex items-center justify-between">
       <div>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Админ панель</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">

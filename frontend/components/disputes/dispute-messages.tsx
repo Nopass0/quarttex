@@ -141,7 +141,7 @@ export function DisputeMessages({
         return {
           name: "Мерчант",
           icon: Building2,
-          color: "bg-[#530FAD]",
+          color: "bg-purple-500",
           align: userType === "merchant" && isOwnMessage ? "right" : "left"
         };
       case "ADMIN":
@@ -225,10 +225,10 @@ export function DisputeMessages({
                     className={cn(
                       "rounded-lg p-3",
                       senderInfo.align === "center"
-                        ? "bg-purple-100/40 dark:bg-gray-800 text-center"
+                        ? "bg-gray-100 dark:bg-gray-800 text-center"
                         : isOwnMessage
                         ? "bg-primary text-primary-foreground"
-                        : "bg-purple-100/40 dark:bg-gray-800"
+                        : "bg-gray-100 dark:bg-gray-800"
                     )}
                   >
                     {senderInfo.align === "center" && (
@@ -257,7 +257,7 @@ export function DisputeMessages({
                               "flex items-center gap-2 p-2 rounded-lg text-sm hover:opacity-80 transition-opacity",
                               isOwnMessage
                                 ? "bg-primary/20"
-                                : "bg-purple-100/40 dark:bg-gray-800"
+                                : "bg-gray-100 dark:bg-gray-800"
                             )}
                           >
                             <FileIcon className="h-4 w-4 flex-shrink-0" />
@@ -279,11 +279,11 @@ export function DisputeMessages({
                     new Date(msg.createdAt).toDateString() !== 
                     new Date(messages[index - 1].createdAt).toDateString()) && (
                     <div className="flex items-center gap-2 my-4">
-                      <div className="flex-1 h-px bg-gray-200 dark:bg-purple-900/25" />
+                      <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
                       <span className="text-xs text-gray-500 dark:text-gray-400 px-2">
                         {format(new Date(msg.createdAt), "d MMMM yyyy", { locale: ru })}
                       </span>
-                      <div className="flex-1 h-px bg-gray-200 dark:bg-purple-900/25" />
+                      <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
                     </div>
                   )}
                 </div>
@@ -309,7 +309,7 @@ export function DisputeMessages({
             {attachments.map((file, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2 px-3 py-1.5 bg-purple-100/40 dark:bg-gray-800 rounded-full text-sm"
+                className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-full text-sm"
               >
                 <Paperclip className="h-3 w-3" />
                 <span className="max-w-[150px] truncate">{file.name}</span>

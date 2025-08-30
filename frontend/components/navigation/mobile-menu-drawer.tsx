@@ -497,16 +497,16 @@ export function MobileMenuDrawer({
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-purple-50/20 dark:bg-purple-900/15 rounded-t-3xl shadow-xl md:hidden max-h-[90vh] flex flex-col touch-none"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 rounded-t-3xl shadow-xl md:hidden max-h-[90vh] flex flex-col touch-none"
               style={{ touchAction: "none" }}
             >
               {/* Handle bar */}
               <div className="flex justify-center pt-2 pb-2">
-                <div className="w-12 h-1 bg-gray-300 dark:bg-purple-900/25 rounded-full" />
+                <div className="w-12 h-1 bg-gray-300 dark:bg-gray-700 rounded-full" />
               </div>
 
               {/* Header with user info */}
-              <div className="px-6 pb-4 border-b border-purple-200/60 dark:border-gray-800">
+              <div className="px-6 pb-4 border-b border-gray-200 dark:border-gray-800">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -518,7 +518,7 @@ export function MobileMenuDrawer({
                   </div>
                   <button
                     onClick={onClose}
-                    className="p-2 hover:bg-purple-100/40 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                   >
                     <X className="h-5 w-5 text-gray-500" />
                   </button>
@@ -537,16 +537,16 @@ export function MobileMenuDrawer({
                 )}
 
                 {variant === "trader" && rapiraRate && (
-                  <div className="mt-2 p-2 bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/10 dark:to-violet-900/10 rounded-lg border border-[#530FAD] dark:border-[#7c3aed]">
+                  <div className="mt-2 p-2 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/10 dark:to-teal-900/10 rounded-lg border border-emerald-500 dark:border-emerald-600">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4 text-[#530FAD] dark:text-[#7c3aed]" />
+                        <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                         <span className="text-sm font-semibold text-gray-900 dark:text-gray-200">
                           TRC-20 ({source === "bybit" ? "Bybit" : "Rapira"})
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <span className="text-sm font-bold text-[#530FAD] dark:text-[#7c3aed]">
+                        <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
                           {rapiraRate.rate.toFixed(2)}
                         </span>
                         <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
@@ -592,7 +592,7 @@ export function MobileMenuDrawer({
                         window.location.href = "/api/app/download-apk";
                       }}
                     >
-                      <Download className="h-4 w-4 text-[#530FAD] dark:text-[#7c3aed]" />
+                      <Download className="h-4 w-4 text-purple-600" />
                       <span>Скачать APK</span>
                     </Button>
                   </div>
@@ -617,7 +617,7 @@ export function MobileMenuDrawer({
                             onClick={() => toggleExpanded(item.title)}
                             className={cn(
                               "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors",
-                              "text-gray-700 dark:text-gray-300 hover:bg-purple-100/40 dark:hover:bg-gray-800"
+                              "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                             )}
                           >
                             <div className="flex items-center gap-3">
@@ -646,8 +646,8 @@ export function MobileMenuDrawer({
                                     className={cn(
                                       "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors",
                                       isChildActive
-                                        ? "bg-[#530FAD]/10 text-[#530FAD] dark:text-[#2d6a42]"
-                                        : "text-gray-600 dark:text-gray-400 hover:bg-purple-100/40 dark:hover:bg-gray-800"
+                                        ? "bg-[#006039]/10 text-[#006039] dark:text-[#2d6a42]"
+                                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                                     )}
                                   >
                                     <ChildIcon className="h-4 w-4" />
@@ -669,8 +669,8 @@ export function MobileMenuDrawer({
                         className={cn(
                           "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors",
                           isActive
-                            ? "bg-[#530FAD]/10 text-[#530FAD] dark:text-[#2d6a42]"
-                            : "text-gray-700 dark:text-gray-300 hover:bg-purple-100/40 dark:hover:bg-gray-800"
+                            ? "bg-[#006039]/10 text-[#006039] dark:text-[#2d6a42]"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                         )}
                       >
                         <Icon className="h-5 w-5" />
@@ -682,7 +682,7 @@ export function MobileMenuDrawer({
               </div>
 
               {/* Logout button */}
-              <div className="p-4 border-t border-purple-200/60 dark:border-gray-800">
+              <div className="p-4 border-t border-gray-200 dark:border-gray-800">
                 <Button
                   onClick={handleLogout}
                   variant="outline"

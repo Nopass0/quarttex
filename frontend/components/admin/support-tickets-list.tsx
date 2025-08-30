@@ -297,16 +297,16 @@ export function SupportTicketsList() {
       case 'RESOLVED':
         return 'bg-purple-100 text-purple-700'
       case 'CLOSED':
-        return 'bg-purple-100/40 text-gray-700'
+        return 'bg-gray-100 text-gray-700'
       default:
-        return 'bg-purple-100/40 text-gray-700'
+        return 'bg-gray-100 text-gray-700'
     }
   }
   
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'LOW':
-        return 'bg-purple-100/40 text-gray-700'
+        return 'bg-gray-100 text-gray-700'
       case 'NORMAL':
         return 'bg-blue-100 text-blue-700'
       case 'HIGH':
@@ -314,7 +314,7 @@ export function SupportTicketsList() {
       case 'URGENT':
         return 'bg-red-100 text-red-700'
       default:
-        return 'bg-purple-100/40 text-gray-700'
+        return 'bg-gray-100 text-gray-700'
     }
   }
   
@@ -352,7 +352,7 @@ export function SupportTicketsList() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <Card className="bg-purple-50/10 p-4">
+          <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Активные</p>
@@ -362,7 +362,7 @@ export function SupportTicketsList() {
             </div>
           </Card>
           
-          <Card className="bg-purple-50/10 p-4">
+          <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Сегодня</p>
@@ -372,7 +372,7 @@ export function SupportTicketsList() {
             </div>
           </Card>
           
-          <Card className="bg-purple-50/10 p-4">
+          <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">В работе</p>
@@ -382,7 +382,7 @@ export function SupportTicketsList() {
             </div>
           </Card>
           
-          <Card className="bg-purple-50/10 p-4">
+          <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Ожидают</p>
@@ -392,7 +392,7 @@ export function SupportTicketsList() {
             </div>
           </Card>
           
-          <Card className="bg-purple-50/10 p-4">
+          <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Ср. время</p>
@@ -405,7 +405,7 @@ export function SupportTicketsList() {
       )}
       
       {/* Filters */}
-      <Card className="bg-purple-50/10 p-4">
+      <Card className="p-4">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex-1 min-w-[200px]">
             <div className="relative">
@@ -601,7 +601,7 @@ export function SupportTicketsList() {
                             className={cn(
                               "max-w-[70%] rounded-lg p-4",
                               message.isFromSupport
-                                ? "bg-[#530FAD] text-white"
+                                ? "bg-[#006039] text-white"
                                 : "bg-gray-100"
                             )}
                           >
@@ -636,7 +636,7 @@ export function SupportTicketsList() {
                       <Button
                         onClick={sendReply}
                         disabled={isSending || !replyMessage.trim()}
-                        className="bg-[#530FAD] hover:bg-purple-800/60"
+                        className="bg-[#006039] hover:bg-[#005030]"
                       >
                         {isSending ? (
                           <Loader2 className="h-4 w-4 animate-spin text-white" />

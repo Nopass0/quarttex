@@ -95,7 +95,7 @@ export function MerchantExtraSettlements({ merchantId }: MerchantExtraSettlement
       case 'manual':
         return <Badge variant="default" className="dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700">Ручной</Badge>
       case 'auto':
-        return <Badge variant="secondary" className="dark:bg-purple-900/25 dark:text-gray-300">Автоматический</Badge>
+        return <Badge variant="secondary" className="dark:bg-gray-700 dark:text-gray-300">Автоматический</Badge>
       default:
         return <Badge variant="outline" className="dark:border-gray-600 dark:text-gray-300">{reason}</Badge>
     }
@@ -106,13 +106,13 @@ export function MerchantExtraSettlements({ merchantId }: MerchantExtraSettlement
   return (
     <div className="space-y-6">
       {/* Summary Card */}
-      <Card className="bg-purple-50/10 dark:bg-gray-800 dark:border-gray-700">
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
           <CardTitle className="text-lg dark:text-white">Сводка по дополнительным расчетам</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-purple-50/30 dark:bg-purple-900/25 p-4 rounded-lg">
+            <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Всего расчетов</p>
@@ -120,11 +120,11 @@ export function MerchantExtraSettlements({ merchantId }: MerchantExtraSettlement
                 </div>
               </div>
             </div>
-            <div className="bg-purple-50 dark:bg-purple-900/30 p-4 rounded-lg">
+            <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Общая сумма</p>
-                  <p className="text-2xl font-bold text-[#530FAD] dark:text-[#7c3aed] dark:text-purple-400">
+                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                     ${formatAmount(totalAmount)}
                   </p>
                 </div>
@@ -146,7 +146,7 @@ export function MerchantExtraSettlements({ merchantId }: MerchantExtraSettlement
       </Card>
 
       {/* Filters */}
-      <Card className="bg-purple-50/10 dark:bg-gray-800 dark:border-gray-700">
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg dark:text-white">История расчетов</CardTitle>
@@ -195,7 +195,7 @@ export function MerchantExtraSettlements({ merchantId }: MerchantExtraSettlement
                           {settlement.id.slice(0, 8)}...
                         </TableCell>
                         <TableCell>
-                          <div className="font-medium text-[#530FAD] dark:text-[#7c3aed] dark:text-purple-400">
+                          <div className="font-medium text-purple-600 dark:text-purple-400">
                             ${formatAmount(settlement.amount)}
                           </div>
                         </TableCell>

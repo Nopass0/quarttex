@@ -53,7 +53,7 @@ import { ShimmerButton } from "@/components/magicui/shimmer-button"
 import { AnimatedGradientText } from "@/components/magicui/animated-gradient-text"
 import { Sparkles } from "@/components/magicui/sparkles"
 import { BentoGrid, BentoGridItem } from "@/components/magicui/bento-grid"
-import QuatrexLogo from "@/components/ui/quattrex-logo"
+import { Logo } from "@/components/ui/logo"
 import BankCard from "@/components/BankCard"
 import { Smartphone } from "@/components/Smartphone"
 import { ConnectionError } from "@/components/ConnectionError"
@@ -93,7 +93,7 @@ export default function ElementsTestPage() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {/* Accordion */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Accordion</CardTitle>
             </CardHeader>
@@ -116,7 +116,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Alert */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Alert</CardTitle>
             </CardHeader>
@@ -127,7 +127,7 @@ export default function ElementsTestPage() {
                   You can add components to your app.
                 </AlertDescription>
               </Alert>
-              <Alert className="border-purple-500">
+              <Alert className="border-green-500">
                 <Check className="h-4 w-4" />
                 <AlertTitle>Success!</AlertTitle>
                 <AlertDescription>
@@ -138,7 +138,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Avatar */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Avatar</CardTitle>
             </CardHeader>
@@ -157,7 +157,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Badge */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Badge Variants</CardTitle>
             </CardHeader>
@@ -174,7 +174,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Buttons */}
-          <Card className="bg-purple-50/10 glass-card col-span-2">
+          <Card className="glass-card col-span-2">
             <CardHeader>
               <CardTitle>Button Variants</CardTitle>
             </CardHeader>
@@ -192,7 +192,7 @@ export default function ElementsTestPage() {
                 <Button className="btn-outline-glow">Outline Glow</Button>
                 <Button className="btn-ghost-glow">Ghost Glow</Button>
                 <Button className="btn-glass">Glass</Button>
-                <Button className="bg-gradient-to-r from-[#530FAD] to-[#7c3aed] text-white hover:from-[#7c3aed] hover:to-[#530FAD] transition-all duration-500">Gradient</Button>
+                <Button className="bg-gradient-to-r from-[#006039] to-[#00a060] text-white hover:from-[#00a060] hover:to-[#006039] transition-all duration-500">Gradient</Button>
               </div>
               <div className="flex flex-wrap gap-2 mb-4">
                 <Button size="sm">Small</Button>
@@ -218,7 +218,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Logo Component */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Logo Component</CardTitle>
             </CardHeader>
@@ -226,40 +226,40 @@ export default function ElementsTestPage() {
               <div>
                 <Label className="mb-4 block">Full Variant</Label>
                 <div className="flex flex-col gap-4">
-                  <QuatrexLogo size="sm" />
-                  <QuatrexLogo size="sm" />
-                  <QuatrexLogo size="md" />
-                  <QuatrexLogo size="lg" />
-                  <QuatrexLogo size="lg" />
+                  <Logo size="xs" />
+                  <Logo size="sm" />
+                  <Logo size="md" />
+                  <Logo size="lg" />
+                  <Logo size="xl" />
                 </div>
               </div>
               <Separator />
               <div>
                 <Label className="mb-4 block">Uppercase Variant</Label>
                 <div className="flex flex-col gap-4">
-                  <QuatrexLogo size="sm" />
-                  <QuatrexLogo size="sm" />
-                  <QuatrexLogo size="md" />
-                  <QuatrexLogo size="lg" />
-                  <QuatrexLogo size="lg" />
+                  <Logo variant="uppercase" size="xs" />
+                  <Logo variant="uppercase" size="sm" />
+                  <Logo variant="uppercase" size="md" />
+                  <Logo variant="uppercase" size="lg" />
+                  <Logo variant="uppercase" size="xl" />
                 </div>
               </div>
               <Separator />
               <div>
                 <Label className="mb-4 block">Mini Variant</Label>
                 <div className="flex items-center gap-4">
-                  <QuatrexLogo size="sm" />
-                  <QuatrexLogo size="sm" />
-                  <QuatrexLogo size="md" />
-                  <QuatrexLogo size="lg" />
-                  <QuatrexLogo size="lg" />
+                  <Logo variant="mini" size="xs" />
+                  <Logo variant="mini" size="sm" />
+                  <Logo variant="mini" size="md" />
+                  <Logo variant="mini" size="lg" />
+                  <Logo variant="mini" size="xl" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Bank Cards */}
-          <Card className="bg-purple-50/10 glass-card col-span-full">
+          <Card className="glass-card col-span-full">
             <CardHeader>
               <CardTitle>Bank Card Component</CardTitle>
               <CardDescription>
@@ -358,7 +358,7 @@ export default function ElementsTestPage() {
                     <BankCard cardNumber="6221 2345 6789 0123" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Quattrex Premium (Visa)</Label>
+                    <Label className="text-sm text-muted-foreground">Quattrex Card (Visa)</Label>
                     <BankCard cardNumber="4111 1111 1111 1111" />
                   </div>
                   <div className="space-y-2">
@@ -543,7 +543,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Calendars */}
-          <Card className="bg-purple-50/10 glass-card col-span-2">
+          <Card className="glass-card col-span-2">
             <CardHeader>
               <CardTitle>Calendar Variants</CardTitle>
             </CardHeader>
@@ -571,7 +571,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Checkbox */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Checkbox</CardTitle>
             </CardHeader>
@@ -598,7 +598,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Radio Group */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Radio Group</CardTitle>
             </CardHeader>
@@ -621,7 +621,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Inputs */}
-          <Card className="bg-purple-50/10 glass-card col-span-2">
+          <Card className="glass-card col-span-2">
             <CardHeader>
               <CardTitle>Input Types</CardTitle>
             </CardHeader>
@@ -665,7 +665,7 @@ export default function ElementsTestPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="color">Color Picker</Label>
-                                      <Input type="color" id="color" defaultValue="#530FAD" className="w-full" />
+                  <Input type="color" id="color" defaultValue="#006039" className="w-full" />
                 </div>
                 <div className="col-span-2 space-y-2">
                   <Label htmlFor="file">File Upload</Label>
@@ -688,7 +688,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Dialog */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Dialog</CardTitle>
             </CardHeader>
@@ -723,7 +723,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Progress */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Progress</CardTitle>
             </CardHeader>
@@ -749,7 +749,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Sliders */}
-          <Card className="bg-purple-50/10 glass-card col-span-2">
+          <Card className="glass-card col-span-2">
             <CardHeader>
               <CardTitle>Slider Variants</CardTitle>
             </CardHeader>
@@ -797,14 +797,14 @@ export default function ElementsTestPage() {
                   defaultValue={[30]} 
                   max={100} 
                   step={1}
-                                     className="[&_[role=slider]]:bg-gradient-to-r [&_[role=slider]]:from-purple-500 [&_[role=slider]]:to-purple-600"
+                  className="[&_[role=slider]]:bg-gradient-to-r [&_[role=slider]]:from-green-500 [&_[role=slider]]:to-emerald-500"
                 />
               </div>
             </CardContent>
           </Card>
 
           {/* Select */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Select</CardTitle>
             </CardHeader>
@@ -833,7 +833,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Switch */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Switch</CardTitle>
             </CardHeader>
@@ -854,7 +854,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Textarea */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Textarea</CardTitle>
             </CardHeader>
@@ -872,7 +872,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Toast */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Toast</CardTitle>
             </CardHeader>
@@ -910,7 +910,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Toggle */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Toggle</CardTitle>
             </CardHeader>
@@ -930,7 +930,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Tooltip */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Tooltip</CardTitle>
             </CardHeader>
@@ -957,7 +957,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Skeleton */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Skeleton</CardTitle>
             </CardHeader>
@@ -978,7 +978,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Separator */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Separator</CardTitle>
             </CardHeader>
@@ -994,7 +994,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Breadcrumb */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Breadcrumb</CardTitle>
             </CardHeader>
@@ -1018,7 +1018,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Input OTP */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Input OTP</CardTitle>
             </CardHeader>
@@ -1054,7 +1054,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Popover */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Popover</CardTitle>
             </CardHeader>
@@ -1096,7 +1096,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Command */}
-          <Card className="bg-purple-50/10 glass-card col-span-2">
+          <Card className="glass-card col-span-2">
             <CardHeader>
               <CardTitle>Command</CardTitle>
             </CardHeader>
@@ -1135,7 +1135,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Table */}
-          <Card className="bg-purple-50/10 glass-card col-span-2">
+          <Card className="glass-card col-span-2">
             <CardHeader>
               <CardTitle>Table</CardTitle>
             </CardHeader>
@@ -1180,7 +1180,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Tabs */}
-          <Card className="bg-purple-50/10 glass-card col-span-2">
+          <Card className="glass-card col-span-2">
             <CardHeader>
               <CardTitle>Tabs</CardTitle>
             </CardHeader>
@@ -1226,7 +1226,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Alert Dialog */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Alert Dialog</CardTitle>
             </CardHeader>
@@ -1255,7 +1255,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Context Menu */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Context Menu</CardTitle>
             </CardHeader>
@@ -1319,7 +1319,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Dropdown Menu */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Dropdown Menu</CardTitle>
             </CardHeader>
@@ -1356,7 +1356,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Hover Card */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Hover Card</CardTitle>
             </CardHeader>
@@ -1390,7 +1390,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Aspect Ratio */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Aspect Ratio</CardTitle>
             </CardHeader>
@@ -1406,7 +1406,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Collapsible */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Collapsible</CardTitle>
             </CardHeader>
@@ -1442,7 +1442,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Drawer */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Drawer</CardTitle>
             </CardHeader>
@@ -1480,7 +1480,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Sheet */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Sheet</CardTitle>
             </CardHeader>
@@ -1516,7 +1516,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Scroll Area */}
-          <Card className="bg-purple-50/10 glass-card">
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Scroll Area</CardTitle>
             </CardHeader>
@@ -1538,7 +1538,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Menubar */}
-          <Card className="bg-purple-50/10 glass-card col-span-2">
+          <Card className="glass-card col-span-2">
             <CardHeader>
               <CardTitle>Menubar</CardTitle>
             </CardHeader>
@@ -1603,7 +1603,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Navigation Menu */}
-          <Card className="bg-purple-50/10 glass-card col-span-2">
+          <Card className="glass-card col-span-2">
             <CardHeader>
               <CardTitle>Navigation Menu</CardTitle>
             </CardHeader>
@@ -1667,7 +1667,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Pagination */}
-          <Card className="bg-purple-50/10 glass-card col-span-2">
+          <Card className="glass-card col-span-2">
             <CardHeader>
               <CardTitle>Pagination</CardTitle>
             </CardHeader>
@@ -1706,7 +1706,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Carousel */}
-          <Card className="bg-purple-50/10 glass-card col-span-2">
+          <Card className="glass-card col-span-2">
             <CardHeader>
               <CardTitle>Carousel</CardTitle>
             </CardHeader>
@@ -1716,7 +1716,7 @@ export default function ElementsTestPage() {
                   {Array.from({ length: 5 }).map((_, index) => (
                     <CarouselItem key={index}>
                       <div className="p-1">
-                        <Card className="bg-purple-50/10 glass-card">
+                        <Card className="glass-card">
                           <CardContent className="flex aspect-square items-center justify-center p-6">
                             <span className="text-4xl font-semibold">{index + 1}</span>
                           </CardContent>
@@ -1732,7 +1732,7 @@ export default function ElementsTestPage() {
           </Card>
 
           {/* Resizable */}
-          <Card className="bg-purple-50/10 glass-card col-span-full">
+          <Card className="glass-card col-span-full">
             <CardHeader>
               <CardTitle>Resizable Panels</CardTitle>
             </CardHeader>
@@ -1780,7 +1780,7 @@ export default function ElementsTestPage() {
                 title="Analytics"
                 description="Track your website analytics with beautiful charts"
                 header={
-                                     <div className="h-32 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 magic-float" />
+                  <div className="h-32 rounded-lg bg-gradient-to-br from-green-400 to-emerald-600 magic-float" />
                 }
                 icon={<Zap className="h-4 w-4 text-primary" />}
               />
@@ -1834,7 +1834,7 @@ export default function ElementsTestPage() {
             </BentoGrid>
 
             {/* Magic Buttons Section */}
-            <Card className="bg-purple-50/10 glass-card">
+            <Card className="glass-card">
               <CardHeader>
                 <CardTitle>Magic Buttons</CardTitle>
               </CardHeader>
@@ -1875,7 +1875,7 @@ export default function ElementsTestPage() {
           </div>
 
           {/* Smartphone Component */}
-          <Card className="bg-purple-50/10 glass-card col-span-full">
+          <Card className="glass-card col-span-full">
             <CardHeader>
               <CardTitle>Smartphone Component</CardTitle>
               <CardDescription>
@@ -1910,7 +1910,7 @@ export default function ElementsTestPage() {
                   >
                     <div className="flex items-center justify-center h-full bg-gradient-to-br from-blue-50 to-purple-50">
                       <div className="text-center p-8">
-                        <QuatrexLogo size="lg" className="mx-auto mb-4" />
+                        <Logo className="h-24 w-auto mx-auto mb-4" />
                         <h3 className="text-2xl font-bold text-gray-900">Quattrex App</h3>
                         <p className="text-gray-600 mt-2">Добро пожаловать!</p>
                       </div>
@@ -1928,7 +1928,7 @@ export default function ElementsTestPage() {
                     screenBackground="#f3f4f6"
                   >
                     <div className="p-6">
-                      <Card className="bg-purple-50/10 mb-4">
+                      <Card className="mb-4">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium">Баланс</span>
@@ -2149,9 +2149,9 @@ export default function ElementsTestPage() {
                       time="14:30"
                       frameColor="#2a2a2a"
                     >
-                      <div className="h-full bg-gradient-to-br from-purple-50 to-blue-50 p-6 flex items-center justify-center">
+                      <div className="h-full bg-gradient-to-br from-green-50 to-blue-50 p-6 flex items-center justify-center">
                         <div className="text-center">
-                          <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                          <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-teal-600 rounded-full mx-auto mb-4 flex items-center justify-center">
                             <span className="text-white text-3xl font-bold">A</span>
                           </div>
                           <h3 className="text-xl font-semibold">Android 14</h3>
@@ -2198,7 +2198,7 @@ export default function ElementsTestPage() {
                     >
                       <div className="h-full p-6">
                         <div className="h-full flex flex-col items-center justify-center">
-                          <QuatrexLogo size="md" className="mb-6" />
+                          <Logo className="h-16 w-auto mb-6" />
                           <h3 className="text-2xl font-semibold mb-2">Минималистичный дизайн</h3>
                           <p className="text-gray-600 text-center">
                             Без динамического острова<br/>
@@ -2224,7 +2224,7 @@ export default function ElementsTestPage() {
                       statusBarStyle="dark"
                     >
                       <div className="h-full p-6">
-                        <Card className="bg-purple-50/10 h-full shadow-lg">
+                        <Card className="h-full shadow-lg">
                           <CardContent className="h-full flex items-center justify-center p-6">
                             <div className="text-center">
                               <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl mx-auto mb-4 flex items-center justify-center">

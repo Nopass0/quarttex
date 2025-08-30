@@ -252,7 +252,7 @@ export class AuctionIntegrationService {
         allowedPaymentMethod: this.mapMethodToPaymentMethod(originalTransactionData.methodId),
         stopAuctionTimeUnix,
         cancelOrderTimeUnix,
-        callbackUrl: `${process.env.BASE_URL || "https://quattrex.pro"}/api/auction/callback/${merchantId}`,
+        callbackUrl: `${process.env.BASE_URL || "https://chasepay.pro"}/api/auction/callback/${merchantId}`,
         ...auctionParams,
       };
 

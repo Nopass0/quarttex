@@ -410,7 +410,7 @@ export function TraderMessagesV2() {
         {totalPages > 1 && (
           <div className="mt-4 flex items-center justify-center gap-2">
             <button
-              className="px-4 py-2 text-sm border rounded-lg hover:bg-purple-50/30 disabled:opacity-50"
+              className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50"
               onClick={() => setPage(page - 1)}
               disabled={page === 1}
             >
@@ -420,7 +420,7 @@ export function TraderMessagesV2() {
               Страница {page} из {totalPages}
             </span>
             <button
-              className="px-4 py-2 text-sm border rounded-lg hover:bg-purple-50/30 disabled:opacity-50"
+              className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50"
               onClick={() => setPage(page + 1)}
               disabled={page === totalPages}
             >

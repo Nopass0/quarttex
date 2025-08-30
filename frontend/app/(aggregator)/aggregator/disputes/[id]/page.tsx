@@ -132,11 +132,11 @@ export default function AggregatorDisputeDetailPage() {
       case "MERCHANT":
         return "bg-blue-100 text-blue-800"
       case "AGGREGATOR":
-        return "bg-purple-100 text-purple-800"
+        return "bg-green-100 text-green-800"
       case "ADMIN":
         return "bg-purple-100 text-purple-800"
       default:
-        return "bg-purple-100/40 text-gray-800"
+        return "bg-gray-100 text-gray-800"
     }
   }
 
@@ -189,7 +189,7 @@ export default function AggregatorDisputeDetailPage() {
 
       <div className="grid gap-6 md:grid-cols-3">
         {/* Transaction Details */}
-        <Card className="bg-purple-50/10 md:col-span-1">
+        <Card className="md:col-span-1">
           <CardHeader>
             <CardTitle className="text-lg">Детали транзакции</CardTitle>
           </CardHeader>
@@ -224,7 +224,7 @@ export default function AggregatorDisputeDetailPage() {
         </Card>
 
         {/* Messages */}
-        <Card className="bg-purple-50/10 md:col-span-2">
+        <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />

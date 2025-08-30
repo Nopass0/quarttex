@@ -207,7 +207,7 @@ export function AppVersionsList() {
         </div>
         <Button
           onClick={() => setIsUploadDialogOpen(true)}
-          className="bg-[#530FAD] hover:bg-purple-800/60"
+          className="bg-[#006039] hover:bg-[#005030]"
         >
           <Upload className="mr-2 h-4 w-4" />
           Загрузить новую версию
@@ -216,17 +216,17 @@ export function AppVersionsList() {
 
       {/* Current Version Card */}
       {versions.find(v => v.isPrimary) && (
-        <Card className="bg-purple-50/10 p-6 bg-gradient-to-br from-[#006039]/5 to-[#006039]/10 border-[#006039]/20">
+        <Card className="p-6 bg-gradient-to-br from-[#006039]/5 to-[#006039]/10 border-[#006039]/20">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-lg bg-[#530FAD] flex items-center justify-center">
+                <div className="h-12 w-12 rounded-lg bg-[#006039] flex items-center justify-center">
                   <FileArchive className="h-6 w-6 text-white" />
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold flex items-center gap-2">
                     Текущая версия
-                    <Badge className="bg-[#530FAD] text-white">
+                    <Badge className="bg-[#006039] text-white">
                       {versions.find(v => v.isPrimary)?.version}
                     </Badge>
                   </h2>
@@ -302,7 +302,7 @@ export function AppVersionsList() {
                 </TableCell>
                 <TableCell>
                   {version.isPrimary ? (
-                    <Badge className="bg-[#530FAD] text-white">
+                    <Badge className="bg-[#006039] text-white">
                       <CheckCircle className="mr-1 h-3 w-3" />
                       Основная
                     </Badge>
@@ -407,7 +407,7 @@ export function AppVersionsList() {
             </Button>
             <Button
               onClick={handleUpload}
-              className="bg-[#530FAD] hover:bg-purple-800/60"
+              className="bg-[#006039] hover:bg-[#005030]"
               disabled={isUploading || !selectedFile || !newVersion}
             >
               {isUploading ? (

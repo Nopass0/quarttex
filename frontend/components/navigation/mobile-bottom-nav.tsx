@@ -145,7 +145,7 @@ export function MobileBottomNav({ variant, onMoreClick }: MobileBottomNavProps) 
   const mainItems = getMainItems();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-purple-50/20 dark:bg-purple-900/15 border-t border-purple-200/60 dark:border-gray-800 md:hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 md:hidden">
       <div className="grid grid-cols-5 h-16">
         {mainItems.map((item) => {
           const Icon = item.icon;

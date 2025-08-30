@@ -249,7 +249,7 @@ export function DevicesList() {
     const diffHours = (now.getTime() - lastActive.getTime()) / (1000 * 60 * 60)
     
     if (diffHours < 1) {
-      return { label: 'Онлайн', variant: 'default' as const, color: 'text-[#530FAD] dark:text-[#7c3aed]' }
+      return { label: 'Онлайн', variant: 'default' as const, color: 'text-purple-600' }
     } else if (diffHours < 24) {
       return { label: 'Сегодня', variant: 'secondary' as const, color: 'text-blue-600' }
     } else if (diffHours < 168) { // 7 days
@@ -274,18 +274,22 @@ export function DevicesList() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-purple-50/10 border-green-200">
+<<<<<<< Current (Your changes)
+        <Card className="border-purple-200">
+=======
+        <Card className="bg-purple-50/10 border-purple-200">
+>>>>>>> Incoming (Background Agent changes)
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium text-[#530FAD] dark:text-[#7c3aed]">Активных</CardTitle>
+            <CardTitle className="text-base font-medium text-purple-600">Активных</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <p className="text-2xl font-bold text-[#530FAD] dark:text-[#7c3aed]">{statistics.active}</p>
+              <p className="text-2xl font-bold text-purple-600">{statistics.active}</p>
               <Activity className="h-8 w-8 text-purple-400" />
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-purple-50/10 border-red-200">
+        <Card className="border-red-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-medium text-red-600">Неактивных</CardTitle>
           </CardHeader>
@@ -591,7 +595,7 @@ export function DevicesList() {
             <DialogDescription>
               Вы уверены, что хотите удалить это устройство? Это действие нельзя отменить.
               {selectedDevice && (
-                <div className="mt-3 p-3 bg-purple-50/30 rounded-lg">
+                <div className="mt-3 p-3 bg-gray-50 rounded-lg">
                   <p className="text-sm">
                     <strong>Устройство:</strong> {selectedDevice.model}
                   </p>

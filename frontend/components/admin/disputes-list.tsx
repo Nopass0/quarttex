@@ -279,7 +279,7 @@ export function AdminDisputesList() {
                     {dealDisputes.map((dispute) => (
                       <TableRow 
                         key={dispute.id}
-                        className="cursor-pointer hover:bg-purple-50/50"
+                        className="cursor-pointer hover:bg-gray-50"
                         onClick={() => navigateToDispute('deal', dispute.id)}
                       >
                         <TableCell className="font-mono text-sm">
@@ -428,7 +428,7 @@ export function AdminDisputesList() {
                     {withdrawalDisputes.map((dispute) => (
                       <TableRow 
                         key={dispute.id}
-                        className="cursor-pointer hover:bg-purple-50/50"
+                        className="cursor-pointer hover:bg-gray-50"
                         onClick={() => navigateToDispute('withdrawal', dispute.id)}
                       >
                         <TableCell className="font-mono text-sm">

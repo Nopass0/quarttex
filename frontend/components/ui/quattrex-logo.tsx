@@ -1,23 +1,23 @@
-import React from "react"
+import React from "react";
 
 export default function QuatrexLogo({
   className = "",
   size = "md",
 }: {
   className?: string;
-  size?: "sm" | "md" | "lg"
+  size?: "sm" | "md" | "lg";
 }) {
   const sizeClasses = {
     sm: "h-10",
     md: "h-14",
     lg: "h-20",
-  }
+  };
 
   const iconSizeClasses = {
     sm: "w-10 h-10",
     md: "w-14 h-14",
     lg: "w-20 h-20",
-  }
+  };
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
@@ -25,7 +25,7 @@ export default function QuatrexLogo({
       <div className={`${iconSizeClasses[size]} relative`}>
         {/* Outer glow effect */}
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-400 to-purple-600 blur-sm opacity-60 dark:opacity-80"></div>
-        
+
         {/* Main container */}
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500 via-purple-600 to-purple-800 p-0.5">
           <div className="w-full h-full rounded-[15px] bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900 flex items-center justify-center relative overflow-hidden">
@@ -44,7 +44,11 @@ export default function QuatrexLogo({
             </div>
 
             {/* Main icon design */}
-            <svg viewBox="0 0 40 40" fill="none" className="w-4/5 h-4/5 text-white relative z-10">
+            <svg
+              viewBox="0 0 40 40"
+              fill="none"
+              className="w-4/5 h-4/5 text-white relative z-10"
+            >
               {/* Central Q shape with modern design */}
               <g>
                 {/* Main Q circle */}
@@ -57,7 +61,7 @@ export default function QuatrexLogo({
                   fill="none"
                   className="drop-shadow-sm"
                 />
-                
+
                 {/* Q tail with arrow effect */}
                 <path
                   d="M28 28l6 6M32 30l2 2 2-2"
@@ -66,7 +70,7 @@ export default function QuatrexLogo({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-                
+
                 {/* Inner design elements */}
                 <g opacity="0.9">
                   {/* Trading chart pattern */}
@@ -78,7 +82,7 @@ export default function QuatrexLogo({
                     strokeLinejoin="round"
                     fill="none"
                   />
-                  
+
                   {/* Data points */}
                   <circle cx="14" cy="20" r="1.5" fill="currentColor" />
                   <circle cx="17" cy="17" r="1.5" fill="currentColor" />
@@ -86,7 +90,7 @@ export default function QuatrexLogo({
                   <circle cx="23" cy="16" r="1.5" fill="currentColor" />
                   <circle cx="26" cy="19" r="1.5" fill="currentColor" />
                 </g>
-                
+
                 {/* Modern geometric accents */}
                 <g opacity="0.7">
                   {/* Top right accent */}
@@ -104,7 +108,7 @@ export default function QuatrexLogo({
                     strokeLinecap="round"
                   />
                 </g>
-                
+
                 {/* Digital circuit elements */}
                 <g opacity="0.6">
                   <path
@@ -120,9 +124,15 @@ export default function QuatrexLogo({
                     strokeLinecap="round"
                   />
                 </g>
-                
+
                 {/* Center highlight */}
-                <circle cx="20" cy="20" r="2" fill="currentColor" opacity="0.8" />
+                <circle
+                  cx="20"
+                  cy="20"
+                  r="2"
+                  fill="currentColor"
+                  opacity="0.8"
+                />
               </g>
             </svg>
           </div>
@@ -142,12 +152,16 @@ export default function QuatrexLogo({
             letterSpacing: "0.02em",
           }}
         >
-          QUATT<span className="text-purple-500 dark:text-purple-400 dark:drop-shadow-[0_0_6px_rgba(124,58,237,0.4)]">REX</span>
+          QUATT
+          <span className="text-purple-500 dark:text-purple-400 dark:drop-shadow-[0_0_6px_rgba(124,58,237,0.4)]">
+            REX
+          </span>
         </span>
       </div>
     </div>
-  )
+  );
 }
 
 // For backward compatibility
-export const Logo = QuatrexLogo
+export const Logo = QuatrexLogo;
+

@@ -165,7 +165,7 @@ export function TraderMessages() {
       </div>
 
       {/* Search and Filters */}
-      <Card className="bg-purple-50/10 mb-6">
+      <Card className="mb-6">
         <CardContent className="p-4">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1 flex gap-2">
@@ -265,7 +265,7 @@ export function TraderMessages() {
               {messages.map((message) => {
                 const Icon = getMessageIcon(message.type)
                 return (
-                  <div key={message.id} className="p-4 hover:bg-purple-50/50">
+                  <div key={message.id} className="p-4 hover:bg-gray-50">
                     <div className="flex items-start gap-4">
                       {/* Message Icon */}
                       <div className={cn(
@@ -274,7 +274,7 @@ export function TraderMessages() {
                       )}>
                         <Icon className={cn(
                           "w-5 h-5",
-                          message.type === 'notification' ? "text-blue-600" : "text-[#530FAD] dark:text-[#7c3aed]"
+                          message.type === 'notification' ? "text-blue-600" : "text-purple-600"
                         )} />
                       </div>
 
@@ -324,7 +324,7 @@ export function TraderMessages() {
                             {formatDateTime(message.timestamp)}
                           </span>
                           {message.transaction && (
-                            <span className="flex items-center gap-1 text-[#530FAD] dark:text-[#7c3aed]">
+                            <span className="flex items-center gap-1 text-purple-600">
                               <Building className="w-3 h-3" />
                               {message.transaction.amount.toLocaleString('ru-RU')} ₽
                             </span>

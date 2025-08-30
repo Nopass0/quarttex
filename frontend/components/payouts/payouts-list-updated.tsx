@@ -208,7 +208,7 @@ export function PayoutsList() {
 
     if (diff <= 0) {
       return (
-        <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100/80 rounded-full">
+        <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100/80 rounded-full">
           <Clock className="h-3 w-3 text-gray-500" />
           <span className="text-xs text-gray-600 font-medium">Истекло</span>
         </div>
@@ -282,7 +282,7 @@ export function PayoutsList() {
     } else if (payout.status === "disputed") {
       return "bg-orange-100 text-orange-700";
     } else if (payout.status === "expired" || expiresAt < now) {
-      return "bg-purple-100/40 text-gray-700";
+      return "bg-gray-100 text-gray-700";
     } else {
       return "bg-blue-100 text-blue-700";
     }
@@ -851,7 +851,7 @@ export function PayoutsList() {
                     {payout.id}
                   </div>
                   <button
-                    className="p-0.5 hover:bg-purple-100/40 rounded transition-colors"
+                    className="p-0.5 hover:bg-gray-100 rounded transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       copyToClipboard(payout.id.toString(), "ID");
@@ -866,7 +866,7 @@ export function PayoutsList() {
                   })}
                 </div>
                 {payout.accepted_at && (
-                  <div className="text-xs text-[#530FAD] dark:text-[#7c3aed]">
+                  <div className="text-xs text-purple-600">
                     Принято:{" "}
                     {format(new Date(payout.accepted_at), "dd.MM.yyyy HH:mm", {
                       locale: ru,
@@ -923,7 +923,7 @@ export function PayoutsList() {
                           {payout.wallet}
                         </div>
                         <button
-                          className="p-0.5 hover:bg-purple-100/40 rounded transition-colors flex-shrink-0"
+                          className="p-0.5 hover:bg-gray-100 rounded transition-colors flex-shrink-0"
                           onClick={(e) => {
                             e.stopPropagation();
                             copyToClipboard(payout.wallet, "Реквизиты");
@@ -967,7 +967,7 @@ export function PayoutsList() {
                         {payout.amount.toLocaleString("ru-RU")} ₽
                       </div>
                       <button
-                        className="p-0.5 hover:bg-purple-100/40 rounded transition-colors"
+                        className="p-0.5 hover:bg-gray-100 rounded transition-colors"
                         onClick={(e) => {
                           e.stopPropagation();
                           copyToClipboard(payout.amount.toString(), "Сумма");
@@ -1051,7 +1051,7 @@ export function PayoutsList() {
                 {payout.status === "created" ? (
                   <Button
                     size="sm"
-                    className="h-9 px-4 bg-[#530FAD] hover:bg-purple-700/80 text-white"
+                    className="h-9 px-4 bg-[#006039] hover:bg-[#004d2e] text-white"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleAcceptPayout(payout.id);
@@ -1071,7 +1071,7 @@ export function PayoutsList() {
                         setConfirmDialogOpen(true);
                       }}
                     >
-                      <CheckCircle className="h-5 w-5 text-[#530FAD] dark:text-[#7c3aed]" />
+                      <CheckCircle className="h-5 w-5 text-purple-600" />
                     </Button>
                     <Button
                       size="sm"
@@ -1205,7 +1205,7 @@ export function PayoutsList() {
                 className="flex items-center gap-2 text-sm font-normal hover:bg-black/5 transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-purple-100/40 flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
                     <User className="h-4 w-4 text-[#006039]" />
                   </div>
                   <span className="text-gray-700 font-medium">
@@ -1218,7 +1218,7 @@ export function PayoutsList() {
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem
                 onClick={handleLogout}
-                className="text-red-600 focus:text-red-600 hover:bg-purple-50/30 cursor-pointer"
+                className="text-red-600 focus:text-red-600 hover:bg-gray-50 cursor-pointer"
               >
                 <LogOut className="mr-2 h-4 w-4 text-[#006039]" />
                 Выйти
@@ -1465,7 +1465,7 @@ export function PayoutsList() {
                 value={balanceInput}
                 onChange={(e) => setBalanceInput(e.target.value)}
                 onBlur={saveFilters}
-                className="h-12 w-32 focus:ring-2 focus:ring-green-500 focus:border-[#530FAD]"
+className="h-12 w-32 focus:ring-2 focus:ring-purple-500 focus:border-[#530FAD]"
               />
               <Button
                 variant="outline"
@@ -1658,7 +1658,7 @@ export function PayoutsList() {
                 <span>Детали выплаты ${selectedPayout?.id}</span>
                 {selectedPayout && (
                   <button
-                    className="p-1 hover:bg-purple-100/40 rounded transition-colors"
+                    className="p-1 hover:bg-gray-100 rounded transition-colors"
                     onClick={() =>
                       copyToClipboard(
                         selectedPayout.id.toString(),
@@ -1753,7 +1753,7 @@ export function PayoutsList() {
                       </p>
                     </div>
                     <button
-                      className="p-1 hover:bg-purple-100/40 rounded transition-colors flex-shrink-0"
+                      className="p-1 hover:bg-gray-100 rounded transition-colors flex-shrink-0"
                       onClick={() =>
                         copyToClipboard(
                           `${selectedPayout.wallet} ${selectedPayout.bank}`,
@@ -1814,9 +1814,9 @@ export function PayoutsList() {
                       {selectedPayout.proofFiles.map((file, index) => (
                         <div
                           key={index}
-                          className="flex items-center gap-2 p-2 bg-purple-50/30 rounded"
+                          className="flex items-center gap-2 p-2 bg-gray-50 rounded"
                         >
-                          <CheckCircle className="h-4 w-4 text-[#530FAD] dark:text-[#7c3aed]" />
+                          <CheckCircle className="h-4 w-4 text-purple-600" />
                           <span className="text-sm">
                             {file.includes("-")
                               ? file.split("-").slice(1).join("-")
@@ -1972,47 +1972,47 @@ export function PayoutsList() {
             <div className="space-y-2">
               <Label>Причина отмены</Label>
               <div className="space-y-2">
-                <label className="flex items-center gap-2 p-2 rounded hover:bg-purple-50/30 cursor-pointer">
+                <label className="flex items-center gap-2 p-2 rounded hover:bg-gray-50 cursor-pointer">
                   <input
                     type="radio"
                     name="cancel-reason"
                     value="Недостаточно средств"
                     checked={cancelReason === "Недостаточно средств"}
                     onChange={(e) => setCancelReason(e.target.value)}
-                    className="w-4 h-4 text-[#530FAD] dark:text-[#7c3aed]"
+                    className="w-4 h-4 text-purple-600"
                   />
                   <span className="text-sm">Недостаточно средств</span>
                 </label>
-                <label className="flex items-center gap-2 p-2 rounded hover:bg-purple-50/30 cursor-pointer">
+                <label className="flex items-center gap-2 p-2 rounded hover:bg-gray-50 cursor-pointer">
                   <input
                     type="radio"
                     name="cancel-reason"
                     value="Карта заблокирована"
                     checked={cancelReason === "Карта заблокирована"}
                     onChange={(e) => setCancelReason(e.target.value)}
-                    className="w-4 h-4 text-[#530FAD] dark:text-[#7c3aed]"
+                    className="w-4 h-4 text-purple-600"
                   />
                   <span className="text-sm">Карта заблокирована</span>
                 </label>
-                <label className="flex items-center gap-2 p-2 rounded hover:bg-purple-50/30 cursor-pointer">
+                <label className="flex items-center gap-2 p-2 rounded hover:bg-gray-50 cursor-pointer">
                   <input
                     type="radio"
                     name="cancel-reason"
                     value="Технические проблемы"
                     checked={cancelReason === "Технические проблемы"}
                     onChange={(e) => setCancelReason(e.target.value)}
-                    className="w-4 h-4 text-[#530FAD] dark:text-[#7c3aed]"
+                    className="w-4 h-4 text-purple-600"
                   />
                   <span className="text-sm">Технические проблемы</span>
                 </label>
-                <label className="flex items-center gap-2 p-2 rounded hover:bg-purple-50/30 cursor-pointer">
+                <label className="flex items-center gap-2 p-2 rounded hover:bg-gray-50 cursor-pointer">
                   <input
                     type="radio"
                     name="cancel-reason"
                     value="Подозрительная операция"
                     checked={cancelReason === "Подозрительная операция"}
                     onChange={(e) => setCancelReason(e.target.value)}
-                    className="w-4 h-4 text-[#530FAD] dark:text-[#7c3aed]"
+                    className="w-4 h-4 text-purple-600"
                   />
                   <span className="text-sm">Подозрительная операция</span>
                 </label>
@@ -2042,7 +2042,7 @@ export function PayoutsList() {
                 >
                   {cancelFiles.length > 0 ? (
                     <>
-                      <CheckCircle className="h-6 w-6 text-[#530FAD] dark:text-[#7c3aed] mb-1" />
+                      <CheckCircle className="h-6 w-6 text-purple-600 mb-1" />
                       <p className="text-sm font-medium">
                         {cancelFiles.length} файл(ов) выбрано
                       </p>
@@ -2104,7 +2104,7 @@ export function PayoutsList() {
                 if (!payout) return null;
 
                 return (
-                  <div className="bg-purple-50/30 p-4 rounded-lg space-y-2">
+                  <div className="bg-gray-50 p-4 rounded-lg space-y-2">
                     <h4 className="font-medium text-sm text-gray-700">
                       Данные выплаты:
                     </h4>
@@ -2153,7 +2153,7 @@ export function PayoutsList() {
                 >
                   {proofFiles.length > 0 ? (
                     <>
-                      <CheckCircle className="h-8 w-8 text-[#530FAD] dark:text-[#7c3aed] mb-2" />
+                      <CheckCircle className="h-8 w-8 text-purple-600 mb-2" />
                       <p className="text-sm font-medium">
                         {proofFiles.length} файл(ов) выбрано
                       </p>
@@ -2189,7 +2189,7 @@ export function PayoutsList() {
               <Button
                 onClick={() => handleConfirmPayout(selectedPayoutForAction!)}
                 disabled={proofFiles.length === 0}
-                className="bg-[#530FAD] hover:bg-purple-700"
+                className="bg-purple-600 hover:bg-purple-700"
               >
                 Подтвердить выплату
               </Button>
@@ -2200,3 +2200,4 @@ export function PayoutsList() {
     </div>
   );
 }
+

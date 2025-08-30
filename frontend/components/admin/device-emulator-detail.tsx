@@ -104,7 +104,7 @@ interface ServiceLog {
 }
 
 const logLevelColors: Record<LogLevel, string> = {
-  DEBUG: 'bg-purple-100/40 text-gray-700',
+  DEBUG: 'bg-gray-100 text-gray-700',
   INFO: 'bg-blue-100 text-blue-700',
   WARN: 'bg-yellow-100 text-yellow-700',
   ERROR: 'bg-red-100 text-red-700',
@@ -442,7 +442,7 @@ export function DeviceEmulatorDetail() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold text-[#530FAD] dark:text-[#7c3aed]">
+              <span className="text-2xl font-bold text-purple-600">
                 {metrics.activeDevices}
               </span>
               <Activity className="w-8 h-8 text-purple-400" />
@@ -595,7 +595,7 @@ export function DeviceEmulatorDetail() {
                             <TableCell>
                               {activeDevice ? (
                                 activeDevice.isConnected ? (
-                                  <Badge variant="default" className="bg-[#530FAD]">
+                                  <Badge variant="default" className="bg-purple-600">
                                     <Power className="w-3 h-3 mr-1" />
                                     Подключен
                                   </Badge>
@@ -756,7 +756,7 @@ export function DeviceEmulatorDetail() {
                   <summary className="cursor-pointer text-sm font-medium text-gray-700">
                     Пример конфигурации
                   </summary>
-                  <pre className="mt-2 p-4 bg-purple-50/30 rounded-lg overflow-x-auto text-xs">
+                  <pre className="mt-2 p-4 bg-gray-50 rounded-lg overflow-x-auto text-xs">
                     {JSON.stringify(exampleConfig, null, 2)}
                   </pre>
                 </details>
@@ -850,7 +850,7 @@ export function DeviceEmulatorDetail() {
                         const isExpanded = expandedLogs.has(log.id)
                         return (
                           <React.Fragment key={log.id}>
-                            <TableRow className="cursor-pointer hover:bg-purple-50/50" onClick={() => log.data && toggleLogExpanded(log.id)}>
+                            <TableRow className="cursor-pointer hover:bg-gray-50" onClick={() => log.data && toggleLogExpanded(log.id)}>
                               <TableCell className="text-sm text-gray-600">
                                 {formatDateTime(log.createdAt)}
                               </TableCell>

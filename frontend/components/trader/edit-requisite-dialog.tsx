@@ -306,7 +306,7 @@ export function EditRequisiteDialog({ open, onOpenChange, requisite, onSuccess }
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Отмена
               </Button>
-              <Button type="submit" disabled={loading || hasEmptyRequiredNumbers} className="bg-[#530FAD] hover:bg-[#530FAD]/90">
+              <Button type="submit" disabled={loading || hasEmptyRequiredNumbers} className="bg-[#006039] hover:bg-[#006039]/90">
                 Сохранить
               </Button>
             </DialogFooter>

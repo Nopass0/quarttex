@@ -49,7 +49,7 @@ const statusIcons: Record<ServiceStatus, any> = {
 
 const statusColors: Record<ServiceStatus, string> = {
   RUNNING: 'bg-purple-100 text-purple-700',
-  STOPPED: 'bg-purple-100/40 text-gray-700',
+  STOPPED: 'bg-gray-100 text-gray-700',
   ERROR: 'bg-red-100 text-red-700',
 }
 

@@ -181,7 +181,7 @@ export function AgentsList() {
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#530FAD] hover:bg-purple-800/60">
+            <Button className="bg-[#006039] hover:bg-[#005030]">
               <UserPlus className="mr-2 h-4 w-4 text-white" />
               Добавить агента
             </Button>
@@ -249,7 +249,7 @@ export function AgentsList() {
             <DialogFooter>
               <Button
                 onClick={handleCreateAgent}
-                className="bg-[#530FAD] hover:bg-purple-800/60"
+                className="bg-[#006039] hover:bg-[#005030]"
                 disabled={isLoading || !formData.email || !formData.name}
               >
                 Создать
@@ -283,7 +283,7 @@ export function AgentsList() {
               {filteredAgents.map((agent) => (
                 <TableRow 
                   key={agent.id}
-                  className="cursor-pointer hover:bg-purple-50/50"
+                  className="cursor-pointer hover:bg-gray-50"
                   onClick={() => router.push(`/admin/agents/${agent.id}`)}
                 >
                   <TableCell>
@@ -366,7 +366,7 @@ export function AgentsList() {
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <div className="bg-purple-100/40 p-4 rounded-lg font-mono text-lg text-center relative">
+            <div className="bg-gray-100 p-4 rounded-lg font-mono text-lg text-center relative">
               {generatedPassword}
               <Button
                 variant="outline"
@@ -384,7 +384,7 @@ export function AgentsList() {
                 setShowPasswordDialog(false)
                 setGeneratedPassword('')
               }}
-              className="bg-[#530FAD] hover:bg-purple-800/60"
+              className="bg-[#006039] hover:bg-[#005030]"
             >
               Закрыть
             </Button>

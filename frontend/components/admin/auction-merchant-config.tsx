@@ -262,7 +262,7 @@ export function AuctionMerchantConfig({
             <Settings className="h-5 w-5" />
             Аукционная система
             {config?.isAuctionEnabled && (
-              <Badge className="bg-purple-100 text-purple-700 border-purple-300">
+              <Badge className="bg-purple-100 text-purple-700 border-green-300">
                 Включена
               </Badge>
             )}
@@ -355,7 +355,7 @@ export function AuctionMerchantConfig({
                   </div>
                   <div className="flex items-center gap-2">
                     {config?.hasKeys ? (
-                      <Badge className="bg-purple-100 text-purple-700 border-purple-300">
+                      <Badge className="bg-purple-100 text-purple-700 border-green-300">
                         <CheckCircle className="h-3 w-3 mr-1" />
                         Ключи созданы
                       </Badge>
@@ -382,7 +382,7 @@ export function AuctionMerchantConfig({
                       <textarea
                         readOnly
                         value={generatedKeys?.publicKey || config?.publicKeyPreview || "Ключ будет доступен после генерации"}
-                        className="w-full h-32 p-2 text-xs font-mono bg-purple-50/30 dark:bg-gray-900 border rounded resize-none whitespace-pre"
+                        className="w-full h-32 p-2 text-xs font-mono bg-gray-50 dark:bg-gray-900 border rounded resize-none whitespace-pre"
                         placeholder="Публичный ключ появится здесь после генерации..."
                         style={{ 
                           fontFamily: 'monospace',
@@ -484,7 +484,7 @@ export function AuctionMerchantConfig({
               disabled={isToggling}
               className={
                 formData.isAuctionEnabled
-                  ? "bg-[#530FAD] hover:bg-purple-800/60"
+                  ? "bg-purple-600 hover:bg-purple-700"
                   : "bg-gray-600 hover:bg-gray-700"
               }
             >
@@ -573,7 +573,7 @@ export function AuctionMerchantConfig({
                 <textarea
                   readOnly
                   value={generatedKeys.publicKey}
-                  className="w-full h-24 p-3 text-xs font-mono bg-purple-50/30 dark:bg-gray-900 border rounded resize-none"
+                  className="w-full h-24 p-3 text-xs font-mono bg-gray-50 dark:bg-gray-900 border rounded resize-none"
                 />
               </div>
 
@@ -593,7 +593,7 @@ export function AuctionMerchantConfig({
                 <textarea
                   readOnly
                   value={generatedKeys.privateKey}
-                  className="w-full h-32 p-3 text-xs font-mono bg-purple-50/30 dark:bg-gray-900 border rounded resize-none"
+                  className="w-full h-32 p-3 text-xs font-mono bg-gray-50 dark:bg-gray-900 border rounded resize-none"
                 />
               </div>
 

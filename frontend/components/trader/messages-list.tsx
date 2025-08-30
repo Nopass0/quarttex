@@ -61,7 +61,7 @@ const statusConfig = {
     icon: "✓",
     iconColor: "text-[#006039]",
     borderColor: "border-[#006039]/20",
-    bgColor: "bg-[#530FAD]/5",
+    bgColor: "bg-[#006039]/5",
   },
   warning: {
     label: "Без сделки",
@@ -231,7 +231,7 @@ export function MessagesList() {
         </div>
 
         {/* Filters Section */}
-        <Card className="bg-purple-50/10 p-6 mb-6">
+        <Card className="p-6 mb-6">
           {/* Search by ID */}
           <div className="mb-6">
             <div className="text-sm font-medium text-gray-700 mb-3">
@@ -384,7 +384,7 @@ export function MessagesList() {
             return (
               <Card
                 key={message.id}
-                className="p-4 cursor-pointer hover:bg-purple-50/30 transition-colors border border-gray-200"
+                className="p-4 cursor-pointer hover:bg-gray-50 transition-colors border border-gray-200"
                 onClick={() => handleMessageClick(message)}
               >
                 <div className="flex items-start gap-4">

@@ -278,7 +278,7 @@ export default function ServiceConfigPage() {
                             size="sm"
                             onClick={handleSaveConfig}
                             disabled={isSaving || editorErrors.length > 0}
-                            className="bg-purple-700/80 hover:bg-purple-700/80/90"
+                            className="bg-[#1B5E3F] hover:bg-[#1B5E3F]/90"
                           >
                             {isSaving ? (
                               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -363,7 +363,7 @@ export default function ServiceConfigPage() {
                           <Card>
                             <CardContent className="p-4">
                               <div className="text-sm text-gray-500">Успешных</div>
-                              <div className="text-2xl font-bold text-[#530FAD] dark:text-[#7c3aed]">
+                              <div className="text-2xl font-bold text-purple-600">
                                 {processorStats.stats?.successfulMatches || 0}
                               </div>
                             </CardContent>
@@ -414,7 +414,7 @@ export default function ServiceConfigPage() {
                             size="sm"
                             onClick={handleSaveConfig}
                             disabled={isSaving || editorErrors.length > 0}
-                            className="bg-purple-700/80 hover:bg-purple-700/80/90"
+                            className="bg-[#1B5E3F] hover:bg-[#1B5E3F]/90"
                           >
                             {isSaving ? (
                               <Loader2 className="h-4 w-4 mr-2 animate-spin" />

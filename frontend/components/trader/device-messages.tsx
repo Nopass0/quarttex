@@ -73,10 +73,10 @@ const notificationTypeColors: Record<string, string> = {
   SMS: 'bg-blue-100 text-blue-800 border-blue-200',
   PUSH: 'bg-purple-100 text-purple-800 border-purple-200',
   PAYMENT: 'bg-purple-100 text-purple-800 border-purple-200',
-  TRANSFER: 'bg-purple-100 text-purple-800 border-purple-200',
+  TRANSFER: 'bg-emerald-100 text-emerald-800 border-emerald-200',
   SUCCESS: 'bg-purple-100 text-purple-800 border-purple-200',
   ERROR: 'bg-red-100 text-red-800 border-red-200',
-  INFO: 'bg-purple-100/40 text-gray-800 border-gray-200',
+  INFO: 'bg-gray-100 text-gray-800 border-gray-200',
   PENDING: 'bg-yellow-100 text-yellow-800 border-yellow-200'
 }
 
@@ -315,7 +315,7 @@ export function DeviceMessages() {
       </div>
 
       {/* Filters and Search */}
-      <Card className="bg-purple-50/10 p-4">
+      <Card className="p-4">
         <div className="flex flex-col gap-4">
           <div className="flex gap-2">
             <div className="relative flex-1">
@@ -356,7 +356,7 @@ export function DeviceMessages() {
                         )}
                         <div className={cn(
                           "w-2 h-2 rounded-full",
-                          device.isOnline ? "bg-[#530FAD] dark:shadow-[0_0_8px_rgba(124,58,237,0.6)]" : "bg-gray-300"
+                          device.isOnline ? "bg-purple-500" : "bg-gray-300"
                         )} />
                       </div>
                     </div>
@@ -390,7 +390,7 @@ export function DeviceMessages() {
       </Card>
 
       {/* Notifications List */}
-      <Card className="bg-purple-50/10 p-0">
+      <Card className="p-0">
         <div className="max-h-[600px] overflow-y-auto">
           {loading && !refreshing ? (
             <div className="flex items-center justify-center py-12">
@@ -405,18 +405,18 @@ export function DeviceMessages() {
             <>
               {Object.entries(groupedNotifications).map(([dateKey, dateNotifications]) => (
                 <div key={dateKey}>
-                  <div className="sticky top-0 bg-purple-50/30 px-4 py-2 text-sm font-medium text-gray-600 border-b">
+                  <div className="sticky top-0 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-600 border-b">
                     {formatDateGroup(dateKey)}
                   </div>
                   {dateNotifications.map((notification) => {
                     const Icon = notificationTypeIcons[notification.type] || MessageSquare
-                    const colorClass = notificationTypeColors[notification.type] || 'bg-purple-100/40 text-gray-800'
+                    const colorClass = notificationTypeColors[notification.type] || 'bg-gray-100 text-gray-800'
                     
                     return (
                       <div
                         key={notification.id}
                         className={cn(
-                          "flex items-start gap-4 p-4 border-b hover:bg-purple-50/30 transition-colors",
+                          "flex items-start gap-4 p-4 border-b hover:bg-gray-50 transition-colors",
                           !notification.isRead && "bg-blue-50/50"
                         )}
                       >

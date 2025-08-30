@@ -407,7 +407,7 @@ export default function TraderRequisitesPage() {
     if (percentage >= 90) return "text-red-500";
     if (percentage >= 70) return "text-orange-500";
     if (percentage >= 50) return "text-yellow-500";
-    return "text-[#530FAD] dark:text-[#7c3aed]";
+    return "text-purple-500";
   };
 
   const getBankLogo = (bankType: string): string => {
@@ -488,14 +488,14 @@ export default function TraderRequisitesPage() {
           <div className="flex items-center gap-2">
             <Button
               variant={currentTab === "working" ? "default" : "outline"}
-              className={currentTab === "working" ? "bg-[#530FAD] hover:bg-[#530FAD]/90 text-white" : ""}
+              className={currentTab === "working" ? "bg-[#006039] hover:bg-[#006039]/90 text-white" : ""}
               onClick={() => setCurrentTab("working")}
             >
               Рабочие реквизиты
             </Button>
             <Button
               variant={currentTab === "archived" ? "default" : "outline"}
-              className={currentTab === "archived" ? "bg-[#530FAD] hover:bg-[#530FAD]/90 text-white" : ""}
+              className={currentTab === "archived" ? "bg-[#006039] hover:bg-[#006039]/90 text-white" : ""}
               onClick={() => setCurrentTab("archived")}
             >
               Архив
@@ -567,7 +567,7 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-[#7c3aed]",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                 filterStatus === "all" &&
                                   "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
@@ -579,7 +579,7 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-[#7c3aed]",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                 filterStatus === "active" &&
                                   "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
@@ -591,7 +591,7 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-[#7c3aed]",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                 filterStatus === "stopped" &&
                                   "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
@@ -603,7 +603,7 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-[#7c3aed]",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                 filterStatus === "archived" &&
                                   "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
@@ -661,7 +661,7 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-[#7c3aed]",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                 filterDevice === "all" &&
                                   "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
@@ -673,7 +673,7 @@ export default function TraderRequisitesPage() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-[#7c3aed]",
+                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                 filterDevice === "none" &&
                                   "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                               )}
@@ -691,7 +691,7 @@ export default function TraderRequisitesPage() {
                                   variant="ghost"
                                   size="default"
                                   className={cn(
-                                    "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-[#7c3aed]",
+                                    "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
                                     filterDevice === device.id &&
                                       "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
                                   )}
@@ -701,7 +701,7 @@ export default function TraderRequisitesPage() {
                                     <Smartphone className="h-4 w-4" />
                                     <span>{device.name}</span>
                                     {device.isOnline && (
-                                      <div className="w-2 h-2 bg-[#530FAD] rounded-full" />
+                                      <div className="w-2 h-2 bg-purple-500 rounded-full" />
                                     )}
                                   </div>
                                 </Button>
@@ -715,7 +715,7 @@ export default function TraderRequisitesPage() {
 
           {/* Bulk Actions */}
           {selectedRequisites.length > 0 && (
-            <Card className="bg-purple-50/10 p-4">
+            <Card className="p-4">
               <div className="flex justify-between items-center">
                 <div className="flex gap-2">
                   <Select value={bulkAction} onValueChange={setBulkAction}>
@@ -741,7 +741,7 @@ export default function TraderRequisitesPage() {
                   <Button
                     onClick={handleBulkAction}
                     disabled={!bulkAction}
-                    className="bg-[#530FAD] hover:bg-[#530FAD]/90"
+                    className="bg-[#006039] hover:bg-[#006039]/90"
                   >
                     Применить
                   </Button>
@@ -801,8 +801,8 @@ export default function TraderRequisitesPage() {
                               </div>
                               {requisite.device && (
                                 <div className="flex items-center gap-1 mt-1">
-                                  <Smartphone className="h-3 w-3 text-[#530FAD] dark:text-[#7c3aed]" />
-                                  <span className="text-xs text-[#530FAD] dark:text-[#7c3aed] truncate">
+                                  <Smartphone className="h-3 w-3 text-purple-600" />
+                                  <span className="text-xs text-purple-600 truncate">
                                     {requisite.device.name}
                                   </span>
                                 </div>
@@ -817,8 +817,13 @@ export default function TraderRequisitesPage() {
                                 <Badge className={cn(
                                   "text-xs px-2 py-1",
                                   (requisite.device.isWorking ?? requisite.device.isOnline)
-                                    ? "bg-purple-50 text-purple-700 border-green-200"
+<<<<<<< Current (Your changes)
+                                    ? "bg-purple-50 text-purple-700 border-purple-200"
+                                    : "bg-gray-100 text-gray-600 border-gray-300"
+=======
+                                    ? "bg-purple-50 text-purple-700 border-purple-200"
                                     : "bg-purple-100/40 text-gray-600 border-gray-300"
+>>>>>>> Incoming (Background Agent changes)
                                 )}>
                                   {(requisite.device.isWorking ?? requisite.device.isOnline)
                                     ? "Устройство: в работе"
@@ -829,7 +834,7 @@ export default function TraderRequisitesPage() {
                                 "text-xs px-2 py-1",
                                 requisite.isActive && !requisite.isArchived
                                   ? "bg-blue-50 text-blue-700 border-blue-200"
-                                  : "bg-purple-100/40 text-gray-600 border-gray-300"
+                                  : "bg-gray-100 text-gray-600 border-gray-300"
                               )}>
                                 {requisite.isActive ? "Реквизит: активен" : "Реквизит: неактивен"}
                               </Badge>
@@ -948,8 +953,8 @@ export default function TraderRequisitesPage() {
                             </div>
                             {requisite.device && (
                               <div className="flex items-center gap-1.5">
-                                <Smartphone className="h-3.5 w-3.5 text-[#530FAD] dark:text-[#7c3aed]" />
-                                <span className="text-sm text-[#530FAD] dark:text-[#7c3aed]">
+                                <Smartphone className="h-3.5 w-3.5 text-purple-600" />
+                                <span className="text-sm text-purple-600">
                                   {requisite.device.name}
                                 </span>
                               </div>
@@ -1013,7 +1018,7 @@ export default function TraderRequisitesPage() {
                               "px-3 py-2",
                               (requisite.device.isWorking ?? requisite.device.isOnline)
                                 ? "bg-purple-50 text-purple-700"
-                                : "bg-purple-100/40 text-gray-600"
+                                : "bg-gray-100 text-gray-600"
                             )}>
                               {(requisite.device.isWorking ?? requisite.device.isOnline)
                                 ? "Устройство: в работе"
@@ -1024,7 +1029,7 @@ export default function TraderRequisitesPage() {
                             "px-3 py-2",
                             requisite.isActive && !requisite.isArchived
                               ? "bg-blue-50 text-blue-700"
-                              : "bg-purple-100/40 text-gray-600"
+                              : "bg-gray-100 text-gray-600"
                           )}>
                             {requisite.isActive ? "Реквизит: активен" : "Реквизит: неактивен"}
                           </Badge>
@@ -1328,7 +1333,7 @@ export default function TraderRequisitesPage() {
                 Отмена
               </Button>
               <Button
-                className="bg-[#530FAD] hover:bg-[#530FAD]/90 w-full sm:w-auto"
+                className="bg-[#006039] hover:bg-[#006039]/90 w-full sm:w-auto"
                 onClick={handleCreateRequisite}
                 disabled={addingRequisite}
               >

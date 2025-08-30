@@ -1222,7 +1222,7 @@ export function MessagesListNew() {
                           {message.amount && message.amount > 0 ? (
                             <Badge
                               variant="outline"
-                              className="px-2 py-1 text-xs font-bold border rounded-lg bg-purple-50 text-[#530FAD] dark:text-[#7c3aed] border-green-200"
+                              className="px-2 py-1 text-xs font-bold border rounded-lg bg-purple-50 text-[#530FAD] dark:text-[#7c3aed] border-purple-200"
                             >
                               {message.amount.toLocaleString("ru-RU")} ₽
                             </Badge>
@@ -1298,7 +1298,7 @@ export function MessagesListNew() {
                       {message.amount && message.amount > 0 ? (
                         <Badge
                           variant="outline"
-                          className="px-4 py-2 text-sm font-bold border rounded-xl bg-purple-50 text-[#530FAD] dark:text-[#7c3aed] border-green-200 w-full text-center justify-center"
+                          className="px-4 py-2 text-sm font-bold border rounded-xl bg-purple-50 text-[#530FAD] dark:text-[#7c3aed] border-purple-200 w-full text-center justify-center"
                         >
                           {message.amount.toLocaleString("ru-RU")} RUB
                         </Badge>

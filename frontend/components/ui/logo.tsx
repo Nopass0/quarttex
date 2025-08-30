@@ -5,6 +5,7 @@ interface LogoProps {
   size?: "xs" | "sm" | "md" | "lg" | "xl"
   variant?: "full" | "mini" | "uppercase"
   className?: string
+  animated?: boolean
 }
 
 const sizeMap = {
@@ -23,28 +24,34 @@ const iconSizeMap = {
   xl: "w-12 h-12"
 }
 
-export function Logo({ size = "md", variant = "full", className }: LogoProps) {
+export function Logo({ size = "md", variant = "full", className, animated = false }: LogoProps) {
   const textSize = sizeMap[size]
   const iconSize = iconSizeMap[size]
+
+  const rotateClass = animated ? "logo-rotate-z" : ""
 
   if (variant === "mini") {
     return (
       <div className={cn("flex items-center justify-center", iconSize, className)} suppressHydrationWarning>
-        <div className="relative w-full h-full">
-          {/* Mini logo with Q */}
-          <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 blur-sm opacity-60 dark:opacity-80"></div>
-          <div className="relative w-full h-full rounded-lg bg-gradient-to-br from-purple-600 to-purple-800 dark:from-purple-500 dark:to-purple-700 flex items-center justify-center">
-            <span className={cn("font-bold text-white", textSize)}>Q</span>
-          </div>
-        </div>
+        <span className={cn("font-black text-[#006039] dark:text-[#2d6a42] inline-block glass-dollar", textSize, rotateClass)} style={{ fontWeight: '900' }}>$</span>
       </div>
     )
   }
 
   return (
     <div className={cn("flex items-center font-bold tracking-tight dark:text-[#eeeeee]", textSize, className)} suppressHydrationWarning>
-      <span className="bg-gradient-to-r from-purple-600 to-purple-800 dark:from-purple-400 dark:to-purple-600 bg-clip-text text-transparent">QUATT</span>
-      <span className="text-purple-500 dark:text-purple-400" style={{ fontSize: '1.1em', letterSpacing: '0.05em' }}>REX</span>
+      <span>CHA</span>
+      <span 
+        className={cn("text-[#006039] dark:text-[#2d6a42] mx-0.5 inline-block font-black glass-dollar", rotateClass)} 
+        style={{ 
+          fontSize: '1.1em', 
+          letterSpacing: '0.05em',
+          fontWeight: '900'
+        }}
+      >
+        $
+      </span>
+      <span>E</span>
     </div>
   )
 }

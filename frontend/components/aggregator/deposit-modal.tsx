@@ -194,7 +194,7 @@ export function AggregatorDepositModal() {
               </div>
 
               {/* QR код */}
-              <div className="flex justify-center p-4 bg-purple-50/20 dark:bg-purple-900/15 rounded-lg border">
+              <div className="flex justify-center p-4 bg-white rounded-lg border">
                 <QRCode value={depositSettings.address} size={150} />
               </div>
             </div>
@@ -243,7 +243,7 @@ export function AggregatorDepositModal() {
                 disabled={
                   loading || !amount || !txHash || parseFloat(amount) <= 0
                 }
-                className="bg-[#530FAD] hover:bg-purple-700/80"
+                className="bg-[#006039] hover:bg-[#004d2e]"
               >
                 {loading ? (
                   <>

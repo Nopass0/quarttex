@@ -191,9 +191,9 @@ export default function DepositsPage() {
     const variants: Record<string, { color: string; label: string }> = {
       PENDING: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', label: 'Ожидает' },
       CHECKING: { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Проверка' },
-      CONFIRMED: { color: 'bg-purple-100 text-purple-800 border-green-200', label: 'Подтвержден' },
+      CONFIRMED: { color: 'bg-purple-100 text-purple-800 border-purple-200', label: 'Подтвержден' },
       FAILED: { color: 'bg-red-100 text-red-800 border-red-200', label: 'Отклонен' },
-      EXPIRED: { color: 'bg-purple-100/40 text-gray-800 border-gray-200', label: 'Истек' },
+      EXPIRED: { color: 'bg-gray-100 text-gray-800 border-gray-200', label: 'Истек' },
     }
     
     const variant = variants[status] || variants.PENDING
@@ -216,25 +216,25 @@ export default function DepositsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-purple-50/10 p-6">
+        <Card className="p-6">
           <div className="space-y-2">
             <p className="text-sm text-gray-600">Всего заявок</p>
             <p className="text-2xl font-bold">{stats.totalDeposits}</p>
           </div>
         </Card>
-        <Card className="bg-purple-50/10 p-6">
+        <Card className="p-6">
           <div className="space-y-2">
             <p className="text-sm text-gray-600">Ожидают подтверждения</p>
             <p className="text-2xl font-bold text-yellow-600">{stats.pendingDeposits}</p>
           </div>
         </Card>
-        <Card className="bg-purple-50/10 p-6">
+        <Card className="p-6">
           <div className="space-y-2">
             <p className="text-sm text-gray-600">Подтверждено</p>
-            <p className="text-2xl font-bold text-[#530FAD] dark:text-[#7c3aed]">{stats.confirmedDeposits}</p>
+            <p className="text-2xl font-bold text-purple-600">{stats.confirmedDeposits}</p>
           </div>
         </Card>
-        <Card className="bg-purple-50/10 p-6">
+        <Card className="p-6">
           <div className="space-y-2">
             <p className="text-sm text-gray-600">Общая сумма</p>
             <p className="text-2xl font-bold">${stats.totalAmount.toFixed(2)}</p>
@@ -243,7 +243,7 @@ export default function DepositsPage() {
       </div>
 
       {/* Filters */}
-      <Card className="bg-purple-50/10 p-4">
+      <Card className="p-4">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Label>Фильтр по статусу:</Label>
@@ -313,7 +313,7 @@ export default function DepositsPage() {
                       deposit.status === 'CHECKING' ? 'bg-blue-100' :
                       deposit.status === 'CONFIRMED' ? 'bg-purple-100' :
                       deposit.status === 'FAILED' ? 'bg-red-100' :
-                      'bg-gray-100'
+                      'bg-purple-100'
                     }`}>
                       {getStatusIcon(deposit.status)}
                     </div>
@@ -343,11 +343,11 @@ export default function DepositsPage() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-5 w-5 hover:bg-purple-100/50"
+                          className="h-5 w-5 hover:bg-gray-100"
                           onClick={() => copyToClipboard(deposit.address, 'address')}
                         >
                           {copiedAddress === deposit.address ? (
-                            <Check className="h-3 w-3 text-[#530FAD] dark:text-[#7c3aed]" />
+                            <Check className="h-3 w-3 text-purple-600" />
                           ) : (
                             <Copy className="h-3 w-3 text-gray-400 hover:text-gray-600" />
                           )}
@@ -364,11 +364,11 @@ export default function DepositsPage() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-5 w-5 hover:bg-purple-100/50"
+                          className="h-5 w-5 hover:bg-gray-100"
                           onClick={() => copyToClipboard(deposit.txHash!, 'txHash')}
                         >
                           {copiedTxHash === deposit.txHash ? (
-                            <Check className="h-3 w-3 text-[#530FAD] dark:text-[#7c3aed]" />
+                            <Check className="h-3 w-3 text-purple-600" />
                           ) : (
                             <Copy className="h-3 w-3 text-gray-400 hover:text-gray-600" />
                           )}
@@ -391,7 +391,7 @@ export default function DepositsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-[#530FAD] dark:text-[#7c3aed] hover:text-purple-700"
+                          className="text-purple-600 hover:text-purple-700"
                           onClick={() => setConfirmDialog({ open: true, deposit })}
                         >
                           Подтвердить

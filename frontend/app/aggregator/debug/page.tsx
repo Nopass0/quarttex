@@ -40,23 +40,23 @@ export default function DebugPage() {
     <div className="p-8 max-w-4xl mx-auto space-y-4">
       <h1 className="text-2xl font-bold">Debug Aggregator Auth</h1>
       
-      <Card className="bg-purple-50/10 p-4">
+      <Card className="p-4">
         <h2 className="font-semibold mb-2">Current Store State:</h2>
-        <pre className="bg-purple-100/40 p-2 rounded text-xs overflow-auto">
+        <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto">
           {JSON.stringify(auth, null, 2)}
         </pre>
       </Card>
       
-      <Card className="bg-purple-50/10 p-4">
+      <Card className="p-4">
         <h2 className="font-semibold mb-2">LocalStorage Data:</h2>
-        <pre className="bg-purple-100/40 p-2 rounded text-xs overflow-auto">
+        <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto">
           {localStorageData}
         </pre>
       </Card>
       
-      <Card className="bg-purple-50/10 p-4">
+      <Card className="p-4">
         <h2 className="font-semibold mb-2">Session Token:</h2>
-        <p className={auth.sessionToken ? "text-[#530FAD] dark:text-[#7c3aed]" : "text-red-600"}>
+        <p className={auth.sessionToken ? "text-purple-600" : "text-red-600"}>
           {auth.sessionToken || "NOT SET"}
         </p>
       </Card>
