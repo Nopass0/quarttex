@@ -1966,6 +1966,18 @@ export default (app: Elysia) =>
             });
             if (existing) continue;
 
+            // Проверяем интервал между сделками
+            if (bd.intervalMinutes > 0) {
+              const { canCreateDealOnRequisite } = await import("@/utils/requisite-interval");
+              const canCreate = await canCreateDealOnRequisite(bd.id, bd.intervalMinutes);
+              if (!canCreate) {
+                console.log(
+                  `[AdminTransactions] Реквизит ${bd.id} отклонен: не прошел интервал ${bd.intervalMinutes} минут между сделками`
+                );
+                continue;
+              }
+            }
+
             if (bd.maxCountTransactions && bd.maxCountTransactions > 0) {
               const todayStart = new Date();
               todayStart.setHours(0, 0, 0, 0);

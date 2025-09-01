@@ -324,6 +324,16 @@ export default (app: Elysia) =>
                 }
               }
 
+              // Check interval between deals
+              if (bd.intervalMinutes > 0) {
+                const { canCreateDealOnRequisite } = await import("@/utils/requisite-interval");
+                const canCreate = await canCreateDealOnRequisite(bd.id, bd.intervalMinutes);
+                if (!canCreate) {
+                  console.log(`[Wellbit] Requisite ${bd.id} rejected: interval ${bd.intervalMinutes} minutes not passed`);
+                  continue;
+                }
+              }
+
               // Check sum limit
               if (bd.sumLimit > 0) {
                 const totalSumResult = await db.transaction.aggregate({

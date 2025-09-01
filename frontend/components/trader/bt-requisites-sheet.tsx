@@ -77,6 +77,7 @@ const formSchema = z.object({
   maxAmount: numberField(1000).optional(),
   sumLimit: numberField(0).optional(),
   operationLimit: numberField(0).optional(),
+  intervalMinutes: numberField(0).optional(),
   isActive: z.boolean().default(true),
 });
 
@@ -166,6 +167,7 @@ export function BtRequisitesSheet({
       maxAmount: 100000,
       sumLimit: 0,
       operationLimit: 0,
+      intervalMinutes: 0,
       isActive: true,
     },
   });
@@ -176,6 +178,7 @@ export function BtRequisitesSheet({
   const [maxAmountInput, setMaxAmountInput] = useState<string>("");
   const [sumLimitInput, setSumLimitInput] = useState<string>("");
   const [operationLimitInput, setOperationLimitInput] = useState<string>("");
+  const [intervalMinutesInput, setIntervalMinutesInput] = useState<string>("");
 
   useEffect(() => {
     const values = form.getValues();
@@ -183,20 +186,23 @@ export function BtRequisitesSheet({
     setMaxAmountInput(values.maxAmount !== undefined ? String(values.maxAmount) : "");
     setSumLimitInput(values.sumLimit !== undefined ? String(values.sumLimit) : "");
     setOperationLimitInput(values.operationLimit !== undefined ? String(values.operationLimit) : "");
+    setIntervalMinutesInput(values.intervalMinutes !== undefined ? String(values.intervalMinutes) : "");
   }, [showForm]);
 
-  const [minAmount, maxAmount, sumLimit, operationLimit] = form.watch([
+  const [minAmount, maxAmount, sumLimit, operationLimit, intervalMinutes] = form.watch([
     "minAmount",
     "maxAmount",
     "sumLimit",
     "operationLimit",
+    "intervalMinutes",
   ]);
 
   const hasEmptyRequiredNumbers =
     minAmount === undefined ||
     maxAmount === undefined ||
     sumLimit === undefined ||
-    operationLimit === undefined;
+    operationLimit === undefined ||
+    intervalMinutes === undefined;
 
   useEffect(() => {
     if (open && !showForm) {

@@ -82,6 +82,7 @@ const formSchema = z.object({
   maxAmount: numberField(1000).optional(),
   sumLimit: numberField(0).optional(),
   operationLimit: numberField(0).optional(),
+  intervalMinutes: numberField(0).optional(),
   isActive: z.boolean().default(true),
 });
 
@@ -180,6 +181,7 @@ export function RequisitesSheet({
       maxAmount: 100000,
       sumLimit: 0,
       operationLimit: 0,
+      intervalMinutes: 0,
       isActive: true,
     },
   });
@@ -189,6 +191,7 @@ export function RequisitesSheet({
   const [maxAmountInput, setMaxAmountInput] = useState<string>("");
   const [sumLimitInput, setSumLimitInput] = useState<string>("");
   const [operationLimitInput, setOperationLimitInput] = useState<string>("");
+  const [intervalMinutesInput, setIntervalMinutesInput] = useState<string>("");
 
   useEffect(() => {
     const values = form.getValues();
@@ -197,19 +200,22 @@ export function RequisitesSheet({
     setMaxAmountInput(values.maxAmount && values.maxAmount !== 0 ? String(values.maxAmount) : "");
     setSumLimitInput(values.sumLimit && values.sumLimit !== 0 ? String(values.sumLimit) : "");
     setOperationLimitInput(values.operationLimit && values.operationLimit !== 0 ? String(values.operationLimit) : "");
+    setIntervalMinutesInput(values.intervalMinutes && values.intervalMinutes !== 0 ? String(values.intervalMinutes) : "");
   }, [showForm, existingRequisite, open]);
 
-  const [minAmount, maxAmount, sumLimit, operationLimit] = form.watch([
+  const [minAmount, maxAmount, sumLimit, operationLimit, intervalMinutes] = form.watch([
     "minAmount",
     "maxAmount",
     "sumLimit",
     "operationLimit",
+    "intervalMinutes",
   ]);
   const hasEmptyRequiredNumbers =
     minAmount === undefined ||
     maxAmount === undefined ||
     sumLimit === undefined ||
-    operationLimit === undefined;
+    operationLimit === undefined ||
+    intervalMinutes === undefined;
 
   useEffect(() => {
     if (open && !showForm) {
@@ -231,6 +237,7 @@ export function RequisitesSheet({
         maxAmount: existingRequisite.maxAmount,
         sumLimit: existingRequisite.sumLimit || 0,
         operationLimit: existingRequisite.operationLimit || 0,
+        intervalMinutes: existingRequisite.intervalMinutes || 0,
         isActive: existingRequisite.isActive,
       });
       // Обновляем локальные состояния для числовых полей
@@ -238,6 +245,7 @@ export function RequisitesSheet({
       setMaxAmountInput(existingRequisite.maxAmount && existingRequisite.maxAmount !== 0 ? String(existingRequisite.maxAmount) : "");
       setSumLimitInput(existingRequisite.sumLimit && existingRequisite.sumLimit !== 0 ? String(existingRequisite.sumLimit) : "");
       setOperationLimitInput(existingRequisite.operationLimit && existingRequisite.operationLimit !== 0 ? String(existingRequisite.operationLimit) : "");
+      setIntervalMinutesInput(existingRequisite.intervalMinutes && existingRequisite.intervalMinutes !== 0 ? String(existingRequisite.intervalMinutes) : "");
     } else if (!existingRequisite && open) {
       // Reset to list view when opening without a requisite
       setShowForm(false);
@@ -281,6 +289,7 @@ export function RequisitesSheet({
       maxAmount: requisite.maxAmount,
       sumLimit: requisite.sumLimit || 0,
       operationLimit: requisite.operationLimit || 0,
+      intervalMinutes: requisite.intervalMinutes || 0,
       isActive: !requisite.isArchived,
     });
     // Обновляем локальные состояния для числовых полей
@@ -288,6 +297,7 @@ export function RequisitesSheet({
     setMaxAmountInput(requisite.maxAmount && requisite.maxAmount !== 0 ? String(requisite.maxAmount) : "");
     setSumLimitInput(requisite.sumLimit && requisite.sumLimit !== 0 ? String(requisite.sumLimit) : "");
     setOperationLimitInput(requisite.operationLimit && requisite.operationLimit !== 0 ? String(requisite.operationLimit) : "");
+    setIntervalMinutesInput(requisite.intervalMinutes && requisite.intervalMinutes !== 0 ? String(requisite.intervalMinutes) : "");
     setShowForm(true);
   };
 
@@ -350,7 +360,8 @@ export function RequisitesSheet({
         data.minAmount === undefined ||
         data.maxAmount === undefined ||
         data.sumLimit === undefined ||
-        data.operationLimit === undefined
+        data.operationLimit === undefined ||
+        data.intervalMinutes === undefined
       ) {
         toast.error("Заполните все числовые поля");
         return;
@@ -374,8 +385,8 @@ export function RequisitesSheet({
         maxAmount: Number(data.maxAmount),
         sumLimit: Number(data.sumLimit),
         operationLimit: Number(data.operationLimit),
+        intervalMinutes: Number(data.intervalMinutes),
         isActive: data.isActive,
-        intervalMinutes: 5,
         deviceId: null,
       };
 
@@ -874,6 +885,38 @@ export function RequisitesSheet({
                   />
                 </div>
 
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="intervalMinutes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Интервал между сделками (мин)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            placeholder="0"
+                            value={intervalMinutesInput}
+                            onChange={(e) => {
+                              const raw = e.target.value;
+                              const digitsOnly = raw.replace(/\D/g, "");
+                              setIntervalMinutesInput(digitsOnly);
+                              form.setValue("intervalMinutes", digitsOnly === "" ? undefined : Number(digitsOnly), { 
+                                shouldValidate: false, 
+                                shouldDirty: true 
+                              });
+                            }}
+                            disabled={loading}
+                          />
+                        </FormControl>
+                        <FormDescription>0 = без ограничений</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 {editingRequisite && (
                   <>

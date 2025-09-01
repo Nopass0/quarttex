@@ -594,6 +594,18 @@ export default (app: Elysia) =>
             continue;
           }
 
+          // Проверяем интервал между сделками
+          if (bd.intervalMinutes > 0) {
+            const { canCreateDealOnRequisite } = await import("@/utils/requisite-interval");
+            const canCreate = await canCreateDealOnRequisite(bd.id, bd.intervalMinutes);
+            if (!canCreate) {
+              console.log(
+                `[Merchant] Реквизит ${bd.id} отклонен: не прошел интервал ${bd.intervalMinutes} минут между сделками`
+              );
+              continue;
+            }
+          }
+
           // Атомарная проверка лимита по количеству операций
           if (bd.operationLimit > 0) {
             try {
