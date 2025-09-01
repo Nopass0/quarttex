@@ -556,14 +556,14 @@ export function RateSources() {
                       <Users className="h-4 w-4 text-gray-500" />
                       <span className="text-sm text-gray-600">Трейдеры:</span>
                     </div>
-                    <span className="text-lg font-semibold">{source._count?.traders || 0}</span>
+                    <span className="text-lg font-semibold">{source._count?.traders || source.traders?.length || 0}</span>
                   </div>
                   <div className="flex-1 p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-2">
                       <Building2 className="h-4 w-4 text-gray-500" />
                       <span className="text-sm text-gray-600">Мерчанты:</span>
                     </div>
-                    <span className="text-lg font-semibold">{source._count?.merchants || 0}</span>
+                    <span className="text-lg font-semibold">{source._count?.merchants || source.merchants?.length || 0}</span>
                   </div>
                 </div>
 
@@ -604,11 +604,7 @@ export function RateSources() {
                   </Button>
                 </div>
 
-                {source.lastRateUpdate && (
-                  <p className="text-xs text-gray-500 text-center">
-                    Обновлено: {new Date(source.lastRateUpdate).toLocaleString('ru-RU')}
-                  </p>
-                )}
+
               </div>
             </CardContent>
           </Card>

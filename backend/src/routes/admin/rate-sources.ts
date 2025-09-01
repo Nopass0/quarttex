@@ -31,6 +31,12 @@ export default (app: Elysia) =>
                 },
               },
             },
+            _count: {
+              select: {
+                traders: true,
+                merchants: true,
+              },
+            },
           },
         });
 
