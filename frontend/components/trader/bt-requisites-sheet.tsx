@@ -249,6 +249,7 @@ export function BtRequisitesSheet({
     setMaxAmountInput("100000");
     setSumLimitInput("0");
     setOperationLimitInput("0");
+    setIntervalMinutesInput("0");
     setShowForm(true);
   };
 
@@ -264,12 +265,14 @@ export function BtRequisitesSheet({
       maxAmount: requisite.maxAmount,
       sumLimit: requisite.sumLimit || 0,
       operationLimit: requisite.operationLimit || 0,
+      intervalMinutes: requisite.intervalMinutes || 0,
       isActive: requisite.isActive,
     });
     setMinAmountInput(String(requisite.minAmount ?? ""));
     setMaxAmountInput(String(requisite.maxAmount ?? ""));
     setSumLimitInput(String(requisite.sumLimit ?? ""));
     setOperationLimitInput(String(requisite.operationLimit ?? ""));
+    setIntervalMinutesInput(String(requisite.intervalMinutes ?? ""));
     setShowForm(true);
   };
 
@@ -308,7 +311,8 @@ export function BtRequisitesSheet({
         data.minAmount === undefined ||
         data.maxAmount === undefined ||
         data.sumLimit === undefined ||
-        data.operationLimit === undefined
+        data.operationLimit === undefined ||
+        data.intervalMinutes === undefined
       ) {
         toast.error("Заполните все числовые поля");
         return;
@@ -333,8 +337,8 @@ export function BtRequisitesSheet({
         maxAmount: Number(data.maxAmount),
         sumLimit: Number(data.sumLimit),
         operationLimit: Number(data.operationLimit),
+        intervalMinutes: Number(data.intervalMinutes),
         cardNumber: data.methodType === "sbp" ? (data.phoneNumber || "") : (data.cardNumber || ""),
-        intervalMinutes: 5, // Требуется бэкендом
       } as any;
 
       if (editingRequisite) {
@@ -537,6 +541,12 @@ export function BtRequisitesSheet({
                               <span className="text-muted-foreground">Лимит операций:</span>
                               <span className="ml-1 font-medium">
                                 {((requisite.activeDeals || 0) + (requisite.transactionsReady || 0))} / {requisite.operationLimit === 0 ? '∞' : (requisite.operationLimit || 0)}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Интервал:</span>
+                              <span className="ml-1 font-medium">
+                                {requisite.intervalMinutes === 0 ? 'без ограничений' : `${requisite.intervalMinutes || 0} мин`}
                               </span>
                             </div>
                           </div>
@@ -772,6 +782,35 @@ export function BtRequisitesSheet({
                               const digitsOnly = raw.replace(/\D/g, "");
                               setOperationLimitInput(digitsOnly);
                               form.setValue("operationLimit", digitsOnly === "" ? undefined : Number(digitsOnly), { shouldValidate: false, shouldDirty: true });
+                            }}
+                            disabled={loading}
+                          />
+                        </FormControl>
+                        <FormDescription>0 = без ограничений</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="intervalMinutes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Интервал между сделками (мин)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            placeholder="0"
+                            value={intervalMinutesInput}
+                            onChange={(e) => {
+                              const raw = e.target.value;
+                              const digitsOnly = raw.replace(/\D/g, "");
+                              setIntervalMinutesInput(digitsOnly);
+                              form.setValue("intervalMinutes", digitsOnly === "" ? undefined : Number(digitsOnly), { shouldValidate: false, shouldDirty: true });
                             }}
                             disabled={loading}
                           />

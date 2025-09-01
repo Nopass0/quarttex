@@ -83,6 +83,7 @@ const formSchema = z.object({
   maxAmount: numberField(1000).optional(),
   operationLimit: numberField(0).optional(),
   sumLimit: numberField(0).optional(),
+  intervalMinutes: numberField(0).optional(),
   isActive: z.boolean().default(true),
 });
 
@@ -109,6 +110,7 @@ interface DeviceRequisite {
   currentTotalAmount: number;
   operationLimit: number;
   sumLimit: number;
+  intervalMinutes: number;
   activeDeals: number;
   minAmount: number;
   maxAmount: number;
@@ -167,6 +169,7 @@ export function DeviceRequisitesSheet({
       maxAmount: 100000,
       operationLimit: 0,
       sumLimit: 0,
+      intervalMinutes: 0,
       isActive: true,
     },
   });
@@ -176,6 +179,7 @@ export function DeviceRequisitesSheet({
   const [maxAmountInput, setMaxAmountInput] = useState<string>("");
   const [operationLimitInput, setOperationLimitInput] = useState<string>("");
   const [sumLimitInput, setSumLimitInput] = useState<string>("");
+  const [intervalMinutesInput, setIntervalMinutesInput] = useState<string>("");
 
   useEffect(() => {
     // Инициализируем строки из текущих значений формы
@@ -184,6 +188,7 @@ export function DeviceRequisitesSheet({
     setMaxAmountInput(values.maxAmount !== undefined ? String(values.maxAmount) : "");
     setOperationLimitInput(values.operationLimit !== undefined ? String(values.operationLimit) : "");
     setSumLimitInput(values.sumLimit !== undefined ? String(values.sumLimit) : "");
+    setIntervalMinutesInput(values.intervalMinutes !== undefined ? String(values.intervalMinutes) : "");
   }, [showForm]);
 
   // Блокируем сохранение, если любой из инпутов пуст
@@ -191,7 +196,8 @@ export function DeviceRequisitesSheet({
     minAmountInput === "" ||
     maxAmountInput === "" ||
     operationLimitInput === "" ||
-    sumLimitInput === "";
+    sumLimitInput === "" ||
+    intervalMinutesInput === "";
 
   useEffect(() => {
     if (open && !showForm) {
@@ -229,12 +235,14 @@ export function DeviceRequisitesSheet({
         maxAmount: existingRequisite.maxAmount,
         operationLimit: existingRequisite.operationLimit || 0,
         sumLimit: existingRequisite.sumLimit || 0,
+        intervalMinutes: existingRequisite.intervalMinutes || 0,
         isActive: existingRequisite.isActive ?? true,
       });
       setMinAmountInput(String(existingRequisite.minAmount ?? ""));
       setMaxAmountInput(String(existingRequisite.maxAmount ?? ""));
       setOperationLimitInput(String(existingRequisite.operationLimit ?? ""));
       setSumLimitInput(String(existingRequisite.sumLimit ?? ""));
+      setIntervalMinutesInput(String(existingRequisite.intervalMinutes ?? ""));
     }
   }, [existingRequisite, methods, form]);
 
@@ -274,12 +282,14 @@ export function DeviceRequisitesSheet({
       maxAmount: 100000,
       operationLimit: 0,
       sumLimit: 0,
+      intervalMinutes: 0,
       isActive: true,
     });
     setMinAmountInput("1000");
     setMaxAmountInput("100000");
     setOperationLimitInput("0");
     setSumLimitInput("0");
+    setIntervalMinutesInput("0");
     setShowForm(true);
   };
 
@@ -307,12 +317,14 @@ export function DeviceRequisitesSheet({
       maxAmount: requisite.maxAmount,
       operationLimit: requisite.operationLimit || 0,
       sumLimit: requisite.sumLimit || 0,
+      intervalMinutes: requisite.intervalMinutes || 0,
       isActive: requisite.isActive ?? true,
     });
     setMinAmountInput(String(requisite.minAmount ?? ""));
     setMaxAmountInput(String(requisite.maxAmount ?? ""));
     setOperationLimitInput(String(requisite.operationLimit ?? ""));
     setSumLimitInput(String(requisite.sumLimit ?? ""));
+    setIntervalMinutesInput(String(requisite.intervalMinutes ?? ""));
     setShowForm(true);
   };
 
@@ -373,7 +385,8 @@ export function DeviceRequisitesSheet({
         data.minAmount === undefined ||
         data.maxAmount === undefined ||
         data.operationLimit === undefined ||
-        data.sumLimit === undefined
+        data.sumLimit === undefined ||
+        data.intervalMinutes === undefined
       ) {
         toast.error("Заполните все числовые поля");
         return;
@@ -404,9 +417,9 @@ export function DeviceRequisitesSheet({
         maxAmount: Number(data.maxAmount),
         operationLimit: Number(data.operationLimit),
         sumLimit: Number(data.sumLimit),
+        intervalMinutes: Number(data.intervalMinutes),
         isActive: data.isActive ?? true,
         deviceId,
-        intervalMinutes: 5,
 
         isArchived: editingRequisite ? editingRequisite.isArchived : existingRequisite?.isArchived ?? false,
       };
@@ -592,6 +605,12 @@ export function DeviceRequisitesSheet({
                             <span className="text-muted-foreground">Лимит операций:</span>
                             <span className="ml-1 font-medium">
                               {((requisite.activeDeals || 0) + (requisite.transactionsReady || 0))} / {requisite.operationLimit === 0 ? '∞' : requisite.operationLimit}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Интервал:</span>
+                            <span className="ml-1 font-medium">
+                              {requisite.intervalMinutes === 0 ? 'без ограничений' : `${requisite.intervalMinutes || 0} мин`}
                             </span>
                           </div>
                         </div>
@@ -834,6 +853,35 @@ export function DeviceRequisitesSheet({
                               const digitsOnly = raw.replace(/\D/g, "");
                               setSumLimitInput(digitsOnly);
                               form.setValue("sumLimit", digitsOnly === "" ? undefined : Number(digitsOnly), { shouldValidate: false, shouldDirty: true });
+                            }}
+                            disabled={loading}
+                          />
+                        </FormControl>
+                        <FormDescription>0 = без ограничений</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="intervalMinutes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Интервал между сделками (мин)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            placeholder="0"
+                            value={intervalMinutesInput}
+                            onChange={(e) => {
+                              const raw = e.target.value;
+                              const digitsOnly = raw.replace(/\D/g, "");
+                              setIntervalMinutesInput(digitsOnly);
+                              form.setValue("intervalMinutes", digitsOnly === "" ? undefined : Number(digitsOnly), { shouldValidate: false, shouldDirty: true });
                             }}
                             disabled={loading}
                           />

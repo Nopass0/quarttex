@@ -138,6 +138,7 @@ export default function TraderRequisitesPage() {
     maxAmount: "50000",
     operationLimit: "0",
     sumLimit: "0",
+    intervalMinutes: "0",
   });
 
   useEffect(() => {
@@ -818,13 +819,8 @@ export default function TraderRequisitesPage() {
                                 <Badge className={cn(
                                   "text-xs px-2 py-1",
                                   (requisite.device.isWorking ?? requisite.device.isOnline)
-<<<<<<< Current (Your changes)
-                                    ? "bg-purple-50 text-purple-700 border-purple-200"
-                                    : "bg-gray-100 text-gray-600 border-gray-300"
-=======
                                     ? "bg-purple-50 text-purple-700 border-purple-200"
                                     : "bg-purple-100/40 text-gray-600 border-gray-300"
->>>>>>> Incoming (Background Agent changes)
                                 )}>
                                   {(requisite.device.isWorking ?? requisite.device.isOnline)
                                     ? "Устройство: в работе"
@@ -927,6 +923,12 @@ export default function TraderRequisitesPage() {
                                 {requisite.operationLimit === 0 ? '∞' : (requisite.operationLimit || 0)}
                               </span>
                             </div>
+                            <div>
+                              <span className="text-gray-600">Интервал: </span>
+                              <span className="font-medium">
+                                {requisite.intervalMinutes === 0 ? 'без ограничений' : `${requisite.intervalMinutes || 0} мин`}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1007,6 +1009,12 @@ export default function TraderRequisitesPage() {
                         <span className="text-gray-600">Лимит операций: </span>
                         <span className="font-medium">
                           {requisite.operationLimit === 0 ? '∞' : (requisite.operationLimit || 0)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Интервал: </span>
+                        <span className="font-medium">
+                          {requisite.intervalMinutes === 0 ? 'без ограничений' : `${requisite.intervalMinutes || 0} мин`}
                         </span>
                       </div>
                     </div>
@@ -1316,6 +1324,26 @@ export default function TraderRequisitesPage() {
                       setRequisiteForm({
                         ...requisiteForm,
                         sumLimit: digitsOnly,
+                      });
+                    }}
+                    placeholder="0 = без ограничений"
+                    className="text-sm md:text-base"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="intervalMinutes" className="text-sm">Интервал между сделками (мин)</Label>
+                  <Input
+                    id="intervalMinutes"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={requisiteForm.intervalMinutes}
+                    onChange={(e) => {
+                      const digitsOnly = e.target.value.replace(/\D/g, "");
+                      setRequisiteForm({
+                        ...requisiteForm,
+                        intervalMinutes: digitsOnly,
                       });
                     }}
                     placeholder="0 = без ограничений"

@@ -52,9 +52,9 @@ const formSchema = z.object({
   phoneNumber: z.string().optional(),
   minAmount: numberField(100),
   maxAmount: numberField(1000),
-  dailyLimit: numberField(0),
-  monthlyLimit: numberField(0),
-  maxCountTransactions: numberField(0),
+  operationLimit: numberField(0),
+  sumLimit: numberField(0),
+  intervalMinutes: numberField(0),
 });
 
 type FormData = z.input<typeof formSchema>;

@@ -124,8 +124,8 @@ export function RequisitesEnhanced() {
     recipientName: "",
     minAmount: 1000,
     maxAmount: 20000,
-    dailyLimit: 100000,
-    monthlyLimit: 3000000,
+    operationLimit: 0,
+    sumLimit: 0,
     intervalMinutes: 0,
   })
   

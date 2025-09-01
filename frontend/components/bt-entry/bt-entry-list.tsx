@@ -1739,7 +1739,6 @@ export function BtEntryList() {
                 switch (transaction.status) {
                   case "READY":
                     return "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800";
->>>>>>> Incoming (Background Agent changes)
                   case "CREATED":
                   case "IN_PROGRESS":
                     return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800";

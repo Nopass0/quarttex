@@ -619,6 +619,12 @@ export function RequisitesSheet({
                                 {((requisite.activeDeals || 0) + (requisite.transactionsReady || 0))} / {requisite.operationLimit === 0 ? '∞' : (requisite.operationLimit || 0)}
                               </span>
                             </div>
+                            <div>
+                              <span className="text-muted-foreground">Интервал:</span>
+                              <span className="ml-1 font-medium">
+                                {requisite.intervalMinutes === 0 ? 'без ограничений' : `${requisite.intervalMinutes || 0} мин`}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </Card>

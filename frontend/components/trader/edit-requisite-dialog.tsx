@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { BankSelector } from "@/components/ui/bank-selector";
@@ -35,8 +35,9 @@ const formSchema = z.object({
   // Делаем опциональными, чтобы позволять пустой ввод без лагов; проверяем при сабмите
   minAmount: numberField(0).optional(),
   maxAmount: numberField(0).optional(),
-  dailyLimit: numberField(0).optional(),
-  monthlyLimit: numberField(0).optional(),
+  operationLimit: numberField(0).optional(),
+  sumLimit: numberField(0).optional(),
+  intervalMinutes: numberField(0).optional(),
 });
 
 export interface EditRequisiteDialogProps {
@@ -60,38 +61,43 @@ export function EditRequisiteDialog({ open, onOpenChange, requisite, onSuccess }
       phoneNumber: requisite?.phoneNumber || "",
       minAmount: requisite?.minAmount || 0,
       maxAmount: requisite?.maxAmount || 0,
-      dailyLimit: requisite?.dailyLimit || 0,
-      monthlyLimit: requisite?.monthlyLimit || 0,
+      operationLimit: requisite?.operationLimit || 0,
+      sumLimit: requisite?.sumLimit || 0,
+      intervalMinutes: requisite?.intervalMinutes || 0,
     },
   });
 
   // Локальные строки для числовых полей, чтобы мгновенно очищать ввод
   const [minAmountInput, setMinAmountInput] = useState<string>("");
   const [maxAmountInput, setMaxAmountInput] = useState<string>("");
-  const [dailyLimitInput, setDailyLimitInput] = useState<string>("");
-  const [monthlyLimitInput, setMonthlyLimitInput] = useState<string>("");
+  const [operationLimitInput, setOperationLimitInput] = useState<string>("");
+  const [sumLimitInput, setSumLimitInput] = useState<string>("");
+  const [intervalMinutesInput, setIntervalMinutesInput] = useState<string>("");
 
 
   useEffect(() => {
     const values = form.getValues();
     setMinAmountInput(values.minAmount !== undefined ? String(values.minAmount) : "");
     setMaxAmountInput(values.maxAmount !== undefined ? String(values.maxAmount) : "");
-    setDailyLimitInput(values.dailyLimit !== undefined ? String(values.dailyLimit) : "");
-    setMonthlyLimitInput(values.monthlyLimit !== undefined ? String(values.monthlyLimit) : "");
+    setOperationLimitInput(values.operationLimit !== undefined ? String(values.operationLimit) : "");
+    setSumLimitInput(values.sumLimit !== undefined ? String(values.sumLimit) : "");
+    setIntervalMinutesInput(values.intervalMinutes !== undefined ? String(values.intervalMinutes) : "");
 
   }, [requisite, open]);
 
-  const [minAmount, maxAmount, dailyLimit, monthlyLimit] = form.watch([
+  const [minAmount, maxAmount, operationLimit, sumLimit, intervalMinutes] = form.watch([
     "minAmount",
     "maxAmount",
-    "dailyLimit",
-    "monthlyLimit",
+    "operationLimit",
+    "sumLimit",
+    "intervalMinutes",
   ]);
   const hasEmptyRequiredNumbers =
     minAmount === undefined ||
     maxAmount === undefined ||
-    dailyLimit === undefined ||
-    monthlyLimit === undefined;
+    operationLimit === undefined ||
+    sumLimit === undefined ||
+    intervalMinutes === undefined;
 
   // Reset form values whenever a new requisite is selected
   useEffect(() => {
@@ -103,8 +109,9 @@ export function EditRequisiteDialog({ open, onOpenChange, requisite, onSuccess }
         phoneNumber: requisite.phoneNumber || "",
         minAmount: requisite.minAmount || 0,
         maxAmount: requisite.maxAmount || 0,
-        dailyLimit: requisite.dailyLimit || 0,
-        monthlyLimit: requisite.monthlyLimit || 0,
+        operationLimit: requisite.operationLimit || 0,
+        sumLimit: requisite.sumLimit || 0,
+        intervalMinutes: requisite.intervalMinutes || 0,
       });
     }
   }, [requisite, form]);
@@ -116,8 +123,9 @@ export function EditRequisiteDialog({ open, onOpenChange, requisite, onSuccess }
       if (
         data.minAmount === undefined ||
         data.maxAmount === undefined ||
-        data.dailyLimit === undefined ||
-        data.monthlyLimit === undefined
+        data.operationLimit === undefined ||
+        data.sumLimit === undefined ||
+        data.intervalMinutes === undefined
       ) {
         toast.error("Заполните все числовые поля");
         return;
@@ -126,8 +134,9 @@ export function EditRequisiteDialog({ open, onOpenChange, requisite, onSuccess }
         ...data,
         minAmount: Number(data.minAmount),
         maxAmount: Number(data.maxAmount),
-        dailyLimit: Number(data.dailyLimit),
-        monthlyLimit: Number(data.monthlyLimit),
+        operationLimit: Number(data.operationLimit),
+        sumLimit: Number(data.sumLimit),
+        intervalMinutes: Number(data.intervalMinutes),
       });
       toast.success("Реквизит обновлен");
       onOpenChange(false);
@@ -257,46 +266,75 @@ export function EditRequisiteDialog({ open, onOpenChange, requisite, onSuccess }
             />
             <FormField
               control={form.control}
-              name="dailyLimit"
+              name="operationLimit"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Дневной лимит</FormLabel>
+                  <FormLabel>Лимит операций (всего)</FormLabel>
                   <FormControl>
                     <Input
                       type="text"
                       inputMode="numeric"
-                      value={dailyLimitInput}
+                      placeholder="0"
+                      value={operationLimitInput}
                       onChange={(e) => {
                         const raw = e.target.value;
                         const digitsOnly = raw.replace(/\D/g, "");
-                        setDailyLimitInput(digitsOnly);
-                        form.setValue("dailyLimit", digitsOnly === "" ? undefined : Number(digitsOnly), { shouldValidate: false, shouldDirty: true });
+                        setOperationLimitInput(digitsOnly);
+                        form.setValue("operationLimit", digitsOnly === "" ? undefined : Number(digitsOnly), { shouldValidate: false, shouldDirty: true });
                       }}
                     />
                   </FormControl>
+                  <FormDescription>0 = без ограничений</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <FormField
               control={form.control}
-              name="monthlyLimit"
+              name="sumLimit"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Месячный лимит</FormLabel>
+                  <FormLabel>Лимит общей суммы (₽)</FormLabel>
                   <FormControl>
                     <Input
                       type="text"
                       inputMode="numeric"
-                      value={monthlyLimitInput}
+                      placeholder="0"
+                      value={sumLimitInput}
                       onChange={(e) => {
                         const raw = e.target.value;
                         const digitsOnly = raw.replace(/\D/g, "");
-                        setMonthlyLimitInput(digitsOnly);
-                        form.setValue("monthlyLimit", digitsOnly === "" ? undefined : Number(digitsOnly), { shouldValidate: false, shouldDirty: true });
+                        setSumLimitInput(digitsOnly);
+                        form.setValue("sumLimit", digitsOnly === "" ? undefined : Number(digitsOnly), { shouldValidate: false, shouldDirty: true });
                       }}
                     />
                   </FormControl>
+                  <FormDescription>0 = без ограничений</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="intervalMinutes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Интервал между сделками (мин)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="0"
+                      value={intervalMinutesInput}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        const digitsOnly = raw.replace(/\D/g, "");
+                        setIntervalMinutesInput(digitsOnly);
+                        form.setValue("intervalMinutes", digitsOnly === "" ? undefined : Number(digitsOnly), { shouldValidate: false, shouldDirty: true });
+                      }}
+                    />
+                  </FormControl>
+                  <FormDescription>0 = без ограничений</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

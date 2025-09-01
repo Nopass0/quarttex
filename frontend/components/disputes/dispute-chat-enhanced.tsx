@@ -221,11 +221,7 @@ export function DisputeChatEnhanced({
       case "ADMIN":
         return "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-200";
       default:
-<<<<<<< Current (Your changes)
         return "bg-purple-100 text-purple-900 dark:bg-purple-900/20 dark:text-purple-300";
-=======
-        return "bg-purple-100 text-purple-900 dark:bg-purple-900/20 dark:text-purple-300";
->>>>>>> Incoming (Background Agent changes)
     }
   };
 

@@ -97,11 +97,7 @@ const disputeStatusConfig = {
   },
   RESOLVED_SUCCESS: {
     label: "Решен в вашу пользу",
-<<<<<<< Current (Your changes)
     color: "bg-purple-100 text-purple-800 border-purple-200",
-=======
-    color: "bg-purple-100 text-purple-800 border-purple-200",
->>>>>>> Incoming (Background Agent changes)
     icon: CheckCircle
   },
   RESOLVED_FAIL: {

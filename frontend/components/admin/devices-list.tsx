@@ -274,11 +274,7 @@ export function DevicesList() {
             </div>
           </CardContent>
         </Card>
-<<<<<<< Current (Your changes)
-        <Card className="border-purple-200">
-=======
         <Card className="bg-purple-50/10 border-purple-200">
->>>>>>> Incoming (Background Agent changes)
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-medium text-purple-600">Активных</CardTitle>
           </CardHeader>
