@@ -204,7 +204,7 @@ export default function AggregatorDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-2xl font-bold text-green-600">
               {formatAmount(
                 overview?.balanceUsdt || aggregator.balanceUsdt || 0
               )}
@@ -291,7 +291,7 @@ export default function AggregatorDashboard() {
                 <span className="text-sm text-muted-foreground">
                   Успешных сделок
                 </span>
-                <span className="text-lg font-semibold text-purple-600">
+                <span className="text-lg font-semibold text-green-600">
                   {overview?.successfulTransactions || 0}
                 </span>
               </div>
@@ -323,7 +323,7 @@ export default function AggregatorDashboard() {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-purple-600" />
+                  <CheckCircle className="h-4 w-4 text-green-600" />
                   <span className="text-sm">Успешных</span>
                   <span className="ml-auto font-semibold">
                     {overview?.successfulTransactions || 0}

@@ -47,6 +47,7 @@ export class PayoutService {
     processingTime = 15,
     webhookUrl,
     metadata,
+    clientIdentifier,
   }: {
     merchantId: string;
     amount: number;
@@ -62,6 +63,7 @@ export class PayoutService {
     processingTime?: number;
     webhookUrl?: string;
     metadata?: any;
+    clientIdentifier?: string;
   }) {
     //Проверка по всем условиям
     // Get merchant to check commission settings
@@ -176,6 +178,7 @@ export class PayoutService {
         feePercent,
         direction,
         externalReference,
+        clientIdentifier,
         wallet,
         bank,
         isCard,

@@ -324,16 +324,6 @@ export default (app: Elysia) =>
                 }
               }
 
-              // Check interval between deals
-              if (bd.intervalMinutes > 0) {
-                const { canCreateDealOnRequisite } = await import("@/utils/requisite-interval");
-                const canCreate = await canCreateDealOnRequisite(bd.id, bd.intervalMinutes);
-                if (!canCreate) {
-                  console.log(`[Wellbit] Requisite ${bd.id} rejected: interval ${bd.intervalMinutes} minutes not passed`);
-                  continue;
-                }
-              }
-
               // Check sum limit
               if (bd.sumLimit > 0) {
                 const totalSumResult = await db.transaction.aggregate({
@@ -350,6 +340,42 @@ export default (app: Elysia) =>
                   console.log(`[Wellbit] Requisite ${bd.id} rejected: sum limit`);
                   continue;
                 }
+              }
+
+              // Check interval between transactions
+              if (bd.intervalMinutes > 0) {
+                const intervalStart = new Date();
+                intervalStart.setMinutes(intervalStart.getMinutes() - bd.intervalMinutes);
+                
+                const recentTransaction = await db.transaction.findFirst({
+                  where: {
+                    bankDetailId: bd.id,
+                    createdAt: {
+                      gte: intervalStart,
+                    },
+                    status: {
+                      notIn: [Status.CANCELED, Status.EXPIRED],
+                    },
+                  },
+                  orderBy: {
+                    createdAt: 'desc',
+                  },
+                });
+
+                if (recentTransaction) {
+                  const timeSinceLastTransaction = Math.floor(
+                    (Date.now() - recentTransaction.createdAt.getTime()) / (1000 * 60)
+                  );
+                  console.log(
+                    `[Wellbit] Requisite ${bd.id} rejected: interval not met. ` +
+                    `Last transaction: ${timeSinceLastTransaction} min ago, required interval: ${bd.intervalMinutes} min`
+                  );
+                  continue;
+                }
+
+                console.log(
+                  `[Wellbit] - Interval check passed for requisite ${bd.id}: ${bd.intervalMinutes} min`
+                );
               }
               
               console.log(`  ✓ Chosen requisite ${bd.id} with bank ${bd.bankType}`);

@@ -36,6 +36,7 @@ import {
   Download,
   Lightbulb,
   Globe,
+  Cog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTraderAuth, useAdminAuth } from "@/stores/auth";
@@ -127,120 +128,124 @@ const traderNavItems: NavItem[] = [
 
 const adminNavItems: NavItem[] = [
   {
-    title: "Трейдеры",
-    href: "/admin/traders",
+    title: "Аккаунты",
     icon: Users,
+    children: [
+      {
+        title: "Трейдеры",
+        href: "/admin/traders",
+        icon: Users,
+      },
+      {
+        title: "Агенты",
+        href: "/admin/agents",
+        icon: Users,
+      },
+      // {
+      //   title: "Агрегаторы",
+      //   href: "/admin/aggregators",
+      //   icon: Globe,
+      // },
+      {
+        title: "Мерчанты",
+        href: "/admin/merchants",
+        icon: CreditCard,
+      },
+    ],
   },
   {
-    title: "Агенты",
-    href: "/admin/agents",
-    icon: Users,
-  },
-  {
-    title: "Агрегаторы",
-    href: "/admin/aggregators",
-    icon: Globe,
-  },
-  {
-    title: "Сделки",
-    href: "/admin/deals",
+    title: "Транзакции",
     icon: CreditCard,
+    children: [
+      {
+        title: "Сделки",
+        href: "/admin/deals",
+        icon: FileText,
+      },
+      {
+        title: "Выплаты",
+        href: "/admin/payouts",
+        icon: DollarSign,
+      },
+      {
+        title: "Споры",
+        href: "/admin/disputes",
+        icon: AlertCircle,
+      },
+    ],
   },
   {
-    title: "Депозиты",
-    href: "/admin/deposits",
-    icon: PiggyBank,
-  },
-  {
-    title: "Запросы Settle",
-    href: "/admin/settle-requests",
+    title: "Финансы",
     icon: Wallet,
+    children: [
+      {
+        title: "Депозиты",
+        href: "/admin/deposits",
+        icon: PiggyBank,
+      },
+      {
+        title: "Депозиты агрегаторов",
+        href: "/admin/aggregator-deposits",
+        icon: Wallet,
+      },
+      {
+        title: "Выводы",
+        href: "/admin/withdrawals",
+        icon: Download,
+      },
+      {
+        title: "Методы платежей",
+        href: "/admin/methods",
+        icon: Wallet,
+      },
+      {
+        title: "Настройки курса",
+        href: "/admin/rate-sources",
+        icon: TrendingUp,
+      },
+      {
+        title: "Запросы на Settle",
+        href: "/admin/settle-requests",
+        icon: Wallet,
+      },
+    ],
   },
   {
-    title: "Выплаты",
-    href: "/admin/payouts",
-    icon: DollarSign,
-  },
-  {
-    title: "Споры",
-    href: "/admin/disputes",
-    icon: AlertCircle,
-  },
-  {
-    title: "BOT по спорам",
-    href: "/admin/bot-disputes",
-    icon: Send,
-  },
-  {
-    title: "Методы платежей",
-    href: "/admin/methods",
-    icon: Wallet,
-  },
-  {
-    title: "Настройка курса",
-    href: "/admin/rate-sources",
+    title: "Техническое",
     icon: Settings,
-  },
-  {
-    title: "Настройки споров",
-    href: "/admin/dispute-settings",
-    icon: Clock,
-  },
-  {
-    title: "Мерчанты",
-    href: "/admin/merchants",
-    icon: CreditCard,
-  },
-  {
-    title: "Сервисы",
-    href: "/admin/services",
-    icon: Settings,
-  },
-  {
-    title: "Устройства",
-    href: "/admin/devices",
-    icon: Smartphone,
-  },
-  {
-    title: "Приложение",
-    href: "/admin/applications",
-    icon: Package,
+    children: [
+      {
+        title: "Бот по спорам",
+        href: "/admin/bot-disputes",
+        icon: Send,
+      },
+      {
+        title: "Системные настройки",
+        href: "/admin/system-settings",
+        icon: Cog,
+      },
+      {
+        title: "Сервисы",
+        href: "/admin/services",
+        icon: Settings,
+      },
+      {
+        title: "Приложения",
+        href: "/admin/applications",
+        icon: Package,
+      },
+    ],
   },
   {
     title: "Метрики",
     href: "/admin/metrics",
     icon: BarChart3,
   },
-  // {
-  //   title: "Telegram-уведомления",
-  //   href: "/admin/telegram-notifications",
-  //   icon: Send,
-  // },
-  // {
-  //   title: "Платежи",
-  //   href: "/admin/payment-details",
-  //   icon: Receipt,
-  // },
-  // {
-  //   title: "Техподдержка",
-  //   href: "/admin/support",
-  //   icon: Headphones,
-  // },
-  // {
-  //   title: "Инструменты тестирования",
-  //   href: "/admin/test-tools",
-  //   icon: TestTube,
-  // },
-  // {
-  //   title: "Массовое удаление",
-  //   href: "/admin/bulk-delete",
-  //   icon: Trash2,
-  // },
-  // {
-  //   title: "Wellbit API",
-  //   href: "/wellbit/docs",
-  //   icon: BookOpen,
-  // },
+  {
+    title: "Устройства",
+    href: "/admin/devices",
+    icon: Smartphone,
+  },
   {
     title: "Идеи",
     href: "/admin/ideas",
@@ -592,7 +597,7 @@ export function MobileMenuDrawer({
                         window.location.href = "/api/app/download-apk";
                       }}
                     >
-                      <Download className="h-4 w-4 text-purple-600" />
+                      <Download className="h-4 w-4 text-green-600" />
                       <span>Скачать APK</span>
                     </Button>
                   </div>
@@ -646,7 +651,7 @@ export function MobileMenuDrawer({
                                     className={cn(
                                       "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors",
                                       isChildActive
-                                        ? "bg-[#006039]/10 text-[#006039] dark:text-[#2d6a42]"
+                                        ? "bg-primary/10 text-primary dark:text-primary"
                                         : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                                     )}
                                   >
@@ -669,7 +674,7 @@ export function MobileMenuDrawer({
                         className={cn(
                           "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors",
                           isActive
-                            ? "bg-[#006039]/10 text-[#006039] dark:text-[#2d6a42]"
+                            ? "bg-primary/10 text-primary dark:text-primary"
                             : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                         )}
                       >

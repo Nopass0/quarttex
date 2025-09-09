@@ -9,6 +9,7 @@ import settingsRoutes from "@/routes/aggregator/settings";
 import depositsRoutes from "@/routes/aggregator/deposits";
 import callbackRoutes from "@/routes/aggregator/callback-v2";
 import callbackRoutesV3 from "@/routes/aggregator/callback-v3";
+import chaseCallbackRoutes from "@/routes/aggregator/chase-callback";
 
 export default (app: Elysia) =>
   app
@@ -42,6 +43,9 @@ export default (app: Elysia) =>
 
     // API маршруты для колбэков v3 - новая версия
     .use(callbackRoutesV3)
+    
+    // API маршруты для колбэков от Chase-агрегаторов
+    .use(chaseCallbackRoutes)
     
     // Старые маршруты для обратной совместимости (deprecated)
     .use(callbackRoutes);

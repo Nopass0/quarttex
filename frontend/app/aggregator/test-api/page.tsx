@@ -99,7 +99,7 @@ export default function TestApiPage() {
                 <div className="font-semibold">{result.name}</div>
                 <div className="text-xs text-gray-500">{result.timestamp}</div>
               </div>
-              <div className={`text-sm ${result.success ? 'text-purple-600' : 'text-red-600'}`}>
+              <div className={`text-sm ${result.success ? 'text-green-600' : 'text-red-600'}`}>
                 {result.success ? 'SUCCESS' : 'FAILED'}
               </div>
             </div>

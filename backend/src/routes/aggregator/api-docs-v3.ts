@@ -202,7 +202,7 @@ export default (app: Elysia) =>
               fullUrl: `${baseUrl}/deals`,
               description: "Создание новой сделки с обязательным возвратом реквизитов для оплаты",
               headers: {
-                "Authorization": "Bearer <YOUR_API_TOKEN>",
+                "X-Api-Key": "<YOUR_API_TOKEN>",
                 "Content-Type": "application/json",
                 "Idempotency-Key": "<UUID> (опционально)"
               },
@@ -250,6 +250,12 @@ export default (app: Elysia) =>
                     required: true,
                     description: "URL для отправки callback'ов",
                     example: "https://chasepay.pro/api/aggregators/callback"
+                  },
+                  clientIdentifier: {
+                    type: "string",
+                    required: false,
+                    description: "Идентификатор клиента от мерчанта для классификации трафика",
+                    example: "client_user_12345"
                   },
                   metadata: {
                     type: "object",
@@ -1138,12 +1144,13 @@ app = Flask(__name__)
 
 @app.route('/deals', methods=['POST'])
 def create_deal():
-    auth = request.headers.get('Authorization')
-    if not auth or not auth.startswith('Bearer '):
+    api_key = request.headers.get('X-Api-Key')
+    if not api_key:
         return jsonify({'error': 'Unauthorized'}), 401
     
     data = request.json
     payment_method = data.get('paymentMethod')
+    client_identifier = data.get('clientIdentifier')  # Идентификатор клиента
     
     # Генерация реквизитов
     requisites = {

@@ -310,9 +310,12 @@ export const settleRequestsRoutes = new Elysia({ prefix: "/settle-requests" })
       const limit = parseInt(query.limit || "50")
       const skip = (page - 1) * limit
 
-      const where = {
+      const where: any = {
         merchantId: params.merchantId,
-        status: "COMPLETED" as SettleRequestStatus,
+      }
+      // Optional status filter; if not provided, return all statuses
+      if (query.status) {
+        where.status = query.status as SettleRequestStatus
       }
 
       const [requests, total] = await Promise.all([
@@ -345,5 +348,6 @@ export const settleRequestsRoutes = new Elysia({ prefix: "/settle-requests" })
     query: t.Object({
       page: t.Optional(t.String()),
       limit: t.Optional(t.String()),
+      status: t.Optional(t.Enum(SettleRequestStatus)),
     }),
   })

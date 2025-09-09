@@ -10,18 +10,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { toast } from 'sonner'
 import { useAdminAuth } from '@/stores/auth'
 import { Loader2 } from 'lucide-react'
+import { TraderSettingsTabs, type TraderSettings, type DisplayRate } from '@/components/admin/trader-settings-tabs'
 
 type Agent = {
   id: string
@@ -36,27 +28,7 @@ type Team = {
   agentId: string
 }
 
-type TraderSettings = {
-  id: string
-  email: string
-  name: string
-  minInsuranceDeposit: number
-  maxInsuranceDeposit: number
-  minAmountPerRequisite: number
-  maxAmountPerRequisite: number
-  disputeLimit: number
-  maxSimultaneousPayouts: number
-  teamId: string | null
-  team: {
-    id: string
-    name: string
-    agentId: string
-    agent: {
-      id: string
-      name: string
-    }
-  } | null
-}
+// Types are now imported from TraderSettingsTabs
 
 interface TraderSettingsDialogProps {
   traderId: string
@@ -72,6 +44,9 @@ export function TraderSettingsDialog({ traderId, isOpen, onClose, onUpdate }: Tr
   const [agents, setAgents] = useState<Agent[]>([])
   const [selectedAgentId, setSelectedAgentId] = useState<string>('')
   const [formData, setFormData] = useState<TraderSettings | null>(null)
+  const [displayRates, setDisplayRates] = useState<DisplayRate[]>([
+    { stakePercent: 0, amountFrom: 0, amountTo: 0 }
+  ])
 
   useEffect(() => {
     if (isOpen) {
@@ -83,6 +58,17 @@ export function TraderSettingsDialog({ traderId, isOpen, onClose, onUpdate }: Tr
   useEffect(() => {
     if (formData?.team?.agentId) {
       setSelectedAgentId(formData.team.agentId)
+    }
+    // Загружаем отображаемые ставки
+    if (formData?.displayRates && formData.displayRates.length > 0) {
+      setDisplayRates(formData.displayRates)
+    } else if (formData?.displayStakePercent || formData?.displayAmountFrom || formData?.displayAmountTo) {
+      // Миграция со старой системы
+      setDisplayRates([{
+        stakePercent: formData.displayStakePercent || 0,
+        amountFrom: formData.displayAmountFrom || 0,
+        amountTo: formData.displayAmountTo || 0
+      }])
     }
   }, [formData])
 
@@ -139,7 +125,20 @@ export function TraderSettingsDialog({ traderId, isOpen, onClose, onUpdate }: Tr
           maxAmountPerRequisite: formData.maxAmountPerRequisite,
           disputeLimit: formData.disputeLimit,
           maxSimultaneousPayouts: formData.maxSimultaneousPayouts,
+          minPayoutAmount: formData.minPayoutAmount,
+          maxPayoutAmount: formData.maxPayoutAmount,
+          payoutRateDelta: formData.payoutRateDelta,
+          payoutFeePercent: formData.payoutFeePercent,
+          payoutAcceptanceTime: formData.payoutAcceptanceTime,
           teamId: formData.teamId,
+          telegramChatId: formData.telegramChatId,
+          telegramDisputeChatId: formData.telegramDisputeChatId,
+          telegramBotToken: formData.telegramBotToken,
+          rateSourceConfigId: formData.rateSourceConfigId,
+          displayStakePercent: formData.displayStakePercent ?? null,
+          displayAmountFrom: formData.displayAmountFrom ?? null,
+          displayAmountTo: formData.displayAmountTo ?? null,
+          displayRates: displayRates.filter(rate => rate.stakePercent > 0 && rate.amountFrom > 0 && rate.amountTo > 0),
         }),
       })
 
@@ -155,8 +154,7 @@ export function TraderSettingsDialog({ traderId, isOpen, onClose, onUpdate }: Tr
     }
   }
 
-  const selectedAgent = agents.find(a => a.id === selectedAgentId)
-  const availableTeams = selectedAgent?.teams || []
+  // Functions are now handled by TraderSettingsTabs component
 
   if (!formData) return null
 
@@ -170,181 +168,20 @@ export function TraderSettingsDialog({ traderId, isOpen, onClose, onUpdate }: Tr
           </DialogDescription>
         </DialogHeader>
 
-        {isLoading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-          </div>
-        ) : (
-          <div className="grid gap-6 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="name">Имя</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold">Страховые депозиты</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="minInsuranceDeposit">Минимальный депозит ($)</Label>
-                  <Input
-                    id="minInsuranceDeposit"
-                    type="number"
-                    step="0.01"
-                    value={formData.minInsuranceDeposit}
-                    onChange={(e) => setFormData({ ...formData, minInsuranceDeposit: parseFloat(e.target.value) || 0 })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="maxInsuranceDeposit">Максимальный депозит ($)</Label>
-                  <Input
-                    id="maxInsuranceDeposit"
-                    type="number"
-                    step="0.01"
-                    value={formData.maxInsuranceDeposit}
-                    onChange={(e) => setFormData({ ...formData, maxInsuranceDeposit: parseFloat(e.target.value) || 0 })}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold">Лимиты на реквизит</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="minAmountPerRequisite">Минимальная сумма (₽)</Label>
-                  <Input
-                    id="minAmountPerRequisite"
-                    type="number"
-                    step="0.01"
-                    value={formData.minAmountPerRequisite}
-                    onChange={(e) => setFormData({ ...formData, minAmountPerRequisite: parseFloat(e.target.value) || 0 })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="maxAmountPerRequisite">Максимальная сумма (₽)</Label>
-                  <Input
-                    id="maxAmountPerRequisite"
-                    type="number"
-                    step="0.01"
-                    value={formData.maxAmountPerRequisite}
-                    onChange={(e) => setFormData({ ...formData, maxAmountPerRequisite: parseFloat(e.target.value) || 0 })}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="disputeLimit">Лимит одновременных споров</Label>
-              <Input
-                id="disputeLimit"
-                type="number"
-                min="0"
-                value={formData.disputeLimit}
-                onChange={(e) => setFormData({ ...formData, disputeLimit: parseInt(e.target.value) || 0 })}
-              />
-              <p className="text-xs text-gray-500">
-                При достижении этого количества споров, новые сделки не будут назначаться трейдеру
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="maxSimultaneousPayouts">Максимальное количество выплат для проверки</Label>
-              <Input
-                id="maxSimultaneousPayouts"
-                type="number"
-                min="1"
-                value={formData.maxSimultaneousPayouts}
-                onChange={(e) => setFormData({ ...formData, maxSimultaneousPayouts: parseInt(e.target.value) || 5 })}
-              />
-              <p className="text-xs text-gray-500">
-                Максимальное количество выплат, которые можно брать на проверку одновременно
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold">Команда и агент</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="agent">Агент (тим-лид)</Label>
-                  <Select
-                    value={selectedAgentId || 'none'}
-                    onValueChange={(value) => {
-                      const agentId = value === 'none' ? '' : value
-                      setSelectedAgentId(agentId)
-                      setFormData({ ...formData, teamId: null })
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Выберите агента" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Без агента</SelectItem>
-                      {agents.map((agent) => (
-                        <SelectItem key={agent.id} value={agent.id}>
-                          {agent.name} ({agent.email})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="team">Команда</Label>
-                  <Select
-                    value={formData.teamId || 'none'}
-                    onValueChange={(value) => setFormData({ ...formData, teamId: value === 'none' ? null : value })}
-                    disabled={!selectedAgentId}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Выберите команду" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Без команды</SelectItem>
-                      {availableTeams.map((team) => (
-                        <SelectItem key={team.id} value={team.id}>
-                          {team.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              {formData.team && (
-                <p className="text-sm text-gray-500">
-                  Текущая команда: {formData.team.name} (Агент: {formData.team.agent.name})
-                </p>
-              )}
-            </div>
-          </div>
-        )}
+        <TraderSettingsTabs
+          settings={formData}
+          onSettingsChange={setFormData}
+          displayRates={displayRates}
+          onDisplayRatesChange={setDisplayRates}
+          agents={agents}
+          onSave={handleSave}
+          isSaving={isSaving}
+          isLoading={isLoading}
+        />
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isSaving}>
-            Отмена
-          </Button>
-          <Button onClick={handleSave} disabled={isSaving || isLoading}>
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Сохранение...
-              </>
-            ) : (
-              'Сохранить'
-            )}
+            Закрыть
           </Button>
         </DialogFooter>
       </DialogContent>

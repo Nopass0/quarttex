@@ -96,14 +96,14 @@ export function TradersList() {
   const fetchTraders = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/traders`, {
+      const response = await fetch(`${API_URL}/admin/users`, {
         headers: {
           'x-admin-key': adminToken || '',
         },
       })
       if (!response.ok) throw new Error('Failed to fetch traders')
       const data = await response.json()
-      setTraders(data.traders || [])
+      setTraders(data)
     } catch (error) {
       toast.error('Не удалось загрузить список трейдеров')
     } finally {
@@ -351,7 +351,7 @@ export function TradersList() {
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#7c3aed] dark:hover:bg-purple-800/60">
+            <Button className="bg-[#006039] hover:bg-[#005030]">
               <UserPlus className="mr-2 h-4 w-4 text-white" />
               Добавить трейдера
             </Button>
@@ -421,7 +421,7 @@ export function TradersList() {
             <DialogFooter>
               <Button
                 onClick={handleCreateTrader}
-                className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#7c3aed] dark:hover:bg-purple-800/60"
+                className="bg-[#006039] hover:bg-[#005030]"
                 disabled={isLoading || !formData.email}
               >
                 Создать
@@ -483,7 +483,7 @@ export function TradersList() {
                     <div className="text-sm font-medium">${formatAmount(trader.trustBalance)}</div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm font-medium text-purple-600">${formatAmount(trader.deposit || 0)}</div>
+                    <div className="text-sm font-medium text-green-600">${formatAmount(trader.deposit || 0)}</div>
                   </TableCell>
                   <TableCell>₽{formatAmount(trader.turnover)}</TableCell>
                   <TableCell>
@@ -716,7 +716,7 @@ export function TradersList() {
           <DialogFooter>
             <Button
               onClick={handleUpdateTrader}
-              className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#7c3aed] dark:hover:bg-purple-800/60"
+              className="bg-[#006039] hover:bg-[#005030]"
               disabled={isLoading}
             >
               Сохранить
@@ -752,7 +752,7 @@ export function TradersList() {
                 setShowPasswordDialog(false)
                 setGeneratedPassword('')
               }}
-              className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#7c3aed] dark:hover:bg-purple-800/60"
+              className="bg-[#006039] hover:bg-[#005030]"
             >
               Закрыть
             </Button>

@@ -16,7 +16,6 @@ async function initRateSources() {
     // Create Bybit source
     const bybitSource = await db.rateSourceConfig.create({
       data: {
-        id: "rate-source-bybit",
         source: RateSource.bybit,
         displayName: "Bybit",
         kkkPercent: 0,
@@ -31,7 +30,6 @@ async function initRateSources() {
     // Create Rapira source
     const rapiraSource = await db.rateSourceConfig.create({
       data: {
-        id: "rate-source-rapira",
         source: RateSource.rapira,
         displayName: "Rapira",
         kkkPercent: 0,

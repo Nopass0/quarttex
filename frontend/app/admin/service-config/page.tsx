@@ -363,7 +363,7 @@ export default function ServiceConfigPage() {
                           <Card>
                             <CardContent className="p-4">
                               <div className="text-sm text-gray-500">Успешных</div>
-                              <div className="text-2xl font-bold text-purple-600">
+                              <div className="text-2xl font-bold text-green-600">
                                 {processorStats.stats?.successfulMatches || 0}
                               </div>
                             </CardContent>

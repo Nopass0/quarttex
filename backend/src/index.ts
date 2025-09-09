@@ -35,6 +35,8 @@ import wellbitBankMappingRoutes from "@/routes/admin/wellbit-bank-mapping";
 import { callbackTestRoute } from "@/routes/test/callback-test";
 import { callbackProxyRoutes } from "@/routes/callback-proxy";
 import auctionRoutes from "@/routes/auction";
+import externalAggregatorRoutes from "@/routes/external/aggregator";
+import pspwareCallbackRoutes from "@/routes/pspware/callback";
 
 import { Glob } from "bun";
 import { pathToFileURL } from "node:url";
@@ -289,58 +291,95 @@ const app = new Elysia({
     };
   })
   .use(ip())
-  .use(
-    cors({
-      origin: (origin) => {
-        // Always allow requests without origin (like Postman, curl, etc.)
-        if (!origin) return true;
+  // Manual CORS handling for better control
+  .onBeforeHandle(({ request, set }) => {
+    const origin = request.headers.get("origin");
+    
+    if (origin) {
+      const originStr = String(origin);
+      let allowOrigin = false;
 
-        // Convert to string if needed
-        const originStr = String(origin);
+      // Always allow localhost for development (any port)
+      if (
+        originStr.startsWith("http://localhost") ||
+        originStr.startsWith("https://localhost") ||
+        originStr.startsWith("http://127.0.0.1") ||
+        originStr.startsWith("https://127.0.0.1")
+      ) {
+        console.log(`[CORS] Allowing localhost origin: ${originStr}`);
+        allowOrigin = true;
+      } else {
+        // Allowed production domains - only these domains can access the API
+        const allowedDomains = [
+          "https://chasepay.pro",
+          "https://www.chasepay.pro",
+          "http://chasepay.pro",
+          "http://www.chasepay.pro",
+          "https://domainchsp.ru",
+          "https://www.domainchsp.ru",
+          "http://domainchsp.ru",
+          "http://www.domainchsp.ru"
+        ];
 
-        // Always allow local development
-        if (
-          originStr.startsWith("http://localhost") ||
-          originStr.startsWith("https://localhost")
-        ) {
-          return true;
+        allowOrigin = allowedDomains.includes(originStr);
+        
+        if (!allowOrigin) {
+          console.log(`[CORS] Blocked request from unauthorized origin: ${originStr}`);
         }
+      }
 
-        // Allow any origin for callbacks (production domains can be restricted here)
-        return true;
-      },
-      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
-      allowedHeaders: [
-        "Content-Type",
-        "Authorization",
-        "authorization",
-        "x-trader-token",
-        "x-admin-key",
-        "x-device-token",
-        "x-agent-token",
-        "x-merchant-api-key",
-        "x-api-key",
-        "x-api-token",
-        "x-aggregator-session-token",
-        "Access-Control-Allow-Origin",
-        "Access-Control-Allow-Methods",
-        "Access-Control-Allow-Headers",
-      ],
-      exposedHeaders: [
-        "x-trader-token",
-        "x-admin-key",
-        "x-device-token",
-        "x-agent-token",
-        "x-merchant-api-key",
-        "x-api-key",
-        "x-api-token",
-        "x-aggregator-session-token",
-      ],
-      credentials: true,
-      preflight: true,
-      maxAge: 86400, // 24 hours
-    })
-  )
+      if (allowOrigin) {
+        set.headers["Access-Control-Allow-Origin"] = originStr;
+        set.headers["Access-Control-Allow-Credentials"] = "true";
+        set.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD";
+        set.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, authorization, x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token, x-2fa-verified";
+        set.headers["Access-Control-Expose-Headers"] = "x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token";
+      }
+    }
+  })
+  // Handle preflight OPTIONS requests
+  .options("/*", ({ set, request }) => {
+    const origin = request.headers.get("origin");
+    
+    if (origin) {
+      const originStr = String(origin);
+      let allowOrigin = false;
+
+      // Always allow localhost for development (any port)
+      if (
+        originStr.startsWith("http://localhost") ||
+        originStr.startsWith("https://localhost") ||
+        originStr.startsWith("http://127.0.0.1") ||
+        originStr.startsWith("https://127.0.0.1")
+      ) {
+        allowOrigin = true;
+      } else {
+        // Allowed production domains
+        const allowedDomains = [
+          "https://chasepay.pro",
+          "https://www.chasepay.pro",
+          "http://chasepay.pro",
+          "http://www.chasepay.pro",
+          "https://domainchsp.ru",
+          "https://www.domainchsp.ru",
+          "http://domainchsp.ru",
+          "http://www.domainchsp.ru"
+        ];
+        allowOrigin = allowedDomains.includes(originStr);
+      }
+
+      if (allowOrigin) {
+        set.headers["Access-Control-Allow-Origin"] = originStr;
+        set.headers["Access-Control-Allow-Credentials"] = "true";
+        set.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD";
+        set.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, authorization, x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token, x-2fa-verified";
+        set.headers["Access-Control-Max-Age"] = "86400";
+      }
+    }
+
+    set.status = 204;
+    return "";
+  })
 
   // Register all service endpoints
   .onBeforeHandle(({ request }) => {
@@ -385,6 +424,10 @@ const app = new Elysia({
             name: "agent",
             description: "Эндпоинты для агентов (защищенные токеном агента)",
           },
+          {
+            name: "pspware",
+            description: "Эндпоинты для интеграции с PSPWare API",
+          },
         ],
       },
     })
@@ -427,8 +470,23 @@ const app = new Elysia({
   .group("/admin", (g) =>
     g.use(adminGuard(MASTER_KEY, ADMIN_IP_WHITELIST)).use(adminRoutes)
   )
+  // Temporary test endpoint without admin guard
+  .get("/test/trader/:id", async ({ params }) => {
+    const trader = await db.user.findUnique({
+      where: { id: params.id },
+      include: {
+        displayRates: {
+          where: { isActive: true },
+          orderBy: { sortOrder: 'asc' }
+        }
+      }
+    });
+    return trader ? { success: true, trader } : { success: false, error: "Not found" };
+  })
   .group("/merchant", (app) => app.use(merchantRoutes))
   .group("/aggregator", (app) => app.use(aggregatorRoutes))
+  .group("/external/aggregator", (app) => app.use(externalAggregatorRoutes))
+  .group("/pspware", (app) => app.use(pspwareCallbackRoutes))
   .group("/device", (app) => app.use(deviceRoutes))
   .group("/trader", (app) => app.use(traderRoutes))
   .group("/wellbit", (app) => app.use(wellbitRoutes))
@@ -447,7 +505,25 @@ const app = new Elysia({
   .use(devicePingRoutes)
   .use(deviceStatusRoutes)
   .use(callbackTestRoute)
-  .use(callbackProxyRoutes);
+  .use(callbackProxyRoutes)
+  
+  // Тестовый endpoint для проверки курса трейдера
+  .get("/test-trader-rate", async () => {
+    try {
+      const { getTraderRate } = await import("@/utils/trader-rate");
+      const rateData = await getTraderRate('cmf4330t50034ikdgly4d7p3w');
+      return {
+        success: true,
+        data: rateData
+      };
+    } catch (error) {
+      console.error('Test trader rate error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  });
 
 // Register all service endpoints
 for (const serviceApp of serviceApps) {

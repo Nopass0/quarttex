@@ -382,16 +382,31 @@ export default class PayoutRedistributionService extends BaseService {
 
       // Check trader filters if they exist
       if (trader.filters) {
-        // Check traffic type filter
+        // Check max payout amount
+        const maxAmount = trader.filters.maxPayoutAmount || 0;
+        if (maxAmount > 0 && payout.amount > maxAmount) {
+          continue;
+        }
+
+        // Check traffic type filter - only if filters are set AND balance > 0
+        // If balance is set but no filters selected, all traffic types are allowed
+        const hasBalanceSet = maxAmount > 0;
         const trafficTypes = trader.filters.trafficTypes || [];
         if (trafficTypes.length > 0) {
           const payoutTrafficType = payout.isCard ? "card" : "sbp";
           if (!trafficTypes.includes(payoutTrafficType)) {
             continue;
           }
+        } else if (hasBalanceSet) {
+          // Balance is set but no traffic types selected - allow all types
+          // Continue processing (don't skip this trader)
+        } else if (!hasBalanceSet && trafficTypes.length === 0) {
+          // No balance and no traffic types - skip this trader (not participating)
+          continue;
         }
 
-        // Check bank filter
+        // Check bank filter - only if filters are set AND balance > 0
+        // If balance is set but no bank filters selected, all banks are allowed
         const bankTypes = trader.filters.bankTypes || [];
         if (bankTypes.length > 0) {
           // Convert payout bank name to enum value for comparison
@@ -399,13 +414,13 @@ export default class PayoutRedistributionService extends BaseService {
           if (!payoutBankEnum || !bankTypes.includes(payoutBankEnum)) {
             continue;
           }
+        } else if (hasBalanceSet) {
+          // Balance is set but no bank filters selected - allow all banks
+          // Continue processing (don't skip this trader)
         }
-
-        // Check max payout amount
-        const maxAmount = trader.filters.maxPayoutAmount || 0;
-        if (maxAmount > 0 && payout.amount > maxAmount) {
-          continue;
-        }
+      } else {
+        // No filters object - skip this trader (not participating)
+        continue;
       }
 
       eligibleTraders.push(trader);

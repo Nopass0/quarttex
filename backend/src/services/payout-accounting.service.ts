@@ -154,13 +154,11 @@ export class PayoutAccountingService {
     // Return payout to pool and unfreeze RUB balance
     const updates: Prisma.PrismaPromise<any>[] = [
       // Create cancellation history record
-      db.payoutCancellation.create({
+      db.payoutCancellationHistory.create({
         data: {
           payoutId,
           traderId,
           reason,
-          reasonCode: reasonCode || null,
-          files: files || [],
         },
       }),
       // Add to blacklist to prevent reassignment to this trader

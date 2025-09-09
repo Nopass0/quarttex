@@ -21,8 +21,6 @@ import {
   Loader2,
   Download,
   Eye,
-  Settings,
-  TrendingUp,
   AlertCircle,
   CheckCircle,
   XCircle,
@@ -96,7 +94,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: any }> 
   CREATED: { label: 'Создан', color: 'bg-blue-100 text-blue-800', icon: Clock },
   ACTIVE: { label: 'Активен', color: 'bg-yellow-100 text-yellow-800', icon: AlertCircle },
   CHECKING: { label: 'Проверка', color: 'bg-purple-100 text-purple-800', icon: Eye },
-  COMPLETED: { label: 'Завершен', color: 'bg-purple-100 text-purple-800', icon: CheckCircle },
+  COMPLETED: { label: 'Завершен', color: 'bg-green-100 text-green-800', icon: CheckCircle },
   CANCELLED: { label: 'Отменен', color: 'bg-red-100 text-red-800', icon: XCircle },
   EXPIRED: { label: 'Истек', color: 'bg-gray-100 text-gray-800', icon: Clock },
   DISPUTED: { label: 'Спор', color: 'bg-orange-100 text-orange-800', icon: AlertCircle },
@@ -124,8 +122,6 @@ export default function AdminPayoutsPage() {
     action: 'approve'
   })
   const [rejectReason, setRejectReason] = useState('')
-  const [testPayoutDialog, setTestPayoutDialog] = useState(false)
-  const [testPayoutLoading, setTestPayoutLoading] = useState(false)
   const [callbackHistory, setCallbackHistory] = useState<CallbackHistory[]>([])
   const [loadingCallbacks, setLoadingCallbacks] = useState(false)
 
@@ -229,47 +225,6 @@ export default function AdminPayoutsPage() {
     )
   }
 
-  const handleCreateTestPayouts = async (count: number = 5) => {
-    setTestPayoutLoading(true)
-    try {
-      // First, check if test merchant exists and get its countInRubEquivalent setting
-      const testMerchant = await adminApiInstance.get('/admin/merchants', {
-        params: { search: 'test' }
-      })
-      
-      const merchant = testMerchant.data?.data?.find((m: any) => m.name === 'test')
-      const countInRubEquivalent = merchant?.countInRubEquivalent || false
-      
-      // Prepare request data based on merchant setting
-      const requestData: any = {
-        count,
-        direction: 'OUT',
-        isCard: true,
-      }
-      
-      // Only include rate if countInRubEquivalent is false
-      if (!countInRubEquivalent) {
-        requestData.rate = 95 + Math.random() * 5
-      }
-      
-      const result = await api.createTestPayouts(requestData)
-      
-      if (result.success) {
-        toast.success(`Создано ${result.created} тестовых выплат`, {
-          description: result.failed > 0 ? `Не удалось создать: ${result.failed}` : undefined
-        })
-        loadPayouts()
-        setTestPayoutDialog(false)
-      } else {
-        throw new Error(result.error || 'Ошибка создания выплат')
-      }
-    } catch (error: any) {
-      console.error('Test payouts error:', error)
-      toast.error(error.response?.data?.error || error.message || 'Ошибка создания тестовых выплат')
-    } finally {
-      setTestPayoutLoading(false)
-    }
-  }
 
   const handleReviewPayout = async (payoutId: string, action: 'approve' | 'reject') => {
     try {
@@ -511,7 +466,7 @@ export default function AdminPayoutsPage() {
                             <Badge
                               className={
                                 callback.statusCode >= 200 && callback.statusCode < 300
-                                  ? 'bg-purple-100 text-purple-800'
+                                  ? 'bg-green-100 text-green-800'
                                   : 'bg-red-100 text-red-800'
                               }
                             >
@@ -596,7 +551,7 @@ export default function AdminPayoutsPage() {
                   Отклонить
                 </Button>
                 <Button
-                  className="bg-purple-600 hover:bg-purple-700"
+                  className="bg-green-600 hover:bg-green-700"
                   onClick={() => setReviewDialog({ 
                     open: true, 
                     payout: selectedPayout, 
@@ -634,7 +589,7 @@ export default function AdminPayoutsPage() {
             <div className="space-y-2">
               <Label>Причина отклонения</Label>
               <textarea
-                className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="Укажите причину отклонения..."
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
@@ -648,7 +603,7 @@ export default function AdminPayoutsPage() {
             </Button>
             <Button
               onClick={() => handleReviewPayout(payout.id, action)}
-              className={action === 'approve' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-red-600 hover:bg-red-700'}
+              className={action === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
             >
               {action === 'approve' ? 'Одобрить' : 'Отклонить'}
             </Button>
@@ -731,7 +686,7 @@ export default function AdminPayoutsPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-purple-600 hover:text-purple-700"
+                      className="text-green-600 hover:text-green-700"
                       onClick={() => setReviewDialog({ 
                         open: true, 
                         payout, 
@@ -764,30 +719,6 @@ export default function AdminPayoutsPage() {
             </p>
           </div>
 
-          <div className="mb-6 flex gap-4">
-            <Button 
-              onClick={() => window.location.href = '/admin/payout-settings'}
-              variant="outline"
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Настройки лимитов
-            </Button>
-            <Button 
-              onClick={() => window.location.href = '/admin/rate-settings'}
-              variant="outline"
-            >
-              <TrendingUp className="h-4 w-4 mr-2" />
-              Настройки ставок
-            </Button>
-            <Button 
-              onClick={() => setTestPayoutDialog(true)}
-              variant="outline"
-              className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-300"
-            >
-              <DollarSign className="h-4 w-4 mr-2" />
-              Создать тестовые выплаты
-            </Button>
-          </div>
 
           <Card>
             <CardHeader>
@@ -1003,71 +934,6 @@ export default function AdminPayoutsPage() {
         <PayoutDetailsDialog />
         <ReviewActionDialog />
         
-        {/* Test Payouts Dialog */}
-        <Dialog open={testPayoutDialog} onOpenChange={setTestPayoutDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Создать тестовые выплаты</DialogTitle>
-              <DialogDescription>
-                Выберите количество тестовых выплат для создания. 
-                Выплаты будут созданы с случайными параметрами для тестового мерчанта.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4 py-4">
-              <div className="text-sm text-gray-600">
-                <p className="mb-2">ℹ️ Курс будет определен автоматически в зависимости от настроек тестового мерчанта:</p>
-                <ul className="list-disc list-inside space-y-1 text-xs">
-                  <li>Если "Расчеты в рублях" включены - курс берется из системы</li>
-                  <li>Если "Расчеты в рублях" выключены - используется случайный курс</li>
-                </ul>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-4">
-                <Button
-                  variant="outline"
-                  onClick={() => handleCreateTestPayouts(1)}
-                  disabled={testPayoutLoading}
-                  className="h-20 flex flex-col items-center justify-center gap-2"
-                >
-                  <span className="text-2xl font-bold">1</span>
-                  <span className="text-sm">выплата</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleCreateTestPayouts(5)}
-                  disabled={testPayoutLoading}
-                  className="h-20 flex flex-col items-center justify-center gap-2 border-blue-300 bg-blue-50 hover:bg-blue-100"
-                >
-                  <span className="text-2xl font-bold text-blue-700">5</span>
-                  <span className="text-sm text-blue-700">выплат</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleCreateTestPayouts(10)}
-                  disabled={testPayoutLoading}
-                  className="h-20 flex flex-col items-center justify-center gap-2"
-                >
-                  <span className="text-2xl font-bold">10</span>
-                  <span className="text-sm">выплат</span>
-                </Button>
-              </div>
-              
-              {testPayoutLoading && (
-                <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                  <span className="ml-2">Создание выплат...</span>
-                </div>
-              )}
-            </div>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setTestPayoutDialog(false)}>
-                Отмена
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </AuthLayout>
     </ProtectedRoute>
   )

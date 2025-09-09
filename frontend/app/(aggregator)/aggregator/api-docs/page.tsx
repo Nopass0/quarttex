@@ -58,7 +58,7 @@ export default function AggregatorApiDocs() {
   const getMethodBadge = (method: string) => {
     const colors: Record<string, string> = {
       GET: "bg-blue-100 text-blue-800",
-      POST: "bg-purple-100 text-purple-800",
+      POST: "bg-green-100 text-green-800",
       PUT: "bg-yellow-100 text-yellow-800",
       DELETE: "bg-red-100 text-red-800",
     }
@@ -211,7 +211,7 @@ export default function AggregatorApiDocs() {
                       <h4 className="font-semibold mb-2">Тело ответа:</h4>
                       {endpoint.response.success && (
                         <div className="mb-3">
-                          <h5 className="font-medium mb-1 text-purple-600">✅ Успешный ответ (HTTP {endpoint.response.success.status || 200}):</h5>
+                          <h5 className="font-medium mb-1 text-green-600">✅ Успешный ответ (HTTP {endpoint.response.success.status || 200}):</h5>
                           <div className="bg-muted p-3 rounded text-sm">
                             <pre>{JSON.stringify(endpoint.response.success.example || endpoint.response.success.body, null, 2)}</pre>
                           </div>

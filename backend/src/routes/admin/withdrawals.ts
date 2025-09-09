@@ -107,13 +107,12 @@ export const adminWithdrawalsRoutes = new Elysia({ prefix: "/withdrawals" })
         }
       });
 
-      // For TRUST balance, we need to decrement both trustBalance and frozenUsdt
-      // For other balances, the amount was already deducted when creating the request
+      // For TRUST balance, the trustBalance was already deducted on request creation.
+      // On approval we only release (decrement) the frozen amount.
       if (withdrawal.balanceType === "TRUST") {
         await tx.user.update({
           where: { id: withdrawal.traderId },
           data: {
-            trustBalance: { decrement: withdrawal.amountUSDT },
             frozenUsdt: { decrement: withdrawal.amountUSDT }
           }
         });
@@ -194,11 +193,12 @@ export const adminWithdrawalsRoutes = new Elysia({ prefix: "/withdrawals" })
 
       // Refund balance based on type
       if (withdrawal.balanceType === "TRUST") {
-        // For TRUST balance, unfreeze the amount
+        // For TRUST balance, unfreeze and return to trustBalance
         await tx.user.update({
           where: { id: withdrawal.traderId },
           data: {
-            frozenUsdt: { decrement: withdrawal.amountUSDT }
+            frozenUsdt: { decrement: withdrawal.amountUSDT },
+            trustBalance: { increment: withdrawal.amountUSDT }
           }
         });
       } else {

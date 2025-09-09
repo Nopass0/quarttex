@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { ProtectedRoute } from "@/components/auth/protected-route"
+import { AuthLayout } from "@/components/layouts/auth-layout"
 import { adminApi } from "@/services/api"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -127,8 +129,10 @@ export default function MerchantSettleHistoryPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
+    <ProtectedRoute variant="admin">
+      <AuthLayout variant="admin">
+        <div className="space-y-6">
+          <div className="flex items-center gap-4">
         <Button
           variant="ghost"
           size="icon"
@@ -391,6 +395,8 @@ export default function MerchantSettleHistoryPage() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+        </div>
+      </AuthLayout>
+    </ProtectedRoute>
   )
 }

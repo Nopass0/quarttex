@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import QuatrexLogo from "@/components/ui/quattrex-logo";
+import { DynamicLogo } from "@/components/DynamicLogo";
 import { toast } from "sonner";
 import { useAggregatorAuth } from "@/stores/aggregator-auth";
 import { Loader2, Mail, Lock, Globe } from "lucide-react";
@@ -128,8 +128,8 @@ export default function AggregatorLoginPage() {
       <Card className="w-full max-w-md p-8 bg-white dark:bg-[#29382f] shadow-lg border-gray-200 dark:border-[#29382f]">
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center gap-3 mb-6">
-            <Globe className="h-10 w-10 text-[#530FAD] dark:text-[#7c3aed]" />
-            <QuatrexLogo size="lg" />
+            <Globe className="h-10 w-10 text-primary" />
+            <DynamicLogo size="lg" />
           </div>
           <h1 className="mt-4 text-2xl font-semibold text-gray-900 dark:text-[#eeeeee]">
             Личный кабинет агрегатора
@@ -148,7 +148,7 @@ export default function AggregatorLoginPage() {
                 Email
               </Label>
               <div className="mt-1 relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#530FAD] dark:text-[#7c3aed] h-4 w-4" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary h-4 w-4" />
                 <Input
                   id="email"
                   type="email"
@@ -166,7 +166,7 @@ export default function AggregatorLoginPage() {
                 Пароль
               </Label>
               <div className="mt-1 relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#530FAD] dark:text-[#7c3aed] h-4 w-4" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary h-4 w-4" />
                 <Input
                   id="password"
                   type="password"
@@ -181,7 +181,7 @@ export default function AggregatorLoginPage() {
 
             <Button
               type="submit"
-              className="w-full bg-[#530FAD] hover:bg-[#6d28d9] dark:bg-[#7c3aed] dark:hover:bg-[#6d28d9]"
+              className="w-full bg-[#006039] hover:bg-[#004d2e] dark:bg-[#2d6a42] dark:hover:bg-[#236035]"
               disabled={loading}
             >
               {loading ? (
@@ -212,7 +212,7 @@ export default function AggregatorLoginPage() {
             </div>
             <Button
               type="submit"
-              className="w-full bg-[#530FAD] hover:bg-[#6d28d9] dark:bg-[#7c3aed] dark:hover:bg-[#6d28d9]"
+              className="w-full bg-[#006039] hover:bg-[#004d2e] dark:bg-[#2d6a42] dark:hover:bg-[#236035]"
               disabled={loading || otp.length < 6}
             >
               {loading ? (
@@ -243,7 +243,7 @@ export default function AggregatorLoginPage() {
             Нет доступа?{" "}
             <a
               href="#"
-              className="text-[#530FAD] dark:text-[#7c3aed] hover:text-[#6d28d9] dark:hover:text-[#6d28d9] font-medium"
+              className="text-[#006039] dark:text-[#2d6a42] hover:text-[#004d2e] dark:hover:text-[#236035] font-medium"
             >
               Свяжитесь с администратором
             </a>

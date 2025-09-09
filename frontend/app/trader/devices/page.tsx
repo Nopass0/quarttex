@@ -38,6 +38,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { traderApi } from "@/services/api";
 import { toast } from "sonner";
+import { ClassicEntryTabs } from "@/components/trader/classic-entry-tabs";
 import {
   Plus,
   Search,
@@ -475,9 +476,9 @@ export default function DevicesPage() {
         badge: {
           text: "В работе",
           className:
-            "bg-purple-100 text-purple-700 border-green-300 dark:bg-purple-800/30 dark:text-purple-300 dark:border-green-600",
+            "bg-green-100 text-green-700 border-green-300 dark:bg-green-800/30 dark:text-green-300 dark:border-green-600",
         },
-        iconColor: "text-purple-600 dark:text-purple-400",
+        iconColor: "text-green-600 dark:text-green-400",
       };
     }
 
@@ -511,6 +512,9 @@ export default function DevicesPage() {
     <ProtectedRoute variant="trader">
       <AuthLayout variant="trader">
         <div className="space-y-6">
+          {/* Classic Entry Tabs */}
+          <ClassicEntryTabs />
+          
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl md:text-3xl font-bold">
@@ -622,7 +626,7 @@ export default function DevicesPage() {
                           "p-2 rounded-lg flex-shrink-0",
                           device.isRegistered
                             ? device.isWorking
-                              ? "bg-purple-100 dark:bg-purple-800/30"
+                              ? "bg-green-100 dark:bg-green-800/30"
                               : "bg-gray-50 dark:bg-gray-900/50"
                             : "bg-red-100 dark:bg-red-900/20"
                         )}
@@ -684,7 +688,7 @@ export default function DevicesPage() {
                             <div
                               className={cn(
                                 "w-2 h-2 rounded-full",
-                                device.isOnline ? "bg-purple-500" : "bg-gray-400"
+                                device.isOnline ? "bg-green-500" : "bg-gray-400"
                               )}
                             />
                             <p className="text-xs text-gray-600">
@@ -733,7 +737,7 @@ export default function DevicesPage() {
                           "p-3 rounded-lg",
                           device.isRegistered
                             ? device.isWorking
-                              ? "bg-purple-100 dark:bg-purple-800/30"
+                              ? "bg-green-100 dark:bg-green-800/30"
                               : "bg-gray-50 dark:bg-gray-900/50"
                             : "bg-red-100 dark:bg-red-900/20"
                         )}

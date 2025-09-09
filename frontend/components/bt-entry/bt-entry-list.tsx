@@ -182,7 +182,7 @@ const statusConfig = {
   },
   READY: {
     label: "Выполнено",
-    color: "bg-purple-50 text-purple-600 border-purple-200",
+    color: "bg-green-50 text-green-600 border-green-200",
   },
   EXPIRED: { label: "Истекло", color: "bg-red-50 text-red-600 border-red-200" },
   CANCELED: {
@@ -833,7 +833,7 @@ export function BtEntryList() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#530FAD]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
       </div>
     );
   }
@@ -903,7 +903,7 @@ export function BtEntryList() {
                     : period === "year"
                     ? "за год"
                     : "за сегодня"}
-                  <ChevronDown className="ml-1 h-3 w-3 text-[#530FAD] dark:text-[#2d6a42]" />
+                  <ChevronDown className="ml-1 h-3 w-3 text-[#006039] dark:text-[#2d6a42]" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -1009,7 +1009,7 @@ export function BtEntryList() {
                     : period === "year"
                     ? "за год"
                     : "за сегодня"}
-                  <ChevronDown className="ml-1 h-3 w-3 text-[#530FAD] dark:text-[#2d6a42]" />
+                  <ChevronDown className="ml-1 h-3 w-3 text-[#006039] dark:text-[#2d6a42]" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -1086,7 +1086,7 @@ export function BtEntryList() {
         <div className="flex gap-2">
           {/* Search */}
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#530FAD] dark:text-[#2d6a42] h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#006039] dark:text-[#2d6a42] h-4 w-4" />
             <Input
               placeholder="Поиск..."
               value={searchQuery}
@@ -1103,7 +1103,7 @@ export function BtEntryList() {
                 size="default"
                 className="gap-1 md:gap-2 h-10 md:h-12 px-3 md:px-6 text-sm md:text-base"
               >
-                <SlidersHorizontal className="h-4 w-4 text-[#530FAD]" />
+                <SlidersHorizontal className="h-4 w-4 text-[#006039]" />
                 <span className="hidden sm:inline">Не выбраны</span>
                 <span className="sm:hidden">Фильтры</span>
                 {(filterStatus !== "all" ||
@@ -1129,7 +1129,7 @@ export function BtEntryList() {
                 <ChevronDown
                   className={cn(
                     "h-4 w-4 transition-colors",
-                    filtersOpen ? "text-[#530FAD]" : "text-gray-400"
+                    filtersOpen ? "text-[#006039]" : "text-gray-400"
                   )}
                 />
               </Button>
@@ -1145,7 +1145,7 @@ export function BtEntryList() {
                 {/* Status Filter */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-[#530FAD]" />
+                    <CheckCircle className="h-4 w-4 text-[#006039]" />
                     <Label className="text-sm">Статус платежа</Label>
                   </div>
                   <Popover>
@@ -1155,7 +1155,7 @@ export function BtEntryList() {
                         size="default"
                         className="w-full justify-between h-12"
                       >
-                        <span className={"text-[#530FAD]"}>
+                        <span className={"text-[#006039]"}>
                           {filterStatus === "all"
                             ? "Все сделки"
                             : filterStatus === "not_credited"
@@ -1164,7 +1164,7 @@ export function BtEntryList() {
                             ? "Зачисленные сделки"
                             : "Сделки выполняются"}
                         </span>
-                        <ChevronDown className="h-4 w-4 opacity-50 text-[#530FAD]" />
+                        <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
@@ -1183,9 +1183,9 @@ export function BtEntryList() {
                           variant="ghost"
                           size="default"
                           className={cn(
-                            "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                            "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                             filterStatus === "all" &&
-                              "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                              "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                           )}
                           onClick={() => setFilterStatus("all")}
                         >
@@ -1195,9 +1195,9 @@ export function BtEntryList() {
                           variant="ghost"
                           size="default"
                           className={cn(
-                            "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                            "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                             filterStatus === "not_credited" &&
-                              "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                              "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                           )}
                           onClick={() => setFilterStatus("not_credited")}
                         >
@@ -1207,9 +1207,9 @@ export function BtEntryList() {
                           variant="ghost"
                           size="default"
                           className={cn(
-                            "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                            "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                             filterStatus === "credited" &&
-                              "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                              "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                           )}
                           onClick={() => setFilterStatus("credited")}
                         >
@@ -1219,9 +1219,9 @@ export function BtEntryList() {
                           variant="ghost"
                           size="default"
                           className={cn(
-                            "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                            "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                             filterStatus === "in_progress" &&
-                              "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                              "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                           )}
                           onClick={() => setFilterStatus("in_progress")}
                         >
@@ -1236,7 +1236,7 @@ export function BtEntryList() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-[#530FAD]" />
+                      <DollarSign className="h-4 w-4 text-[#006039]" />
                       <Label className="text-sm">Сумма зачисления</Label>
                     </div>
                     <div className="flex items-center gap-2">
@@ -1244,7 +1244,7 @@ export function BtEntryList() {
                         className={cn(
                           "text-sm font-medium transition-colors",
                           filterAmountType === "exact"
-                            ? "text-[#530FAD]"
+                            ? "text-[#006039]"
                             : "text-gray-500 hover:text-gray-700"
                         )}
                         onClick={() => setFilterAmountType("exact")}
@@ -1256,7 +1256,7 @@ export function BtEntryList() {
                         className={cn(
                           "text-sm font-medium transition-colors",
                           filterAmountType === "range"
-                            ? "text-[#530FAD]"
+                            ? "text-[#006039]"
                             : "text-gray-500 hover:text-gray-700"
                         )}
                         onClick={() => setFilterAmountType("range")}
@@ -1328,7 +1328,7 @@ export function BtEntryList() {
                 {/* Requisite Filter */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4 text-[#530FAD]" />
+                    <CreditCard className="h-4 w-4 text-[#006039]" />
                     <Label className="text-sm">Реквизиты</Label>
                   </div>
                   <Popover>
@@ -1338,14 +1338,14 @@ export function BtEntryList() {
                         size="default"
                         className="w-full justify-between h-12"
                       >
-                        <span className={"text-[#530FAD]"}>
+                        <span className={"text-[#006039]"}>
                           {filterRequisite === "all"
                             ? "Все реквизиты"
                             : filterRequisite === "1"
                             ? "Основная карта"
                             : "Резервная карта"}
                         </span>
-                        <ChevronDown className="h-4 w-4 opacity-50 text-[#530FAD]" />
+                        <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
@@ -1369,9 +1369,9 @@ export function BtEntryList() {
                           variant="ghost"
                           size="default"
                           className={cn(
-                            "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                            "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                             filterRequisite === "all" &&
-                              "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                              "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                           )}
                           onClick={() => setFilterRequisite("all")}
                         >
@@ -1405,9 +1405,9 @@ export function BtEntryList() {
                               variant="ghost"
                               size="default"
                               className={cn(
-                                "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                                "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                                 filterRequisite === requisite.id &&
-                                  "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                                  "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                               )}
                               onClick={() => setFilterRequisite(requisite.id)}
                             >
@@ -1440,7 +1440,7 @@ export function BtEntryList() {
                 {/* Payment Method Filter */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-[#530FAD]" />
+                    <Building2 className="h-4 w-4 text-[#006039]" />
                     <Label className="text-sm">Метод оплаты</Label>
                   </div>
                   <Popover>
@@ -1450,10 +1450,10 @@ export function BtEntryList() {
                         size="default"
                         className="w-full justify-between h-12"
                       >
-                        <span className={"text-[#530FAD]"}>
+                        <span className={"text-[#006039]"}>
                           {filterMethod === "all" ? "Все методы" : filterMethod}
                         </span>
-                        <ChevronDown className="h-4 w-4 opacity-50 text-[#530FAD]" />
+                        <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
@@ -1477,9 +1477,9 @@ export function BtEntryList() {
                           variant="ghost"
                           size="default"
                           className={cn(
-                            "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                            "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                             filterMethod === "all" &&
-                              "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                              "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                           )}
                           onClick={() => setFilterMethod("all")}
                         >
@@ -1519,9 +1519,9 @@ export function BtEntryList() {
                                 variant="ghost"
                                 size="default"
                                 className={cn(
-                                  "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#530FAD] dark:hover:text-purple-400",
+                                  "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                                   filterMethod === method.id &&
-                                    "text-[#530FAD] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                                    "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20"
                                 )}
                                 onClick={() => setFilterMethod(method.id)}
                               >
@@ -1552,7 +1552,7 @@ export function BtEntryList() {
                 {/* Date Range */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-[#530FAD]" />
+                    <Calendar className="h-4 w-4 text-[#006039]" />
                     <Label className="text-sm">Дата создания платежа</Label>
                   </div>
                   <div className="flex gap-2">
@@ -1594,7 +1594,7 @@ export function BtEntryList() {
                   </Button>
                   <Button
                     size="sm"
-                    className="flex-1 h-12 bg-purple-100 hover:bg-purple-200 transition-colors duration-150 text-purple-500"
+                    className="flex-1 h-12 bg-green-100 hover:bg-green-200 transition-colors duration-150 text-green-500"
                     onClick={() => setFiltersOpen(false)}
                   >
                     Применить фильтры
@@ -1612,7 +1612,7 @@ export function BtEntryList() {
                 size="default"
                 className="gap-2 h-12 px-6"
               >
-                <ArrowUpDown className="h-4 w-4 text-[#530FAD]" />
+                <ArrowUpDown className="h-4 w-4 text-[#006039]" />
                 Сортировка
                 <ChevronDown className="h-4 w-4 text-gray-400" />
               </Button>
@@ -1685,8 +1685,8 @@ export function BtEntryList() {
                     );
                   case "READY":
                     return (
-                      <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                        <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                      <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                        <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
                       </div>
                     );
                   case "DISPUTE":
@@ -1738,7 +1738,7 @@ export function BtEntryList() {
               const getStatusBadgeColor = () => {
                 switch (transaction.status) {
                   case "READY":
-                    return "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800";
+                    return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800";
                   case "CREATED":
                   case "IN_PROGRESS":
                     return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800";
@@ -1876,7 +1876,7 @@ export function BtEntryList() {
             {/* Loading more indicator */}
             {loadingMore && (
               <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin text-[#530FAD]" />
+                <Loader2 className="h-6 w-6 animate-spin text-[#006039]" />
                 <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                   Загрузка...
                 </span>
@@ -1917,7 +1917,7 @@ export function BtEntryList() {
                       onClick={() => setShowRequisiteDetails(false)}
                       className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 -ml-2"
                     >
-                      <ChevronDown className="h-4 w-4 mr-1 rotate-90 text-[#530FAD]" />
+                      <ChevronDown className="h-4 w-4 mr-1 rotate-90 text-[#006039]" />
                       Назад
                     </Button>
                     <h3 className="font-medium dark:text-white">
@@ -1944,7 +1944,7 @@ export function BtEntryList() {
                       }}
                       className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
                     >
-                      <X className="h-4 w-4 text-[#530FAD]" />
+                      <X className="h-4 w-4 text-[#006039]" />
                     </Button>
                   </>
                 )}
@@ -1957,8 +1957,8 @@ export function BtEntryList() {
                     {/* Status Icon */}
                     <div className="mb-4 flex justify-center">
                       {selectedTransaction.status === "READY" ? (
-                        <div className="w-20 h-20 rounded-3xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                          <CheckCircle2 className="h-10 w-10 text-purple-600 dark:text-purple-400" />
+                        <div className="w-20 h-20 rounded-3xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                          <CheckCircle2 className="h-10 w-10 text-green-600 dark:text-green-400" />
                         </div>
                       ) : selectedTransaction.status === "CREATED" ||
                         selectedTransaction.status === "IN_PROGRESS" ? (
@@ -1989,7 +1989,7 @@ export function BtEntryList() {
 
                     {/* Amount */}
                     <div className="mb-1">
-                      <span className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                      <span className="text-3xl font-bold text-green-600 dark:text-green-400">
                         {selectedTransaction.frozenUsdtAmount
                           ? (
                               Math.trunc(
@@ -2086,7 +2086,7 @@ export function BtEntryList() {
                           </p>
                         </div>
                       </div>
-                      <ChevronDown className="h-5 w-5 text-[#530FAD] -rotate-90" />
+                      <ChevronDown className="h-5 w-5 text-[#006039] -rotate-90" />
                     </Button>
                   </div>
 
@@ -2114,7 +2114,7 @@ export function BtEntryList() {
                         <span className="text-sm text-gray-500 dark:text-gray-400">
                           Прибыль
                         </span>
-                        <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
+                        <span className="text-lg font-semibold text-green-600 dark:text-green-400">
                           +{" "}
                           {selectedTransaction.calculatedCommission
                             ? selectedTransaction.calculatedCommission.toFixed(
@@ -2139,7 +2139,7 @@ export function BtEntryList() {
                         </p>
                         <div className="space-y-2">
                           <Button
-                            className="w-full bg-purple-600 hover:bg-purple-700"
+                            className="w-full bg-green-600 hover:bg-green-700"
                             onClick={() =>
                               manualCloseTransaction(selectedTransaction.id)
                             }
@@ -2304,7 +2304,7 @@ export function BtEntryList() {
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                            <Smartphone className="h-5 w-5 text-[#530FAD] dark:text-purple-400" />
+                            <Smartphone className="h-5 w-5 text-[#006039] dark:text-green-400" />
                           </div>
                           <div className="text-left">
                             <p className="text-sm font-medium dark:text-white">
@@ -2317,7 +2317,7 @@ export function BtEntryList() {
                             </p>
                           </div>
                         </div>
-                        <ChevronDown className="h-5 w-5 text-[#530FAD] dark:text-purple-400 -rotate-90" />
+                        <ChevronDown className="h-5 w-5 text-[#006039] dark:text-green-400 -rotate-90" />
                       </Button>
                     </div>
 
@@ -2339,7 +2339,7 @@ export function BtEntryList() {
                           className="w-full justify-start dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
                           onClick={() => toast.info("Функция в разработке")}
                         >
-                          <Eye className="h-4 w-4 mr-2 text-[#530FAD] dark:text-purple-400" />
+                          <Eye className="h-4 w-4 mr-2 text-[#006039] dark:text-green-400" />
                           Просмотр сделок по реквизиту
                         </Button>
                         <Button
@@ -2347,7 +2347,7 @@ export function BtEntryList() {
                           className="w-full justify-start dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
                           onClick={() => toast.info("Функция в разработке")}
                         >
-                          <CreditCard className="h-4 w-4 mr-2 text-[#530FAD] dark:text-purple-400" />
+                          <CreditCard className="h-4 w-4 mr-2 text-[#006039] dark:text-green-400" />
                           Подтвердить номер карты
                         </Button>
                         <Button
@@ -2355,7 +2355,7 @@ export function BtEntryList() {
                           className="w-full justify-start dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
                           onClick={() => toast.info("Функция в разработке")}
                         >
-                          <CreditCard className="h-4 w-4 mr-2 text-[#530FAD] dark:text-purple-400" />
+                          <CreditCard className="h-4 w-4 mr-2 text-[#006039] dark:text-green-400" />
                           Подтвердить номер счета
                         </Button>
                       </div>

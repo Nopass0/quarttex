@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -307,12 +307,12 @@ export function PaymentDetailsList() {
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-purple-50/10 border-purple-200">
+        <Card className="border-green-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium text-purple-600">Успешных</CardTitle>
+            <CardTitle className="text-base font-medium text-green-600">Успешных</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-purple-600">{statistics.success.count}</p>
+            <p className="text-2xl font-bold text-green-600">{statistics.success.count}</p>
             <p className="text-sm text-gray-600">
               {formatAmount(statistics.success.amount)} руб
             </p>

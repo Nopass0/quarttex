@@ -135,9 +135,8 @@ export default class ExpiredTransactionWatcher extends BaseService {
 
             // Размораживаем средства для IN транзакций
             if (tx.type === "IN" && tx.traderId && tx.frozenUsdtAmount) {
-              // Размораживаем основную сумму + комиссию (если есть)
-              unfrozenAmount =
-                tx.frozenUsdtAmount + (tx.calculatedCommission || 0);
+              // Размораживаем ровно замороженную сумму (ceil2(amount/rate))
+              unfrozenAmount = tx.frozenUsdtAmount;
 
               // Проверяем текущий замороженный баланс трейдера
               const trader = await prisma.user.findUnique({

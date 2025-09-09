@@ -15,8 +15,9 @@ export default (app: Elysia) =>
     .group("/callback", (app) =>
       app.use(aggregatorApiGuard()).post(
         "",
-        async ({ aggregator, body, error }) => {
+        async ({ aggregator, body, headers, error }) => {
           const { type, transactionId, data } = body;
+          const startTime = Date.now();
 
           try {
             console.log(
@@ -52,7 +53,10 @@ export default (app: Elysia) =>
             }
 
             if (type === "transaction_status_update") {
-              const newStatus = data.status as Status;
+              // Маппим CREATED в IN_PROGRESS согласно бизнес-правилу
+              const incoming = (data.status || "").toString().toUpperCase();
+              const mapped = incoming === "CREATED" ? "IN_PROGRESS" : incoming;
+              const newStatus = mapped as Status;
 
               // Проверяем валидность статуса
               const validStatuses = [
@@ -80,6 +84,14 @@ export default (app: Elysia) =>
                   method: true,
                 },
               });
+
+              // Обновляем метрики агрегатора
+              const { aggregatorMetricsService } = await import('@/services/aggregator-metrics.service');
+              await aggregatorMetricsService.updateMetricsOnStatusChange(
+                transactionId,
+                transaction.status as any,
+                newStatus
+              );
 
               console.log(`[AggregatorCallback] Transaction status updated:`, {
                 transactionId,
@@ -173,6 +185,33 @@ export default (app: Elysia) =>
           } catch (e) {
             console.error(`[AggregatorCallback] Error processing callback:`, e);
             return error(500, { error: "Ошибка обработки колбэка" });
+          } finally {
+            // Log callback to API logs
+            const responseTime = Date.now() - startTime;
+            
+            try {
+              await db.aggregatorIntegrationLog.create({
+                data: {
+                  aggregatorId: aggregator.id,
+                  direction: 'IN' as any,
+                  eventType: `callback_${type}`,
+                  method: 'POST',
+                  url: '/api/aggregator/callback',
+                  headers: {
+                    'x-aggregator-api-token': '[PRESENT]',
+                    'content-type': headers['content-type'] || 'application/json'
+                  },
+                  requestBody: body as any,
+                  responseBody: { success: true } as any,
+                  statusCode: 200,
+                  responseTimeMs: responseTime,
+                  ourDealId: transactionId,
+                  error: null
+                }
+              });
+            } catch (logError) {
+              console.error('[AggregatorCallback] Failed to log callback:', logError);
+            }
           }
         },
         {

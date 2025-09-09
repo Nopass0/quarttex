@@ -60,7 +60,9 @@ import { settleRequestsRoutes } from "@/routes/admin/settle-requests";
 import { merchantRequestLogsRoutes } from "@/routes/admin/merchant-request-logs";
 import { botDisputesRoutes } from "@/routes/admin/bot-disputes";
 import aggregatorsRoutes from "@/routes/admin/aggregators";
+import aggregatorsV2Routes from "@/routes/admin/aggregators-v2";
 import auctionRoutes from "@/routes/admin/auction";
+import { admin2faRoutes } from "@/routes/admin/2fa";
 // import { testToolsRoutes } from "@/routes/admin/test-tools";
 
 const authHeader = t.Object({ "x-admin-key": t.String() });
@@ -141,13 +143,14 @@ export default (app: Elysia) =>
     .group("/support", (a) => supportRoutes(a))
     .group("/rate-settings", (a) => rateSettingsRoutes(a))
     .group("/kkk-settings", (a) => kkkSettingsRoutes(a))
-    .use(rateSourceRoutes)
+    .group("/rate-sources", (a) => rateSourceRoutes(a))
     .use(processorRoutes)
     .use(deviceEmulatorRoutes)
     .use(payoutEmulatorRoutes)
     .use(adminPayoutsRoutes)
     .use(telegramSettingsRoutes)
     .use(adminWithdrawalsRoutes)
+    .use(admin2faRoutes)
     .use(merchantEmulatorApi)
     .use(depositsRoutes)
     .use(aggregatorDepositsRoutes)
@@ -162,6 +165,7 @@ export default (app: Elysia) =>
     .use(merchantRequestLogsRoutes)
     .use(botDisputesRoutes)
     .group("/aggregators", (a) => aggregatorsRoutes(a))
+    .group("/aggregators-v2", (a) => aggregatorsV2Routes(a))
     .use(auctionRoutes)
     // .group("/test-tools", (a) => a.use(testToolsRoutes))
     .group("", (a) => metricsRoutes(a))
@@ -170,8 +174,15 @@ export default (app: Elysia) =>
     .get(
       "/methods",
       async () => {
-        const methods = await db.method.findMany();
-        return methods;
+        const methods = await db.method.findMany({
+          orderBy: { name: 'asc' }
+        });
+        // Добавляем category на основе типа метода  
+        return methods.map(method => ({
+          ...method,
+          category: method.type === 'sbp' ? 'СБП' : 'C2C',
+          isActive: true // По умолчанию все методы активны
+        }));
       },
       {
         tags: ["admin"],
@@ -184,6 +195,8 @@ export default (app: Elysia) =>
               name: t.String(),
               type: t.Enum(MethodType),
               currency: t.Enum(Currency),
+              category: t.String(),
+              isActive: t.Boolean(),
             })
           ),
           401: ErrorSchema,
@@ -595,7 +608,7 @@ export default (app: Elysia) =>
           profitPercent: t.Optional(t.Nullable(t.Number())),
           stakePercent: t.Optional(t.Nullable(t.Number())),
           banned: t.Optional(t.Boolean()),
-          rateSource: t.Optional(t.Enum(RateSource)),
+          rateSource: t.Optional(t.Nullable(t.Enum(RateSource))),
         }),
         response: {
           200: t.Object({
@@ -613,7 +626,7 @@ export default (app: Elysia) =>
             stakePercent: t.Nullable(t.Number()),
             banned: t.Boolean(),
             createdAt: t.String(),
-            rateSource: t.Optional(t.Enum(RateSource)),
+            rateSource: t.Optional(t.Nullable(t.Enum(RateSource))),
           }),
           404: ErrorSchema,
           401: ErrorSchema,
@@ -669,143 +682,9 @@ export default (app: Elysia) =>
       };
     })
 
-    // Rate sources endpoints
-    .get("/rate-sources", async () => {
-      const rateSources = await db.rateSourceConfig.findMany({
-        include: {
-          traders: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            }
-          },
-          merchants: {
-            include: {
-              merchant: {
-                select: {
-                  id: true,
-                  name: true,
-                }
-              }
-            }
-          },
-          _count: {
-            select: {
-              traders: true,
-              merchants: true,
-            }
-          }
-        },
-        orderBy: {
-          createdAt: 'asc'
-        }
-      })
+    // Rate sources endpoints removed - now handled by dedicated rate-sources.ts
 
-      // Получить текущие курсы от источников
-      const ratesPromises = rateSources.map(async (source) => {
-        let currentRate = null
-        
-        try {
-          if (source.source === 'bybit') {
-            const response = await fetch('https://api.bybit.com/v5/market/tickers?category=spot&symbol=USDTRUB')
-            const data = await response.json()
-            if (data.result?.list?.[0]?.lastPrice) {
-              currentRate = parseFloat(data.result.list[0].lastPrice)
-            }
-          } else if (source.source === 'rapira') {
-            currentRate = source.baseRate || 95.5
-          }
-        } catch (error) {
-          console.error(`Failed to fetch rate for ${source.source}:`, error)
-        }
-
-        return {
-          ...source,
-          currentRate,
-          adjustedRate: currentRate ? 
-            currentRate * (1 + (source.kkkPercent / 100) * (source.kkkOperation === 'MINUS' ? -1 : 1)) : 
-            null
-        }
-      })
-
-      const sourcesWithRates = await Promise.all(ratesPromises)
-
-      return {
-        success: true,
-        data: sourcesWithRates
-      }
-    })
-
-    // Update rate source settings
-    .put("/rate-sources/:id", async ({ params: { id }, body }) => {
-      const { displayName, kkkPercent, kkkOperation, isActive } = body as any
-
-      try {
-        const updated = await db.rateSourceConfig.update({
-          where: { id },
-          data: {
-            ...(displayName !== undefined && { displayName }),
-            ...(kkkPercent !== undefined && { kkkPercent }),
-            ...(kkkOperation !== undefined && { kkkOperation }),
-            ...(isActive !== undefined && { isActive }),
-          }
-        })
-
-        return {
-          success: true,
-          data: updated
-        }
-      } catch (error) {
-        return {
-          success: false,
-          error: 'Failed to update rate source'
-        }
-      }
-    })
-
-    // Update all rates
-    .post("/rate-sources/update-rates", async () => {
-      const sources = await db.rateSourceConfig.findMany({
-        where: { isActive: true }
-      })
-
-      const updates = []
-
-      for (const source of sources) {
-        let rate = null
-        
-        try {
-          if (source.source === 'bybit') {
-            const response = await fetch('https://api.bybit.com/v5/market/tickers?category=spot&symbol=USDTRUB')
-            const data = await response.json()
-            if (data.result?.list?.[0]?.lastPrice) {
-              rate = parseFloat(data.result.list[0].lastPrice)
-            }
-          } else if (source.source === 'rapira') {
-            rate = 95.5
-          }
-
-          if (rate) {
-            const updated = await db.rateSourceConfig.update({
-              where: { id: source.id },
-              data: {
-                baseRate: rate,
-                lastRateUpdate: new Date()
-              }
-            })
-            updates.push(updated)
-          }
-        } catch (error) {
-          console.error(`Failed to update rate for ${source.source}:`, error)
-        }
-      }
-
-      return {
-        success: true,
-        data: updates
-      }
-    })
+    // All rate-sources endpoints moved to dedicated rate-sources.ts file
 
     //get profits for trader
     .get("/traders/:id/profits", async ({ params }) => {
@@ -868,9 +747,13 @@ export default (app: Elysia) =>
             return error(400, { error: "Неверный тип валюты" });
           }
 
-          const newBalance = currentBalance + body.amount;
+          const mode = (body.mode?.toUpperCase?.() ?? "DELTA") as "DELTA" | "SET";
+          const newBalance = mode === "SET" ? body.amount : currentBalance + body.amount;
 
-          if (newBalance < 0) {
+          if (
+            newBalance < 0 &&
+            !["frozenUsdt", "frozenRub"].includes(balanceField)
+          ) {
             return error(400, { error: "Недостаточно средств на балансе" });
           }
 
@@ -924,6 +807,7 @@ export default (app: Elysia) =>
             t.Literal("PROFIT_DEALS"),
             t.Literal("PROFIT_PAYOUTS"),
           ]),
+          mode: t.Optional(t.Union([t.Literal("DELTA"), t.Literal("SET")])),
         }),
         response: {
           200: t.Object({
@@ -1134,128 +1018,6 @@ export default (app: Elysia) =>
       }
     )
 
-    /* ───────────────── trader: get full details ───────────────── */
-    .get(
-      "/traders/:id/full",
-      async ({ params, error }) => {
-        try {
-          const trader = await db.user.findUniqueOrThrow({
-            where: { id: params.id },
-            include: {
-              team: {
-                include: {
-                  agent: true,
-                },
-              },
-              agentTraders: {
-                include: {
-                  agent: true,
-                  team: true,
-                },
-              },
-              bankDetails: {
-                where: { isArchived: false },
-                select: {
-                  id: true,
-                  methodType: true,
-                  bankType: true,
-                  cardNumber: true,
-                  recipientName: true,
-                },
-              },
-              _count: {
-                select: {
-                  tradedTransactions: {
-                    where: { status: "DISPUTE" },
-                  },
-                },
-              },
-            },
-          });
-
-          return {
-            id: trader.id,
-            email: trader.email,
-            name: trader.name,
-            balanceUsdt: trader.balanceUsdt,
-            balanceRub: trader.balanceRub,
-            minInsuranceDeposit: trader.minInsuranceDeposit,
-            maxInsuranceDeposit: trader.maxInsuranceDeposit,
-            minAmountPerRequisite: trader.minAmountPerRequisite,
-            maxAmountPerRequisite: trader.maxAmountPerRequisite,
-            disputeLimit: trader.disputeLimit,
-            currentDisputes: trader._count.tradedTransactions,
-            teamId: trader.teamId,
-            team: trader.team
-              ? {
-                  id: trader.team.id,
-                  name: trader.team.name,
-                  agentId: trader.team.agentId,
-                  agentName: trader.team.agent.name,
-                }
-              : null,
-            agent:
-              trader.agentTraders.length > 0
-                ? {
-                    id: trader.agentTraders[0].agent.id,
-                    name: trader.agentTraders[0].agent.name,
-                    email: trader.agentTraders[0].agent.email,
-                  }
-                : null,
-            requisitesCount: trader.bankDetails.length,
-            createdAt: trader.createdAt.toISOString(),
-          };
-        } catch (e) {
-          if (
-            e instanceof Prisma.PrismaClientKnownRequestError &&
-            e.code === "P2025"
-          )
-            return error(404, { error: "Трейдер не найден" });
-          throw e;
-        }
-      },
-      {
-        tags: ["admin"],
-        headers: authHeader,
-        params: t.Object({ id: t.String() }),
-        response: {
-          200: t.Object({
-            id: t.String(),
-            email: t.String(),
-            name: t.String(),
-            balanceUsdt: t.Number(),
-            balanceRub: t.Number(),
-            minInsuranceDeposit: t.Number(),
-            maxInsuranceDeposit: t.Number(),
-            minAmountPerRequisite: t.Number(),
-            maxAmountPerRequisite: t.Number(),
-            disputeLimit: t.Number(),
-            currentDisputes: t.Number(),
-            teamId: t.Nullable(t.String()),
-            team: t.Nullable(
-              t.Object({
-                id: t.String(),
-                name: t.String(),
-                agentId: t.String(),
-                agentName: t.String(),
-              })
-            ),
-            agent: t.Nullable(
-              t.Object({
-                id: t.String(),
-                name: t.String(),
-                email: t.String(),
-              })
-            ),
-            requisitesCount: t.Number(),
-            createdAt: t.String(),
-          }),
-          404: ErrorSchema,
-          401: ErrorSchema,
-          403: ErrorSchema,
-        },
-      }
-    )
 
     /* ───────────────── users list ───────────────── */
     .get(

@@ -27,6 +27,21 @@ export class CallbackService {
         return await WellbitCallbackService.sendWellbitCallback(transaction, status);
       }
 
+      // Проверяем, работает ли мерчант в режиме агрегатора
+      const merchantWithAggregatorMode = await prisma.merchant.findUnique({
+        where: { id: transaction.merchantId },
+        select: { 
+          isAggregatorMode: true, 
+          externalCallbackToken: true,
+          name: true 
+        }
+      });
+      
+      if (merchantWithAggregatorMode?.isAggregatorMode && merchantWithAggregatorMode.externalCallbackToken) {
+        console.log(`[CallbackService] Detected aggregator mode merchant ${merchantWithAggregatorMode.name}, sending aggregator callback`);
+        return await this.sendAggregatorCallback(transaction, merchantWithAggregatorMode.externalCallbackToken, status);
+      }
+      
       // Проверяем, является ли мерчант аукционным
       const isAuction = await auctionIntegrationService.isAuctionMerchant(transaction.merchantId);
       if (isAuction) {
@@ -123,6 +138,77 @@ export class CallbackService {
     }
   }
 
+  static async sendAggregatorCallback(transaction: Transaction, callbackToken: string, status?: string): Promise<void> {
+    const callbackUrl = transaction.callbackUri;
+    
+    if (!callbackUrl || callbackUrl === "none" || callbackUrl === "") {
+      console.log(`[CallbackService] No callback URL for aggregator transaction ${transaction.id}`);
+      return;
+    }
+    
+    // Формируем payload в агрегаторском формате
+    const payload = {
+      ourDealId: transaction.orderId,
+      status: status || transaction.status,
+      amount: transaction.amount,
+      partnerDealId: transaction.id,
+      updatedAt: new Date().toISOString(),
+      metadata: {}
+    };
+    
+    let responseText: string | null = null;
+    let statusCode: number | null = null;
+    let errorMessage: string | null = null;
+    
+    try {
+      console.log(`[CallbackService] Sending aggregator callback to ${callbackUrl} for transaction ${transaction.id}`);
+      console.log(`[CallbackService] Aggregator payload:`, payload);
+      
+      const response = await fetch(callbackUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${callbackToken}`,
+          "x-aggregator-token": callbackToken,
+          "User-Agent": "Chase/1.0 (Aggregator)"
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      statusCode = response.status;
+      responseText = await response.text();
+      
+      if (!response.ok) {
+        console.error(`[CallbackService] Aggregator callback failed with status ${response.status}`);
+        console.error(`[CallbackService] Response:`, responseText);
+      } else {
+        console.log(`[CallbackService] Aggregator callback sent successfully to ${callbackUrl}`);
+        if (responseText) {
+          console.log(`[CallbackService] Response:`, responseText);
+        }
+      }
+    } catch (error) {
+      errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`[CallbackService] Error sending aggregator callback:`, error);
+    }
+    
+    // Сохраняем историю колбэка в БД
+    try {
+      await prisma.callbackHistory.create({
+        data: {
+          transactionId: transaction.id,
+          url: callbackUrl,
+          payload: payload as any,
+          response: responseText,
+          statusCode: statusCode,
+          error: errorMessage
+        }
+      });
+    } catch (dbError) {
+      console.error(`[CallbackService] Error saving aggregator callback history:`, dbError);
+    }
+  }
+  
   static async sendTestCallback(transactionId: string, amount: number, status: string, callbackUrl: string): Promise<void> {
     const payload: CallbackPayload = {
       id: transactionId,

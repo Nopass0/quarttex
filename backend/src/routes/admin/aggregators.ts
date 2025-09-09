@@ -14,7 +14,7 @@
 
 import { Elysia, t } from 'elysia'
 import { db } from '@/db'
-import { Prisma } from '@prisma/client'
+import { Prisma, AggregatorApiSchema, PSPWareRandomizationType } from '@prisma/client'
 import ErrorSchema from '@/types/error'
 import { randomBytes } from 'node:crypto'
 import bcrypt from 'bcryptjs'
@@ -35,6 +35,13 @@ const serializeAggregator = (aggregator: any) => ({
   ...aggregator,
   createdAt: aggregator.createdAt.toISOString(),
   updatedAt: aggregator.updatedAt.toISOString(),
+  customApiToken: aggregator.customApiToken || null,
+  apiSchema: aggregator.apiSchema || 'DEFAULT',
+  // Сериализуем транзакции если они есть
+  transactions: aggregator.transactions?.map((tx: any) => ({
+    ...tx,
+    createdAt: tx.createdAt.toISOString()
+  })),
   // Не возвращаем пароль и 2FA секрет
   password: undefined,
   twoFactorSecret: undefined
@@ -47,12 +54,45 @@ const AggregatorResponseSchema = t.Object({
   email: t.String(),
   name: t.String(),
   apiToken: t.String(),
+  customApiToken: t.Union([t.String(), t.Null()]),
   apiBaseUrl: t.Union([t.String(), t.Null()]),
+  apiSchema: t.String(),
   balanceUsdt: t.Number(),
   isActive: t.Boolean(),
   twoFactorEnabled: t.Boolean(),
   createdAt: t.String(),
   updatedAt: t.String()
+})
+
+const AggregatorDetailResponseSchema = t.Object({
+  id: t.String(),
+  email: t.String(),
+  name: t.String(),
+  apiToken: t.String(),
+  customApiToken: t.Union([t.String(), t.Null()]),
+  apiBaseUrl: t.Union([t.String(), t.Null()]),
+  apiSchema: t.String(),
+  balanceUsdt: t.Number(),
+  isActive: t.Boolean(),
+  twoFactorEnabled: t.Boolean(),
+  createdAt: t.String(),
+  updatedAt: t.String(),
+  _count: t.Object({
+    transactions: t.Number(),
+    disputes: t.Number(),
+    sessions: t.Number(),
+    apiLogs: t.Number()
+  }),
+  transactions: t.Array(t.Object({
+    id: t.String(),
+    numericId: t.Number(),
+    amount: t.Number(),
+    status: t.String(),
+    createdAt: t.String(),
+    merchant: t.Object({
+      name: t.String()
+    })
+  }))
 })
 
 const AuthHeaderSchema = t.Object({ 'x-admin-key': t.String() })
@@ -178,7 +218,14 @@ export default (app: Elysia) =>
               callbackToken, // Добавляем обязательное поле
               apiBaseUrl: body.apiBaseUrl,
               isActive: body.isActive ?? true,
-              balanceUsdt: body.balanceUsdt || 0
+              balanceUsdt: body.balanceUsdt || 0,
+              // PSPWare поля
+              apiSchema: body.isPSPWare ? AggregatorApiSchema.PSPWARE : AggregatorApiSchema.DEFAULT,
+              pspwareApiKey: body.pspwareApiKey || null,
+              enableRandomization: body.enableRandomization || false,
+              randomizationType: body.randomizationType || PSPWareRandomizationType.NONE,
+              // Chase project поле
+              isChaseProject: body.isChaseProject || false
             }
           })
 
@@ -206,7 +253,18 @@ export default (app: Elysia) =>
           name: t.String({ description: 'Название агрегатора' }),
           apiBaseUrl: t.Optional(t.Union([t.String({ description: 'Базовый URL API агрегатора' }), t.Null()])),
           isActive: t.Optional(t.Boolean()),
-          balanceUsdt: t.Optional(t.Number())
+          balanceUsdt: t.Optional(t.Number()),
+          // PSPWare поля
+          isPSPWare: t.Optional(t.Boolean({ description: 'Использует PSPWare API схему' })),
+          pspwareApiKey: t.Optional(t.String({ description: 'API ключ PSPWare' })),
+          enableRandomization: t.Optional(t.Boolean({ description: 'Включить рандомизацию сумм' })),
+          randomizationType: t.Optional(t.Union([
+            t.Literal('FULL'),
+            t.Literal('PARTIAL'),
+            t.Literal('NONE')
+          ], { description: 'Тип рандомизации' })),
+          // Chase project поле
+          isChaseProject: t.Optional(t.Boolean({ description: 'Это другой экземпляр Chase' }))
         }),
         response: {
           201: t.Intersect([
@@ -261,27 +319,7 @@ export default (app: Elysia) =>
         headers: AuthHeaderSchema,
         params: t.Object({ id: t.String() }),
         response: {
-          200: t.Intersect([
-            AggregatorResponseSchema,
-            t.Object({
-              _count: t.Object({
-                transactions: t.Number(),
-                disputes: t.Number(),
-                sessions: t.Number(),
-                apiLogs: t.Number()
-              }),
-              transactions: t.Array(t.Object({
-                id: t.String(),
-                numericId: t.Number(),
-                amount: t.Number(),
-                status: t.String(),
-                createdAt: t.String(),
-                merchant: t.Object({
-                  name: t.String()
-                })
-              }))
-            })
-          ]),
+          200: AggregatorDetailResponseSchema,
           404: ErrorSchema
         }
       }
@@ -299,6 +337,13 @@ export default (app: Elysia) =>
           if (body.apiBaseUrl !== undefined) updateData.apiBaseUrl = body.apiBaseUrl
           if (body.isActive !== undefined) updateData.isActive = body.isActive
           if (body.balanceUsdt !== undefined) updateData.balanceUsdt = body.balanceUsdt
+          if (body.customApiToken !== undefined) updateData.customApiToken = body.customApiToken
+          // PSPWare поля
+          if (body.isPSPWare !== undefined) updateData.apiSchema = body.isPSPWare ? AggregatorApiSchema.PSPWARE : AggregatorApiSchema.DEFAULT
+          if (body.pspwareApiKey !== undefined) updateData.pspwareApiKey = body.pspwareApiKey
+          if (body.enableRandomization !== undefined) updateData.enableRandomization = body.enableRandomization
+          if (body.randomizationType !== undefined) updateData.randomizationType = body.randomizationType
+          if (body.isChaseProject !== undefined) updateData.isChaseProject = body.isChaseProject
 
           const aggregator = await db.aggregator.update({
             where: { id: params.id },
@@ -329,7 +374,19 @@ export default (app: Elysia) =>
           name: t.String(),
           apiBaseUrl: t.Union([t.String(), t.Null()]),
           isActive: t.Boolean(),
-          balanceUsdt: t.Number()
+          balanceUsdt: t.Number(),
+          customApiToken: t.Union([t.String(), t.Null()]),
+          // PSPWare поля
+          isPSPWare: t.Boolean({ description: 'Использует PSPWare API схему' }),
+          pspwareApiKey: t.String({ description: 'API ключ PSPWare' }),
+          enableRandomization: t.Boolean({ description: 'Включить рандомизацию сумм' }),
+          randomizationType: t.Union([
+            t.Literal('FULL'),
+            t.Literal('PARTIAL'),
+            t.Literal('NONE')
+          ], { description: 'Тип рандомизации' }),
+          // Chase project поле
+          isChaseProject: t.Boolean({ description: 'Это другой экземпляр Chase' })
         })),
         response: {
           200: AggregatorResponseSchema,
@@ -429,12 +486,12 @@ export default (app: Elysia) =>
     .get(
       '/:id/api-logs',
       async ({ params, query, error }) => {
-        const where: Prisma.AggregatorApiLogWhereInput = {
+        const where: Prisma.AggregatorIntegrationLogWhereInput = {
           aggregatorId: params.id
         }
 
         if (query.endpoint) {
-          where.endpoint = { contains: query.endpoint, mode: 'insensitive' }
+          where.url = { contains: query.endpoint, mode: 'insensitive' }
         }
 
         if (query.method) {
@@ -455,18 +512,31 @@ export default (app: Elysia) =>
 
         try {
           const [logs, total] = await Promise.all([
-            db.aggregatorApiLog.findMany({
+            db.aggregatorIntegrationLog.findMany({
               where,
               orderBy: { createdAt: 'desc' },
               skip,
               take: limit
             }),
-            db.aggregatorApiLog.count({ where })
+            db.aggregatorIntegrationLog.count({ where })
           ])
 
           return {
             data: logs.map(log => ({
-              ...log,
+              id: log.id,
+              endpoint: log.url,
+              method: log.method,
+              requestData: log.requestBody,
+              responseData: log.responseBody,
+              headers: log.headers,
+              statusCode: log.statusCode || undefined,
+              error: log.error || undefined,
+              duration: log.responseTimeMs || undefined,
+              eventType: log.eventType,
+              direction: log.direction,
+              slaViolation: log.slaViolation,
+              ourDealId: log.ourDealId,
+              partnerDealId: log.partnerDealId,
               createdAt: log.createdAt.toISOString()
             })),
             meta: { total, page, limit, totalPages: Math.ceil(total / limit) }
@@ -496,6 +566,7 @@ export default (app: Elysia) =>
               method: t.String(),
               requestData: t.Any(),
               responseData: t.Any(),
+              headers: t.Any(),
               statusCode: t.Optional(t.Number()),
               error: t.Optional(t.String()),
               duration: t.Optional(t.Number()),
@@ -508,6 +579,611 @@ export default (app: Elysia) =>
               totalPages: t.Number()
             })
           }),
+          500: ErrorSchema
+        }
+      }
+    )
+
+    /* ─────────── POST /admin/aggregators/:id/deposit ─────────── */
+    .post(
+      '/:id/deposit',
+      async ({ params, body, error }) => {
+        try {
+          const { aggregatorMetricsService } = await import('@/services/aggregator-metrics.service');
+          
+          const aggregator = await db.aggregator.findUnique({
+            where: { id: params.id }
+          })
+
+          if (!aggregator) {
+            return error(404, { error: 'Агрегатор не найден' })
+          }
+
+          // Определяем тип пополнения
+          if (body.type === 'deposit') {
+            await aggregatorMetricsService.addDeposit(params.id, body.amount);
+            const updated = await db.aggregator.findUnique({
+              where: { id: params.id }
+            });
+            return {
+              success: true,
+              message: `Депозит агрегатора пополнен на ${body.amount} USDT`,
+              newDeposit: updated?.depositUsdt || 0
+            }
+          } else {
+            await aggregatorMetricsService.addBalance(params.id, body.amount);
+            const updated = await db.aggregator.findUnique({
+              where: { id: params.id }
+            });
+            return {
+              success: true,
+              message: `Баланс агрегатора пополнен на ${body.amount} USDT`,
+              newBalance: updated?.balanceUsdt || 0
+            }
+          }
+        } catch (e) {
+          console.error('Error adding deposit to aggregator:', e)
+          return error(500, { error: 'Ошибка пополнения агрегатора' })
+        }
+      },
+      {
+        tags: ['admin'],
+        detail: { summary: 'Пополнение баланса или депозита агрегатора' },
+        headers: AuthHeaderSchema,
+        params: t.Object({ id: t.String() }),
+        body: t.Object({
+          amount: t.Number({ minimum: 0.01 }),
+          type: t.Optional(t.Union([t.Literal('balance'), t.Literal('deposit')], { default: 'balance' }))
+        }),
+        response: {
+          200: t.Object({
+            success: t.Boolean(),
+            message: t.String(),
+            newBalance: t.Optional(t.Number()),
+            newDeposit: t.Optional(t.Number())
+          }),
+          404: ErrorSchema,
+          500: ErrorSchema
+        }
+      }
+    )
+
+    /* ─────────── POST /admin/aggregators/:id/balance ─────────── */
+    .post(
+      '/:id/balance',
+      async ({ params, body, error }) => {
+        try {
+          const amount = body.amount;
+          if (amount <= 0) {
+            return error(400, { error: 'Сумма должна быть положительной' });
+          }
+
+          const aggregator = await db.aggregator.update({
+            where: { id: params.id },
+            data: {
+              balanceUsdt: { increment: amount }
+            }
+          });
+
+          return {
+            success: true,
+            message: `Баланс пополнен на ${amount} USDT`,
+            balanceUsdt: aggregator.balanceUsdt
+          };
+        } catch (e) {
+          if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
+            return error(404, { error: 'Агрегатор не найден' })
+          }
+          console.error('Error adding balance:', e)
+          return error(500, { error: 'Ошибка пополнения баланса' })
+        }
+      },
+      {
+        tags: ['admin'],
+        detail: { summary: 'Пополнение основного баланса агрегатора' },
+        headers: AuthHeaderSchema,
+        params: t.Object({ id: t.String() }),
+        body: t.Object({
+          amount: t.Number({ minimum: 0.01 }),
+          description: t.Optional(t.String())
+        }),
+        response: {
+          200: t.Object({
+            success: t.Boolean(),
+            message: t.String(),
+            balanceUsdt: t.Number()
+          }),
+          400: ErrorSchema,
+          404: ErrorSchema,
+          500: ErrorSchema
+        }
+      }
+    )
+
+    /* ─────────── GET /admin/aggregators/:id/metrics ─────────── */
+    .get(
+      '/:id/metrics',
+      async ({ params, error }) => {
+        try {
+          const { aggregatorMetricsService } = await import('@/services/aggregator-metrics.service');
+          const metrics = await aggregatorMetricsService.getAggregatorMetrics(params.id);
+          return metrics;
+        } catch (e) {
+          console.error('Error getting aggregator metrics:', e)
+          return error(500, { error: 'Ошибка получения метрик агрегатора' })
+        }
+      },
+      {
+        tags: ['admin'],
+        detail: { summary: 'Получение метрик агрегатора' },
+        headers: AuthHeaderSchema,
+        params: t.Object({ id: t.String() }),
+        response: {
+          200: t.Object({
+            balanceUsdt: t.Number(),
+            depositUsdt: t.Number(),
+            balanceNoRequisite: t.Number(),
+            balanceSuccess: t.Number(),
+            balanceExpired: t.Number(),
+            totalPlatformProfit: t.Number(),
+            totalTransactions: t.Number(),
+            successRate: t.Number()
+          }),
+          500: ErrorSchema
+        }
+      }
+    )
+
+    /* ─────────── GET /admin/aggregators/:id/method-fees ─────────── */
+    .get(
+      '/:id/method-fees',
+      async ({ params, error }) => {
+        try {
+          const fees = await db.aggregatorMethodFee.findMany({
+            where: { aggregatorId: params.id },
+            include: {
+              method: true
+            }
+          });
+
+          return {
+            fees: fees.map(fee => ({
+              id: fee.id,
+              methodId: fee.methodId,
+              methodName: fee.method.name,
+              methodCode: fee.method.code,
+              feePercent: fee.feePercent,
+              isActive: fee.isActive
+            }))
+          };
+        } catch (e) {
+          console.error('Error getting method fees:', e)
+          return error(500, { error: 'Ошибка получения процентных ставок' })
+        }
+      },
+      {
+        tags: ['admin'],
+        detail: { summary: 'Получение процентных ставок по методам' },
+        headers: AuthHeaderSchema,
+        params: t.Object({ id: t.String() }),
+        response: {
+          200: t.Object({
+            fees: t.Array(t.Object({
+              id: t.String(),
+              methodId: t.String(),
+              methodName: t.String(),
+              methodCode: t.String(),
+              feePercent: t.Number(),
+              isActive: t.Boolean()
+            }))
+          }),
+          500: ErrorSchema
+        }
+      }
+    )
+
+    /* ─────────── POST /admin/aggregators/:id/method-fees ─────────── */
+    .post(
+      '/:id/method-fees',
+      async ({ params, body, error }) => {
+        try {
+          const fee = await db.aggregatorMethodFee.upsert({
+            where: {
+              aggregatorId_methodId: {
+                aggregatorId: params.id,
+                methodId: body.methodId
+              }
+            },
+            update: {
+              feePercent: body.feePercent,
+              isActive: body.isActive ?? true
+            },
+            create: {
+              aggregatorId: params.id,
+              methodId: body.methodId,
+              feePercent: body.feePercent,
+              isActive: body.isActive ?? true
+            }
+          });
+
+          return { success: true, fee };
+        } catch (e) {
+          console.error('Error setting method fee:', e)
+          return error(500, { error: 'Ошибка установки процентной ставки' })
+        }
+      },
+      {
+        tags: ['admin'],
+        detail: { summary: 'Установка процентной ставки для метода' },
+        headers: AuthHeaderSchema,
+        params: t.Object({ id: t.String() }),
+        body: t.Object({
+          methodId: t.String(),
+          feePercent: t.Number({ minimum: 0, maximum: 100 }),
+          isActive: t.Optional(t.Boolean())
+        }),
+        response: {
+          200: t.Object({
+            success: t.Boolean(),
+            fee: t.Object({
+              id: t.String(),
+              aggregatorId: t.String(),
+              methodId: t.String(),
+              feePercent: t.Number(),
+              isActive: t.Boolean()
+            })
+          }),
+          500: ErrorSchema
+        }
+      }
+    )
+
+    /* ─────────── POST /admin/aggregators/:id/rate-source ─────────── */
+    .post(
+      '/:id/rate-source',
+      async ({ params, body, error }) => {
+        try {
+          const rateSource = await db.aggregatorRateSource.upsert({
+            where: {
+              aggregatorId: params.id
+            },
+            update: {
+              rateSourceId: body.rateSourceId,
+              kkkPercent: body.kkkPercent,
+              kkkOperation: body.kkkOperation,
+              isActive: body.isActive ?? true
+            },
+            create: {
+              aggregatorId: params.id,
+              rateSourceId: body.rateSourceId,
+              kkkPercent: body.kkkPercent,
+              kkkOperation: body.kkkOperation,
+              isActive: body.isActive ?? true
+            }
+          });
+
+          return { success: true, rateSource };
+        } catch (e) {
+          console.error('Error setting rate source:', e)
+          return error(500, { error: 'Ошибка установки источника курса' })
+        }
+      },
+      {
+        tags: ['admin'],
+        detail: { summary: 'Установка источника курса для агрегатора' },
+        headers: AuthHeaderSchema,
+        params: t.Object({ id: t.String() }),
+        body: t.Object({
+          rateSourceId: t.String(),
+          kkkPercent: t.Number({ minimum: -100, maximum: 100 }),
+          kkkOperation: t.Union([t.Literal('PLUS'), t.Literal('MINUS')]),
+          isActive: t.Optional(t.Boolean())
+        }),
+        response: {
+          200: t.Object({
+            success: t.Boolean(),
+            rateSource: t.Object({
+              id: t.String(),
+              aggregatorId: t.String(),
+              rateSourceId: t.String(),
+              kkkPercent: t.Number(),
+              kkkOperation: t.String(),
+              isActive: t.Boolean()
+            })
+          }),
+          500: ErrorSchema
+        }
+      }
+    )
+
+    /* ─────────── GET /admin/aggregators/:id/rate-sources ─────────── */
+    .get(
+      '/:id/rate-sources',
+      async ({ params, error }) => {
+        try {
+          const rateSources = await db.aggregatorRateSource.findMany({
+            where: { aggregatorId: params.id },
+            include: {
+              rateSource: {
+                select: {
+                  id: true,
+                  displayName: true,
+                  source: true,
+                  isActive: true
+                }
+              }
+            }
+          });
+
+          return rateSources.map(rs => ({
+            id: rs.id,
+            rateSourceId: rs.rateSourceId,
+            kkkAdjustment: rs.kkkPercent * (rs.kkkOperation === 'MINUS' ? -1 : 1),
+            rateSource: {
+              id: rs.rateSource.id,
+              name: rs.rateSource.displayName || rs.rateSource.source,
+              type: rs.rateSource.source,
+              isActive: rs.rateSource.isActive
+            }
+          }));
+        } catch (e) {
+          console.error('Error fetching aggregator rate sources:', e)
+          return error(500, { error: 'Ошибка получения источников курса' })
+        }
+      },
+      {
+        tags: ['admin'],
+        detail: { summary: 'Получение источников курса агрегатора' },
+        headers: AuthHeaderSchema,
+        params: t.Object({ id: t.String() }),
+        response: {
+          200: t.Array(t.Object({
+            id: t.String(),
+            rateSourceId: t.String(),
+            kkkAdjustment: t.Number(),
+            rateSource: t.Object({
+              id: t.String(),
+              name: t.String(),
+              type: t.String(),
+              isActive: t.Boolean()
+            })
+          })),
+          500: ErrorSchema
+        }
+      }
+    )
+
+    /* ─────────── POST /admin/aggregators/:id/rate-sources ─────────── */
+    .post(
+      '/:id/rate-sources',
+      async ({ params, body, error }) => {
+        try {
+          // Проверяем, что источник еще не добавлен
+          const existing = await db.aggregatorRateSource.findFirst({
+            where: {
+              aggregatorId: params.id,
+              rateSourceId: body.rateSourceId
+            }
+          });
+
+          if (existing) {
+            return error(409, { error: 'Этот источник курса уже добавлен' });
+          }
+
+          const kkkOperation = body.kkkAdjustment < 0 ? 'MINUS' : 'PLUS';
+          const kkkPercent = Math.abs(body.kkkAdjustment);
+
+          const rateSource = await db.aggregatorRateSource.create({
+            data: {
+              aggregatorId: params.id,
+              rateSourceId: body.rateSourceId,
+              kkkPercent,
+              kkkOperation,
+              isActive: true
+            },
+            include: {
+              rateSource: {
+                select: {
+                  id: true,
+                  displayName: true,
+                  source: true,
+                  isActive: true
+                }
+              }
+            }
+          });
+
+          return {
+            success: true,
+            rateSource: {
+              id: rateSource.id,
+              rateSourceId: rateSource.rateSourceId,
+              kkkAdjustment: rateSource.kkkPercent * (rateSource.kkkOperation === 'MINUS' ? -1 : 1),
+              rateSource: {
+                id: rateSource.rateSource.id,
+                name: rateSource.rateSource.displayName || rateSource.rateSource.source,
+                type: rateSource.rateSource.source,
+                isActive: rateSource.rateSource.isActive
+              }
+            }
+          };
+        } catch (e) {
+          console.error('Error adding rate source:', e)
+          return error(500, { error: 'Ошибка добавления источника курса' })
+        }
+      },
+      {
+        tags: ['admin'],
+        detail: { summary: 'Добавление источника курса для агрегатора' },
+        headers: AuthHeaderSchema,
+        params: t.Object({ id: t.String() }),
+        body: t.Object({
+          rateSourceId: t.String(),
+          kkkAdjustment: t.Number({ minimum: -100, maximum: 100 })
+        }),
+        response: {
+          200: t.Object({
+            success: t.Boolean(),
+            rateSource: t.Object({
+              id: t.String(),
+              rateSourceId: t.String(),
+              kkkAdjustment: t.Number(),
+              rateSource: t.Object({
+                id: t.String(),
+                name: t.String(),
+                type: t.String(),
+                isActive: t.Boolean()
+              })
+            })
+          }),
+          409: ErrorSchema,
+          500: ErrorSchema
+        }
+      }
+    )
+
+    /* ─────────── PUT /admin/aggregators/:id/rate-sources/:sourceId ─────────── */
+    .put(
+      '/:id/rate-sources/:sourceId',
+      async ({ params, body, error }) => {
+        try {
+          const kkkOperation = body.kkkAdjustment < 0 ? 'MINUS' : 'PLUS';
+          const kkkPercent = Math.abs(body.kkkAdjustment);
+
+          const rateSource = await db.aggregatorRateSource.update({
+            where: { id: params.sourceId },
+            data: {
+              rateSourceId: body.rateSourceId,
+              kkkPercent,
+              kkkOperation
+            },
+            include: {
+              rateSource: true
+            }
+          });
+
+          return {
+            success: true,
+            rateSource: {
+              id: rateSource.id,
+              rateSourceId: rateSource.rateSourceId,
+              kkkAdjustment: rateSource.kkkPercent * (rateSource.kkkOperation === 'MINUS' ? -1 : 1),
+              rateSource: {
+                id: rateSource.rateSource.id,
+                name: rateSource.rateSource.name,
+                type: rateSource.rateSource.type,
+                isActive: rateSource.rateSource.isActive
+              }
+            }
+          };
+        } catch (e) {
+          console.error('Error updating rate source:', e)
+          return error(500, { error: 'Ошибка обновления источника курса' })
+        }
+      },
+      {
+        tags: ['admin'],
+        detail: { summary: 'Обновление источника курса агрегатора' },
+        headers: AuthHeaderSchema,
+        params: t.Object({ id: t.String(), sourceId: t.String() }),
+        body: t.Object({
+          rateSourceId: t.String(),
+          kkkAdjustment: t.Number({ minimum: -100, maximum: 100 })
+        }),
+        response: {
+          200: t.Object({
+            success: t.Boolean(),
+            rateSource: t.Object({
+              id: t.String(),
+              rateSourceId: t.String(),
+              kkkAdjustment: t.Number(),
+              rateSource: t.Object({
+                id: t.String(),
+                name: t.String(),
+                type: t.String(),
+                isActive: t.Boolean()
+              })
+            })
+          }),
+          500: ErrorSchema
+        }
+      }
+    )
+
+    /* ─────────── DELETE /admin/aggregators/:id/rate-sources/:sourceId ─────────── */
+    .delete(
+      '/:id/rate-sources/:sourceId',
+      async ({ params, error }) => {
+        try {
+          await db.aggregatorRateSource.delete({
+            where: { id: params.sourceId }
+          });
+
+          return { success: true };
+        } catch (e) {
+          if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
+            return error(404, { error: 'Источник курса не найден' })
+          }
+          console.error('Error deleting rate source:', e)
+          return error(500, { error: 'Ошибка удаления источника курса' })
+        }
+      },
+      {
+        tags: ['admin'],
+        detail: { summary: 'Удаление источника курса агрегатора' },
+        headers: AuthHeaderSchema,
+        params: t.Object({ id: t.String(), sourceId: t.String() }),
+        response: {
+          200: t.Object({ success: t.Boolean() }),
+          404: ErrorSchema,
+          500: ErrorSchema
+        }
+      }
+    )
+
+    /* ─────────── PATCH /admin/aggregators/:id/toggle ─────────── */
+    .patch(
+      '/:id/toggle',
+      async ({ params, error }) => {
+        try {
+          const aggregator = await db.aggregator.findUnique({
+            where: { id: params.id }
+          })
+
+          if (!aggregator) {
+            return error(404, { error: 'Агрегатор не найден' })
+          }
+
+          const updatedAggregator = await db.aggregator.update({
+            where: { id: params.id },
+            data: { isActive: !aggregator.isActive }
+          })
+
+          return {
+            success: true,
+            isActive: updatedAggregator.isActive,
+            message: updatedAggregator.isActive ? 'Агрегатор активирован' : 'Агрегатор деактивирован'
+          }
+        } catch (e) {
+          if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
+            return error(404, { error: 'Агрегатор не найден' })
+          }
+          console.error('Error toggling aggregator:', e)
+          return error(500, { error: 'Ошибка переключения статуса агрегатора' })
+        }
+      },
+      {
+        tags: ['admin'],
+        detail: { summary: 'Переключение статуса активности агрегатора' },
+        headers: AuthHeaderSchema,
+        params: t.Object({ id: t.String() }),
+        response: {
+          200: t.Object({
+            success: t.Boolean(),
+            isActive: t.Boolean(),
+            message: t.String()
+          }),
+          404: ErrorSchema,
           500: ErrorSchema
         }
       }

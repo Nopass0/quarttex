@@ -15,6 +15,7 @@ interface AggregatorTransactionRequest {
   successUrl: string;
   failUrl: string;
   expiresAt: string;
+  clientIdentifier?: string;
 }
 
 interface AggregatorTransactionResponse {
@@ -85,7 +86,8 @@ export class AggregatorService {
       callbackUrl: `${process.env.API_URL || 'http://localhost:3000'}/api/aggregator/callback`,
       successUrl: transaction.successUri,
       failUrl: transaction.failUri,
-      expiresAt: transaction.expired_at.toISOString()
+      expiresAt: transaction.expired_at.toISOString(),
+      clientIdentifier: transaction.clientIdentifier
     };
 
     try {
@@ -98,7 +100,7 @@ export class AggregatorService {
       const response = await axios.post(endpoint, requestData, {
         headers: {
           'Content-Type': 'application/json',
-          'X-Api-Token': aggregator.apiToken
+          'Authorization': `Bearer ${aggregator.customApiToken || aggregator.apiToken}`
         },
         timeout: 30000 // 30 секунд
       });
@@ -182,7 +184,7 @@ export class AggregatorService {
       const response = await axios.post(endpoint, requestData, {
         headers: {
           'Content-Type': 'application/json',
-          'X-Api-Token': aggregator.apiToken
+          'Authorization': `Bearer ${aggregator.customApiToken || aggregator.apiToken}`
         },
         timeout: 30000 // 30 секунд
       });
@@ -251,7 +253,7 @@ export class AggregatorService {
 
       const response = await axios.get(endpoint, {
         headers: {
-          'X-Api-Token': aggregator.apiToken
+          'Authorization': `Bearer ${aggregator.customApiToken || aggregator.apiToken}`
         },
         timeout: 30000 // 30 секунд
       });

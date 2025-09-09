@@ -84,6 +84,7 @@ const formSchema = z.object({
   operationLimit: numberField(0).optional(),
   intervalMinutes: numberField(0).optional(),
   isActive: z.boolean().default(true),
+  trafficPreference: z.enum(["ANY", "PRIMARY", "SECONDARY", "VIP"]).optional(),
 });
 
 type FormData = z.input<typeof formSchema>;
@@ -113,6 +114,7 @@ interface Requisite {
     name: string;
     isOnline: boolean;
   };
+  trafficPreference?: 'ANY' | 'PRIMARY' | 'SECONDARY' | 'VIP';
 }
 
 interface RequisitesSheetProps {
@@ -129,8 +131,8 @@ const requisiteStatusConfig = {
   ACTIVE: {
     label: "Активен",
     description: "Реквизит активен",
-    color: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
-    badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
+    color: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
+    badgeColor: "bg-green-50 text-green-700 border-green-200",
     icon: CheckCircle
   },
   INACTIVE: {
@@ -183,6 +185,7 @@ export function RequisitesSheet({
       operationLimit: 0,
       intervalMinutes: 0,
       isActive: true,
+      trafficPreference: "ANY",
     },
   });
 
@@ -239,6 +242,7 @@ export function RequisitesSheet({
         operationLimit: existingRequisite.operationLimit || 0,
         intervalMinutes: existingRequisite.intervalMinutes || 0,
         isActive: existingRequisite.isActive,
+        trafficPreference: existingRequisite.trafficPreference || 'ANY',
       });
       // Обновляем локальные состояния для числовых полей
       setMinAmountInput(existingRequisite.minAmount && existingRequisite.minAmount !== 0 ? String(existingRequisite.minAmount) : "");
@@ -274,6 +278,7 @@ export function RequisitesSheet({
     setMaxAmountInput("");
     setSumLimitInput("");
     setOperationLimitInput("");
+    setIntervalMinutesInput("");
     setShowForm(true);
   };
 
@@ -291,6 +296,7 @@ export function RequisitesSheet({
       operationLimit: requisite.operationLimit || 0,
       intervalMinutes: requisite.intervalMinutes || 0,
       isActive: !requisite.isArchived,
+      trafficPreference: requisite.trafficPreference || 'ANY',
     });
     // Обновляем локальные состояния для числовых полей
     setMinAmountInput(requisite.minAmount && requisite.minAmount !== 0 ? String(requisite.minAmount) : "");
@@ -373,7 +379,8 @@ export function RequisitesSheet({
         return;
       }
 
-      if (data.methodType === "sbp" && !data.phoneNumber) {
+      // При редактировании СБП реквизитов номер телефона не требуется (он заблокирован)
+      if (data.methodType === "sbp" && !data.phoneNumber && !isEditing) {
         toast.error("Введите номер телефона");
         return;
       }
@@ -385,9 +392,10 @@ export function RequisitesSheet({
         maxAmount: Number(data.maxAmount),
         sumLimit: Number(data.sumLimit),
         operationLimit: Number(data.operationLimit),
-        intervalMinutes: Number(data.intervalMinutes),
+        intervalMinutes: Number(data.intervalMinutes || 0),
         isActive: data.isActive,
         deviceId: null,
+        trafficPreference: data.trafficPreference || 'ANY',
       };
 
       if (!isEditing) {
@@ -466,7 +474,7 @@ export function RequisitesSheet({
         <div className="mt-6">
           {!showForm ? (
             <div className="space-y-4">
-              <Button onClick={handleAddNew} className="w-full bg-[#530FAD] hover:bg-[#530FAD]/90">
+              <Button onClick={handleAddNew} className="w-full bg-[#006039] hover:bg-[#006039]/90">
                 <Plus className="h-4 w-4 mr-2" />
                 Добавить реквизит
               </Button>
@@ -768,6 +776,29 @@ export function RequisitesSheet({
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
+                    name="trafficPreference"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Тип трафика</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Выберите тип" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="ANY">Любой</SelectItem>
+                            <SelectItem value="PRIMARY">Первичный</SelectItem>
+                            <SelectItem value="SECONDARY">Вторичный</SelectItem>
+                            <SelectItem value="VIP">VIP</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
                     name="minAmount"
                     render={({ field }) => (
                       <FormItem>
@@ -891,38 +922,38 @@ export function RequisitesSheet({
                   />
                 </div>
 
-                <div>
-                  <FormField
-                    control={form.control}
-                    name="intervalMinutes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Интервал между сделками (мин)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            placeholder="0"
-                            value={intervalMinutesInput}
-                            onChange={(e) => {
-                              const raw = e.target.value;
-                              const digitsOnly = raw.replace(/\D/g, "");
-                              setIntervalMinutesInput(digitsOnly);
-                              form.setValue("intervalMinutes", digitsOnly === "" ? undefined : Number(digitsOnly), { 
-                                shouldValidate: false, 
-                                shouldDirty: true 
-                              });
-                            }}
-                            disabled={loading}
-                          />
-                        </FormControl>
-                        <FormDescription>0 = без ограничений</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="intervalMinutes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Интервал между сделками (мин)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          placeholder="0"
+                          value={intervalMinutesInput}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            const digitsOnly = raw.replace(/\D/g, "");
+                            setIntervalMinutesInput(digitsOnly);
+                            form.setValue("intervalMinutes", digitsOnly === "" ? undefined : Number(digitsOnly), { 
+                              shouldValidate: false, 
+                              shouldDirty: true 
+                            });
+                          }}
+                          disabled={loading}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Минимальный интервал между новыми сделками на этом реквизите. 0 = без ограничений
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 {editingRequisite && (
                   <>
@@ -986,7 +1017,7 @@ export function RequisitesSheet({
                   <Button
                     type="submit"
                     disabled={loading || !form.formState.isValid || hasEmptyRequiredNumbers}
-                    className="bg-[#530FAD] hover:bg-[#530FAD]/90"
+                    className="bg-[#006039] hover:bg-[#006039]/90"
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {editingRequisite ? "Сохранить" : "Добавить"}

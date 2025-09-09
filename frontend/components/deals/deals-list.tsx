@@ -196,7 +196,7 @@ const statusConfig = {
   },
   READY: {
     label: "Выполнено",
-    color: "bg-purple-50 text-purple-600 border-purple-200",
+    color: "bg-primary/10 text-primary border-primary/20",
   },
   EXPIRED: { label: "Истекло", color: "bg-red-50 text-red-600 border-red-200" },
   CANCELED: {
@@ -228,7 +228,7 @@ const formatRemainingTime = (expiredAt: string) => {
   }
 };
 
-export function DealsList() {
+export function DealsList({ showAllDeals = false }: { showAllDeals?: boolean }) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTransaction, setSelectedTransaction] =
@@ -273,6 +273,7 @@ export function DealsList() {
     count: 0,
     totalAmount: 0,
     totalProfit: 0,
+    totalAmountRub: 0,
   });
 
   // Real data for filters
@@ -638,14 +639,56 @@ export function DealsList() {
       // Add period for stats
       params.period = period;
 
-      const response = await traderApi.getTransactions(params);
-      console.log("[DealsList] API Response:", response);
-      // Handle both response formats
-      const txData = response.data || response.transactions || [];
-      const hasMoreData = txData.length === 50; // If we get full page, there might be more
+      let txData: any[] = [];
+      let hasMoreData = false;
 
-      if (response.stats) {
-        setPeriodStats(response.stats);
+      if (showAllDeals) {
+        // Для вкладки "Все" - загружаем классические и БТ сделки
+        const [classicResponse, btResponse, classicStatsResponse, btStatsResponse] = await Promise.all([
+          traderApi.getTransactions(params),
+          traderApi.getBtDeals({ page: pageNum, limit: 50 }),
+          traderApi.getTransactions({ page: 1, limit: 1, period }),
+          traderApi.getBtStats({ period }),
+        ]);
+
+        const classicTxs = classicResponse.data || [];
+        const btTxs = (btResponse.data || []).map((tx: any) => ({
+          ...tx,
+          clientName: tx.merchantName || "БТ клиент",
+          assetOrBank: tx.bankType || "БТ",
+          requisites: tx.cardNumber ? {
+            id: tx.requisiteId,
+            cardNumber: tx.cardNumber,
+            bankType: tx.bankType,
+            recipientName: tx.recipientName,
+          } : null,
+        }));
+
+        txData = [...classicTxs, ...btTxs].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        hasMoreData = classicTxs.length === 50 || btTxs.length === 50;
+
+        // Объединяем статистику
+        const classicStats = classicStatsResponse.stats || { count: 0, totalAmount: 0, totalAmountRub: 0, totalProfit: 0 };
+        const btStats = btStatsResponse.stats || { count: 0, totalAmount: 0, totalAmountRub: 0, totalProfit: 0 };
+        
+        setPeriodStats({
+          count: classicStats.count + btStats.count,
+          totalAmount: classicStats.totalAmount + btStats.totalAmount,
+          totalAmountRub: classicStats.totalAmountRub + btStats.totalAmountRub,
+          totalProfit: classicStats.totalProfit + btStats.totalProfit,
+        });
+      } else {
+        // Обычная логика для классических сделок
+        const response = await traderApi.getTransactions(params);
+        console.log("[DealsList] API Response:", response);
+        txData = response.data || response.transactions || [];
+        hasMoreData = txData.length === 50;
+
+        if (response.stats) {
+          setPeriodStats(response.stats);
+        }
       }
 
       console.log("[DealsList] Transactions data:", txData.length, "items");
@@ -747,6 +790,10 @@ export function DealsList() {
           balanceUsdt: balanceUsdt || 0,
           balanceRub: balanceRub || 0,
           deposit: deposit || 0,
+          escrowBalance: 0,
+          compensationBalance: 0,
+          referralBalance: 0,
+          disputedBalance: 0,
         });
       }
     } catch (error) {
@@ -814,22 +861,7 @@ export function DealsList() {
 
     // Status filter
     if (appliedFilters.status !== "all") {
-      switch (appliedFilters.status) {
-        case "not_credited":
-          filtered = filtered.filter(
-            (t) =>
-              t.status === "CREATED" ||
-              t.status === "EXPIRED" ||
-              t.status === "CANCELED"
-          );
-          break;
-        case "credited":
-          filtered = filtered.filter((t) => t.status === "READY");
-          break;
-        case "in_progress":
-          filtered = filtered.filter((t) => t.status === "IN_PROGRESS");
-          break;
-      }
+      filtered = filtered.filter((t) => t.status === appliedFilters.status);
     }
 
     // Amount filter
@@ -929,7 +961,7 @@ export function DealsList() {
       {/* Header with user info */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-900 dark:text-[#eeeeee]">
-          Последние сделки
+          {showAllDeals ? "Все сделки" : "Последние сделки"}
         </h1>
 
         <TraderHeader />
@@ -949,7 +981,7 @@ export function DealsList() {
                   {periodStats.totalAmount.toFixed(2)} USDT
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
-                  {(periodStats.totalAmount * 95).toFixed(0)} RUB
+                  {(periodStats.totalAmountRub || 0).toFixed(0)} RUB
                 </div>
                 {periodStats.count === 0 && (
                   <div className="text-xs text-red-500 dark:text-[#c64444] mt-2">
@@ -983,7 +1015,6 @@ export function DealsList() {
               <PopoverContent
                 className="w-48 p-0"
                 align="end"
-                alignOffset={-10}
               >
                 <div className="max-h-64 overflow-auto">
                   <Button
@@ -1089,7 +1120,6 @@ export function DealsList() {
               <PopoverContent
                 className="w-48 p-0"
                 align="end"
-                alignOffset={-10}
               >
                 <div className="max-h-64 overflow-auto">
                   <Button
@@ -1268,12 +1298,16 @@ export function DealsList() {
               >
                 <span className={"text-[#006039]"}>
                   {filterStatus === "all"
-                    ? "Все сделки"
-                    : filterStatus === "not_credited"
-                    ? "Не зачисленные сделки"
-                    : filterStatus === "credited"
-                    ? "Зачисленные сделки"
-                    : "Сделки выполняются"}
+                    ? "Все статусы"
+                    : filterStatus === "IN_PROGRESS"
+                    ? "В процессе"
+                    : filterStatus === "READY"
+                    ? "Готово"
+                    : filterStatus === "EXPIRED"
+                    ? "Истекло"
+                    : filterStatus === "DISPUTE"
+                    ? "Спор"
+                    : "Все статусы"}
                 </span>
                 <ChevronDown className="h-4 w-4 opacity-50 text-[#006039]" />
               </Button>
@@ -1294,49 +1328,61 @@ export function DealsList() {
                   variant="ghost"
                   size="default"
                   className={cn(
-                    "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
+                    "w-full justify-start h-12 hover:bg-primary/10 hover:text-primary",
                     filterStatus === "all" &&
-                      "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                      "text-primary bg-primary/10"
                   )}
                   onClick={() => setFilterStatus("all")}
                 >
-                  Все сделки
+                  Все статусы
                 </Button>
                 <Button
                   variant="ghost"
                   size="default"
                   className={cn(
-                    "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
-                    filterStatus === "not_credited" &&
-                      "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                    "w-full justify-start h-12 hover:bg-primary/10 hover:text-primary",
+                    filterStatus === "IN_PROGRESS" &&
+                      "text-primary bg-primary/10"
                   )}
-                  onClick={() => setFilterStatus("not_credited")}
+                  onClick={() => setFilterStatus("IN_PROGRESS")}
                 >
-                  Не зачисленные сделки
+                  В процессе
                 </Button>
                 <Button
                   variant="ghost"
                   size="default"
                   className={cn(
-                    "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
-                    filterStatus === "credited" &&
-                      "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                    "w-full justify-start h-12 hover:bg-primary/10 hover:text-primary",
+                    filterStatus === "READY" &&
+                      "text-primary bg-primary/10"
                   )}
-                  onClick={() => setFilterStatus("credited")}
+                  onClick={() => setFilterStatus("READY")}
                 >
-                  Зачисленные сделки
+                  Готово
                 </Button>
                 <Button
                   variant="ghost"
                   size="default"
                   className={cn(
-                    "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
-                    filterStatus === "in_progress" &&
-                      "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                    "w-full justify-start h-12 hover:bg-primary/10 hover:text-primary",
+                    filterStatus === "EXPIRED" &&
+                      "text-primary bg-primary/10"
                   )}
-                  onClick={() => setFilterStatus("in_progress")}
+                  onClick={() => setFilterStatus("EXPIRED")}
                 >
-                  Сделки выполняются
+                  Истекло
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="default"
+                  className={cn(
+                    "w-full justify-start h-12 hover:bg-primary/10 hover:text-primary",
+                    filterStatus === "DISPUTE" &&
+                      "text-primary bg-primary/10"
+                  )}
+                  onClick={() => setFilterStatus("DISPUTE")}
+                >
+                  Спор
                 </Button>
               </div>
             </PopoverContent>
@@ -1480,9 +1526,9 @@ export function DealsList() {
                   variant="ghost"
                   size="default"
                   className={cn(
-                    "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
+                    "w-full justify-start h-12 hover:bg-primary/10 hover:text-primary",
                     filterDevice === "all" &&
-                      "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                      "text-primary bg-primary/10"
                   )}
                   onClick={() => setFilterDevice("all")}
                 >
@@ -1515,9 +1561,9 @@ export function DealsList() {
                       variant="ghost"
                       size="default"
                       className={cn(
-                        "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
+                        "w-full justify-start h-12 hover:bg-primary/10 hover:text-primary",
                         filterDevice === device.id &&
-                          "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                          "text-primary bg-primary/10"
                       )}
                       onClick={() => setFilterDevice(device.id)}
                     >
@@ -1584,9 +1630,9 @@ export function DealsList() {
                   variant="ghost"
                   size="default"
                   className={cn(
-                    "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
+                    "w-full justify-start h-12 hover:bg-primary/10 hover:text-primary",
                     filterRequisite === "all" &&
-                      "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                      "text-primary bg-primary/10"
                   )}
                   onClick={() => setFilterRequisite("all")}
                 >
@@ -1620,9 +1666,9 @@ export function DealsList() {
                       variant="ghost"
                       size="default"
                       className={cn(
-                        "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
+                        "w-full justify-start h-12 hover:bg-primary/10 hover:text-primary",
                         filterRequisite === requisite.id &&
-                          "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                          "text-primary bg-primary/10"
                       )}
                       onClick={() => setFilterRequisite(requisite.id)}
                     >
@@ -1630,7 +1676,9 @@ export function DealsList() {
                         {requisite.bankType ? (
                           getBankIcon(requisite.bankType, "sm")
                         ) : (
-                          <NeutralBankIcon />
+                          <div className="w-8 h-8 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center">
+                            <CreditCard className="w-4 h-4 text-gray-600" />
+                          </div>
                         )}
                         <div className="text-left">
                           <div className="font-medium">
@@ -1719,8 +1767,8 @@ export function DealsList() {
                     );
                   case "READY":
                     return (
-                      <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                        <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <CheckCircle className="h-6 w-6 text-primary" />
                       </div>
                     );
                   case "DISPUTE":
@@ -1777,7 +1825,7 @@ export function DealsList() {
               const getStatusBadgeColor = () => {
                 switch (transaction.status) {
                   case "READY":
-                    return "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-green-800";
+                    return "bg-primary/10 text-primary border-primary/20";
                   case "CREATED":
                   case "IN_PROGRESS":
                     return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800";
@@ -1894,7 +1942,7 @@ export function DealsList() {
                         transaction.status === "COMPLETED") &&
                         transaction.profit != null &&
                         transaction.profit > 0 && (
-                          <div className="text-xs text-purple-600 dark:text-purple-400 mt-0.5">
+                          <div className="text-xs text-primary mt-0.5">
                             +{transaction.profit.toFixed(2)}
                           </div>
                         )}
@@ -2012,8 +2060,8 @@ export function DealsList() {
                     {/* Status Icon */}
                     <div className="mb-4 flex justify-center">
                       {selectedTransaction.status === "READY" ? (
-                        <div className="w-20 h-20 rounded-3xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                          <CheckCircle2 className="h-10 w-10 text-purple-600 dark:text-purple-400" />
+                        <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center">
+                          <CheckCircle2 className="h-10 w-10 text-primary" />
                         </div>
                       ) : selectedTransaction.status === "CREATED" ||
                         selectedTransaction.status === "IN_PROGRESS" ? (
@@ -2044,7 +2092,7 @@ export function DealsList() {
 
                     {/* Amount */}
                     <div className="mb-1">
-                      <span className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                      <span className="text-3xl font-bold text-primary">
                         {selectedTransaction.rate
                           ? (
                               Math.trunc(
@@ -2163,7 +2211,7 @@ export function DealsList() {
                         <span className="text-sm text-gray-500 dark:text-gray-400">
                           Прибыль
                         </span>
-                        <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
+                        <span className="text-lg font-semibold text-primary">
                           +{" "}
                           {selectedTransaction.profit
                             ? selectedTransaction.profit.toFixed(2)
@@ -2191,7 +2239,7 @@ export function DealsList() {
                         >
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                              <Smartphone className="h-5 w-5 text-[#006039] dark:text-purple-400" />
+                              <Smartphone className="h-5 w-5 text-primary" />
                             </div>
                             <div className="text-left">
                               <p className="text-sm font-medium dark:text-white">
@@ -2204,7 +2252,7 @@ export function DealsList() {
                               </p>
                             </div>
                           </div>
-                          <ChevronDown className="h-5 w-5 text-[#006039] dark:text-purple-400 -rotate-90" />
+                          <ChevronDown className="h-5 w-5 text-primary -rotate-90" />
                         </Button>
                       </div>
                     )}
@@ -2223,8 +2271,8 @@ export function DealsList() {
                           }}
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                              <MessageSquare className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                            <div className="w-10 h-10 rounded bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                              <MessageSquare className="h-5 w-5 text-green-600 dark:text-green-400" />
                             </div>
                             <div className="text-left flex-1 min-w-0">
                               <p className="text-sm font-medium dark:text-white">
@@ -2242,7 +2290,7 @@ export function DealsList() {
                               </p>
                             </div>
                           </div>
-                          <ChevronDown className="h-5 w-5 text-[#006039] dark:text-purple-400 -rotate-90" />
+                          <ChevronDown className="h-5 w-5 text-primary -rotate-90" />
                         </Button>
                       </div>
                     )}
@@ -2429,7 +2477,7 @@ export function DealsList() {
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                            <Smartphone className="h-5 w-5 text-[#006039] dark:text-purple-400" />
+                            <Smartphone className="h-5 w-5 text-[#006039] dark:text-green-400" />
                           </div>
                           <div className="text-left">
                             <p className="text-sm font-medium dark:text-white">
@@ -2442,7 +2490,7 @@ export function DealsList() {
                             </p>
                           </div>
                         </div>
-                        <ChevronDown className="h-5 w-5 text-[#006039] dark:text-purple-400 -rotate-90" />
+                        <ChevronDown className="h-5 w-5 text-[#006039] dark:text-green-400 -rotate-90" />
                       </Button>
                     </div>
 
@@ -2464,7 +2512,7 @@ export function DealsList() {
                           className="w-full justify-start dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
                           onClick={() => toast.info("Функция в разработке")}
                         >
-                          <Eye className="h-4 w-4 mr-2 text-[#006039] dark:text-purple-400" />
+                          <Eye className="h-4 w-4 mr-2 text-[#006039] dark:text-green-400" />
                           Просмотр сделок по реквизиту
                         </Button>
                         <Button
@@ -2472,7 +2520,7 @@ export function DealsList() {
                           className="w-full justify-start dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
                           onClick={() => toast.info("Функция в разработке")}
                         >
-                          <CreditCard className="h-4 w-4 mr-2 text-[#006039] dark:text-purple-400" />
+                          <CreditCard className="h-4 w-4 mr-2 text-[#006039] dark:text-green-400" />
                           Подтвердить номер карты
                         </Button>
                         <Button
@@ -2480,7 +2528,7 @@ export function DealsList() {
                           className="w-full justify-start dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600"
                           onClick={() => toast.info("Функция в разработке")}
                         >
-                          <CreditCard className="h-4 w-4 mr-2 text-[#006039] dark:text-purple-400" />
+                          <CreditCard className="h-4 w-4 mr-2 text-[#006039] dark:text-green-400" />
                           Подтвердить номер счета
                         </Button>
                       </div>

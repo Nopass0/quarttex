@@ -4,6 +4,7 @@ import { ServerCheck } from "@/components/server-check"
 import { AuthInitializer } from "@/components/auth/auth-initializer"
 import { ThemeProvider } from "@/providers/theme-provider"
 import { WebSocketProvider } from "@/providers/websocket-provider"
+import { ProjectProvider } from "@/contexts/ProjectContext"
 import { useEffect } from "react"
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -70,18 +71,20 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="light"
-      enableSystem={false}
-      disableTransitionOnChange
-    >
-      <AuthInitializer />
-      <WebSocketProvider>
-        <ServerCheck>
-          {children}
-        </ServerCheck>
-      </WebSocketProvider>
-    </ThemeProvider>
+    <ProjectProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="light"
+        enableSystem={false}
+        disableTransitionOnChange
+      >
+        <AuthInitializer />
+        <WebSocketProvider>
+          <ServerCheck>
+            {children}
+          </ServerCheck>
+        </WebSocketProvider>
+      </ThemeProvider>
+    </ProjectProvider>
   )
 }

@@ -268,7 +268,7 @@ export function SupportChat({ variant }: SupportChatProps) {
       case 'WAITING_REPLY':
         return 'bg-purple-100 text-purple-700'
       case 'RESOLVED':
-        return 'bg-purple-100 text-purple-700'
+        return 'bg-green-100 text-green-700'
       case 'CLOSED':
         return 'bg-gray-100 text-gray-700'
       default:

@@ -83,7 +83,6 @@ export function RequisitesDialog({
     methodId: "",
     minAmount: "100",
     maxAmount: "100000",
-    intervalMinutes: "0",
   });
 
   // Fetch methods on mount
@@ -142,7 +141,7 @@ export function RequisitesDialog({
         methodId: formData.methodId,
         minAmount: parseInt(formData.minAmount),
         maxAmount: parseInt(formData.maxAmount),
-        intervalMinutes: parseInt(formData.intervalMinutes),
+        intervalMinutes: 5,
       };
 
       // Add method-specific fields
@@ -315,20 +314,7 @@ export function RequisitesDialog({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="intervalMinutes">Интервал между сделками (мин)</Label>
-              <Input
-                id="intervalMinutes"
-                type="number"
-                placeholder="0"
-                value={formData.intervalMinutes}
-                onChange={(e) =>
-                  setFormData({ ...formData, intervalMinutes: e.target.value })
-                }
-                disabled={loading}
-              />
-              <div className="text-xs text-muted-foreground">0 = без ограничений</div>
-            </div>
+
           </div>
 
           <div className="flex justify-end gap-3">

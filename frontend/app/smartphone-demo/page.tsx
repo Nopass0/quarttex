@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import QuatrexLogo from "@/components/ui/quattrex-logo"
+import { Logo } from "@/components/ui/logo"
 import BankCard from "@/components/BankCard"
 import { AlertCircle, Check, Home, CreditCard, Settings, User } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -38,14 +38,14 @@ export default function SmartphoneDemoPage() {
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold">Главная</h1>
-            <QuatrexLogo size="sm" className="h-8 w-auto" />
+            <Logo className="h-8 w-auto" />
           </div>
           
           <Card className="mb-4">
             <CardContent className="p-6">
               <p className="text-sm text-gray-500 mb-1">Общий баланс</p>
               <p className="text-3xl font-bold">₽245,680.50</p>
-              <p className="text-sm text-purple-600 mt-2">+12.5% за месяц</p>
+              <p className="text-sm text-green-600 mt-2">+12.5% за месяц</p>
             </CardContent>
           </Card>
 
@@ -97,7 +97,7 @@ export default function SmartphoneDemoPage() {
                 <p className="font-medium">Перевод от Ивана</p>
                 <p className="text-sm text-gray-500">Вчера, 18:45</p>
               </div>
-              <span className="font-medium text-purple-600">+₽15,000</span>
+              <span className="font-medium text-green-600">+₽15,000</span>
             </div>
           </div>
         </div>
@@ -173,7 +173,7 @@ export default function SmartphoneDemoPage() {
             </div>
             <div className="p-4 border rounded-lg">
               <p className="text-sm text-gray-500">Статус</p>
-              <p className="font-medium text-purple-600">Верифицирован</p>
+              <p className="font-medium text-green-600">Верифицирован</p>
             </div>
           </div>
         </div>
@@ -317,7 +317,7 @@ export default function SmartphoneDemoPage() {
                     setCurrentScreen("cards")
                   }}
                 >
-                  <Check className="h-4 w-4 mr-2 text-purple-500" />
+                  <Check className="h-4 w-4 mr-2 text-green-500" />
                   Идеальное состояние
                 </Button>
               </div>
@@ -359,7 +359,7 @@ export default function SmartphoneDemoPage() {
                 className="scale-75 mx-auto"
               >
                 <div className="h-full bg-black text-white p-6">
-                  <QuatrexLogo size="lg" className="h-12 w-auto mb-6 filter invert" />
+                  <Logo className="h-12 w-auto mb-6 filter invert" />
                   <h2 className="text-2xl font-bold mb-4">Темный режим</h2>
                   <p className="text-gray-300">
                     Приложение поддерживает темную тему для комфортного использования в ночное время.

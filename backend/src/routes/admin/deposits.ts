@@ -157,14 +157,12 @@ export default new Elysia({ prefix: "/deposits" })
           }
         });
 
-        // Add to trader's balance based on deposit type
+        // Always add to trader's deposit for deposit requests
         console.log(`Confirming deposit ${deposit.id}, type: ${deposit.type}, amount: ${deposit.amountUSDT}`);
         
-        const balanceUpdate = deposit.type === DepositType.INSURANCE
-          ? { deposit: { increment: deposit.amountUSDT } }
-          : { trustBalance: { increment: deposit.amountUSDT } };
-          
-        console.log('Balance update:', balanceUpdate);
+        const balanceUpdate = { deposit: { increment: deposit.amountUSDT } };
+        
+        console.log('Balance update (forced to deposit):', balanceUpdate);
         
         const updatedUser = await prisma.user.update({
           where: { id: deposit.traderId },

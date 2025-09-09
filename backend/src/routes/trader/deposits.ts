@@ -73,7 +73,7 @@ export default new Elysia({ prefix: "/deposits" })
   // Create deposit request
   .post("/", async ({ trader, body, set }) => {
     try {
-      const { amountUSDT, type = DepositType.BALANCE, txHash } = body;
+      const { amountUSDT, txHash } = body;
       
       // Get deposit settings
       const [walletAddress, minAmount, expiryMinutes] = await Promise.all([
@@ -115,7 +115,8 @@ export default new Elysia({ prefix: "/deposits" })
           amountUSDT,
           address: walletAddress.value,
           status: DepositStatus.PENDING,
-          type,
+          // Всегда создаём как депозит (INSURANCE), чтобы при подтверждении пополнялся именно депозит
+          type: DepositType.INSURANCE,
           txHash: txHash || null
         }
       });
@@ -148,6 +149,7 @@ export default new Elysia({ prefix: "/deposits" })
     detail: { summary: "Создание заявки на пополнение" },
     body: t.Object({
       amountUSDT: t.Number({ minimum: 0 }),
+      // type в теле игнорируется и всегда принудительно устанавливается как INSURANCE
       type: t.Optional(t.Enum(DepositType)),
       txHash: t.Optional(t.String())
     }),

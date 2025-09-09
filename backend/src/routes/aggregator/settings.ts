@@ -15,11 +15,17 @@ export default (app: Elysia) =>
     .get(
       "/profile",
       async ({ aggregator }) => {
+        // Используем кастомный токен если он задан, иначе сгенерированный
+        const effectiveApiToken = aggregator.customApiToken || aggregator.apiToken;
+        
         return {
           id: aggregator.id,
           email: aggregator.email,
           name: aggregator.name,
-          apiToken: aggregator.apiToken,
+          apiToken: effectiveApiToken,
+          customApiToken: aggregator.customApiToken,
+          generatedApiToken: aggregator.apiToken,
+          callbackToken: aggregator.callbackToken,
           apiBaseUrl: aggregator.apiBaseUrl,
           balanceUsdt: aggregator.balanceUsdt,
           twoFactorEnabled: aggregator.twoFactorEnabled,
@@ -37,6 +43,9 @@ export default (app: Elysia) =>
             email: t.String(),
             name: t.String(),
             apiToken: t.String(),
+            customApiToken: t.Union([t.String(), t.Null()]),
+            generatedApiToken: t.String(),
+            callbackToken: t.String(),
             apiBaseUrl: t.Union([t.String(), t.Null()]),
             balanceUsdt: t.Number(),
             twoFactorEnabled: t.Boolean(),
@@ -57,6 +66,7 @@ export default (app: Elysia) =>
 
           if (body.name) updateData.name = body.name;
           if (body.apiBaseUrl !== undefined) updateData.apiBaseUrl = body.apiBaseUrl;
+          if (body.customApiToken !== undefined) updateData.customApiToken = body.customApiToken;
 
           const updatedAggregator = await db.aggregator.update({
             where: { id: aggregator.id },
@@ -70,6 +80,7 @@ export default (app: Elysia) =>
               email: updatedAggregator.email,
               name: updatedAggregator.name,
               apiBaseUrl: updatedAggregator.apiBaseUrl,
+              customApiToken: updatedAggregator.customApiToken,
               updatedAt: updatedAggregator.updatedAt.toISOString()
             }
           };
@@ -83,7 +94,8 @@ export default (app: Elysia) =>
         detail: { summary: "Обновление профиля агрегатора" },
         body: t.Object({
           name: t.Optional(t.String()),
-          apiBaseUrl: t.Optional(t.Union([t.String(), t.Null()]))
+          apiBaseUrl: t.Optional(t.Union([t.String(), t.Null()])),
+          customApiToken: t.Optional(t.Union([t.String(), t.Null()]))
         }),
         response: {
           200: t.Object({
@@ -93,6 +105,7 @@ export default (app: Elysia) =>
               email: t.String(),
               name: t.String(),
               apiBaseUrl: t.Union([t.String(), t.Null()]),
+              customApiToken: t.Union([t.String(), t.Null()]),
               updatedAt: t.String()
             })
           }),

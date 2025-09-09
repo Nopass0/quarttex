@@ -329,12 +329,74 @@ export default (app: Elysia) =>
             },
           });
 
-          // Handle frozen funds based on resolution
+          // Handle resolution based on who wins the dispute
           const deal = dispute.deal;
           const frozenAmount = deal.frozenUsdtAmount || 0;
 
           if (body.inFavorOf === "MERCHANT") {
-            // In favor of merchant - transaction is marked as READY
+            // In favor of merchant - transaction becomes EXPIRED
+            await tx.transaction.update({
+              where: { id: dispute.dealId },
+              data: {
+                status: Status.EXPIRED,
+              },
+            });
+
+            // If deal was READY before dispute, deduct from balance/deposit
+            if (deal.status === Status.READY && deal.traderId && frozenAmount > 0) {
+              const trader = await tx.user.findUnique({
+                where: { id: deal.traderId },
+                select: { trustBalance: true, deposit: true }
+              });
+
+              if (trader) {
+                const roundedFrozenAmount = Math.ceil(frozenAmount * 100) / 100; // Round up to 2 decimal places
+                
+                if (trader.trustBalance >= roundedFrozenAmount) {
+                  // Deduct from trust balance first
+                  await tx.user.update({
+                    where: { id: deal.traderId },
+                    data: {
+                      frozenUsdt: { decrement: frozenAmount },
+                      trustBalance: { decrement: roundedFrozenAmount },
+                    },
+                  });
+                  console.log(
+                    `[DisputeResolution] Merchant won: deducted ${roundedFrozenAmount} USDT from trader ${deal.traderId} trust balance`
+                  );
+                } else {
+                  // Deduct what's available from trust balance and the rest from deposit
+                  const remainingAmount = roundedFrozenAmount - trader.trustBalance;
+                  
+                  await tx.user.update({
+                    where: { id: deal.traderId },
+                    data: {
+                      frozenUsdt: { decrement: frozenAmount },
+                      trustBalance: 0,
+                      deposit: { decrement: remainingAmount },
+                    },
+                  });
+                  console.log(
+                    `[DisputeResolution] Merchant won: deducted ${trader.trustBalance} USDT from trust balance and ${remainingAmount} USDT from deposit for trader ${deal.traderId}`
+                  );
+                }
+              }
+            } else {
+              // Just unfreeze if deal wasn't READY
+              if (frozenAmount > 0 && deal.traderId) {
+                await tx.user.update({
+                  where: { id: deal.traderId },
+                  data: {
+                    frozenUsdt: { decrement: frozenAmount },
+                  },
+                });
+                console.log(
+                  `[DisputeResolution] Merchant won: unfrozen ${frozenAmount} USDT from trader ${deal.traderId} (deal wasn't READY)`
+                );
+              }
+            }
+          } else {
+            // In favor of trader - transaction becomes READY
             await tx.transaction.update({
               where: { id: dispute.dealId },
               data: {
@@ -343,39 +405,33 @@ export default (app: Elysia) =>
               },
             });
 
-            // Unfreeze funds without returning to trustBalance (merchant wins)
-            if (frozenAmount > 0 && deal.traderId) {
+            // If deal was EXPIRED before, apply same logic as trader confirming the deal
+            if (deal.status === Status.EXPIRED && frozenAmount > 0 && deal.traderId) {
+              // Same calculations as when trader confirms deal
               await tx.user.update({
                 where: { id: deal.traderId },
                 data: {
                   frozenUsdt: { decrement: frozenAmount },
+                  trustBalance: { decrement: frozenAmount },
                 },
               });
               console.log(
-                `[DisputeResolution] Merchant won: unfrozen ${frozenAmount} USDT from trader ${deal.traderId} without returning to trust balance`
+                `[DisputeResolution] Trader won: unfrozen ${frozenAmount} USDT and deducted from trust balance for trader ${deal.traderId}`
               );
-            }
-          } else {
-            // In favor of trader - transaction is expired/canceled
-            await tx.transaction.update({
-              where: { id: dispute.dealId },
-              data: {
-                status: Status.EXPIRED,
-              },
-            });
-
-            // Unfreeze funds and return to trustBalance (trader wins)
-            if (frozenAmount > 0 && deal.traderId) {
-              await tx.user.update({
-                where: { id: deal.traderId },
-                data: {
-                  frozenUsdt: { decrement: frozenAmount },
-                  trustBalance: { increment: frozenAmount },
-                },
-              });
-              console.log(
-                `[DisputeResolution] Trader won: unfrozen ${frozenAmount} USDT and returned to trust balance for trader ${deal.traderId}`
-              );
+            } else {
+              // Unfreeze funds and return to trustBalance (trader wins)
+              if (frozenAmount > 0 && deal.traderId) {
+                await tx.user.update({
+                  where: { id: deal.traderId },
+                  data: {
+                    frozenUsdt: { decrement: frozenAmount },
+                    trustBalance: { increment: frozenAmount },
+                  },
+                });
+                console.log(
+                  `[DisputeResolution] Trader won: unfrozen ${frozenAmount} USDT and returned to trust balance for trader ${deal.traderId}`
+                );
+              }
             }
           }
         });

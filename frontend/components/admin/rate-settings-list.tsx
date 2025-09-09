@@ -32,6 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useRapiraRate } from '@/hooks/use-rapira-rate'
 
 type RateSetting = {
   id: string
@@ -58,11 +59,31 @@ export function RateSettingsList() {
   const [kkkOperation, setKkkOperation] = useState<'PLUS' | 'MINUS'>('MINUS')
   const [selectedMethodId, setSelectedMethodId] = useState('')
   const { token: adminToken } = useAdminAuth()
+  const { baseRate: currentRapiraRate, refetch: refetchRapiraRate } = useRapiraRate()
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
   useEffect(() => {
     fetchSettings()
     fetchMethods()
   }, [])
+
+  // Auto-refresh rates every 60 seconds (and fetch immediately)
+  useEffect(() => {
+    const run = async () => {
+      await refetchRapiraRate()
+      setLastUpdated(new Date())
+    }
+    run()
+    const interval = setInterval(run, 60000) // 1 minute instead of 10 seconds
+    return () => clearInterval(interval)
+  }, [refetchRapiraRate])
+
+  // Update last updated time when rate changes
+  useEffect(() => {
+    if (currentRapiraRate) {
+      setLastUpdated(new Date())
+    }
+  }, [currentRapiraRate])
 
   const fetchSettings = async () => {
     try {
@@ -198,9 +219,34 @@ export function RateSettingsList() {
             size="icon"
             onClick={fetchSettings}
             disabled={isLoading}
+            title="Обновить настройки"
           >
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetchRapiraRate()}
+            title="Обновить курс"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Обновить курс
+          </Button>
+          {currentRapiraRate && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                  Курс Rapira: {currentRapiraRate.toFixed(2)} ₽/USDT
+                </span>
+                {lastUpdated && (
+                  <span className="text-xs text-emerald-600 dark:text-emerald-400">
+                    Обновлено: {lastUpdated.toLocaleTimeString('ru-RU')}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
         <Button
           className="bg-[#006039] hover:bg-[#005030]"
@@ -228,7 +274,8 @@ export function RateSettingsList() {
               <TableHead>Тип</TableHead>
               <TableHead>ККК (%)</TableHead>
               <TableHead>Операция</TableHead>
-              <TableHead>Формула</TableHead>
+              <TableHead>Текущий курс</TableHead>
+              <TableHead>Скорректированный курс</TableHead>
               <TableHead>Обновлено</TableHead>
               <TableHead className="text-right">Действия</TableHead>
             </TableRow>
@@ -247,10 +294,26 @@ export function RateSettingsList() {
                     {setting.kkkOperation === 'PLUS' ? '+' : '-'}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
-                  Курс × {setting.kkkOperation === 'PLUS' 
-                    ? ((100 + setting.kkkPercent) / 100).toFixed(2)
-                    : ((100 - setting.kkkPercent) / 100).toFixed(2)}
+                <TableCell className="text-sm">
+                  {currentRapiraRate ? (
+                    <span className="font-medium text-emerald-600">
+                      {currentRapiraRate.toFixed(2)} ₽
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">Загрузка...</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-sm">
+                  {currentRapiraRate ? (
+                    <span className="font-bold text-emerald-700">
+                      {(currentRapiraRate * (setting.kkkOperation === 'PLUS' 
+                        ? (1 + setting.kkkPercent / 100)
+                        : (1 - setting.kkkPercent / 100)
+                      )).toFixed(2)} ₽
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">Загрузка...</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   {new Date(setting.updatedAt).toLocaleDateString('ru-RU')}
@@ -343,14 +406,29 @@ export function RateSettingsList() {
                     ? 'При операции "+" курс увеличивается, USDT замораживается меньше'
                     : 'При операции "-" курс уменьшается, USDT замораживается больше'}
                 </p>
-                {kkkPercent && (
-                  <p className="text-sm font-medium">
-                    Пример: при курсе 100 и ККК {kkkPercent}% → скорректированный курс {
-                      kkkOperation === 'PLUS'
-                        ? (100 * (1 + parseFloat(kkkPercent) / 100)).toFixed(2)
-                        : (100 * (1 - parseFloat(kkkPercent) / 100)).toFixed(2)
-                    }
-                  </p>
+                {kkkPercent && currentRapiraRate && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">
+                      Пример: при курсе 100 и ККК {kkkPercent}% → скорректированный курс {
+                        kkkOperation === 'PLUS'
+                          ? (100 * (1 + parseFloat(kkkPercent) / 100)).toFixed(2)
+                          : (100 * (1 - parseFloat(kkkPercent) / 100)).toFixed(2)
+                      }
+                    </p>
+                    <div className="p-3 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/10 dark:to-teal-900/10 rounded-lg border-2 border-emerald-500 dark:border-emerald-600">
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-200">
+                        Текущий курс Rapira: <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{currentRapiraRate.toFixed(2)} ₽/USDT</span>
+                      </p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">
+                        Скорректированный курс: <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                          {(currentRapiraRate * (kkkOperation === 'PLUS' 
+                            ? (1 + parseFloat(kkkPercent) / 100)
+                            : (1 - parseFloat(kkkPercent) / 100)
+                          )).toFixed(2)} ₽/USDT
+                        </span>
+                      </p>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

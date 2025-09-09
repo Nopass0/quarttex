@@ -39,6 +39,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useAdminAuth } from "@/stores/auth";
 import { formatAmount, formatDateTime } from "@/lib/utils";
@@ -67,6 +68,7 @@ interface Aggregator {
   email: string;
   name: string;
   apiToken: string;
+  customApiToken?: string | null;
   apiBaseUrl?: string;
   balanceUsdt: number;
   isActive: boolean;
@@ -82,6 +84,11 @@ interface CreateAggregatorData {
   email: string;
   name: string;
   apiBaseUrl?: string;
+  isPSPWare?: boolean;
+  pspwareApiKey?: string;
+  enableRandomization?: boolean;
+  randomizationType?: 'FULL' | 'PARTIAL' | 'NONE';
+  isChaseProject?: boolean;
 }
 
 export default function AdminAggregatorsPage() {
@@ -96,6 +103,11 @@ export default function AdminAggregatorsPage() {
     email: "",
     name: "",
     apiBaseUrl: "",
+    isPSPWare: false,
+    pspwareApiKey: "",
+    enableRandomization: false,
+    randomizationType: "NONE",
+    isChaseProject: false,
   });
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState("");
@@ -165,7 +177,15 @@ export default function AdminAggregatorsPage() {
       setPasswordModalOpen(true);
       
       setCreateModalOpen(false);
-      setNewAggregator({ email: "", name: "", apiBaseUrl: "" });
+      setNewAggregator({ 
+        email: "", 
+        name: "", 
+        apiBaseUrl: "",
+        isPSPWare: false,
+        pspwareApiKey: "",
+        enableRandomization: false,
+        randomizationType: "NONE"
+      });
       fetchAggregators();
     } catch (error) {
       console.error("Error creating aggregator:", error);
@@ -358,6 +378,97 @@ export default function AdminAggregatorsPage() {
                       }
                     />
                   </div>
+                  <div className="space-y-4 border-t pt-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="isChaseProject"
+                        checked={newAggregator.isChaseProject}
+                        onCheckedChange={(checked) =>
+                          setNewAggregator({
+                            ...newAggregator,
+                            isChaseProject: checked as boolean,
+                            isPSPWare: checked ? false : newAggregator.isPSPWare,
+                          })
+                        }
+                      />
+                      <Label htmlFor="isChaseProject" className="cursor-pointer">
+                        Это другой экземпляр Chase
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="isPSPWare"
+                        checked={newAggregator.isPSPWare}
+                        disabled={newAggregator.isChaseProject}
+                        onCheckedChange={(checked) =>
+                          setNewAggregator({
+                            ...newAggregator,
+                            isPSPWare: checked as boolean,
+                            isChaseProject: checked ? false : newAggregator.isChaseProject,
+                          })
+                        }
+                      />
+                      <Label htmlFor="isPSPWare" className="cursor-pointer text-gray-600">
+                        Использует PSPWare API схему
+                      </Label>
+                    </div>
+                    {newAggregator.isPSPWare && (
+                      <>
+                        <div>
+                          <Label htmlFor="pspwareApiKey">PSPWare API ключ</Label>
+                          <Input
+                            id="pspwareApiKey"
+                            placeholder="Введите API ключ PSPWare"
+                            value={newAggregator.pspwareApiKey}
+                            onChange={(e) =>
+                              setNewAggregator({
+                                ...newAggregator,
+                                pspwareApiKey: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="enableRandomization"
+                            checked={newAggregator.enableRandomization}
+                            onCheckedChange={(checked) =>
+                              setNewAggregator({
+                                ...newAggregator,
+                                enableRandomization: checked as boolean,
+                              })
+                            }
+                          />
+                          <Label htmlFor="enableRandomization" className="cursor-pointer">
+                            Включить рандомизацию сумм
+                          </Label>
+                        </div>
+                        {newAggregator.enableRandomization && (
+                          <div>
+                            <Label htmlFor="randomizationType">Тип рандомизации</Label>
+                            <Select
+                              value={newAggregator.randomizationType}
+                              onValueChange={(value) =>
+                                setNewAggregator({
+                                  ...newAggregator,
+                                  randomizationType: value as 'FULL' | 'PARTIAL' | 'NONE',
+                                })
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Выберите тип" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="FULL">Полная (±2 рубля для всех сумм)</SelectItem>
+                                <SelectItem value="PARTIAL">Частичная (±2 для кратных 500)</SelectItem>
+                                <SelectItem value="NONE">Без рандомизации</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
                 <DialogFooter>
                   <Button
@@ -545,7 +656,7 @@ export default function AdminAggregatorsPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            <DollarSign className="h-4 w-4 text-purple-600" />
+                            <DollarSign className="h-4 w-4 text-green-600" />
                             {formatAmount(aggregator.balanceUsdt)}
                           </div>
                         </TableCell>
@@ -558,7 +669,7 @@ export default function AdminAggregatorsPage() {
                           {aggregator.twoFactorEnabled ? (
                             <Badge
                               variant="default"
-                              className="bg-purple-100 text-purple-800"
+                              className="bg-green-100 text-green-800"
                             >
                               <Shield className="h-3 w-3 mr-1" />
                               Включена
@@ -579,7 +690,7 @@ export default function AdminAggregatorsPage() {
                               }
                             />
                             {aggregator.isActive ? (
-                              <Badge className="bg-purple-100 text-purple-800">
+                              <Badge className="bg-green-100 text-green-800">
                                 <CheckCircle className="h-3 w-3 mr-1" />
                                 Активен
                               </Badge>

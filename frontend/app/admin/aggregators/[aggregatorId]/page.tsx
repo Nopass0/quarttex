@@ -38,6 +38,8 @@ import {
 import { toast } from "sonner";
 import { useAdminAuth } from "@/stores/auth";
 import { formatAmount, formatDateTime } from "@/lib/utils";
+import AggregatorMetrics from "@/components/admin/aggregator-metrics";
+import AggregatorMethodFees from "@/components/admin/aggregator-method-fees";
 import {
   ArrowLeft,
   Globe,
@@ -68,7 +70,9 @@ interface Aggregator {
   email: string;
   name: string;
   apiToken: string;
+  customApiToken?: string | null;
   apiBaseUrl?: string;
+  apiSchema?: string;
   balanceUsdt: number;
   isActive: boolean;
   twoFactorEnabled: boolean;
@@ -108,8 +112,12 @@ interface ApiLog {
   endpoint: string;
   method: string;
   statusCode: number;
-  responseTime: number;
+  duration: number;
+  error?: string;
   createdAt: string;
+  headers: any;
+  requestData: any;
+  responseData: any;
 }
 
 interface DepositData {
@@ -132,6 +140,12 @@ export default function AggregatorDetailPage() {
   const [depositModalOpen, setDepositModalOpen] = useState(false);
   const [depositData, setDepositData] = useState<DepositData>({ amount: 0 });
   const [isDepositing, setIsDepositing] = useState(false);
+  const [customTokenInput, setCustomTokenInput] = useState("");
+  const [isUpdatingToken, setIsUpdatingToken] = useState(false);
+  const [apiBaseUrlInput, setApiBaseUrlInput] = useState("");
+  const [isUpdatingUrl, setIsUpdatingUrl] = useState(false);
+  const [selectedLog, setSelectedLog] = useState<ApiLog | null>(null);
+  const [logDetailModalOpen, setLogDetailModalOpen] = useState(false);
 
   useEffect(() => {
     if (aggregatorId) {
@@ -158,6 +172,8 @@ export default function AggregatorDetailPage() {
 
       const aggregatorData = await aggregatorRes.json();
       setAggregator(aggregatorData);
+      setCustomTokenInput(aggregatorData.customApiToken || "");
+      setApiBaseUrlInput(aggregatorData.apiBaseUrl || "");
       
       // Транзакции уже включены в ответ агрегатора
       setTransactions(aggregatorData.transactions || []);
@@ -251,6 +267,80 @@ export default function AggregatorDetailPage() {
     }
   };
 
+  const updateCustomToken = async () => {
+    if (!adminToken || !aggregator) return;
+
+    setIsUpdatingToken(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/aggregators/${aggregator.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "x-admin-key": adminToken,
+          },
+          body: JSON.stringify({
+            customApiToken: customTokenInput || null,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update custom API token");
+      }
+
+      toast.success(customTokenInput ? "Кастомный токен установлен" : "Кастомный токен удален");
+      fetchAggregatorDetails(); // Refresh data
+    } catch (error) {
+      console.error("Error updating custom API token:", error);
+      toast.error("Ошибка при обновлении кастомного токена");
+    } finally {
+      setIsUpdatingToken(false);
+    }
+  };
+
+  const clearCustomToken = () => {
+    setCustomTokenInput("");
+  };
+
+  const updateApiBaseUrl = async () => {
+    if (!adminToken || !aggregator) return;
+
+    setIsUpdatingUrl(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/aggregators/${aggregator.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "x-admin-key": adminToken,
+          },
+          body: JSON.stringify({
+            apiBaseUrl: apiBaseUrlInput || null,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update API URL");
+      }
+
+      toast.success(apiBaseUrlInput ? "API URL обновлен" : "API URL удален");
+      fetchAggregatorDetails(); // Refresh data
+    } catch (error) {
+      console.error("Error updating API URL:", error);
+      toast.error("Ошибка при обновлении API URL");
+    } finally {
+      setIsUpdatingUrl(false);
+    }
+  };
+
+  const clearApiUrl = () => {
+    setApiBaseUrlInput("");
+  };
+
   const addDeposit = async () => {
     if (!adminToken || !aggregator || depositData.amount <= 0) {
       toast.error("Введите корректную сумму депозита");
@@ -290,6 +380,11 @@ export default function AggregatorDetailPage() {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success("Скопировано в буфер обмена");
+  };
+
+  const showLogDetails = (log: ApiLog) => {
+    setSelectedLog(log);
+    setLogDetailModalOpen(true);
   };
 
   if (isLoading) {
@@ -477,6 +572,8 @@ export default function AggregatorDetailPage() {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
               <TabsTrigger value="overview">Обзор</TabsTrigger>
+              <TabsTrigger value="metrics">Метрики</TabsTrigger>
+              <TabsTrigger value="fees">Комиссии</TabsTrigger>
               <TabsTrigger value="transactions">Сделки</TabsTrigger>
               <TabsTrigger value="disputes">Споры</TabsTrigger>
               <TabsTrigger value="api-logs">API Логи</TabsTrigger>
@@ -500,9 +597,18 @@ export default function AggregatorDetailPage() {
                     </div>
                     <div>
                       <Label>API Base URL</Label>
-                      <p className="text-sm font-medium">
-                        {aggregator.apiBaseUrl || "Не указан"}
-                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-sm font-medium flex-1">
+                          {aggregator.apiBaseUrl || "Не указан"}
+                        </p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setActiveTab("settings")}
+                        >
+                          Изменить
+                        </Button>
+                      </div>
                     </div>
                     <div>
                       <Label>Статус</Label>
@@ -557,19 +663,25 @@ export default function AggregatorDetailPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <Label>Текущий токен</Label>
+                      <Label>Активный API токен</Label>
                       <div className="flex items-center gap-2 mt-2">
                         <code className="flex-1 bg-muted px-3 py-2 rounded text-sm">
-                          {aggregator.apiToken}
+                          {aggregator.customApiToken || aggregator.apiToken}
                         </code>
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => copyToClipboard(aggregator.apiToken)}
+                          onClick={() => copyToClipboard(aggregator.customApiToken || aggregator.apiToken)}
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
                       </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {aggregator.customApiToken ? 
+                          `Используется кастомный токен (автогенерированный: ${aggregator.apiToken.substring(0, 16)}...)` : 
+                          'Используется автогенерированный токен'
+                        }
+                      </p>
                     </div>
                     <Button
                       variant="outline"
@@ -582,6 +694,17 @@ export default function AggregatorDetailPage() {
                   </CardContent>
                 </Card>
               </div>
+            </TabsContent>
+
+            <TabsContent value="metrics">
+              <AggregatorMetrics 
+                aggregatorId={aggregatorId} 
+                aggregatorName={aggregator.name}
+              />
+            </TabsContent>
+
+            <TabsContent value="fees">
+              <AggregatorMethodFees aggregatorId={aggregatorId} />
             </TabsContent>
 
             <TabsContent value="transactions">
@@ -688,13 +811,17 @@ export default function AggregatorDetailPage() {
                           <TableHead>Метод</TableHead>
                           <TableHead>Статус</TableHead>
                           <TableHead>Время ответа</TableHead>
+                          <TableHead>Ошибка</TableHead>
                           <TableHead>Дата</TableHead>
+                          <TableHead>Действия</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {apiLogs.map((log) => (
                           <TableRow key={log.id}>
-                            <TableCell>{log.endpoint}</TableCell>
+                            <TableCell className="max-w-xs truncate" title={log.endpoint}>
+                              {log.endpoint}
+                            </TableCell>
                             <TableCell>
                               <Badge variant="outline">{log.method}</Badge>
                             </TableCell>
@@ -706,12 +833,30 @@ export default function AggregatorDetailPage() {
                                     : "default"
                                 }
                               >
-                                {log.statusCode}
+                                {log.statusCode || "N/A"}
                               </Badge>
                             </TableCell>
-                            <TableCell>{log.responseTime}ms</TableCell>
+                            <TableCell>{log.duration || 0}ms</TableCell>
+                            <TableCell className="max-w-xs">
+                              {log.error ? (
+                                <span className="text-red-600 text-sm truncate" title={log.error}>
+                                  {log.error}
+                                </span>
+                              ) : (
+                                <span className="text-green-600">OK</span>
+                              )}
+                            </TableCell>
                             <TableCell>
                               {formatDateTime(log.createdAt)}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => showLogDetails(log)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -745,11 +890,112 @@ export default function AggregatorDetailPage() {
                     />
                   </div>
 
-                  <div className="border-t pt-6">
+                  <div className="border-t pt-6 space-y-6">
                     <div>
-                      <Label>API Token</Label>
+                      <Label>API Base URL</Label>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Базовый URL для API запросов к агрегатору
+                      </p>
+                      <div className="space-y-3">
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Например: https://api.aggregator.com"
+                            value={apiBaseUrlInput}
+                            onChange={(e) => setApiBaseUrlInput(e.target.value)}
+                            className="flex-1"
+                          />
+                          <Button 
+                            variant="outline" 
+                            onClick={clearApiUrl}
+                            disabled={!apiBaseUrlInput}
+                          >
+                            Очистить
+                          </Button>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            onClick={updateApiBaseUrl}
+                            disabled={isUpdatingUrl || apiBaseUrlInput === (aggregator?.apiBaseUrl || "")}
+                            size="sm"
+                          >
+                            {isUpdatingUrl ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : null}
+                            Сохранить URL
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            onClick={() => setApiBaseUrlInput("http://localhost:4001")}
+                            size="sm"
+                          >
+                            Использовать localhost:4001
+                          </Button>
+                          {aggregator?.apiSchema === "PSPWARE" && (
+                            <Button 
+                              variant="outline"
+                              onClick={() => setApiBaseUrlInput("http://localhost:4002")}
+                              size="sm"
+                            >
+                              Использовать PSPWare Mock
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Текущий URL: {aggregator?.apiBaseUrl || "Не задан"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label>Кастомный API Token</Label>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Установите кастомный токен или оставьте пустым для использования автогенерированного
+                      </p>
+                      <div className="space-y-3">
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Введите кастомный токен (например: test-aggregator-token-123)"
+                            value={customTokenInput}
+                            onChange={(e) => setCustomTokenInput(e.target.value)}
+                            className="flex-1"
+                          />
+                          <Button 
+                            variant="outline" 
+                            onClick={clearCustomToken}
+                            disabled={!customTokenInput}
+                          >
+                            Очистить
+                          </Button>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            onClick={updateCustomToken}
+                            disabled={isUpdatingToken || customTokenInput === (aggregator?.customApiToken || "")}
+                            size="sm"
+                          >
+                            {isUpdatingToken ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : null}
+                            Сохранить токен
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            onClick={() => setCustomTokenInput("test-aggregator-token-123")}
+                            size="sm"
+                          >
+                            Использовать токен эмулятора
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Текущий активный токен: {aggregator?.customApiToken || aggregator?.apiToken || "Не задан"}
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <Label>Автогенерированный API Token</Label>
                       <p className="text-sm text-muted-foreground mb-4">
-                        Перегенерировать API токен для агрегатора
+                        Перегенерировать автоматический API токен для агрегатора
                       </p>
                       <Button variant="outline" onClick={regenerateApiToken}>
                         <RefreshCw className="h-4 w-4 mr-2" />
@@ -761,6 +1007,127 @@ export default function AggregatorDetailPage() {
               </Card>
             </TabsContent>
           </Tabs>
+
+          {/* Модальное окно для детального просмотра API лога */}
+          <Dialog open={logDetailModalOpen} onOpenChange={setLogDetailModalOpen}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Детали API запроса</DialogTitle>
+                <DialogDescription>
+                  Полная информация о запросе и ответе
+                </DialogDescription>
+              </DialogHeader>
+              {selectedLog && (
+                <div className="space-y-6">
+                  {/* Основная информация */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium">Endpoint</Label>
+                      <p className="text-sm bg-muted p-2 rounded break-all">
+                        {selectedLog.endpoint}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Метод</Label>
+                      <p className="text-sm">
+                        <Badge variant="outline">{selectedLog.method}</Badge>
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">HTTP Статус</Label>
+                      <p className="text-sm">
+                        <Badge
+                          variant={
+                            selectedLog.statusCode >= 400 ? "destructive" : "default"
+                          }
+                        >
+                          {selectedLog.statusCode || "N/A"}
+                        </Badge>
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Время ответа</Label>
+                      <p className="text-sm">{selectedLog.duration || 0}ms</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Дата/время</Label>
+                      <p className="text-sm">{formatDateTime(selectedLog.createdAt)}</p>
+                    </div>
+                    {selectedLog.error && (
+                      <div>
+                        <Label className="text-sm font-medium">Ошибка</Label>
+                        <p className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                          {selectedLog.error}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Заголовки */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-sm font-medium">Заголовки запроса</Label>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => copyToClipboard(JSON.stringify(selectedLog.headers, null, 2))}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <pre className="text-xs bg-muted p-3 rounded overflow-x-auto">
+                      {selectedLog.headers
+                        ? JSON.stringify(selectedLog.headers, null, 2)
+                        : "Заголовки отсутствуют"}
+                    </pre>
+                  </div>
+
+                  {/* Тело запроса */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-sm font-medium">Тело запроса</Label>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => copyToClipboard(JSON.stringify(selectedLog.requestData, null, 2))}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <pre className="text-xs bg-muted p-3 rounded overflow-x-auto">
+                      {selectedLog.requestData
+                        ? JSON.stringify(selectedLog.requestData, null, 2)
+                        : "Тело запроса отсутствует"}
+                    </pre>
+                  </div>
+
+                  {/* Тело ответа */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-sm font-medium">Тело ответа</Label>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => copyToClipboard(JSON.stringify(selectedLog.responseData, null, 2))}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <pre className="text-xs bg-muted p-3 rounded overflow-x-auto">
+                      {selectedLog.responseData
+                        ? JSON.stringify(selectedLog.responseData, null, 2)
+                        : "Тело ответа отсутствует"}
+                    </pre>
+                  </div>
+                </div>
+              )}
+              <DialogFooter>
+                <Button onClick={() => setLogDetailModalOpen(false)}>
+                  Закрыть
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </AuthLayout>
     </ProtectedRoute>

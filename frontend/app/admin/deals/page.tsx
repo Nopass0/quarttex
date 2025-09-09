@@ -192,7 +192,7 @@ const statusConfig: Record<
   },
   READY: {
     label: "Готова",
-    color: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100",
+    color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
     icon: CheckCircle,
   },
   MILK: {
@@ -1007,7 +1007,7 @@ export default function AdminDealsPage() {
                               className={
                                 callback.statusCode >= 200 &&
                                 callback.statusCode < 300
-                                  ? "bg-purple-100 text-purple-800"
+                                  ? "bg-green-100 text-green-800"
                                   : "bg-red-100 text-red-800"
                               }
                             >
@@ -1504,7 +1504,7 @@ export default function AdminDealsPage() {
       // Успешно создана сделка
       return (
         <div className="group relative inline-block">
-          <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100 gap-1">
+          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 gap-1">
             <CheckCircle className="h-3 w-3" />
             Успешная сделка
           </Badge>
@@ -1938,7 +1938,7 @@ export default function AdminDealsPage() {
                       {attempts.length > 0 && (
                         <div className="flex gap-4 text-sm">
                           <span className="flex items-center gap-1">
-                            <CheckCircle className="h-3 w-3 text-purple-600" />
+                            <CheckCircle className="h-3 w-3 text-green-600" />
                             Успешных: {attempts.filter(a => a.success && a.transactionNumericId).length}
                           </span>
                           <span className="flex items-center gap-1">

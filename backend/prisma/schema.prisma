@@ -84,6 +84,7 @@ model User {
   messages               Message[]
   payouts                Payout[]                @relation("TraderPayouts")
   payoutFilters          PayoutFilters?
+  trafficSettings        TrafficSettings?
   sessions               Session[]
   supportTickets         SupportTicket[]
   traderMerchants        TraderMerchant[]
@@ -99,10 +100,16 @@ model User {
   rateSourceConfigId     String?
   /// Связь с конфигурацией источника курса
   rateSourceConfig       RateSourceConfig? @relation("TraderRateSource", fields: [rateSourceConfigId], references: [id])
-  /// Индивидуальный процент ККК для этого трейдера (если null, используется ККК источника)
-  traderKkkPercent       Float?
-  /// Индивидуальная операция ККК для этого трейдера (если null, используется операция источника)
-  traderKkkOperation     KkkOperationType?
+  /// Индивидуальные настройки трейдера по источникам курсов
+  rateSourceSettings     TraderRateSourceSettings[] @relation("TraderRateSourceSettings")
+  /// Отображаемые ставки трейдера (новая система)
+  displayRates           TraderDisplayRate[] @relation("TraderDisplayRates")
+  /// Отображаемая ставка (%) для трейдера (для UI) - DEPRECATED, использовать displayRates
+  displayStakePercent    Float?
+  /// Отображаемый диапазон суммы (от) для трейдера (для UI) - DEPRECATED, использовать displayRates
+  displayAmountFrom      Float?
+  /// Отображаемый диапазон суммы (до) для трейдера (для UI) - DEPRECATED, использовать displayRates
+  displayAmountTo        Float?
 }
 
 model Session {
@@ -120,6 +127,11 @@ model Admin {
   token     String    @unique
   createdAt DateTime  @default(now())
   role      AdminRole @default(ADMIN)
+  
+  // 2FA fields
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
+  backupCodes      String[] // JSON array of backup codes
 }
 
 model AdminIpWhitelist {
@@ -161,6 +173,10 @@ model Merchant {
   rsaPrivateKeyPem     String?
   keysGeneratedAt      DateTime?
   externalSystemName   String?
+  /// Поля для работы в режиме агрегатора
+  isAggregatorMode     Boolean              @default(false)
+  externalApiToken     String?              @unique
+  externalCallbackToken String?
   dealDisputes         DealDispute[]
   aggregatorDisputes   AggregatorDispute[] @relation("AggregatorDisputes")
   merchantMethods      MerchantMethod[]
@@ -223,6 +239,7 @@ model Method {
   traderMerchants     TraderMerchant[]
   Transaction         Transaction[]
   transactionAttempts TransactionAttempt[]
+  aggregatorMethodFees AggregatorMethodFee[]
 }
 
 model MerchantMethod {
@@ -275,6 +292,8 @@ model Transaction {
   matchedNotificationId String?
   merchantRate          Float?
   traderProfit          Float?
+  /// Идентификатор клиента от мерчанта
+  clientIdentifier      String?
   dealDispute           DealDispute?
   receipts              Receipt[]
   callbackHistory       CallbackHistory[]
@@ -289,6 +308,7 @@ model Transaction {
   aggregatorDisputes    AggregatorDispute[] @relation("AggregatorDisputes")
 
   @@index([bankDetailId, amount])
+  @@index([merchantId, clientIdentifier])
 }
 
 model CallbackHistory {
@@ -364,6 +384,8 @@ model BankDetail {
   intervalMinutes      Int                 @default(0)
   operationLimit       Int                 @default(0) // Лимит по количеству операций без срока давности (0 - без лимита)
   sumLimit             Float               @default(0) // Лимит на общую сумму сделок в рублях (0 - без лимита)
+  /// Предпочтительный тип трафика для этого реквизита
+  trafficPreference    RequisiteTrafficPreference @default(ANY)
   isArchived           Boolean             @default(false)
   isActive             Boolean             @default(true)
   createdAt            DateTime            @default(now())
@@ -428,7 +450,7 @@ model TopupSettings {
 
 /// Настройки источника курсов
 model RateSourceConfig {
-  id                String   @id
+  id                String   @id @default(cuid())
   /// Тип источника курса (bybit, rapira и т.д.)
   source            RateSource @unique
   /// Название источника для отображения
@@ -450,6 +472,10 @@ model RateSourceConfig {
   traders           User[]   @relation("TraderRateSource")
   /// Связанные мерчанты через этот источник
   merchants         MerchantRateSource[]
+  /// Индивидуальные настройки трейдеров для этого источника
+  traderSettings    TraderRateSourceSettings[] @relation("TraderRateSourceSettings")
+  /// Связанные агрегаторы через этот источник
+  aggregators       AggregatorRateSource[]
 }
 
 /// Связь между мерчантом и источником курса
@@ -462,10 +488,6 @@ model MerchantRateSource {
   /// Приоритет источника (для случаев с несколькими источниками)
   priority          Int      @default(0)
   isActive          Boolean  @default(true)
-  /// Индивидуальный процент ККК для этого мерчанта (если null, используется ККК источника)
-  kkkPercent        Float?
-  /// Индивидуальная операция ККК для этого мерчанта (если null, используется операция источника)
-  kkkOperation      KkkOperationType?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   
@@ -474,6 +496,26 @@ model MerchantRateSource {
   
   @@unique([merchantId, rateSourceId])
   @@index([merchantId])
+  @@index([rateSourceId])
+}
+
+/// Индивидуальные настройки трейдера для источника курса
+model TraderRateSourceSettings {
+  id                String   @id @default(cuid())
+  traderId          String
+  rateSourceId      String
+  /// Индивидуальный процент КК для трейдера
+  customKkkPercent  Float?
+  /// Операция для применения индивидуального процента (PLUS или MINUS)
+  customKkkOperation KkkOperationType? @default(MINUS)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  trader            User             @relation("TraderRateSourceSettings", fields: [traderId], references: [id], onDelete: Cascade)
+  rateSource        RateSourceConfig @relation("TraderRateSourceSettings", fields: [rateSourceId], references: [id], onDelete: Cascade)
+  
+  @@unique([traderId, rateSourceId])
+  @@index([traderId])
   @@index([rateSourceId])
 }
 
@@ -687,6 +729,27 @@ model TraderMerchantFeeRange {
   @@index([minAmount, maxAmount])
 }
 
+/// Модель для хранения отображаемых ставок трейдера (для UI)
+model TraderDisplayRate {
+  id              String   @id @default(cuid())
+  traderId        String
+  /// Процентная ставка для отображения
+  stakePercent    Float
+  /// Минимальная сумма диапазона (₽)
+  amountFrom      Float
+  /// Максимальная сумма диапазона (₽)
+  amountTo        Float
+  /// Порядок отображения
+  sortOrder       Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  trader          User     @relation("TraderDisplayRates", fields: [traderId], references: [id], onDelete: Cascade)
+
+  @@index([traderId])
+  @@index([sortOrder])
+}
+
 model Agent {
   id             String          @id @default(cuid())
   email          String          @unique
@@ -847,6 +910,8 @@ model Payout {
   previousTraderIds    String[]            @default([])
   methodId             String?
   profitAmount         Float               @default(0)
+  /// Идентификатор клиента от мерчанта
+  clientIdentifier     String?
   merchant             Merchant            @relation(fields: [merchantId], references: [id])
   method               Method?             @relation(fields: [methodId], references: [id])
   trader               User?               @relation("TraderPayouts", fields: [traderId], references: [id])
@@ -862,6 +927,7 @@ model Payout {
   @@index([expireAt])
   @@index([direction, status])
   @@index([methodId])
+  @@index([merchantId, clientIdentifier])
 }
 
 model PayoutRateAudit {
@@ -1072,6 +1138,17 @@ model PayoutFilters {
   user            User       @relation(fields: [userId], references: [id])
 }
 
+model TrafficSettings {
+  id                 String      @id @default(cuid())
+  userId             String      @unique
+  isEnabled          Boolean     @default(false)
+  maxCounterparties  Int         @default(5)
+  trafficType        TrafficType @default(PRIMARY)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  user               User        @relation(fields: [userId], references: [id])
+}
+
 model TransactionAttempt {
   id            String   @id @default(cuid())
   transactionId String?
@@ -1191,8 +1268,14 @@ model Aggregator {
   name            String
   apiToken        String               @unique               // Токен для подписи исходящих запросов к агрегатору
   callbackToken   String               @unique               // Токен для верификации входящих callback'ов от агрегатора
+  customApiToken  String?              @unique               // Кастомный API токен, задаваемый вручную (если null, используется сгенерированный apiToken)
   apiBaseUrl      String?              // Базовый URL для API агрегатора
-  balanceUsdt     Float                @default(0)
+  balanceUsdt     Float                @default(0)           // Основной баланс для списания
+  depositUsdt     Float                @default(0)           // Страховой депозит (минимум 1000 USDT)
+  balanceNoRequisite Float             @default(0)           // Баланс NO_REQUISITE сделок
+  balanceSuccess  Float                @default(0)           // Баланс успешных сделок
+  balanceExpired  Float                @default(0)           // Баланс истекших сделок
+  totalPlatformProfit Float            @default(0)           // Общая прибыль платформы с этого агрегатора
   isActive        Boolean              @default(true)
   priority        Int                  @default(0)          // Приоритет для fallback маршрутизации (меньше = выше приоритет)
   maxSlaMs        Int                  @default(2000)       // Максимальное время ответа в мс (SLA)
@@ -1207,6 +1290,15 @@ model Aggregator {
   lastPriorityChangeBy String?         // ID админа, изменившего приоритет
   lastPriorityChangeAt DateTime?       // Время последнего изменения приоритета
   
+  // PSPWare интеграция
+  apiSchema        AggregatorApiSchema  @default(DEFAULT)    // Тип API схемы
+  pspwareApiKey    String?              // API ключ для PSPWare
+  enableRandomization Boolean          @default(false)       // Включить рандомизацию сумм
+  randomizationType PSPWareRandomizationType @default(NONE) // Тип рандомизации
+  
+  // Chase project integration
+  isChaseProject   Boolean             @default(false)       // Флаг, что это другой экземпляр Chase
+  
   // Связи
   sessions        AggregatorSession[]
   transactions    Transaction[]        @relation("AggregatorTransactions")
@@ -1215,12 +1307,15 @@ model Aggregator {
   callbackLogs    AggregatorCallbackLog[]
   depositRequests AggregatorDepositRequest[]
   integrationLogs AggregatorIntegrationLog[]
+  methodFees      AggregatorMethodFee[]
+  rateSources     AggregatorRateSource[]
   
   @@index([email])
   @@index([apiToken])
   @@index([callbackToken])
   @@index([priority])
   @@index([isActive])
+  @@index([depositUsdt])
 }
 
 model AggregatorSession {
@@ -1368,6 +1463,41 @@ model AggregatorIntegrationLog {
 enum IntegrationDirection {
   IN
   OUT
+}
+
+model AggregatorMethodFee {
+  id            String     @id @default(cuid())
+  aggregatorId  String
+  methodId      String
+  feePercent    Float      @default(0)    // Процент на вход для этого метода
+  isActive      Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  
+  aggregator    Aggregator @relation(fields: [aggregatorId], references: [id], onDelete: Cascade)
+  method        Method     @relation(fields: [methodId], references: [id])
+  
+  @@unique([aggregatorId, methodId])
+  @@index([aggregatorId])
+  @@index([methodId])
+}
+
+model AggregatorRateSource {
+  id              String           @id @default(cuid())
+  aggregatorId    String
+  rateSourceId    String
+  kkkPercent      Float            @default(0)      // Индивидуальный ККК для этого агрегатора
+  kkkOperation    KkkOperationType @default(MINUS)  // Операция (PLUS/MINUS)
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  aggregator      Aggregator       @relation(fields: [aggregatorId], references: [id], onDelete: Cascade)
+  rateSource      RateSourceConfig @relation(fields: [rateSourceId], references: [id])
+  
+  @@unique([aggregatorId])
+  @@index([aggregatorId])
+  @@index([rateSourceId])
 }
 
 enum WithdrawalDisputeStatus {
@@ -1797,4 +1927,29 @@ enum SettleRequestStatus {
 enum MerchantRequestType {
   TRANSACTION_IN
   PAYOUT_CREATE
+}
+
+enum TrafficType {
+  PRIMARY   // Первичный трафик (первая сделка от клиента)
+  SECONDARY // Вторичный трафик (2 или более сделок от клиента)
+  VIP       // VIP трафик (10 или более сделок от клиента)
+}
+
+/// Тип трафика, разрешенный для реквизита
+enum RequisiteTrafficPreference {
+  ANY       // Любой трафик, без фильтрации (включая без clientIdentifier)
+  PRIMARY   // Только первичный
+  SECONDARY // Только вторичный
+  VIP       // Только VIP
+}
+
+enum AggregatorApiSchema {
+  DEFAULT   // Стандартная схема API
+  PSPWARE   // PSPWare API схема
+}
+
+enum PSPWareRandomizationType {
+  FULL      // Полная рандомизация (+-2 рубля)
+  PARTIAL   // Частичная рандомизация (кратные 500 +-2 рубля)
+  NONE      // Без рандомизации
 }

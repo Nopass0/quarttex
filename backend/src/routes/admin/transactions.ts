@@ -26,6 +26,9 @@ import ErrorSchema from "@/types/error";
 import { notifyByStatus, sendTransactionCallbacks } from "@/utils/notify";
 import axios from "axios";
 import { roundDown2, truncate2 } from "@/utils/rounding";
+
+// Функция округления вверх до 2 знаков
+const roundUp2 = (value: number): number => Math.ceil(value * 100) / 100;
 import { getFlexibleFeePercent } from "@/utils/flexible-fee-calculator";
 import { rapiraService } from "@/services/rapira.service";
 import {
@@ -52,8 +55,16 @@ const serializeTransaction = (trx: any) => ({
   trader: trx.trader
     ? { ...trx.trader, createdAt: trx.trader.createdAt.toISOString() }
     : null,
-  requisites: trx.requisites ?? null,
+  // Обрабатываем requisites: если есть, то обрабатываем null поля
+  requisites: trx.requisites 
+    ? {
+        ...trx.requisites,
+        phoneNumber: trx.requisites.phoneNumber ?? ""
+      }
+    : null,
   ...(trx.rate === null ? { rate: undefined } : {}),
+  // Обрабатываем userIp: если null, то преобразуем в пустую строку
+  userIp: trx.userIp ?? "",
 });
 
 /** Обновление + include + сериализация (чтобы не дублировать код) */
@@ -1966,18 +1977,6 @@ export default (app: Elysia) =>
             });
             if (existing) continue;
 
-            // Проверяем интервал между сделками
-            if (bd.intervalMinutes > 0) {
-              const { canCreateDealOnRequisite } = await import("@/utils/requisite-interval");
-              const canCreate = await canCreateDealOnRequisite(bd.id, bd.intervalMinutes);
-              if (!canCreate) {
-                console.log(
-                  `[AdminTransactions] Реквизит ${bd.id} отклонен: не прошел интервал ${bd.intervalMinutes} минут между сделками`
-                );
-                continue;
-              }
-            }
-
             if (bd.maxCountTransactions && bd.maxCountTransactions > 0) {
               const todayStart = new Date();
               todayStart.setHours(0, 0, 0, 0);
@@ -1992,6 +1991,43 @@ export default (app: Elysia) =>
               });
               if (todayCount + 1 > bd.maxCountTransactions) continue;
             }
+
+            // Check interval between transactions
+            if (bd.intervalMinutes > 0) {
+              const intervalStart = new Date();
+              intervalStart.setMinutes(intervalStart.getMinutes() - bd.intervalMinutes);
+              
+              const recentTransaction = await db.transaction.findFirst({
+                where: {
+                  bankDetailId: bd.id,
+                  createdAt: {
+                    gte: intervalStart,
+                  },
+                  status: {
+                    notIn: [Status.CANCELED, Status.EXPIRED],
+                  },
+                },
+                orderBy: {
+                  createdAt: 'desc',
+                },
+              });
+
+              if (recentTransaction) {
+                const timeSinceLastTransaction = Math.floor(
+                  (Date.now() - recentTransaction.createdAt.getTime()) / (1000 * 60)
+                );
+                console.log(
+                  `[Admin Mock] Requisite ${bd.id} rejected: interval not met. ` +
+                  `Last transaction: ${timeSinceLastTransaction} min ago, required interval: ${bd.intervalMinutes} min`
+                );
+                continue;
+              }
+
+              console.log(
+                `[Admin Mock] - Interval check passed for requisite ${bd.id}: ${bd.intervalMinutes} min`
+              );
+            }
+
             chosen = bd;
             break;
           }
@@ -2367,19 +2403,14 @@ export default (app: Elysia) =>
                   }
                 );
 
-                // Для истекшей транзакции используем сохраненные параметры, не пересчитываем заново
-                const spentUsdt =
-                  existing.frozenUsdtAmount ||
-                  roundDown2(existing.amount / savedRate);
+                // Для истекшей транзакции используем ровно замороженную сумму USDT
+                // (ceil2(amount / rate)) без комиссии
+                const spentUsdt = existing.frozenUsdtAmount || roundUp2(existing.amount / savedRate);
 
-                // Рассчитываем прибыль трейдера на основе сохраненных параметров
+                // Рассчитываем прибыль трейдера от truncate2(spentUsdt * fee%)
                 const traderProfit =
                   existing.traderProfit ||
-                  (existing.calculatedCommission
-                    ? truncate2(existing.calculatedCommission)
-                    : truncate2(
-                        (existing.amount / savedRate) * (feeInPercent / 100)
-                      ));
+                  truncate2(spentUsdt * (feeInPercent / 100));
 
                 const trader = await db.user.findUnique({
                   where: { id: existing.traderId },
@@ -2393,6 +2424,24 @@ export default (app: Elysia) =>
                     remaining
                   );
                   remaining -= trustDeduct;
+
+                  // Проверяем достаточность средств перед списанием
+                  const totalAvailable = (trader.trustBalance || 0) + (trader.deposit || 0);
+                  if (totalAvailable < spentUsdt) {
+                    console.error(
+                      `[Admin Transaction] Insufficient funds for expired transaction ${existing.id}:`,
+                      {
+                        required: spentUsdt,
+                        trustBalance: trader.trustBalance,
+                        deposit: trader.deposit,
+                        totalAvailable,
+                        shortage: spentUsdt - totalAvailable
+                      }
+                    );
+                    return error(400, {
+                      error: `Недостаточно средств у трейдера для подтверждения истекшей транзакции. Требуется: ${spentUsdt}, доступно: ${totalAvailable}`,
+                    });
+                  }
 
                   const updateFields: any = {
                     profitFromDeals: { increment: truncate2(traderProfit) },
@@ -2419,7 +2468,7 @@ export default (app: Elysia) =>
               } else {
                 // Для неистекших транзакций используем сохраненные параметры
                 // ВАЖНО: НЕ пересчитываем курсы, используем сохраненные при создании
-                const spentUsdt = existing.amount / savedRate;
+                const spentUsdt = existing.frozenUsdtAmount || roundUp2(existing.amount / savedRate);
                 const traderProfit = truncate2(
                   spentUsdt * (feeInPercent / 100)
                 );
@@ -2630,16 +2679,12 @@ export default (app: Elysia) =>
               `[Admin Status Update] Processing IN_PROGRESS->EXPIRED: trader=${existing.traderId}, frozenAmount=${existing.frozenUsdtAmount}`
             );
 
-            // Размораживаем средства и возвращаем в trustBalance
+            // Размораживаем средства и возвращаем в trustBalance (truncate2)
             await db.user.update({
               where: { id: existing.traderId },
               data: {
-                frozenUsdt: {
-                  decrement: truncate2(existing.frozenUsdtAmount), // Обрезаем до 2 знаков
-                },
-                trustBalance: {
-                  increment: truncate2(existing.frozenUsdtAmount), // Обрезаем до 2 знаков
-                },
+                frozenUsdt: { decrement: truncate2(existing.frozenUsdtAmount) },
+                trustBalance: { increment: truncate2(existing.frozenUsdtAmount) },
               },
             });
           }

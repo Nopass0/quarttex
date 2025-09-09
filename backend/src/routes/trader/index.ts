@@ -25,6 +25,8 @@ import { payoutFiltersApi } from "@/api/trader/payout-filters";
 import { banksApi } from "@/api/trader/banks";
 import { traderFiltersApi } from "@/api/trader/filters";
 import { traderBanksListApi } from "@/api/trader/banks-list";
+import { trafficSettingsApi } from "@/api/trader/traffic-settings";
+import rateRoutes from "./rate";
 
 /**
  * Маршруты для трейдера
@@ -62,22 +64,18 @@ export default (app: Elysia) =>
       async ({ trader }) => {
         const user = await db.user.findUnique({
           where: { id: trader.id },
-          select: {
-            id: true,
-            numericId: true,
-            email: true,
-            name: true,
-            trustBalance: true,
-            deposit: true,
-            profitFromDeals: true,
-            profitFromPayouts: true,
-            frozenUsdt: true,
-            frozenRub: true,
-            balanceUsdt: true,
-            balanceRub: true,
-            frozenPayoutBalance: true,
-            trafficEnabled: true,
-            rateSource: true,
+          include: {
+            displayRates: {
+              where: { isActive: true },
+              orderBy: { sortOrder: 'asc' },
+              select: {
+                id: true,
+                stakePercent: true,
+                amountFrom: true,
+                amountTo: true,
+                sortOrder: true
+              }
+            }
           }
         });
 
@@ -86,7 +84,25 @@ export default (app: Elysia) =>
         }
 
         return {
-          ...user,
+          id: user.id,
+          numericId: user.numericId,
+          email: user.email,
+          name: user.name,
+          trustBalance: user.trustBalance,
+          deposit: user.deposit,
+          profitFromDeals: user.profitFromDeals,
+          profitFromPayouts: user.profitFromPayouts,
+          frozenUsdt: user.frozenUsdt,
+          frozenRub: user.frozenRub,
+          balanceUsdt: user.balanceUsdt,
+          balanceRub: user.balanceRub,
+          frozenPayoutBalance: user.frozenPayoutBalance,
+          trafficEnabled: user.trafficEnabled,
+          rateSource: user.rateSource,
+          displayStakePercent: user.displayStakePercent ?? null,
+          displayAmountFrom: user.displayAmountFrom ?? null,
+          displayAmountTo: user.displayAmountTo ?? null,
+          displayRates: Array.isArray(user.displayRates) ? user.displayRates : [],
           compensationBalance: user.frozenPayoutBalance || 0,
           referralBalance: 0, // Not implemented yet
           disputedBalance: 0, // TODO: calculate from disputes
@@ -117,6 +133,18 @@ export default (app: Elysia) =>
             escrowBalance: t.Number(),
             trafficEnabled: t.Boolean(),
             rateSource: t.Union([t.Enum({ rapira: 'rapira', bybit: 'bybit' }), t.Null()]),
+            displayStakePercent: t.Nullable(t.Number()),
+            displayAmountFrom: t.Nullable(t.Number()),
+            displayAmountTo: t.Nullable(t.Number()),
+            displayRates: t.Array(
+              t.Object({
+                id: t.String(),
+                stakePercent: t.Number(),
+                amountFrom: t.Number(),
+                amountTo: t.Number(),
+                sortOrder: t.Number(),
+              })
+            ),
           }),
           401: ErrorSchema,
         },
@@ -142,6 +170,8 @@ export default (app: Elysia) =>
     .use(banksApi)
     .use(traderFiltersApi)
     .use(traderBanksListApi)
+    .use(trafficSettingsApi)
+    .use(rateRoutes)
     .use(btEntranceRoutes)
     .use(ideaRoutes)
     .use(notificationRoutes)
@@ -315,6 +345,163 @@ export default (app: Elysia) =>
             totalProfit: t.Number(),
             currency: t.String(),
           }),
+          401: ErrorSchema,
+          403: ErrorSchema,
+        },
+      },
+    )
+    .get(
+      "/merchant-methods",
+      async ({ trader }) => {
+        // Получаем актуальный курс USDT/RUB (базовый курс)
+        let currentRate = 100; // Fallback значение
+        let baseRate = 100; // Базовый курс (без ККК)
+        try {
+          const { rapiraService } = await import("@/services/rapira.service");
+          currentRate = await rapiraService.getUsdtRubRate();
+          baseRate = currentRate; // Базовый курс - это курс без ККК
+        } catch (error) {
+          console.error('Failed to fetch USDT rate, using fallback:', error);
+        }
+
+        // Получаем все связи трейдера с мерчантами и их методами
+        const traderMerchants = await db.traderMerchant.findMany({
+          where: {
+            traderId: trader.id,
+            isMerchantEnabled: true,
+          },
+          include: {
+            merchant: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            method: {
+              select: {
+                id: true,
+                code: true,
+                name: true,
+                type: true,
+              },
+            },
+            feeRanges: {
+              where: {
+                isActive: true,
+              },
+              orderBy: {
+                minAmount: 'asc',
+              },
+            },
+          },
+        });
+
+        // Группируем методы и объединяем одинаковые данные
+        const methodsMap = new Map();
+
+        traderMerchants.forEach((tm) => {
+          const methodKey = tm.method.code;
+          
+          if (!methodsMap.has(methodKey)) {
+            methodsMap.set(methodKey, {
+              method: tm.method.code,
+              methodName: tm.method.name,
+              rates: [],
+            });
+          }
+
+          const methodData = methodsMap.get(methodKey);
+          
+          // Функция для расчёта фактического курса
+          // Формула: 5000/rate = usdt; usdt-ставка_на_вход = new_usdt; 5000/new_usdt = фактический_курс
+          const calculateActualRate = (feeInPercent: number) => {
+            const dealAmount = 5000; // Константа - сумма сделки в рублях
+            const usdt = dealAmount / currentRate; // USDT по базовому курсу
+            const feeAmount = usdt * (feeInPercent / 100); // Размер ставки в USDT
+            const newUsdt = usdt - feeAmount; // Новое количество USDT после вычета ставки
+            return Math.round((dealAmount / newUsdt) * 100) / 100; // Фактический курс, округлённый до 2 знаков
+          };
+
+          // Определяем ставки (используем гибкие ставки если есть, иначе фиксированные)
+          let rateData;
+          
+          if (tm.useFlexibleRates && tm.feeRanges.length > 0) {
+            // Для гибких ставок рассчитываем курс для суммы 5000 рублей
+            let feeInFor5000 = tm.feeRanges[0].feeInPercent;
+            for (const range of tm.feeRanges) {
+              if (5000 >= range.minAmount && 5000 <= range.maxAmount) {
+                feeInFor5000 = range.feeInPercent;
+                break;
+              }
+            }
+            
+            rateData = {
+              inPercentFrom: tm.feeRanges[0].feeInPercent,
+              inPercentTo: tm.feeRanges[tm.feeRanges.length - 1].feeInPercent,
+              outPercentFrom: tm.feeRanges[0].feeOutPercent,
+              outPercentTo: tm.feeRanges[tm.feeRanges.length - 1].feeOutPercent,
+              amountFrom: tm.feeRanges[0].minAmount,
+              amountTo: tm.feeRanges[tm.feeRanges.length - 1].maxAmount,
+              actualRate: calculateActualRate(feeInFor5000),
+              baseRate: baseRate,
+            };
+          } else {
+            // Используем фиксированные ставки
+            rateData = {
+              inPercentFrom: tm.feeIn,
+              inPercentTo: tm.feeIn,
+              outPercentFrom: tm.feeOut,
+              outPercentTo: tm.feeOut,
+              amountFrom: 1000, // Минимальная сумма по умолчанию
+              amountTo: 100000, // Максимальная сумма по умолчанию
+              actualRate: calculateActualRate(tm.feeIn),
+              baseRate: baseRate,
+            };
+          }
+
+          // Проверяем, есть ли уже такие же ставки
+          const existingRate = methodData.rates.find((r) => 
+            r.inPercentFrom === rateData.inPercentFrom &&
+            r.inPercentTo === rateData.inPercentTo &&
+            r.outPercentFrom === rateData.outPercentFrom &&
+            r.outPercentTo === rateData.outPercentTo &&
+            r.amountFrom === rateData.amountFrom &&
+            r.amountTo === rateData.amountTo
+          );
+
+          if (!existingRate) {
+            methodData.rates.push(rateData);
+          }
+        });
+
+        // Преобразуем в массив (показываем все методы, фильтрация уже была на уровне типов)
+        const result = Array.from(methodsMap.values())
+          .map(method => ({
+            method: method.method,
+            methodName: method.methodName,
+            rates: method.rates,
+          }));
+
+        return result;
+      },
+      {
+        tags: ["trader"],
+        detail: { summary: "Получение методов мерчантов с их ставками и лимитами" },
+        response: {
+          200: t.Array(t.Object({
+            method: t.String(),
+            methodName: t.String(),
+            rates: t.Array(t.Object({
+              inPercentFrom: t.Number(),
+              inPercentTo: t.Number(),
+              outPercentFrom: t.Number(),
+              outPercentTo: t.Number(),
+              amountFrom: t.Number(),
+              amountTo: t.Number(),
+              actualRate: t.Number(),
+              baseRate: t.Number(),
+            })),
+          })),
           401: ErrorSchema,
           403: ErrorSchema,
         },

@@ -1,250 +1,199 @@
-import { db } from "../db";
-import { NotificationType, Status, TransactionType, BankType, MethodType } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
-async function createTestDevice() {
-  // Find a test trader
-  const trader = await db.user.findFirst({
-    where: { email: "trader@test.com" }
-  });
+const db = new PrismaClient();
 
-  if (!trader) {
-    console.error("❌ Test trader not found");
-    return;
-  }
+async function testNotificationMatching() {
+  console.log("=== Тест мэтчинга уведомлений со сделками ===\n");
 
-  // Create a test device
-  const device = await db.device.create({
-    data: {
-      name: "Test Device for Notifications",
-      userId: trader.id,
-      token: `test-device-${Date.now()}`,
-      emulated: true,
-      isOnline: true,
-      isWorking: true,
-      pushEnabled: true,
-      firstConnectionAt: new Date()
-    }
-  });
-
-  console.log(`✅ Created test device: ${device.id}`);
-
-  // Create bank details for the device
-  const bankDetails = [
-    {
-      cardNumber: "4276380012345678",
-      recipientName: "IVAN IVANOV",
-      bankType: BankType.SBERBANK,
-      methodType: MethodType.c2c,
-      minAmount: 100,
-      maxAmount: 100000,
-      dailyLimit: 500000,
-      monthlyLimit: 5000000,
-      userId: trader.id,
-      deviceId: device.id
-    },
-    {
-      cardNumber: "5536913812345678",
-      recipientName: "IVAN IVANOV",
-      bankType: BankType.TBANK,
-      methodType: MethodType.c2c,
-      minAmount: 100,
-      maxAmount: 100000,
-      dailyLimit: 500000,
-      monthlyLimit: 5000000,
-      userId: trader.id,
-      deviceId: device.id
-    },
-    {
-      cardNumber: "4272380012345678",
-      recipientName: "IVAN IVANOV",
-      bankType: BankType.VTB,
-      methodType: MethodType.c2c,
-      minAmount: 100,
-      maxAmount: 100000,
-      dailyLimit: 500000,
-      monthlyLimit: 5000000,
-      userId: trader.id,
-      deviceId: device.id
-    }
-  ];
-
-  for (const bd of bankDetails) {
-    const created = await db.bankDetail.create({ data: bd });
-    console.log(`✅ Created bank detail: ${created.bankType} - ${created.cardNumber}`);
-  }
-
-  return { device, trader };
-}
-
-async function createTestTransactions(traderId: string, bankDetailIds: string[]) {
-  // Find test merchant
-  const merchant = await db.merchant.findFirst({
-    where: { name: "Test Merchant" }
-  });
-
-  if (!merchant) {
-    console.error("❌ Test merchant not found");
-    return [];
-  }
-
-  const transactions = [];
-  const amounts = [1000, 2500, 5000, 10000, 15000, 25000];
-  
-  for (let i = 0; i < amounts.length; i++) {
-    const bankDetailId = bankDetailIds[i % bankDetailIds.length];
-    
-    const transaction = await db.transaction.create({
-      data: {
-        orderId: `TEST-${Date.now()}-${i}`,
-        merchantId: merchant.id,
-        traderId: traderId,
-        userId: traderId,
-        bankDetailId: bankDetailId,
-        amount: amounts[i],
-        status: Status.CREATED,
-        type: TransactionType.IN,
-        assetOrBank: "RUB",
-        createdAt: new Date(Date.now() - (i * 60000)), // Different times
-        callbackUri: "https://webhook.site/test-callback",
-        successUri: "https://test.com/success",
-        failUri: "https://test.com/fail",
-        expired_at: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes from now
-        commission: 0,
-        commissionPaidBy: "merchant"
+  try {
+    // 1. Получаем трейдера с устройством и реквизитами
+    const device = await db.device.findFirst({
+      where: {
+        user: {
+          banned: false
+        },
+        bankDetails: {
+          some: {}
+        }
       },
       include: {
-        bankDetail: true
+        user: true,
+        bankDetails: true
       }
     });
-    
-    transactions.push(transaction);
-    console.log(`✅ Created transaction #${i + 1}: ${transaction.amount} RUB for ${transaction.bankDetail.bankType}`);
-  }
 
-  return transactions;
-}
-
-async function sendTestNotifications(deviceId: string, transactions: any[]) {
-  const notifications = [
-    // Exact matches
-    {
-      packageName: "ru.sberbankmobile",
-      message: "Пополнение счета на 1000 ₽ от Иван И.",
-      amount: 1000,
-      bank: "SBERBANK"
-    },
-    {
-      packageName: "com.idamob.tinkoff.android",
-      message: "Перевод на 2500 ₽ от Петров П.П.",
-      amount: 2500,
-      bank: "TBANK"
-    },
-    {
-      packageName: "ru.vtb24.mobilebanking.android",
-      message: "Поступление: 5000 ₽. Остаток: 125000 ₽",
-      amount: 5000,
-      bank: "VTB"
-    },
-    // Near matches (±1 ruble)
-    {
-      packageName: "ru.sberbankmobile",
-      message: "Пополнение карты *1234 на сумму 9999 ₽",
-      amount: 9999,
-      bank: "SBERBANK"
-    },
-    // Non-matching amounts
-    {
-      packageName: "com.idamob.tinkoff.android",
-      message: "Перевод на 7777 ₽ успешно выполнен",
-      amount: 7777,
-      bank: "TBANK"
-    },
-    // Exact match for larger amount
-    {
-      packageName: "ru.sberbankmobile",
-      message: "Зачисление 15000 ₽ на счет *5678",
-      amount: 15000,
-      bank: "SBERBANK"
+    if (!device) {
+      console.error("Не найдено устройство с привязанными реквизитами!");
+      return;
     }
-  ];
 
-  for (const notif of notifications) {
+    console.log(`Устройство: ${device.name}`);
+    console.log(`Трейдер: ${device.user.name}`);
+    console.log(`Привязанных реквизитов: ${device.bankDetails.length}`);
+    
+    const bankDetail = device.bankDetails[0];
+    console.log(`\nИспользуем реквизит:`);
+    console.log(`- Банк: ${bankDetail.bankType}`);
+    console.log(`- Карта: ${bankDetail.cardNumber}`);
+    console.log(`- ID: ${bankDetail.id}`);
+
+    // 2. Создаем тестовую транзакцию
+    console.log("\n=== Создание тестовой транзакции ===");
+    
+    const testAmount = 1234.56;
+    const merchant = await db.merchant.findFirst({
+      where: { banned: false, disabled: false }
+    });
+
+    if (!merchant) {
+      console.error("Активный мерчант не найден!");
+      return;
+    }
+
+    const method = await db.method.findFirst({
+      where: { isEnabled: true }
+    });
+
+    if (!method) {
+      console.error("Активный метод не найден!");
+      return;
+    }
+
+    // Создаем транзакцию напрямую в БД
+    const transaction = await db.transaction.create({
+      data: {
+        merchantId: merchant.id,
+        amount: testAmount,
+        assetOrBank: bankDetail.bankType,
+        orderId: `test-matching-${Date.now()}`,
+        userId: "test-user",
+        callbackUri: "https://example.com/callback",
+        successUri: "https://example.com/success",
+        failUri: "https://example.com/fail",
+        type: "IN",
+        expired_at: new Date(Date.now() + 30 * 60 * 1000),
+        status: "CREATED",
+        rate: 95.5,
+        traderId: device.userId,
+        methodId: method.id,
+        bankDetailId: bankDetail.id,
+        clientName: "Test Client",
+        commission: 0
+      }
+    });
+
+    console.log(`✓ Создана транзакция ID: ${transaction.id}`);
+    console.log(`  Сумма: ${transaction.amount} RUB`);
+    console.log(`  Статус: ${transaction.status}`);
+    console.log(`  Реквизит: ${transaction.bankDetailId}`);
+
+    // 3. Создаем уведомление, имитирующее банковское
+    console.log("\n=== Создание тестового уведомления ===");
+
+    // Определяем правильный пакет для банка
+    const bankPackageMap: Record<string, string> = {
+      "SBERBANK": "ru.sberbankmobile",
+      "TINKOFF": "ru.tinkoff.mobile.android",
+      "VTB": "ru.vtb.mobile",
+      "ALFABANK": "com.idamobile.android.alfabank",
+      "GAZPROMBANK": "ru.gazprombank.mobile",
+      "OZONBANK": "ru.ozon.card"
+    };
+
+    const packageName = bankPackageMap[bankDetail.bankType] || "ru.sberbankmobile";
+
+    // Форматируем сумму для уведомления
+    const formattedAmount = testAmount.toLocaleString('ru-RU', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).replace(',', '.');
+
+    // Создаем текст уведомления в зависимости от банка
+    let notificationText = "";
+    switch (bankDetail.bankType) {
+      case "SBERBANK":
+        notificationText = `Поступление ${formattedAmount} ₽ от *1234`;
+        break;
+      case "TINKOFF":
+        notificationText = `Пополнение +${formattedAmount} ₽`;
+        break;
+      case "VTB":
+        notificationText = `Зачисление ${formattedAmount} RUB`;
+        break;
+      default:
+        notificationText = `Поступление ${formattedAmount} ₽`;
+    }
+
     const notification = await db.notification.create({
       data: {
-        deviceId: deviceId,
-        type: NotificationType.AppNotification,
-        application: notif.packageName,
-        title: "Банковское уведомление",
-        message: notif.message,
-        timestamp: new Date(),
+        type: "AppNotification",
+        title: "Поступление",
+        message: notificationText,
+        deviceId: device.id,
         isRead: false,
         metadata: {
-          packageName: notif.packageName,
-          expectedAmount: notif.amount,
-          expectedBank: notif.bank
+          packageName,
+          timestamp: new Date().toISOString(),
+          originalAmount: testAmount
         }
       }
     });
-    
-    console.log(`📱 Sent notification: ${notif.message}`);
-    
-    // Wait a bit between notifications
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  }
-}
 
-async function checkResults(transactions: any[]) {
-  console.log("\n🔍 Checking transaction statuses after processing...");
-  
-  for (const tx of transactions) {
-    const updated = await db.transaction.findUnique({
-      where: { id: tx.id },
-      include: { bankDetail: true }
+    console.log(`✓ Создано уведомление ID: ${notification.id}`);
+    console.log(`  Пакет: ${packageName}`);
+    console.log(`  Текст: "${notificationText}"`);
+
+    // 4. Ждем обработки NotificationMatcherService
+    console.log("\n=== Ожидание обработки (10 секунд) ===");
+    console.log("NotificationMatcherService должен обработать уведомление...");
+    
+    await new Promise(resolve => setTimeout(resolve, 10000));
+
+    // 5. Проверяем результат
+    console.log("\n=== Проверка результата ===");
+
+    const updatedTransaction = await db.transaction.findUnique({
+      where: { id: transaction.id }
     });
-    
-    console.log(`Transaction ${updated!.amount} RUB (${updated!.bankDetail.bankName}): ${updated!.status}`);
+
+    const updatedNotification = await db.notification.findUnique({
+      where: { id: notification.id }
+    });
+
+    console.log(`\nТранзакция:`);
+    console.log(`- Статус изменился: ${transaction.status} → ${updatedTransaction.status}`);
+    console.log(`- Принята: ${updatedTransaction.acceptedAt ? 'Да' : 'Нет'}`);
+
+    console.log(`\nУведомление:`);
+    console.log(`- Прочитано: ${updatedNotification.isRead ? 'Да' : 'Нет'}`);
+
+    if (updatedTransaction.status === "READY" && updatedNotification.isRead) {
+      console.log("\n✅ Мэтчинг работает корректно!");
+    } else {
+      console.log("\n⚠️ Мэтчинг не сработал");
+      console.log("\nВозможные причины:");
+      console.log("1. NotificationMatcherService не запущен");
+      console.log("2. Regex паттерн не подходит для формата уведомления");
+      console.log("3. Проблема с ассоциацией устройства и реквизита");
+      console.log("4. Другие фильтры не пропускают транзакцию");
+    }
+
+    // 6. Очистка
+    console.log("\n=== Очистка тестовых данных ===");
+    await db.transaction.update({
+      where: { id: transaction.id },
+      data: { status: "CANCELED" }
+    });
+    await db.notification.delete({
+      where: { id: notification.id }
+    });
+    console.log("✓ Тестовые данные удалены");
+
+  } catch (error) {
+    console.error("Ошибка при тестировании:", error);
   }
 }
 
-async function main() {
-  console.log("🚀 Starting notification matching test...\n");
-  
-  // 1. Create test device
-  const result = await createTestDevice();
-  if (!result) return;
-  
-  const { device, trader } = result;
-  
-  // 2. Get bank details
-  const bankDetails = await db.bankDetail.findMany({
-    where: { deviceId: device.id }
-  });
-  
-  // 3. Create test transactions
-  const transactions = await createTestTransactions(
-    trader.id, 
-    bankDetails.map(bd => bd.id)
-  );
-  
-  console.log(`\n📝 Created ${transactions.length} test transactions`);
-  
-  // 4. Send test notifications
-  console.log("\n📱 Sending test notifications...");
-  await sendTestNotifications(device.id, transactions);
-  
-  // 5. Wait for processing
-  console.log("\n⏳ Waiting 10 seconds for NotificationMatcherService to process...");
-  await new Promise(resolve => setTimeout(resolve, 10000));
-  
-  // 6. Check results
-  await checkResults(transactions);
-  
-  console.log("\n✅ Test completed!");
-}
-
-main()
-  .then(() => process.exit(0))
-  .catch(error => {
-    console.error("❌ Error:", error);
-    process.exit(1);
-  });
+testNotificationMatching()
+  .catch(console.error)
+  .finally(() => db.$disconnect());

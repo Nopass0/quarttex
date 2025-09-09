@@ -1,10 +1,11 @@
 import { Elysia, t } from "elysia";
 import { db } from "@/db";
-import { BankType, MethodType } from "@prisma/client";
+import { BankType, MethodType, Status } from "@prisma/client";
 import ErrorSchema from "@/types/error";
 import { startOfDay, endOfDay } from "date-fns";
 import { notifyByStatus } from "@/utils/notify";
 import { truncate2 } from "@/utils/rounding";
+import { roundUp2 } from "@/utils/rounding";
 import { getFlexibleFeePercent } from "@/utils/flexible-fee-calculator";
 
 /* ---------- DTOs ---------- */
@@ -116,6 +117,116 @@ const formatBtRequisite = (
 
 /* ---------- routes ---------- */
 export const btEntranceRoutes = new Elysia({ prefix: "/bt-entrance" })
+  // Stats for BT deals
+  .get(
+    "/stats",
+    async ({ trader, query }) => {
+      // Determine period
+      const period = (query.period as string) || "today";
+      const now = new Date();
+      let start: Date;
+      let end: Date | undefined;
+      switch (period) {
+        case "today":
+          start = new Date(now.setHours(0, 0, 0, 0));
+          break;
+        case "yesterday": {
+          const d = new Date(now);
+          d.setDate(d.getDate() - 1);
+          start = new Date(d.setHours(0, 0, 0, 0));
+          end = new Date(new Date(start).setDate(start.getDate() + 1));
+          break;
+        }
+        case "week":
+          // Последние 7 дней
+          start = new Date(now);
+          start.setDate(now.getDate() - 7);
+          start.setHours(0, 0, 0, 0);
+          break;
+        case "month":
+          // Начало текущего месяца
+          start = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        case "quarter":
+          // Начало текущего квартала
+          const currentMonth = now.getMonth();
+          const quarterStartMonth = Math.floor(currentMonth / 3) * 3;
+          start = new Date(now.getFullYear(), quarterStartMonth, 1);
+          break;
+        case "halfyear":
+          // Начало текущего полугодия
+          const halfYearStartMonth = now.getMonth() < 6 ? 0 : 6;
+          start = new Date(now.getFullYear(), halfYearStartMonth, 1);
+          break;
+        case "year":
+          // Начало текущего года
+          start = new Date(now.getFullYear(), 0, 1);
+          break;
+        default:
+          start = new Date(now.setHours(0, 0, 0, 0));
+      }
+
+      // Base where for trader, BT-eligible methods and READY status
+      const where: any = {
+        traderId: trader.id,
+        method: {
+          type: {
+            in: [MethodType.c2c, MethodType.sbp],
+          },
+        },
+        status: Status.READY,
+        acceptedAt: { gte: start, ...(end ? { lt: end } : {}) },
+      };
+
+      // Fetch transactions and reduce stats only for BT deals (no device requisites or missing requisites)
+      const txs = await db.transaction.findMany({
+        where,
+        select: {
+          amount: true,
+          rate: true,
+          frozenUsdtAmount: true,
+          traderProfit: true,
+          requisites: { select: { deviceId: true } },
+        },
+      });
+
+      const btTxs = txs.filter((tx) => !tx.requisites || tx.requisites.deviceId === null);
+
+      const stats = btTxs.reduce(
+        (acc, tx) => {
+          const calculatedFromRate = tx.rate && tx.rate > 0 ? truncate2(tx.amount / tx.rate) : 0;
+          const usdtAmount = (tx.frozenUsdtAmount ?? calculatedFromRate) ?? 0;
+          acc.count += 1;
+          acc.totalAmount += usdtAmount ?? 0;
+          acc.totalProfit += tx.traderProfit ?? 0;
+          acc.totalAmountRub += tx.amount ?? 0;
+          return acc;
+        },
+        { count: 0, totalAmount: 0, totalProfit: 0, totalAmountRub: 0 }
+      );
+
+      return { stats };
+    },
+    {
+      tags: ["trader"],
+      detail: { summary: "Статистика по BT-входу" },
+      query: t.Object({
+        period: t.Optional(t.String()),
+      }),
+      response: {
+        200: t.Object({
+          stats: t.Object({
+            count: t.Number(),
+            totalAmount: t.Number(),
+            totalProfit: t.Number(),
+            totalAmountRub: t.Number(),
+          }),
+        }),
+        401: ErrorSchema,
+        403: ErrorSchema,
+      },
+    }
+  )
   // Get BT deals (main list)
   .get(
     "/deals",
@@ -253,8 +364,9 @@ export const btEntranceRoutes = new Elysia({ prefix: "/bt-entrance" })
             },
           });
 
-          // Рассчитываем прибыль трейдера с учетом гибких ставок
-          const spentUsdt = deal.rate ? deal.amount / deal.rate : 0;
+          // Базовая USDT: прибыль от truncate2(amount/rate), списания по roundUp2(amount/rate)
+          const baseUsdtTruncated = deal.rate ? truncate2(deal.amount / deal.rate) : 0;
+          const baseUsdtRoundedUp = deal.rate ? roundUp2(deal.amount / deal.rate) : 0;
           const commissionPercent = await getFlexibleFeePercent(
             deal.traderId,
             deal.merchantId,
@@ -262,7 +374,7 @@ export const btEntranceRoutes = new Elysia({ prefix: "/bt-entrance" })
             deal.amount,
             "IN"
           );
-          const traderProfit = truncate2(spentUsdt * (commissionPercent / 100));
+          const traderProfit = truncate2(baseUsdtTruncated * (commissionPercent / 100));
 
           // Обновляем транзакцию
           const updated = await prisma.transaction.update({
@@ -278,7 +390,7 @@ export const btEntranceRoutes = new Elysia({ prefix: "/bt-entrance" })
           if (wasExpired) {
             // Для истекших транзакций средства уже были разморожены и возвращены на trustBalance
             // Теперь нужно списать их оттуда при подтверждении
-            const amountToDeduct = deal.frozenUsdtAmount || spentUsdt;
+            const amountToDeduct = deal.frozenUsdtAmount || baseUsdtRoundedUp;
 
             console.log(
               "[BT-Entrance] Processing EXPIRED transaction approval:",

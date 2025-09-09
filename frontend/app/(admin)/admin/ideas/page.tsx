@@ -46,7 +46,7 @@ interface Idea {
   id: string;
   title: string;
   content: string;
-  status: "PENDING" | "REVIEWING" | "APPROVED" | "REJECTED";
+  status: "PENDING" | "REVIEWING" | "APPROVED" | "ACCEPTED" | "REJECTED" | "IMPLEMENTED";
   adminNotes?: string;
   createdAt: string;
   user: {
@@ -56,10 +56,12 @@ interface Idea {
   };
 }
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
   PENDING: { label: "Ожидает", color: "bg-yellow-500", icon: Clock },
   REVIEWING: { label: "На рассмотрении", color: "bg-blue-500", icon: Eye },
-  APPROVED: { label: "Одобрено", color: "bg-purple-500", icon: CheckCircle },
+  APPROVED: { label: "Одобрено", color: "bg-green-500", icon: CheckCircle },
+  ACCEPTED: { label: "Одобрено", color: "bg-green-500", icon: CheckCircle },
+  IMPLEMENTED: { label: "Реализовано", color: "bg-emerald-600", icon: CheckCircle },
   REJECTED: { label: "Отклонено", color: "bg-red-500", icon: XCircle },
 };
 
@@ -79,7 +81,7 @@ export default function AdminIdeasPage() {
 
   const fetchIdeas = async () => {
     try {
-      const response = await fetch("/api/admin/ideas", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api"}/admin/ideas`, {
         headers: {
           "x-admin-key": token,
         },
@@ -103,7 +105,7 @@ export default function AdminIdeasPage() {
   ) => {
     setUpdatingStatus(true);
     try {
-      const response = await fetch(`/api/admin/ideas/${ideaId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api"}/admin/ideas/${ideaId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -165,7 +167,7 @@ export default function AdminIdeasPage() {
                 />
               </div>
             </div>
-            <div className="w-full md:w-48">
+            <div className="w-full md:w-56">
               <Label htmlFor="status">Статус</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger id="status">
@@ -175,7 +177,8 @@ export default function AdminIdeasPage() {
                   <SelectItem value="all">Все статусы</SelectItem>
                   <SelectItem value="PENDING">Ожидает</SelectItem>
                   <SelectItem value="REVIEWING">На рассмотрении</SelectItem>
-                  <SelectItem value="APPROVED">Одобрено</SelectItem>
+                  <SelectItem value="ACCEPTED">Одобрено</SelectItem>
+                  <SelectItem value="IMPLEMENTED">Реализовано</SelectItem>
                   <SelectItem value="REJECTED">Отклонено</SelectItem>
                 </SelectContent>
               </Select>
@@ -203,7 +206,8 @@ export default function AdminIdeasPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredIdeas.map((idea) => {
-                    const StatusIcon = statusConfig[idea.status].icon;
+                    const cfg = statusConfig[idea.status] || statusConfig.PENDING;
+                    const StatusIcon = cfg.icon;
                     return (
                       <TableRow key={idea.id}>
                         <TableCell>
@@ -226,10 +230,10 @@ export default function AdminIdeasPage() {
                         <TableCell>
                           <Badge
                             variant="secondary"
-                            className={`${statusConfig[idea.status].color} text-white`}
+                            className={`${cfg.color} text-white`}
                           >
                             <StatusIcon className="h-3 w-3 mr-1" />
-                            {statusConfig[idea.status].label}
+                            {cfg.label}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -330,7 +334,7 @@ export default function AdminIdeasPage() {
                       updateIdeaStatus(selectedIdea.id, "APPROVED", adminNotes)
                     }
                     disabled={updatingStatus}
-                    className="bg-purple-600 hover:bg-purple-700"
+                    className="bg-green-600 hover:bg-green-700"
                   >
                     <CheckCircle className="h-4 w-4 mr-1" />
                     Одобрить

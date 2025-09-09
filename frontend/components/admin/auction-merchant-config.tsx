@@ -262,7 +262,7 @@ export function AuctionMerchantConfig({
             <Settings className="h-5 w-5" />
             Аукционная система
             {config?.isAuctionEnabled && (
-              <Badge className="bg-purple-100 text-purple-700 border-green-300">
+              <Badge className="bg-green-100 text-green-700 border-green-300">
                 Включена
               </Badge>
             )}
@@ -355,7 +355,7 @@ export function AuctionMerchantConfig({
                   </div>
                   <div className="flex items-center gap-2">
                     {config?.hasKeys ? (
-                      <Badge className="bg-purple-100 text-purple-700 border-green-300">
+                      <Badge className="bg-green-100 text-green-700 border-green-300">
                         <CheckCircle className="h-3 w-3 mr-1" />
                         Ключи созданы
                       </Badge>
@@ -484,7 +484,7 @@ export function AuctionMerchantConfig({
               disabled={isToggling}
               className={
                 formData.isAuctionEnabled
-                  ? "bg-purple-600 hover:bg-purple-700"
+                  ? "bg-green-600 hover:bg-green-700"
                   : "bg-gray-600 hover:bg-gray-700"
               }
             >

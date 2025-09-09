@@ -1,4 +1,6 @@
-"use client";
+"use client"
+
+import { useProject } from "@/contexts/ProjectContext";
 
 import { useState } from "react";
 import { Check, ChevronDown, Smartphone } from "lucide-react";
@@ -44,6 +46,7 @@ export function DeviceSelector({
   className,
 }: DeviceSelectorProps) {
   const [open, setOpen] = useState(false);
+  const { project } = useProject();
   const selectedDevice = devices.find((d) => d.id === selectedDeviceId);
 
   return (
@@ -71,7 +74,7 @@ export function DeviceSelector({
                 <div
                   className={cn(
                     "w-2 h-2 rounded-full",
-                    selectedDevice.isOnline ? "bg-green-500" : "bg-red-500"
+                    selectedDevice.isOnline ? (project === "quattrex" ? "bg-violet-500" : "bg-emerald-500") : "bg-red-500"
                   )}
                 />
                 <Badge variant="secondary" className="text-xs">
@@ -106,7 +109,7 @@ export function DeviceSelector({
                 <div
                   className={cn(
                     "w-2 h-2 rounded-full shrink-0",
-                    device.isOnline ? "bg-green-500" : "bg-red-500"
+                    device.isOnline ? (project === "quattrex" ? "bg-violet-500" : "bg-emerald-500") : "bg-red-500"
                   )}
                 />
                 <Smartphone className="h-4 w-4 shrink-0 text-gray-500" />
@@ -133,7 +136,7 @@ export function DeviceSelector({
                     {device.bankDetails?.length || 0} рекв.
                   </Badge>
                   {selectedDeviceId === device.id && (
-                    <Check className="h-4 w-4 text-purple-500" />
+                    <Check className={`h-4 w-4 ${project === "quattrex" ? "text-violet-500" : "text-emerald-500"}`} />
                   )}
                 </div>
               </button>

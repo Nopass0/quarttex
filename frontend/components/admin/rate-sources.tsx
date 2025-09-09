@@ -17,8 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { RefreshCw, Users, Building2, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react'
-import { useRapiraRate } from '@/hooks/use-rapira-rate'
+import { RefreshCw, Users, Building2, TrendingUp, TrendingDown, AlertCircle, Building } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -36,6 +35,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import RateSourceAggregators from '@/components/admin/rate-source-aggregators'
 
 interface RateSource {
   id: string
@@ -56,8 +56,6 @@ interface RateSource {
     id: string
     name: string
     email: string
-    traderKkkPercent: number | null
-    traderKkkOperation: 'PLUS' | 'MINUS' | null
   }>
   merchants?: Array<{
     id: string
@@ -65,11 +63,20 @@ interface RateSource {
     merchantProvidesRate: boolean
     priority: number
     isActive: boolean
-    kkkPercent: number | null
-    kkkOperation: 'PLUS' | 'MINUS' | null
     merchant: {
       id: string
       name: string
+    }
+  }>
+  traderSettings?: Array<{
+    id: string
+    traderId: string
+    customKkkPercent: number | null
+    customKkkOperation: 'PLUS' | 'MINUS' | null
+    trader: {
+      id: string
+      name: string
+      email: string
     }
   }>
 }
@@ -91,18 +98,17 @@ export function RateSources() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isMerchantDialogOpen, setIsMerchantDialogOpen] = useState(false)
   const [isTraderDialogOpen, setIsTraderDialogOpen] = useState(false)
-  const [isMerchantKkkDialogOpen, setIsMerchantKkkDialogOpen] = useState(false)
-  const [isTraderKkkDialogOpen, setIsTraderKkkDialogOpen] = useState(false)
-  const [selectedMerchantRelation, setSelectedMerchantRelation] = useState<any>(null)
-  const [selectedTraderForKkk, setSelectedTraderForKkk] = useState<any>(null)
+  const [isAggregatorDialogOpen, setIsAggregatorDialogOpen] = useState(false)
   const [allMerchants, setAllMerchants] = useState<Array<{ id: string; name: string }>>([])
   const [allTraders, setAllTraders] = useState<Array<{ id: string; name: string; email: string }>>([])
   const [selectedMerchantId, setSelectedMerchantId] = useState('')
   const [selectedTraderId, setSelectedTraderId] = useState('')
   const [merchantProvidesRate, setMerchantProvidesRate] = useState(true)
-  const [currentBybitRate, setCurrentBybitRate] = useState<number | null>(null)
+  const [selectedTraderForSettings, setSelectedTraderForSettings] = useState<string | null>(null)
+  const [traderKkkPercent, setTraderKkkPercent] = useState<number>(0)
+  const [traderKkkOperation, setTraderKkkOperation] = useState<'PLUS' | 'MINUS'>('MINUS')
+  const [isTraderSettingsDialogOpen, setIsTraderSettingsDialogOpen] = useState(false)
   const { token: adminToken } = useAdminAuth()
-  const { baseRate: currentRapiraRate, refetch: refetchRapiraRate } = useRapiraRate()
 
   useEffect(() => {
     fetchRateSources()
@@ -110,22 +116,15 @@ export function RateSources() {
     fetchTraders()
   }, [])
 
-  // Auto-refresh rates every 10 seconds (and fetch immediately)
+  // Auto-refresh rates every 30 seconds
   useEffect(() => {
-    const run = async () => {
-      refetchRapiraRate()
-      const br = await fetchBybitRate()
-      if (typeof br === 'number') setCurrentBybitRate(br)
-      fetchRateSources()
-    }
-    run()
-    const interval = setInterval(run, 10000) // 10 seconds
+    const interval = setInterval(fetchRateSources, 30000)
     return () => clearInterval(interval)
-  }, [refetchRapiraRate])
+  }, [])
 
   const fetchRateSources = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/rate-sources-test`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/rate-sources`, {
         headers: {
           'x-admin-key': adminToken || '',
         },
@@ -134,11 +133,9 @@ export function RateSources() {
       if (!response.ok) throw new Error('Failed to fetch rate sources')
       
       const data = await response.json()
-      console.log('Fetched rate sources with KKK:', data.data)
       setSources(data.data || [])
     } catch (error) {
-      console.error('Error fetching rate sources:', error)
-      // Не показываем ошибку пользователю, только логируем
+      toast.error('Не удалось загрузить источники курсов')
     }
   }
 
@@ -199,8 +196,7 @@ export function RateSources() {
       fetchRateSources()
       setIsEditDialogOpen(false)
     } catch (error) {
-      console.error('Failed to update rate source:', error)
-      // Не показываем ошибку пользователю, только логируем
+      toast.error('Не удалось обновить источник курса')
     } finally {
       setIsLoading(false)
     }
@@ -221,8 +217,7 @@ export function RateSources() {
       toast.success('Курсы обновлены')
       fetchRateSources()
     } catch (error) {
-      console.error('Failed to refresh rates:', error)
-      // Не показываем ошибку пользователю, только логируем
+      toast.error('Не удалось обновить курсы')
     } finally {
       setIsLoading(false)
     }
@@ -233,39 +228,29 @@ export function RateSources() {
 
     try {
       setIsLoading(true)
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/admin/rate-sources/${selectedSource.id}/merchants/${selectedMerchantId}`
-      console.log('Adding merchant to rate source:', {
-        sourceId: selectedSource.id,
-        merchantId: selectedMerchantId,
-        url,
-        source: selectedSource
-      })
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/rate-sources/${selectedSource.id}/merchants/${selectedMerchantId}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-key': adminToken || '',
+          },
+          body: JSON.stringify({
+            merchantProvidesRate,
+            priority: 0,
+          }),
+        }
+      )
       
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-key': adminToken || '',
-        },
-        body: JSON.stringify({
-          merchantProvidesRate,
-          priority: 0,
-        }),
-      })
-      
-      if (!response.ok) {
-        const errorData = await response.text()
-        console.error('Failed to add merchant:', response.status, errorData)
-        throw new Error(`Failed to add merchant: ${response.status} ${errorData}`)
-      }
+      if (!response.ok) throw new Error('Failed to add merchant')
       
       toast.success('Мерчант привязан к источнику')
       fetchRateSources()
       setIsMerchantDialogOpen(false)
       setSelectedMerchantId('')
     } catch (error) {
-      console.error('Error adding merchant:', error)
-      // Не показываем ошибку пользователю, только логируем
+      toast.error('Не удалось привязать мерчанта')
     } finally {
       setIsLoading(false)
     }
@@ -276,34 +261,24 @@ export function RateSources() {
 
     try {
       setIsLoading(true)
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/admin/rate-sources/${selectedSource.id}/traders/${selectedTraderId}`
-      console.log('Adding trader to rate source:', {
-        sourceId: selectedSource.id,
-        traderId: selectedTraderId,
-        url,
-        source: selectedSource
-      })
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/rate-sources/${selectedSource.id}/traders/${selectedTraderId}`,
+        {
+          method: 'POST',
+          headers: {
+            'x-admin-key': adminToken || '',
+          },
+        }
+      )
       
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'x-admin-key': adminToken || '',
-        },
-      })
-      
-      if (!response.ok) {
-        const errorData = await response.text()
-        console.error('Failed to add trader:', response.status, errorData)
-        throw new Error(`Failed to add trader: ${response.status} ${errorData}`)
-      }
+      if (!response.ok) throw new Error('Failed to add trader')
       
       toast.success('Трейдер привязан к источнику')
       fetchRateSources()
       setIsTraderDialogOpen(false)
       setSelectedTraderId('')
     } catch (error) {
-      console.error('Error adding trader:', error)
-      // Не показываем ошибку пользователю, только логируем
+      toast.error('Не удалось привязать трейдера')
     } finally {
       setIsLoading(false)
     }
@@ -330,8 +305,7 @@ export function RateSources() {
       toast.success('Настройки мерчанта обновлены')
       fetchRateSources()
     } catch (error) {
-      console.error('Failed to update merchant settings:', error)
-      // Не показываем ошибку пользователю, только логируем
+      toast.error('Не удалось обновить настройки мерчанта')
     }
   }
 
@@ -352,8 +326,7 @@ export function RateSources() {
       toast.success('Мерчант отвязан от источника')
       fetchRateSources()
     } catch (error) {
-      console.error('Failed to remove merchant:', error)
-      // Не показываем ошибку пользователю, только логируем
+      toast.error('Не удалось отвязать мерчанта')
     }
   }
 
@@ -374,15 +347,55 @@ export function RateSources() {
       toast.success('Трейдер отвязан от источника')
       fetchRateSources()
     } catch (error) {
-      console.error('Failed to remove trader:', error)
-      // Не показываем ошибку пользователю, только логируем
+      toast.error('Не удалось отвязать трейдера')
     }
   }
 
-  const handleUpdateMerchantKkk = async (relationId: string, kkkPercent: number | null, kkkOperation: 'PLUS' | 'MINUS' | null) => {
+  const handleOpenTraderSettings = async (sourceId: string, traderId: string) => {
+    setSelectedTraderForSettings(traderId)
+    
+    // Получаем текущие настройки трейдера
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/rate-sources/merchants/${relationId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/rate-sources/${sourceId}/traders/${traderId}/settings`,
+        {
+          headers: {
+            'x-admin-key': adminToken || '',
+          },
+        }
+      )
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.data) {
+          setTraderKkkPercent(data.data.customKkkPercent || 0)
+          setTraderKkkOperation(data.data.customKkkOperation || 'MINUS')
+        } else {
+          // Настройки не найдены, используем значения по умолчанию
+          setTraderKkkPercent(0)
+          setTraderKkkOperation('MINUS')
+        }
+      } else {
+        // Настройки не найдены, используем значения по умолчанию
+        setTraderKkkPercent(0)
+        setTraderKkkOperation('MINUS')
+      }
+    } catch (error) {
+      console.error('Failed to fetch trader settings:', error)
+      setTraderKkkPercent(0)
+      setTraderKkkOperation('MINUS')
+    }
+    
+    setIsTraderSettingsDialogOpen(true)
+  }
+
+  const handleSaveTraderSettings = async () => {
+    if (!selectedSource || !selectedTraderForSettings) return
+
+    try {
+      setIsLoading(true)
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/rate-sources/${selectedSource.id}/traders/${selectedTraderForSettings}/settings`,
         {
           method: 'PUT',
           headers: {
@@ -390,48 +403,50 @@ export function RateSources() {
             'x-admin-key': adminToken || '',
           },
           body: JSON.stringify({
-            kkkPercent,
-            kkkOperation,
+            customKkkPercent: traderKkkPercent,
+            customKkkOperation: traderKkkOperation,
           }),
         }
       )
       
-      if (!response.ok) throw new Error('Failed to update merchant KKK')
+      if (!response.ok) throw new Error('Failed to save trader settings')
       
-      toast.success('Индивидуальный ККК мерчанта обновлен')
+      toast.success('Настройки трейдера сохранены')
       fetchRateSources()
-      setIsMerchantKkkDialogOpen(false)
+      setIsTraderSettingsDialogOpen(false)
+      setSelectedTraderForSettings(null)
     } catch (error) {
-      console.error('Failed to update merchant KKK:', error)
-      // Не показываем ошибку пользователю, только логируем
+      toast.error('Не удалось сохранить настройки трейдера')
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const handleUpdateTraderKkk = async (traderId: string, kkkPercent: number | null, kkkOperation: 'PLUS' | 'MINUS' | null) => {
+  const handleDeleteTraderSettings = async () => {
+    if (!selectedSource || !selectedTraderForSettings) return
+
     try {
+      setIsLoading(true)
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/rate-sources/traders/${traderId}/kkk`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/rate-sources/${selectedSource.id}/traders/${selectedTraderForSettings}/settings`,
         {
-          method: 'PUT',
+          method: 'DELETE',
           headers: {
-            'Content-Type': 'application/json',
             'x-admin-key': adminToken || '',
           },
-          body: JSON.stringify({
-            kkkPercent,
-            kkkOperation,
-          }),
         }
       )
       
-      if (!response.ok) throw new Error('Failed to update trader KKK')
+      if (!response.ok) throw new Error('Failed to delete trader settings')
       
-      toast.success('Индивидуальный ККК трейдера обновлен')
+      toast.success('Индивидуальные настройки трейдера удалены')
       fetchRateSources()
-      setIsTraderKkkDialogOpen(false)
+      setIsTraderSettingsDialogOpen(false)
+      setSelectedTraderForSettings(null)
     } catch (error) {
-      console.error('Failed to update trader KKK:', error)
-      // Не показываем ошибку пользователю, только логируем
+      toast.error('Не удалось удалить настройки трейдера')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -449,15 +464,9 @@ export function RateSources() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <p className="text-sm text-muted-foreground">
-            Управление источниками курсов и их настройками
-          </p>
-          <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
-            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-            Курсы обновляются каждые 10 секунд
-          </p>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          Управление источниками курсов и их настройками
+        </p>
         <Button onClick={handleRefreshRates} disabled={isLoading} size="sm">
           <RefreshCw className="mr-2 h-4 w-4" />
           Обновить курсы
@@ -487,22 +496,17 @@ export function RateSources() {
               <div className="space-y-4">
                 {/* Курсы */}
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center p-3 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-200">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600">Базовый курс:</span>
-                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                    </div>
-                    <span className="font-semibold text-emerald-700">
-                      {(() => {
-                        if (source.source === 'rapira' && currentRapiraRate) {
-                          return `${currentRapiraRate.toFixed(2)} ₽/USDT`
-                        } else if (source.source === 'bybit' && currentBybitRate) {
-                          return `${currentBybitRate.toFixed(2)} ₽/USDT`
-                        } else if (source.currentRate) {
-                          return `${source.currentRate.toFixed(2)} ₽/USDT`
-                        }
-                        return 'Нет данных'
-                      })()}
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-600">Базовый курс:</span>
+                    <span className="font-semibold">
+                      {source.currentRate ? (
+                        `${source.currentRate.toFixed(2)} ₽/USDT`
+                      ) : (
+                        <span className="flex items-center gap-1 text-orange-600">
+                          <AlertCircle className="h-4 w-4" />
+                          Нет данных
+                        </span>
+                      )}
                     </span>
                   </div>
                   
@@ -511,7 +515,7 @@ export function RateSources() {
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-gray-600">Корректировка:</span>
                         {source.kkkOperation === 'PLUS' ? (
-                          <TrendingUp className="h-4 w-4 text-purple-600" />
+                          <TrendingUp className="h-4 w-4 text-green-600" />
                         ) : (
                           <TrendingDown className="h-4 w-4 text-red-600" />
                         )}
@@ -522,31 +526,25 @@ export function RateSources() {
                     </div>
                   )}
 
-                  {source.kkkPercent !== 0 && (
-                    <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                  {source.adjustedRate && source.kkkPercent !== 0 && (
+                    <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
                       <span className="text-sm text-gray-600">Итоговый курс:</span>
-                      <span className="font-bold text-purple-700">
-                        {(() => {
-                          let baseRate = 0
-                          if (source.source === 'rapira' && currentRapiraRate) {
-                            baseRate = currentRapiraRate
-                          } else if (source.source === 'bybit' && currentBybitRate) {
-                            baseRate = currentBybitRate
-                          } else if (source.currentRate) {
-                            baseRate = source.currentRate
-                          }
-                          
-                          if (baseRate > 0) {
-                            const multiplier = source.kkkOperation === 'PLUS' 
-                              ? (1 + source.kkkPercent / 100) 
-                              : (1 - source.kkkPercent / 100)
-                            return `${(baseRate * multiplier).toFixed(2)} ₽/USDT`
-                          }
-                          return 'Нет данных'
-                        })()}
+                      <span className="font-bold text-green-700">
+                        {source.adjustedRate.toFixed(2)} ₽/USDT
                       </span>
                     </div>
                   )}
+                  
+                  {/* Время последнего обновления */}
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded text-xs text-gray-500">
+                    <span>Последнее обновление:</span>
+                    <span>
+                      {source.lastRateUpdate 
+                        ? new Date(source.lastRateUpdate).toLocaleString('ru-RU')
+                        : 'Никогда'
+                      }
+                    </span>
+                  </div>
                 </div>
 
                 {/* Статистика */}
@@ -556,14 +554,14 @@ export function RateSources() {
                       <Users className="h-4 w-4 text-gray-500" />
                       <span className="text-sm text-gray-600">Трейдеры:</span>
                     </div>
-                    <span className="text-lg font-semibold">{source._count?.traders || source.traders?.length || 0}</span>
+                    <span className="text-lg font-semibold">{source._count?.traders || 0}</span>
                   </div>
                   <div className="flex-1 p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-2">
                       <Building2 className="h-4 w-4 text-gray-500" />
                       <span className="text-sm text-gray-600">Мерчанты:</span>
                     </div>
-                    <span className="text-lg font-semibold">{source._count?.merchants || source.merchants?.length || 0}</span>
+                    <span className="text-lg font-semibold">{source._count?.merchants || 0}</span>
                   </div>
                 </div>
 
@@ -579,6 +577,17 @@ export function RateSources() {
                     }}
                   >
                     Настройки
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      setSelectedSource(source)
+                      setIsAggregatorDialogOpen(true)
+                    }}
+                  >
+                    Агрегаторы
                   </Button>
                   <Button
                     variant="outline"
@@ -604,7 +613,11 @@ export function RateSources() {
                   </Button>
                 </div>
 
-
+                {source.lastRateUpdate && (
+                  <p className="text-xs text-gray-500 text-center">
+                    Обновлено: {new Date(source.lastRateUpdate).toLocaleString('ru-RU')}
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -711,7 +724,6 @@ export function RateSources() {
                     <TableRow>
                       <TableHead>Мерчант</TableHead>
                       <TableHead>Источник курса</TableHead>
-                      <TableHead>Индивидуальный ККК</TableHead>
                       <TableHead>Статус</TableHead>
                       <TableHead>Действия</TableHead>
                     </TableRow>
@@ -733,17 +745,6 @@ export function RateSources() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="text-sm">
-                            {relation.kkkPercent !== null ? (
-                              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                                {relation.kkkOperation === 'MINUS' ? '-' : '+'}{relation.kkkPercent}%
-                              </Badge>
-                            ) : (
-                              <span className="text-gray-500 text-xs">Использует ККК источника</span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
                           <Badge variant={relation.isActive ? 'default' : 'secondary'}>
                             {relation.isActive ? 'Активен' : 'Неактивен'}
                           </Badge>
@@ -756,17 +757,6 @@ export function RateSources() {
                               onClick={() => handleToggleMerchantRateProvider(relation.id, relation.merchantProvidesRate)}
                             >
                               {relation.merchantProvidesRate ? 'Использовать источник' : 'Передавать курс'}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-purple-600 border-purple-200 hover:bg-purple-50"
-                              onClick={() => {
-                                setSelectedMerchantRelation(relation)
-                                setIsMerchantKkkDialogOpen(true)
-                              }}
-                            >
-                              ККК
                             </Button>
                             <Button
                               size="sm"
@@ -820,7 +810,7 @@ export function RateSources() {
                 </div>
               </div>
               
-              <Button onClick={handleAddMerchant} disabled={!selectedMerchantId || isLoading} className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#7c3aed] dark:hover:bg-purple-800/60">
+              <Button onClick={handleAddMerchant} disabled={!selectedMerchantId || isLoading}>
                 Добавить мерчанта
               </Button>
             </TabsContent>
@@ -851,50 +841,50 @@ export function RateSources() {
                     <TableRow>
                       <TableHead>Имя</TableHead>
                       <TableHead>Email</TableHead>
-                      <TableHead>Индивидуальный ККК</TableHead>
+                      <TableHead>Индивидуальный КК %</TableHead>
                       <TableHead>Действия</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {selectedSource.traders.map((trader) => (
-                      <TableRow key={trader.id}>
-                        <TableCell className="font-medium">{trader.name}</TableCell>
-                        <TableCell>{trader.email}</TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            {trader.traderKkkPercent !== null ? (
-                              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                                {trader.traderKkkOperation === 'MINUS' ? '-' : '+'}{trader.traderKkkPercent}%
+                    {selectedSource.traders.map((trader) => {
+                      const customSettings = selectedSource.traderSettings?.find(s => s.traderId === trader.id)
+                      return (
+                        <TableRow key={trader.id}>
+                          <TableCell className="font-medium">{trader.name}</TableCell>
+                          <TableCell>{trader.email}</TableCell>
+                          <TableCell>
+                            {customSettings && customSettings.customKkkPercent !== null ? (
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                                {customSettings.customKkkOperation === 'MINUS' ? '-' : '+'}{customSettings.customKkkPercent}%
                               </Badge>
                             ) : (
-                              <span className="text-gray-500 text-xs">Использует ККК источника</span>
+                              <Badge variant="secondary">По умолчанию</Badge>
                             )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-purple-600 border-purple-200 hover:bg-purple-50"
-                              onClick={() => {
-                                setSelectedTraderForKkk(trader)
-                                setIsTraderKkkDialogOpen(true)
-                              }}
-                            >
-                              ККК
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => selectedSource && handleRemoveTrader(selectedSource.id, trader.id)}
-                            >
-                              Удалить
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedSource(selectedSource)
+                                  handleOpenTraderSettings(selectedSource.id, trader.id)
+                                }}
+                              >
+                                Настроить КК
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => selectedSource && handleRemoveTrader(selectedSource.id, trader.id)}
+                              >
+                                Удалить
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
                   </TableBody>
                 </Table>
               ) : (
@@ -921,7 +911,7 @@ export function RateSources() {
                 </Select>
               </div>
               
-              <Button onClick={handleAddTrader} disabled={!selectedTraderId || isLoading} className="bg-[#530FAD] hover:bg-[#530FAD]/90 dark:bg-[#7c3aed] dark:hover:bg-purple-800/60">
+              <Button onClick={handleAddTrader} disabled={!selectedTraderId || isLoading}>
                 Добавить трейдера
               </Button>
             </TabsContent>
@@ -929,230 +919,88 @@ export function RateSources() {
         </DialogContent>
       </Dialog>
 
-      {/* Диалог настройки ККК мерчанта */}
-      <Dialog open={isMerchantKkkDialogOpen} onOpenChange={setIsMerchantKkkDialogOpen}>
+      {/* Диалог настройки индивидуального КК для трейдера */}
+      <Dialog open={isTraderSettingsDialogOpen} onOpenChange={setIsTraderSettingsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Настройка индивидуального ККК</DialogTitle>
+            <DialogTitle>Индивидуальные настройки КК для трейдера</DialogTitle>
             <DialogDescription>
-              Настройка ККК для мерчанта {selectedMerchantRelation?.merchant.name}
+              Настройте индивидуальный процент КК для выбранного трейдера
             </DialogDescription>
           </DialogHeader>
-          {selectedMerchantRelation && (
-            <MerchantKkkForm
-              relation={selectedMerchantRelation}
-              sourceKkk={{
-                percent: selectedSource?.kkkPercent || 0,
-                operation: selectedSource?.kkkOperation || 'MINUS'
-              }}
-              onSave={(kkkPercent, kkkOperation) => 
-                handleUpdateMerchantKkk(selectedMerchantRelation.id, kkkPercent, kkkOperation)
-              }
-              onCancel={() => setIsMerchantKkkDialogOpen(false)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Диалог настройки ККК трейдера */}
-      <Dialog open={isTraderKkkDialogOpen} onOpenChange={setIsTraderKkkDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Настройка индивидуального ККК</DialogTitle>
-            <DialogDescription>
-              Настройка ККК для трейдера {selectedTraderForKkk?.name}
-            </DialogDescription>
-          </DialogHeader>
-          {selectedTraderForKkk && (
-            <TraderKkkForm
-              trader={selectedTraderForKkk}
-              sourceKkk={{
-                percent: selectedSource?.kkkPercent || 0,
-                operation: selectedSource?.kkkOperation || 'MINUS'
-              }}
-              onSave={(kkkPercent, kkkOperation) => 
-                handleUpdateTraderKkk(selectedTraderForKkk.id, kkkPercent, kkkOperation)
-              }
-              onCancel={() => setIsTraderKkkDialogOpen(false)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-    </div>
-  )
-}
-
-// Форма настройки ККК мерчанта
-function MerchantKkkForm({ 
-  relation, 
-  sourceKkk, 
-  onSave, 
-  onCancel 
-}: {
-  relation: any
-  sourceKkk: { percent: number, operation: 'PLUS' | 'MINUS' }
-  onSave: (kkkPercent: number | null, kkkOperation: 'PLUS' | 'MINUS' | null) => void
-  onCancel: () => void
-}) {
-  const [useIndividual, setUseIndividual] = useState(relation.kkkPercent !== null)
-  const [kkkPercent, setKkkPercent] = useState(relation.kkkPercent?.toString() || '0')
-  const [kkkOperation, setKkkOperation] = useState<'PLUS' | 'MINUS'>(relation.kkkOperation || 'MINUS')
-
-  const handleSave = () => {
-    if (useIndividual) {
-      onSave(parseFloat(kkkPercent) || 0, kkkOperation)
-    } else {
-      onSave(null, null)
-    }
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <Switch
-          checked={useIndividual}
-          onCheckedChange={setUseIndividual}
-        />
-        <Label>Использовать индивидуальный ККК</Label>
-      </div>
-
-      {useIndividual && (
-        <div className="space-y-4 p-4 bg-purple-50/50 rounded-lg border border-purple-200">
-          <div className="space-y-2">
-            <Label>Корректировка курса (%)</Label>
-            <div className="flex gap-2">
-              <Select value={kkkOperation} onValueChange={(value: 'PLUS' | 'MINUS') => setKkkOperation(value)}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PLUS">Увеличить</SelectItem>
-                  <SelectItem value="MINUS">Уменьшить</SelectItem>
-                </SelectContent>
-              </Select>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Процент КК (%)</Label>
               <Input
                 type="number"
                 step="0.01"
                 min="0"
                 max="100"
-                value={kkkPercent}
-                onChange={(e) => setKkkPercent(e.target.value)}
-                className="flex-1"
-                placeholder="0.00"
+                value={traderKkkPercent}
+                onChange={(e) => setTraderKkkPercent(parseFloat(e.target.value) || 0)}
               />
             </div>
-          </div>
-        </div>
-      )}
-
-      <div className="p-3 bg-gray-50 rounded-lg">
-        <p className="text-sm text-gray-600 mb-1">Текущий ККК источника:</p>
-        <Badge variant="outline">
-          {sourceKkk.operation === 'MINUS' ? '-' : '+'}{sourceKkk.percent}%
-        </Badge>
-      </div>
-
-      <div className="flex gap-2">
-        <Button variant="outline" onClick={onCancel} className="flex-1">
-          Отмена
-        </Button>
-        <Button onClick={handleSave} className="flex-1 bg-[#530FAD] hover:bg-[#530FAD]/90">
-          Сохранить
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-// Форма настройки ККК трейдера
-function TraderKkkForm({ 
-  trader, 
-  sourceKkk, 
-  onSave, 
-  onCancel 
-}: {
-  trader: any
-  sourceKkk: { percent: number, operation: 'PLUS' | 'MINUS' }
-  onSave: (kkkPercent: number | null, kkkOperation: 'PLUS' | 'MINUS' | null) => void
-  onCancel: () => void
-}) {
-  const [useIndividual, setUseIndividual] = useState(trader.traderKkkPercent !== null)
-  const [kkkPercent, setKkkPercent] = useState(trader.traderKkkPercent?.toString() || '0')
-  const [kkkOperation, setKkkOperation] = useState<'PLUS' | 'MINUS'>(trader.traderKkkOperation || 'MINUS')
-
-  const handleSave = () => {
-    if (useIndividual) {
-      onSave(parseFloat(kkkPercent) || 0, kkkOperation)
-    } else {
-      onSave(null, null)
-    }
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <Switch
-          checked={useIndividual}
-          onCheckedChange={setUseIndividual}
-        />
-        <Label>Использовать индивидуальный ККК</Label>
-      </div>
-
-      {useIndividual && (
-        <div className="space-y-4 p-4 bg-purple-50/50 rounded-lg border border-purple-200">
-          <div className="space-y-2">
-            <Label>Корректировка курса (%)</Label>
-            <div className="flex gap-2">
-              <Select value={kkkOperation} onValueChange={(value: 'PLUS' | 'MINUS') => setKkkOperation(value)}>
-                <SelectTrigger className="w-[140px]">
+            
+            <div className="space-y-2">
+              <Label>Операция</Label>
+              <Select
+                value={traderKkkOperation}
+                onValueChange={(value: 'PLUS' | 'MINUS') => setTraderKkkOperation(value)}
+              >
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="PLUS">Увеличить</SelectItem>
-                  <SelectItem value="MINUS">Уменьшить</SelectItem>
+                  <SelectItem value="PLUS">Увеличить курс</SelectItem>
+                  <SelectItem value="MINUS">Уменьшить курс</SelectItem>
                 </SelectContent>
               </Select>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                max="100"
-                value={kkkPercent}
-                onChange={(e) => setKkkPercent(e.target.value)}
-                className="flex-1"
-                placeholder="0.00"
-              />
+            </div>
+
+            <div className="p-3 bg-blue-50 rounded-lg text-sm">
+              <p className="font-medium text-blue-900">Предварительный расчет:</p>
+              <p className="text-blue-700">
+                Если базовый курс = 95.00 ₽/USDT, то итоговый курс будет:{' '}
+                <span className="font-bold">
+                  {(95 * (1 + (traderKkkPercent / 100) * (traderKkkOperation === 'MINUS' ? -1 : 1))).toFixed(2)} ₽/USDT
+                </span>
+              </p>
             </div>
           </div>
-        </div>
-      )}
 
-      <div className="p-3 bg-gray-50 rounded-lg">
-        <p className="text-sm text-gray-600 mb-1">Текущий ККК источника:</p>
-        <Badge variant="outline">
-          {sourceKkk.operation === 'MINUS' ? '-' : '+'}{sourceKkk.percent}%
-        </Badge>
-      </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsTraderSettingsDialogOpen(false)}>
+              Отмена
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteTraderSettings}>
+              Сбросить
+            </Button>
+            <Button onClick={handleSaveTraderSettings} disabled={isLoading}>
+              Сохранить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      <div className="flex gap-2">
-        <Button variant="outline" onClick={onCancel} className="flex-1">
-          Отмена
-        </Button>
-        <Button onClick={handleSave} className="flex-1 bg-[#530FAD] hover:bg-[#530FAD]/90">
-          Сохранить
-        </Button>
-      </div>
+      {/* Диалог управления агрегаторами */}
+      <Dialog open={isAggregatorDialogOpen} onOpenChange={setIsAggregatorDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Агрегаторы источника курса</DialogTitle>
+            <DialogDescription>
+              Управление агрегаторами для источника {selectedSource?.displayName}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedSource && (
+            <RateSourceAggregators
+              rateSourceId={selectedSource.id}
+              rateSourceName={selectedSource.displayName}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
-}
-
-async function fetchBybitRate() {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rapira-rate/bybit-rate`)
-    if (!res.ok) return null
-    const data = await res.json()
-    return data?.data?.baseRate as number
-  } catch {
-    return null
-  }
 }

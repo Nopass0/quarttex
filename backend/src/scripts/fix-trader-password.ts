@@ -1,30 +1,22 @@
 import { db } from "../db";
-import { createHash } from "crypto";
+import { sha256 } from "../utils/hash";
 
 async function fixTraderPassword() {
-  const trader = await db.user.findFirst({
-    where: { email: "trader@example.com" }
+  const hashedPassword = await sha256("test123");
+  
+  const trader = await db.user.update({
+    where: {
+      email: "trader@test.com"
+    },
+    data: {
+      password: hashedPassword
+    }
   });
   
-  if (!trader) {
-    console.log("Trader not found");
-    return;
-  }
+  console.log("Updated trader password to hashed version of 'test123'");
+  console.log("Trader:", trader.email);
   
-  // Hash the password with SHA256
-  const passwordHash = createHash("sha256").update("Trader123!").digest("hex");
-  
-  await db.user.update({
-    where: { id: trader.id },
-    data: { password: passwordHash }
-  });
-  
-  console.log("Fixed trader password hash");
+  process.exit(0);
 }
 
-fixTraderPassword()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+fixTraderPassword().catch(console.error);

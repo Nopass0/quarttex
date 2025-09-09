@@ -97,35 +97,52 @@ export const traderWithdrawalsRoutes = new Elysia({ prefix: "/withdrawals" })
     }
 
     let availableBalance = 0;
+    let displayedBalance = 0; // Баланс, отображаемый на сайте
     let balanceField = "";
 
     switch (balanceType) {
       case WithdrawalBalanceType.TRUST:
         // For TRUST balance, consider frozen amount
         availableBalance = user.trustBalance - user.frozenUsdt;
+        displayedBalance = user.trustBalance; // На сайте показывается полный trustBalance
         balanceField = "frozenUsdt"; // We'll freeze instead of decrement
         break;
       case WithdrawalBalanceType.COMPENSATION:
         availableBalance = user.payoutBalance;
+        displayedBalance = user.payoutBalance;
         balanceField = "payoutBalance";
         break;
       case WithdrawalBalanceType.PROFIT_DEALS:
         availableBalance = user.profitFromDeals;
+        displayedBalance = user.profitFromDeals;
         balanceField = "profitFromDeals";
         break;
       case WithdrawalBalanceType.PROFIT_PAYOUTS:
         availableBalance = user.profitFromPayouts;
+        displayedBalance = user.profitFromPayouts;
         balanceField = "profitFromPayouts";
         break;
       case WithdrawalBalanceType.REFERRAL:
         availableBalance = 0; // TODO: Implement referral balance
+        displayedBalance = 0;
         break;
       case WithdrawalBalanceType.WORKING:
         availableBalance = user.balanceUsdt;
+        displayedBalance = user.balanceUsdt;
         balanceField = "balanceUsdt";
         break;
     }
 
+    // Проверяем, что сумма вывода не превышает баланс, отображаемый на сайте
+    if (amountUSDT > displayedBalance) {
+      set.status = 400;
+      return {
+        success: false,
+        error: `Сумма вывода не может превышать баланс на сайте (${displayedBalance.toFixed(2)} USDT)`
+      };
+    }
+
+    // Проверяем доступный баланс (с учетом замороженных средств)
     if (availableBalance < amountUSDT) {
       set.status = 400;
       return {
@@ -168,11 +185,12 @@ export const traderWithdrawalsRoutes = new Elysia({ prefix: "/withdrawals" })
       // Deduct from balance or freeze funds
       if (balanceField) {
         if (balanceType === WithdrawalBalanceType.TRUST) {
-          // For TRUST balance, freeze the amount
+          // For TRUST balance, freeze the amount and deduct from trustBalance immediately
           await tx.user.update({
             where: { id: trader.id },
             data: {
-              frozenUsdt: { increment: amountUSDT }
+              frozenUsdt: { increment: amountUSDT },
+              trustBalance: { decrement: amountUSDT }
             }
           });
         } else if (balanceField !== "referralBalance") {

@@ -31,6 +31,7 @@ export default function MerchantTestPage() {
   const [amount, setAmount] = useState("")
   const [orderId, setOrderId] = useState("")
   const [callbackUri, setCallbackUri] = useState("")
+  const [clientIdentifier, setClientIdentifier] = useState("")
   const [autoCreate, setAutoCreate] = useState({ IN: false, OUT: false })
   const [minDelay, setMinDelay] = useState({ IN: "5", OUT: "10" })
   const [maxDelay, setMaxDelay] = useState({ IN: "15", OUT: "30" })
@@ -70,6 +71,64 @@ export default function MerchantTestPage() {
     return `TEST_${timestamp}_${random}`
   }
 
+  const createPayout = async () => {
+    if (!methodId) {
+      toast.error("Выберите метод оплаты")
+      return
+    }
+
+    if (!amount || parseFloat(amount) <= 0) {
+      toast.error("Введите корректную сумму")
+      return
+    }
+
+    setLoading(true)
+    try {
+      const data: any = {
+        methodId,
+        amount: parseFloat(amount),
+        wallet: "4111111111111111", // Тестовая карта
+        bank: "SBERBANK",
+        isCard: true,
+        merchantRate: 95 + Math.random() * 10,
+        externalReference: orderId || generateOrderId(),
+      }
+
+      if (callbackUri) {
+        data.webhookUrl = callbackUri
+      }
+
+      if (clientIdentifier) {
+        data.clientIdentifier = clientIdentifier
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/merchant/payouts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': merchantToken || ''
+        },
+        body: JSON.stringify(data)
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        toast.success("Тестовая выплата создана", {
+          description: `ID: ${result.payout?.id || result.id}`
+        })
+        setOrderId("")
+        setClientIdentifier("")
+      } else {
+        const error = await response.json()
+        toast.error(error.error || "Ошибка создания выплаты")
+      }
+    } catch (error) {
+      toast.error("Не удалось создать выплату")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const createTransaction = async (type: 'IN' | 'OUT') => {
     if (!methodId) {
       toast.error("Выберите метод оплаты")
@@ -94,6 +153,10 @@ export default function MerchantTestPage() {
 
       if (callbackUri) {
         data.callbackUri = callbackUri
+      }
+
+      if (clientIdentifier) {
+        data.clientIdentifier = clientIdentifier
       }
 
       const endpoint = type === 'IN' ? 'in' : 'out'
@@ -147,6 +210,11 @@ export default function MerchantTestPage() {
 
         if (callbackUri) {
           data.callbackUri = callbackUri
+        }
+
+        // Для пакетного создания генерируем случайные clientIdentifier
+        if (Math.random() > 0.3) { // 70% транзакций будут с clientIdentifier
+          data.clientIdentifier = `client_${Math.floor(Math.random() * 1000)}_${i}`;
         }
 
         const endpoint = type === 'IN' ? 'in' : 'out'
@@ -280,6 +348,18 @@ export default function MerchantTestPage() {
                     onChange={(e) => setCallbackUri(e.target.value)}
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label>Идентификатор клиента (опционально)</Label>
+                  <Input
+                    placeholder="client_user_12345"
+                    value={clientIdentifier}
+                    onChange={(e) => setClientIdentifier(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Используется для определения типа трафика (первичный/вторичный/VIP)
+                  </p>
+                </div>
               </div>
 
               <div className="flex gap-2">
@@ -293,14 +373,14 @@ export default function MerchantTestPage() {
                   Создать сделку (IN)
                 </Button>
                 <Button
-                  onClick={() => createTransaction('OUT')}
+                  onClick={createPayout}
                   disabled={loading}
                   variant="outline"
                   className="flex-1"
                 >
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   <CreditCard className="mr-2 h-4 w-4" />
-                  Создать выплату (OUT)
+                  Создать выплату (Payouts API)
                 </Button>
               </div>
             </CardContent>

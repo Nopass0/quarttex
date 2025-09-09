@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api'
 
 export function formatAmount(amount: number): string {
   // Truncate to 2 decimal places instead of rounding

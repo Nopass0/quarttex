@@ -515,7 +515,7 @@ export function RequisitesAndDevices() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {device.isActive ? (
-                            <Badge className="bg-purple-50 text-purple-600 border-0">
+                            <Badge className="bg-green-50 text-green-600 border-0">
                               <CheckCircle className="mr-1 h-3 w-3" />
                               Активно
                             </Badge>

@@ -110,7 +110,7 @@ interface DeviceRequisite {
   currentTotalAmount: number;
   operationLimit: number;
   sumLimit: number;
-  intervalMinutes: number;
+  intervalMinutes?: number;
   activeDeals: number;
   minAmount: number;
   maxAmount: number;
@@ -404,7 +404,8 @@ export function DeviceRequisitesSheet({
         return;
       }
 
-      if (selectedMethod.type === "sbp" && !data.phoneNumber) {
+      // При редактировании СБП реквизитов номер телефона не требуется (он заблокирован)
+      if (selectedMethod.type === "sbp" && !data.phoneNumber && !isEditing) {
         toast.error("Введите номер телефона");
         return;
       }
@@ -417,10 +418,9 @@ export function DeviceRequisitesSheet({
         maxAmount: Number(data.maxAmount),
         operationLimit: Number(data.operationLimit),
         sumLimit: Number(data.sumLimit),
-        intervalMinutes: Number(data.intervalMinutes),
+        intervalMinutes: Number(data.intervalMinutes || 0),
         isActive: data.isActive ?? true,
         deviceId,
-
         isArchived: editingRequisite ? editingRequisite.isArchived : existingRequisite?.isArchived ?? false,
       };
 
@@ -864,34 +864,34 @@ export function DeviceRequisitesSheet({
                   />
                 </div>
 
-                <div>
-                  <FormField
-                    control={form.control}
-                    name="intervalMinutes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Интервал между сделками (мин)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="text"
-                            inputMode="numeric"
-                            placeholder="0"
-                            value={intervalMinutesInput}
-                            onChange={(e) => {
-                              const raw = e.target.value;
-                              const digitsOnly = raw.replace(/\D/g, "");
-                              setIntervalMinutesInput(digitsOnly);
-                              form.setValue("intervalMinutes", digitsOnly === "" ? undefined : Number(digitsOnly), { shouldValidate: false, shouldDirty: true });
-                            }}
-                            disabled={loading}
-                          />
-                        </FormControl>
-                        <FormDescription>0 = без ограничений</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="intervalMinutes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Интервал между сделками (мин)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="0"
+                          value={intervalMinutesInput}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            const digitsOnly = raw.replace(/\D/g, "");
+                            setIntervalMinutesInput(digitsOnly);
+                            form.setValue("intervalMinutes", digitsOnly === "" ? undefined : Number(digitsOnly), { shouldValidate: false, shouldDirty: true });
+                          }}
+                          disabled={loading}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Минимальный интервал между новыми сделками на этом реквизите. 0 = без ограничений
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}

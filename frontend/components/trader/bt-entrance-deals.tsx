@@ -6,6 +6,7 @@ import { ru } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -34,6 +35,7 @@ import { formatAmount } from "@/lib/utils";
 import { BtEntranceList } from "./bt-entrance-list";
 import { BtRequisitesSheet } from "./bt-requisites-sheet";
 import { useRouter } from "next/navigation";
+import { TraderHeader } from "@/components/trader/trader-header";
 import {
   Loader2,
   Search,
@@ -180,8 +182,8 @@ const dealStatusConfig = {
     label: "Готово",
     description: "Сделка выполнена",
     color:
-      "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-green-800",
-    badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
+      "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
+    badgeColor: "bg-green-50 text-green-700 border-green-200",
     icon: CheckCircle,
   },
   EXPIRED: {
@@ -199,6 +201,14 @@ const dealStatusConfig = {
       "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600",
     badgeColor: "bg-gray-50 text-gray-700 border-gray-200",
     icon: XCircle,
+  },
+  DISPUTE: {
+    label: "Спор",
+    description: "Сделка в споре",
+    color:
+      "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800",
+    badgeColor: "bg-yellow-50 text-yellow-700 border-yellow-200",
+    icon: AlertCircle,
   },
 };
 
@@ -254,9 +264,18 @@ export function BtEntranceDeals() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalDeals, setTotalDeals] = useState(0);
 
+  // Period stats (аналогично DealsList)
+  const [period, setPeriod] = useState("today");
+  const [periodStats, setPeriodStats] = useState({
+    count: 0,
+    totalAmount: 0,
+    totalAmountRub: 0,
+    totalProfit: 0,
+  });
+
   useEffect(() => {
     fetchDeals();
-  }, [filterStatus, searchQuery, currentPage]);
+  }, [filterStatus, searchQuery, currentPage, period]);
 
   // Автоматическое обновление списка сделок каждые 10 секунд
   useEffect(() => {
@@ -265,7 +284,7 @@ export function BtEntranceDeals() {
     }, 10000); // 10 секунд
 
     return () => clearInterval(interval);
-  }, [filterStatus, searchQuery, currentPage]);
+  }, [filterStatus, searchQuery, currentPage, period]);
 
   // Timer for countdown update - only update if there are active deals
   useEffect(() => {
@@ -298,12 +317,35 @@ export function BtEntranceDeals() {
         limit: 50,
         ...(filterStatus !== "all" && { status: filterStatus }),
         ...(searchQuery && { search: searchQuery }),
+        period,
       };
 
-      const response = await traderApi.getBtDeals(params);
+      const [dealsResponse, statsResponse] = await Promise.all([
+        traderApi.getBtDeals(params),
+        traderApi.getBtStats({ period }),
+      ]);
 
       // Response already contains the full structure from API
-      const apiDeals = response.data || [];
+      const apiDeals = dealsResponse.data || [];
+
+      // Собираем простую агрегированную статистику по видимым сделкам
+      const visible = apiDeals.filter((d: any) => isWithoutDevice(d));
+      const ready = visible.filter((d: any) => d.status === "READY");
+      const totalUsd = ready.reduce(
+        (sum: number, d: any) => sum + (d.amount / (d.rate || 1)),
+        0
+      );
+      const totalRub = ready.reduce((sum: number, d: any) => sum + d.amount, 0);
+      const profitUsdt = ready.reduce(
+        (sum: number, d: any) => sum + (d.traderProfit || 0),
+        0
+      );
+      setPeriodStats({
+        count: ready.length,
+        totalAmount: Number(totalUsd.toFixed(2)),
+        totalAmountRub: Math.round(totalRub),
+        totalProfit: Number(profitUsdt.toFixed(2)),
+      });
 
       // Debug first ready deal
       const readyDeal = apiDeals.find((d: any) => d.status === "READY");
@@ -328,8 +370,12 @@ export function BtEntranceDeals() {
       }
 
       setDeals(apiDeals.filter(isWithoutDevice));
-      setTotalDeals(response.total || 0);
-      setTotalPages(Math.ceil((response.total || 0) / 50));
+      setTotalDeals(dealsResponse.total || 0);
+      setTotalPages(Math.ceil((dealsResponse.total || 0) / 50));
+
+      if (statsResponse?.stats) {
+        setPeriodStats(statsResponse.stats);
+      }
 
       if (initialLoading) {
         setInitialLoading(false);
@@ -423,29 +469,137 @@ export function BtEntranceDeals() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header with user info (как в классике) */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">БТ-Вход</h1>
-          <p className="text-gray-600 mt-2">
-            Сделки для реквизитов без устройств (ручная обработка)
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => {
-              console.log("Opening BT Requisites Sheet");
-              setShowRequisitesSheet(true);
-            }}
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            Реквизиты БТ
-          </Button>
-        </div>
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-[#eeeeee]">БТ-вход</h1>
+        <TraderHeader />
       </div>
 
-      {/* Filters */}
+      {/* Stats Blocks (как в классике) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6">
+        {/* Deals Stats */}
+        <Card className="p-3 md:p-4 border border-gray-200 dark:border-[#29382f]">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                Сделки ({periodStats.count})
+              </h3>
+              <div className="space-y-1">
+                <div className="text-xl font-semibold text-gray-900 dark:text-[#eeeeee]">
+                  {periodStats.totalAmount.toFixed(2)} USDT
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  {(periodStats.totalAmountRub || 0).toFixed(0)} RUB
+                </div>
+                {periodStats.count === 0 && (
+                  <div className="text-xs text-red-500 dark:text-[#c64444] mt-2">
+                    Нет успешных сделок
+                  </div>
+                )}
+              </div>
+            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="text-xs">
+                  <span className="hidden sm:inline">Период: </span>
+                  {period === "today"
+                    ? "за сегодня"
+                    : period === "yesterday"
+                    ? "за вчера"
+                    : period === "week"
+                    ? "за неделю"
+                    : period === "month"
+                    ? "за месяц"
+                    : period === "quarter"
+                    ? "за квартал"
+                    : period === "halfyear"
+                    ? "за полгода"
+                    : period === "year"
+                    ? "за год"
+                    : "за сегодня"}
+                  <ChevronDown className="ml-1 h-3 w-3 text-[#006039] dark:text-[#2d6a42]" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-0" align="end" alignOffset={-10}>
+                <div className="max-h-64 overflow-auto">
+                  {[
+                    ["today","За сегодня"],
+                    ["yesterday","За вчера"],
+                    ["week","За неделю"],
+                    ["month","За месяц"],
+                    ["quarter","За квартал"],
+                    ["halfyear","За полгода"],
+                    ["year","За год"],
+                  ].map(([val,label]) => (
+                    <Button key={val} variant="ghost" size="sm" className="w-full justify-start" onClick={() => setPeriod(val as any)}>
+                      {label}
+                    </Button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </Card>
+
+        {/* Profit Stats */}
+        <Card className="p-3 md:p-4 border border-gray-200 dark:border-[#29382f]">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="text-sm text-gray-600 dark:text-gray-400 mb-2">Прибыль</h3>
+              <div className="space-y-1">
+                <div className="text-xl font-semibold text-gray-900 dark:text-[#eeeeee]">
+                  {periodStats.totalProfit.toFixed(2)} USDT
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  {(periodStats.totalProfit * 95).toFixed(0)} RUB
+                </div>
+              </div>
+            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="text-xs">
+                  <span className="hidden sm:inline">Период: </span>
+                  {period === "today"
+                    ? "за сегодня"
+                    : period === "yesterday"
+                    ? "за вчера"
+                    : period === "week"
+                    ? "за неделю"
+                    : period === "month"
+                    ? "за месяц"
+                    : period === "quarter"
+                    ? "за квартал"
+                    : period === "halfyear"
+                    ? "за полгода"
+                    : period === "year"
+                    ? "за год"
+                    : "за сегодня"}
+                  <ChevronDown className="ml-1 h-3 w-3 text-[#006039] dark:text-[#2d6a42]" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-0" align="end" alignOffset={-10}>
+                <div className="max-h-64 overflow-auto">
+                  {[
+                    ["today","За сегодня"],
+                    ["yesterday","За вчера"],
+                    ["week","За неделю"],
+                    ["month","За месяц"],
+                    ["quarter","За квартал"],
+                    ["halfyear","За полгода"],
+                    ["year","За год"],
+                  ].map(([val,label]) => (
+                    <Button key={val} variant="ghost" size="sm" className="w-full justify-start" onClick={() => setPeriod(val as any)}>
+                      {label}
+                    </Button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </Card>
+      </div>
+
+      {/* Filters and header actions */}
       <div className="space-y-4">
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Status Filter */}
@@ -455,12 +609,10 @@ export function BtEntranceDeals() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Все статусы</SelectItem>
-              <SelectItem value="PENDING">Ожидает принятия</SelectItem>
-              <SelectItem value="ACCEPTED">Принята</SelectItem>
               <SelectItem value="IN_PROGRESS">В процессе</SelectItem>
               <SelectItem value="READY">Готово</SelectItem>
-              <SelectItem value="EXPIRED">Просрочена</SelectItem>
-              <SelectItem value="CANCELLED">Отменена</SelectItem>
+              <SelectItem value="EXPIRED">Истекло</SelectItem>
+              <SelectItem value="DISPUTE">Спор</SelectItem>
             </SelectContent>
           </Select>
 
@@ -473,6 +625,16 @@ export function BtEntranceDeals() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
             />
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowRequisitesSheet(true)}
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Реквизиты БТ
+            </Button>
           </div>
         </div>
       </div>
@@ -498,8 +660,8 @@ export function BtEntranceDeals() {
                     );
                   case "READY":
                     return (
-                      <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                        <CheckCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                      <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                        <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
                       </div>
                     );
                   case "EXPIRED":
@@ -512,6 +674,12 @@ export function BtEntranceDeals() {
                     return (
                       <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-900/30 flex items-center justify-center">
                         <XCircle className="h-6 w-6 text-gray-600 dark:text-gray-400" />
+                      </div>
+                    );
+                  case "DISPUTE":
+                    return (
+                      <div className="w-12 h-12 rounded-xl bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+                        <AlertCircle className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
                       </div>
                     );
                   default:
@@ -528,6 +696,8 @@ export function BtEntranceDeals() {
                   case "ACCEPTED":
                   case "IN_PROGRESS":
                     return "Платеж ожидает зачисления";
+                  case "DISPUTE":
+                    return "Сделка в споре";
                   default:
                     return "Платеж не зачислен";
                 }
@@ -546,6 +716,8 @@ export function BtEntranceDeals() {
                     return "Истекло";
                   case "CANCELLED":
                     return "Отменено";
+                  case "DISPUTE":
+                    return "Спор";
                   default:
                     return "Не зачислен";
                 }
@@ -554,11 +726,13 @@ export function BtEntranceDeals() {
               const getStatusBadgeColor = () => {
                 switch (deal.status) {
                   case "READY":
-                    return "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-green-800";
+                    return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800";
                   case "PENDING":
                   case "ACCEPTED":
                   case "IN_PROGRESS":
                     return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800";
+                  case "DISPUTE":
+                    return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800";
                   default:
                     return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800";
                 }
@@ -640,7 +814,7 @@ export function BtEntranceDeals() {
                       </div>
                       {/* Profit - показываем только для статуса READY */}
                       {deal.status === "READY" && deal.traderProfit != null && (
-                        <div className="text-xs text-purple-600 dark:text-purple-400 mt-0.5">
+                        <div className="text-xs text-green-600 dark:text-green-400 mt-0.5">
                           +{deal.traderProfit.toFixed(2)}
                         </div>
                       )}
@@ -782,8 +956,8 @@ export function BtEntranceDeals() {
                     {/* Status Icon */}
                     <div className="mb-4 flex justify-center">
                       {selectedDeal.status === "READY" ? (
-                        <div className="w-20 h-20 rounded-3xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                          <CheckCircle2 className="h-10 w-10 text-purple-600 dark:text-purple-400" />
+                        <div className="w-20 h-20 rounded-3xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                          <CheckCircle2 className="h-10 w-10 text-green-600 dark:text-green-400" />
                         </div>
                       ) : selectedDeal.status === "PENDING" ||
                         selectedDeal.status === "ACCEPTED" ||
@@ -832,7 +1006,7 @@ export function BtEntranceDeals() {
 
                     {/* Amount */}
                     <div className="mb-1">
-                      <span className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                      <span className="text-3xl font-bold text-green-600 dark:text-green-400">
                         {(selectedDeal.amount / selectedDeal.rate).toFixed(2)}{" "}
                         USDT
                       </span>
@@ -913,7 +1087,7 @@ export function BtEntranceDeals() {
                             <span className="text-sm text-gray-500 dark:text-gray-400">
                               Прибыль
                             </span>
-                            <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
+                            <span className="text-lg font-semibold text-green-600 dark:text-green-400">
                               + {selectedDeal.traderProfit.toFixed(2)} USDT
                             </span>
                           </div>

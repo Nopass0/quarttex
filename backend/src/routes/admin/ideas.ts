@@ -43,28 +43,55 @@ export default (app: Elysia) =>
   })
   .patch(
     "/:id",
-    async ({ params, body }) => {
-      const idea = await db.idea.update({
-        where: { id: params.id },
-        data: {
-          status: body.status,
-          adminNotes: body.adminNotes,
-        },
-      });
+    async ({ params, body, set }) => {
+      if (body.status === undefined && body.adminNotes === undefined) {
+        set.status = 400;
+        return { error: "Nothing to update" };
+      }
 
-      return idea;
+      const existing = await db.idea.findUnique({ where: { id: params.id } });
+      if (!existing) {
+        set.status = 404;
+        return { error: "Idea not found" };
+      }
+
+      // Нормализуем статус из UI в статус БД (Prisma)
+      const normalizedStatus =
+        body.status === "APPROVED"
+          ? "ACCEPTED"
+          : body.status;
+
+      try {
+        const idea = await db.idea.update({
+          where: { id: params.id },
+          data: {
+            ...(normalizedStatus !== undefined ? { status: normalizedStatus as any } : {}),
+            ...(body.adminNotes !== undefined ? { adminNotes: body.adminNotes } : {}),
+          },
+        });
+
+        return idea;
+      } catch (e) {
+        set.status = 400;
+        return { error: "Invalid payload", details: e instanceof Error ? e.message : String(e) };
+      }
     },
     {
       params: t.Object({
         id: t.String(),
       }),
       body: t.Object({
-        status: t.Optional(t.Union([
-          t.Literal("PENDING"),
-          t.Literal("REVIEWING"),
-          t.Literal("APPROVED"),
-          t.Literal("REJECTED"),
-        ])),
+        // Разрешаем значения из UI, маппим APPROVED -> ACCEPTED
+        status: t.Optional(
+          t.Union([
+            t.Literal("PENDING"),
+            t.Literal("REVIEWING"),
+            t.Literal("APPROVED"),
+            t.Literal("REJECTED"),
+            t.Literal("IMPLEMENTED"),
+            t.Literal("ACCEPTED"),
+          ])
+        ),
         adminNotes: t.Optional(t.String()),
       }),
     }

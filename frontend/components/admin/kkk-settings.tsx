@@ -31,7 +31,7 @@ export function KkkSettings() {
     fetchKkkSettings()
   }, [])
 
-  // Auto-refresh rates every 10 seconds (and fetch immediately)
+  // Auto-refresh rates every 60 seconds (and fetch immediately) 
   useEffect(() => {
     const run = async () => {
       refetchRapiraRate()
@@ -39,7 +39,7 @@ export function KkkSettings() {
       if (typeof br === 'number') setCurrentBybitRate(br)
     }
     run()
-    const interval = setInterval(run, 10000) // 10 seconds
+    const interval = setInterval(run, 60000) // Reduced from 10 seconds to 1 minute
     return () => clearInterval(interval)
   }, [refetchRapiraRate])
 

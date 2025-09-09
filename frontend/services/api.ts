@@ -3,7 +3,7 @@ import { useTraderAuth, useAdminAuth } from "@/stores/auth";
 import { useMerchantAuth } from "@/stores/merchant-auth";
 import { useAggregatorAuth } from "@/stores/aggregator-auth";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 // Debug log
 if (typeof window !== "undefined") {
@@ -70,7 +70,7 @@ export const adminApiInstance = axios.create({
 });
 
 adminApiInstance.interceptors.request.use((config) => {
-  const token = useAdminAuth.getState().token;
+  const { token, twoFactorVerified } = useAdminAuth.getState();
   console.log("[Admin API] Request to:", config.url);
   console.log("[Admin API] Token from store:", token);
   if (token) {
@@ -78,6 +78,11 @@ adminApiInstance.interceptors.request.use((config) => {
     const sanitizedToken = token.replace(/[^\x00-\x7F]/g, "");
     config.headers["x-admin-key"] = sanitizedToken;
     console.log("[Admin API] Setting header x-admin-key:", sanitizedToken);
+    
+    // Add 2FA verification header if verified
+    if (twoFactorVerified) {
+      config.headers["x-2fa-verified"] = "true";
+    }
   }
   return config;
 });
@@ -86,6 +91,11 @@ adminApiInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 || error.response?.status === 403) {
+      // Check if 2FA is required
+      if (error.response?.data?.requiresTwoFactor) {
+        // Don't logout, just indicate 2FA is needed
+        return Promise.reject(error);
+      }
       useAdminAuth.getState().logout();
       window.location.href = "/admin/login";
     }
@@ -282,6 +292,10 @@ export const traderApi = {
   // Methods endpoints
   getMethods: async () => {
     const response = await traderApiInstance.get("/trader/methods");
+    return response.data;
+  },
+  getMerchantMethods: async () => {
+    const response = await traderApiInstance.get("/trader/merchant-methods");
     return response.data;
   },
   // Transaction status update
@@ -616,6 +630,13 @@ export const traderApi = {
     );
     return response.data;
   },
+  getBtStats: async (params?: { period?: string }) => {
+    const response = await traderApiInstance.get(
+      "/trader/bt-entrance/stats",
+      { params }
+    );
+    return response.data;
+  },
   createBtRequisite: async (data: any) => {
     const response = await traderApiInstance.post(
       "/trader/bt-entrance/requisites",
@@ -668,6 +689,13 @@ export const traderApi = {
       );
       return response.data;
     },
+    getStats: async (params?: { period?: string }) => {
+      const response = await traderApiInstance.get(
+        "/trader/bt-entrance/stats",
+        { params }
+      );
+      return response.data;
+    },
     updateDealStatus: async (id: string, status: string) => {
       const response = await traderApiInstance.patch(
         `/trader/bt-entrance/deals/${id}/status`,
@@ -702,6 +730,20 @@ export const traderApi = {
       );
       return response.data;
     },
+  },
+  
+  // Traffic Settings API
+  getTrafficSettings: async () => {
+    const response = await traderApiInstance.get("/trader/traffic-settings");
+    return response.data;
+  },
+  updateTrafficSettings: async (settings: {
+    isEnabled: boolean;
+    maxCounterparties: number;
+    trafficType: "PRIMARY" | "SECONDARY" | "VIP";
+  }) => {
+    const response = await traderApiInstance.put("/trader/traffic-settings", settings);
+    return response.data;
   },
 };
 
@@ -1475,6 +1517,34 @@ export const adminApi = {
     );
     return response.data;
   },
+
+  // 2FA endpoints
+  get2FAStatus: async () => {
+    const response = await adminApiInstance.get("/admin/2fa/status");
+    return response.data;
+  },
+  setup2FA: async () => {
+    const response = await adminApiInstance.post("/admin/2fa/setup");
+    return response.data;
+  },
+  enable2FA: async (token: string) => {
+    const response = await adminApiInstance.post("/admin/2fa/enable", { token });
+    return response.data;
+  },
+  disable2FA: async (token?: string, backupCode?: string) => {
+    const response = await adminApiInstance.post("/admin/2fa/disable", { 
+      token, 
+      backupCode 
+    });
+    return response.data;
+  },
+  verify2FA: async (token?: string, backupCode?: string) => {
+    const response = await adminApiInstance.post("/admin/2fa/verify", { 
+      token, 
+      backupCode 
+    });
+    return response.data;
+  },
 };
 
 // Aggregator API instance with interceptors
@@ -1575,7 +1645,7 @@ export const aggregatorApi = {
     );
     return response.data;
   },
-  updateProfile: async (data: { name?: string; apiBaseUrl?: string }) => {
+  updateProfile: async (data: { name?: string; apiBaseUrl?: string; customApiToken?: string | null }) => {
     const response = await aggregatorApiInstance.patch(
       "/aggregator/settings/profile",
       data

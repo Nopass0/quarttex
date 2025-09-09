@@ -168,14 +168,14 @@ const getBankIcon = (bankType: string, size: "sm" | "md" = "md") => {
 
   if (!logoPath) {
     return (
-      <div className={`${sizeClasses} rounded-lg bg-purple-100/40 border border-purple-200/60 flex items-center justify-center`}>
+      <div className={`${sizeClasses} rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center`}>
         <CreditCard className="w-5 h-5 text-gray-600" />
       </div>
     );
   }
 
   return (
-    <div className={`${sizeClasses} rounded-lg bg-purple-50/20 border-purple-200/60 border-purple-200/60 flex items-center justify-center overflow-hidden`}>
+    <div className={`${sizeClasses} rounded-lg bg-white border border-gray-200 flex items-center justify-center overflow-hidden`}>
       <img src={logoPath} alt={bankType} className="w-full h-full object-contain p-1" />
     </div>
   );
@@ -556,13 +556,13 @@ export function MessagesListNew() {
   };
 
   const getMessageIcon = () => (
-    <div className="w-12 h-12 rounded-xl bg-purple-100/40 flex items-center justify-center">
+    <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center">
       <MessageSquare className="h-6 w-6 text-gray-600" />
     </div>
   );
 
   const getDeviceIcon = () => (
-    <div className="w-10 h-10 rounded-lg bg-purple-50/30 flex items-center justify-center">
+    <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center">
       <Smartphone className="h-5 w-5 text-gray-500" />
     </div>
   );
@@ -616,7 +616,7 @@ export function MessagesListNew() {
                 filterAmountType !== "all" ||
                 filterDateFrom ||
                 filterDateTo) && (
-                <Badge className="ml-1 bg-[#530FAD] text-white">
+                <Badge className="ml-1 bg-[#006039] text-white">
                   {
                     [
                       filterStatus !== "all",
@@ -677,9 +677,9 @@ export function MessagesListNew() {
                         variant="ghost"
                         size="default"
                         className={cn(
-                          "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
+                          "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                           filterStatus === "all" &&
-                            "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                            "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
                         )}
                         onClick={() => setFilterStatus("all")}
                       >
@@ -689,9 +689,9 @@ export function MessagesListNew() {
                         variant="ghost"
                         size="default"
                         className={cn(
-                          "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
+                          "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                           filterStatus === "processed" &&
-                            "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                            "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
                         )}
                         onClick={() => setFilterStatus("processed")}
                       >
@@ -701,9 +701,9 @@ export function MessagesListNew() {
                         variant="ghost"
                         size="default"
                         className={cn(
-                          "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
+                          "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                           filterStatus === "danger" &&
-                            "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                            "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
                         )}
                         onClick={() => setFilterStatus("danger")}
                       >
@@ -713,9 +713,9 @@ export function MessagesListNew() {
                         variant="ghost"
                         size="default"
                         className={cn(
-                          "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
+                          "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                           filterStatus === "warning" &&
-                            "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                            "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
                         )}
                         onClick={() => setFilterStatus("warning")}
                       >
@@ -725,9 +725,9 @@ export function MessagesListNew() {
                         variant="ghost"
                         size="default"
                         className={cn(
-                          "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
+                          "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                           filterStatus === "new" &&
-                            "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                            "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
                         )}
                         onClick={() => setFilterStatus("new")}
                       >
@@ -776,14 +776,14 @@ export function MessagesListNew() {
                         variant="ghost"
                         size="default"
                         className={cn(
-                          "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
+                          "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                           filterDevice === "all" &&
-                            "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                            "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
                         )}
                         onClick={() => setFilterDevice("all")}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-purple-100/40 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                             <Smartphone className="h-4 w-4 text-gray-600" />
                           </div>
                           <div className="text-left">
@@ -806,13 +806,13 @@ export function MessagesListNew() {
                             variant="ghost"
                             size="default"
                             className={cn(
-                              "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
-                              filterDevice === device.id && "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                              "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                              filterDevice === device.id && "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
                             )}
                             onClick={() => setFilterDevice(device.id)}
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-purple-100/40 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                 <Smartphone className="h-4 w-4 text-gray-600" />
                               </div>
                               <div className="text-left">
@@ -894,14 +894,14 @@ export function MessagesListNew() {
                         variant="ghost"
                         size="default"
                         className={cn(
-                          "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
+                          "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
                           filterBank === "all" &&
-                            "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                            "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
                         )}
                         onClick={() => setFilterBank("all")}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-purple-100/40 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                             <CreditCard className="h-4 w-4 text-gray-600" />
                           </div>
                           <div className="text-left">
@@ -924,8 +924,8 @@ export function MessagesListNew() {
                             variant="ghost"
                             size="default"
                             className={cn(
-                              "w-full justify-start h-12 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#006039] dark:hover:text-purple-400",
-                              filterBank === bank.code && "text-[#006039] dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
+                              "w-full justify-start h-12 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-[#006039] dark:hover:text-green-400",
+                              filterBank === bank.code && "text-[#006039] dark:text-green-400 bg-green-50 dark:bg-green-900/20",
                             )}
                             onClick={() => setFilterBank(bank.code)}
                           >
@@ -977,7 +977,7 @@ export function MessagesListNew() {
                           size="sm"
                           onClick={() => setFilterAmountType("all")}
                           className={cn(
-                            filterAmountType === "all" && "bg-[#530FAD] hover:bg-purple-800/60"
+                            filterAmountType === "all" && "bg-[#006039] hover:bg-[#005030]"
                           )}
                         >
                           Любая
@@ -987,7 +987,7 @@ export function MessagesListNew() {
                           size="sm"
                           onClick={() => setFilterAmountType("exact")}
                           className={cn(
-                            filterAmountType === "exact" && "bg-[#530FAD] hover:bg-purple-800/60"
+                            filterAmountType === "exact" && "bg-[#006039] hover:bg-[#005030]"
                           )}
                         >
                           Точная
@@ -997,7 +997,7 @@ export function MessagesListNew() {
                           size="sm"
                           onClick={() => setFilterAmountType("range")}
                           className={cn(
-                            filterAmountType === "range" && "bg-[#530FAD] hover:bg-purple-800/60"
+                            filterAmountType === "range" && "bg-[#006039] hover:bg-[#005030]"
                           )}
                         >
                           Диапазон
@@ -1072,7 +1072,7 @@ export function MessagesListNew() {
                 </Button>
                 <Button
                   size="sm"
-                  className="flex-1 h-12 bg-purple-100 hover:bg-purple-200 transition-colors duration-150 text-[#530FAD] dark:text-[#7c3aed]"
+                  className="flex-1 h-12 bg-green-100 hover:bg-green-200 transition-colors duration-150 text-green-500"
                   onClick={() => setFiltersOpen(false)}
                 >
                   Применить фильтры
@@ -1143,7 +1143,7 @@ export function MessagesListNew() {
       <div className="relative">
         {/* Progress indicator */}
         {messages.length > 0 && (
-          <div className="sticky top-0 z-10 bg-purple-50/20 border-purple-200/60-b px-4 py-2 flex items-center justify-between mb-2">
+          <div className="sticky top-0 z-10 bg-white border-b px-4 py-2 flex items-center justify-between mb-2">
             <span className="text-sm text-gray-600">
               Показано {messages.length} сообщений
             </span>
@@ -1185,7 +1185,7 @@ export function MessagesListNew() {
         <div ref={scrollContainerRef} className="h-[calc(100vh-250px)] md:h-[calc(100vh-300px)] overflow-y-auto pr-2 md:pr-4">
           <div className="space-y-2 md:space-y-3">
             {filteredMessages.length === 0 ? (
-              <Card className="bg-purple-50/10 p-8 md:p-12 text-center text-gray-500 text-sm md:text-base">
+              <Card className="p-8 md:p-12 text-center text-gray-500 text-sm md:text-base">
                 Сообщения не найдены
               </Card>
             ) : (
@@ -1205,7 +1205,7 @@ export function MessagesListNew() {
                       {/* Top row: Package name, amount */}
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <div className="w-10 h-10 rounded-lg bg-purple-100/40 flex items-center justify-center flex-shrink-0">
+                          <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
                             <MessageSquare className="h-5 w-5 text-gray-600" />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1222,14 +1222,14 @@ export function MessagesListNew() {
                           {message.amount && message.amount > 0 ? (
                             <Badge
                               variant="outline"
-                              className="px-2 py-1 text-xs font-bold border rounded-lg bg-purple-50 text-[#530FAD] dark:text-[#7c3aed] border-purple-200"
+                              className="px-2 py-1 text-xs font-bold border rounded-lg bg-green-50 text-green-600 border-green-200"
                             >
                               {message.amount.toLocaleString("ru-RU")} ₽
                             </Badge>
                           ) : (
                             <Badge
                               variant="outline"
-                              className="px-2 py-1 text-xs font-medium border rounded-lg bg-purple-100/40 text-gray-600 border-gray-200"
+                              className="px-2 py-1 text-xs font-medium border rounded-lg bg-gray-100 text-gray-600 border-gray-200"
                             >
                               0 ₽
                             </Badge>
@@ -1298,14 +1298,14 @@ export function MessagesListNew() {
                       {message.amount && message.amount > 0 ? (
                         <Badge
                           variant="outline"
-                          className="px-4 py-2 text-sm font-bold border rounded-xl bg-purple-50 text-[#530FAD] dark:text-[#7c3aed] border-purple-200 w-full text-center justify-center"
+                          className="px-4 py-2 text-sm font-bold border rounded-xl bg-green-50 text-green-600 border-green-200 w-full text-center justify-center"
                         >
                           {message.amount.toLocaleString("ru-RU")} RUB
                         </Badge>
                       ) : (
                         <Badge
                           variant="outline"
-                          className="px-4 py-2 text-sm font-medium border rounded-xl bg-purple-100/40 text-gray-600 border-purple-200/60 w-full text-center justify-center"
+                          className="px-4 py-2 text-sm font-medium border rounded-xl bg-gray-100 text-gray-600 border-gray-200 w-full text-center justify-center"
                         >
                           0 RUB
                         </Badge>
@@ -1361,7 +1361,7 @@ export function MessagesListNew() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setSelectedMessage(null)}
-                  className="h-8 w-8 p-0 hover:bg-purple-100/40 rounded-full"
+                  className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
                 >
                   <X className="h-4 w-4 text-[#006039]" />
                 </Button>
@@ -1372,7 +1372,7 @@ export function MessagesListNew() {
                   {/* Message Icon and Info */}
                   <div className="px-6 py-6 text-center">
                     <div className="mb-4 flex justify-center">
-                      <div className="w-20 h-20 rounded-3xl bg-purple-100/40 flex items-center justify-center">
+                      <div className="w-20 h-20 rounded-3xl bg-gray-100 flex items-center justify-center">
                         <MessageSquare className="h-10 w-10 text-gray-600" />
                       </div>
                     </div>
@@ -1388,7 +1388,7 @@ export function MessagesListNew() {
                   {/* Message Content */}
                   <div className="px-6 pb-4 space-y-4">
                     {/* Full message text */}
-                    <div className="border border-purple-200/60 rounded-lg p-4">
+                    <div className="border border-gray-200 rounded-lg p-4">
                       <div className="flex items-start justify-between mb-2">
                         <span className="text-sm font-medium text-gray-500">
                           Текст сообщения
@@ -1413,7 +1413,7 @@ export function MessagesListNew() {
                     {/* Device info */}
                     <Button
                       variant="outline"
-                      className="w-full p-4 h-auto justify-between hover:bg-purple-50/30 transition-colors"
+                      className="w-full p-4 h-auto justify-between hover:bg-gray-50 transition-colors"
                       onClick={() => {
                         if (selectedMessage.deviceId) {
                           router.push(`/trader/devices/${selectedMessage.deviceId}`);
@@ -1423,7 +1423,7 @@ export function MessagesListNew() {
                       }}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded bg-purple-100/40 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center">
                           <Smartphone className="h-5 w-5 text-[#006039]" />
                         </div>
                         <div className="text-left">
@@ -1440,13 +1440,13 @@ export function MessagesListNew() {
                     </Button>
 
                     {/* Amount */}
-                    <div className="border border-purple-200/60 rounded-lg p-4">
+                    <div className="border border-gray-200 rounded-lg p-4">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-500">
                           Обнаруженная сумма
                         </span>
                         {selectedMessage.amount && selectedMessage.amount > 0 ? (
-                          <span className="text-lg font-semibold text-[#530FAD] dark:text-[#7c3aed]">
+                          <span className="text-lg font-semibold text-green-600">
                             {selectedMessage.amount.toLocaleString("ru-RU")} RUB
                           </span>
                         ) : (
@@ -1461,7 +1461,7 @@ export function MessagesListNew() {
                   {/* Action Button */}
                   <div className="px-6 pb-6">
                     <Button
-                      className="w-full bg-[#530FAD] hover:bg-[#530FAD]/90"
+                      className="w-full bg-[#006039] hover:bg-[#006039]/90"
                       onClick={() => setSelectedMessage(null)}
                     >
                       Закрыть

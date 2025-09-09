@@ -31,6 +31,7 @@ const BankDetailDTO = t.Object({
   intervalMinutes: t.Number(),
   operationLimit: t.Number(), // Лимит по количеству операций без срока давности
   sumLimit: t.Number(), // Лимит на общую сумму сделок в рублях
+  trafficPreference: t.String(),
   successfulDeals: t.Number(),
   totalDeals: t.Number(),
   activeDeals: t.Number(), // Количество активных транзакций
@@ -92,6 +93,7 @@ const toDTO = (
   return {
     ...rest,
     phoneNumber: rest.phoneNumber || "", // Ensure phoneNumber is never null for DTO
+    trafficPreference: bankDetail.trafficPreference || 'ANY',
     successfulDeals,
     totalDeals,
     activeDeals,
@@ -249,23 +251,40 @@ export default (app: Elysia) =>
           sumLimit: body.sumLimit,
         });
 
-        const bankDetail = await db.bankDetail.create({
-          data: {
-            cardNumber: body.cardNumber,
-            bankType: mappedBankType as BankType,
-            methodType: body.methodType as MethodType,
-            recipientName: body.recipientName,
-            phoneNumber: body.phoneNumber,
-            minAmount: body.minAmount,
-            maxAmount: body.maxAmount,
-            totalAmountLimit: body.totalAmountLimit ?? 0,
-            intervalMinutes: body.intervalMinutes,
-            operationLimit: body.operationLimit ?? 0,
-            sumLimit: body.sumLimit ?? 0,
-            userId: trader.id,
-            deviceId: body.deviceId,
-          },
-        });
+        // Формируем данные для создания с trafficPreference, но делаем фолбэк без него, если колонка ещё не мигрирована
+        const createData: any = {
+          cardNumber: body.cardNumber,
+          bankType: mappedBankType as BankType,
+          methodType: body.methodType as MethodType,
+          recipientName: body.recipientName,
+          phoneNumber: body.phoneNumber,
+          minAmount: body.minAmount,
+          maxAmount: body.maxAmount,
+          totalAmountLimit: body.totalAmountLimit ?? 0,
+          intervalMinutes: body.intervalMinutes,
+          operationLimit: body.operationLimit ?? 0,
+          sumLimit: body.sumLimit ?? 0,
+          userId: trader.id,
+          deviceId: body.deviceId,
+        };
+        if (typeof body.trafficPreference === 'string') {
+          createData.trafficPreference = body.trafficPreference;
+        }
+
+        let bankDetail;
+        try {
+          bankDetail = await db.bankDetail.create({ data: createData });
+        } catch (e: any) {
+          // Если упало из-за неизвестной колонки, пробуем без trafficPreference
+          const msg = String(e?.message || e);
+          if (msg.includes('trafficPreference') || msg.includes('column') || msg.includes('Unknown')) {
+            const fallbackData = { ...createData };
+            delete fallbackData.trafficPreference;
+            bankDetail = await db.bankDetail.create({ data: fallbackData });
+          } else {
+            throw e;
+          }
+        }
         
         // Bank detail was just created, so there are no devices yet
         return toDTO(bankDetail, 0, 0, null, 0, 0, 0);
@@ -286,6 +305,12 @@ export default (app: Elysia) =>
           operationLimit: t.Optional(t.Number()),
           sumLimit: t.Optional(t.Number()),
           intervalMinutes: t.Number(),
+          trafficPreference: t.Optional(t.Union([
+            t.Literal('ANY'),
+            t.Literal('PRIMARY'),
+            t.Literal('SECONDARY'),
+            t.Literal('VIP'),
+          ])),
           deviceId: t.Optional(t.String()),
         }),
         response: { 
@@ -379,16 +404,36 @@ export default (app: Elysia) =>
           fullBody: updateData,
         });
 
-        const bankDetail = await db.bankDetail.update({
-          where: { id: params.id },
-          data: {
-            ...updateData,
-            bankType: mappedBankType as BankType,
-          },
-          include: {
-            device: true
+        // Поддерживаем обновление с trafficPreference и фолбэк без него при отсутствии колонки
+        let bankDetail;
+        try {
+          bankDetail = await db.bankDetail.update({
+            where: { id: params.id },
+            data: {
+              ...updateData,
+              bankType: mappedBankType as BankType,
+            },
+            include: {
+              device: true
+            }
+          });
+        } catch (e: any) {
+          const msg = String(e?.message || e);
+          if (msg.includes('trafficPreference') || msg.includes('column') || msg.includes('Unknown')) {
+            const fallbackUpdate = { ...updateData } as any;
+            delete fallbackUpdate.trafficPreference;
+            bankDetail = await db.bankDetail.update({
+              where: { id: params.id },
+              data: {
+                ...fallbackUpdate,
+                bankType: mappedBankType as BankType,
+              },
+              include: { device: true }
+            });
+          } else {
+            throw e;
           }
-        });
+        }
         
         return toDTO(bankDetail, 0, 0, bankDetail.device, 0, 0, 0);
       },
@@ -409,6 +454,12 @@ export default (app: Elysia) =>
             operationLimit: t.Number(),
             sumLimit: t.Number(),
             intervalMinutes: t.Number(),
+            trafficPreference: t.Union([
+              t.Literal('ANY'),
+              t.Literal('PRIMARY'),
+              t.Literal('SECONDARY'),
+              t.Literal('VIP'),
+            ]),
             isActive: t.Boolean(),
             isArchived: t.Boolean(),
           })

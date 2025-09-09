@@ -46,7 +46,6 @@ const formSchema = z.object({
   maxAmount: z.number().min(1000),
   sumLimit: z.number().min(0),
   operationLimit: z.number().min(0),
-  intervalMinutes: z.number().min(0),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -89,7 +88,6 @@ export function AddBTRequisiteDialog({
       maxAmount: 100000,
       sumLimit: 0,
       operationLimit: 0,
-      intervalMinutes: 0,
     },
   });
 
@@ -142,7 +140,7 @@ export function AddBTRequisiteDialog({
         phoneNumber: data.phoneNumber || "",
         minAmount: data.minAmount,
         maxAmount: data.maxAmount,
-        intervalMinutes: data.intervalMinutes,
+        intervalMinutes: 5,
         sumLimit: data.sumLimit,
         operationLimit: data.operationLimit,
       };
@@ -361,26 +359,6 @@ export function AddBTRequisiteDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Лимит операций</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="0"
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormDescription>0 = без ограничений</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="intervalMinutes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Интервал между сделками (мин)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"

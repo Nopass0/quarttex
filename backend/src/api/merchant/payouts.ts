@@ -108,6 +108,7 @@ export const merchantPayoutsApi = new Elysia({ prefix: "/payouts" })
           externalReference: body.externalReference,
           webhookUrl: body.webhookUrl,
           metadata: body.metadata,
+          clientIdentifier: body.clientIdentifier,
         });
 
         set.status = 200;
@@ -154,6 +155,7 @@ export const merchantPayoutsApi = new Elysia({ prefix: "/payouts" })
         externalReference: t.Optional(t.String()),
         processingTime: t.Optional(t.Number({ minimum: 5, maximum: 60 })),
         webhookUrl: t.Optional(t.String({ format: "uri" })),
+        clientIdentifier: t.Optional(t.String({ minLength: 1, maxLength: 255 })),
         metadata: t.Optional(
           t.Object(
             {

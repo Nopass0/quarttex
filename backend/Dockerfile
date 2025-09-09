@@ -22,8 +22,8 @@ COPY prisma ./prisma/
 RUN bun install
 
 # Generate Prisma client with memory limits
-RUN NODE_OPTIONS="--max-old-space-size=384" npx prisma generate || \
-    (echo "Retrying with lower memory..." && NODE_OPTIONS="--max-old-space-size=256" npx prisma generate)
+RUN NODE_OPTIONS="--max-old-space-size=384" bunx prisma generate || \
+    (echo "Retrying with lower memory..." && NODE_OPTIONS="--max-old-space-size=256" bunx prisma generate)
 
 # Copy source code
 COPY . .

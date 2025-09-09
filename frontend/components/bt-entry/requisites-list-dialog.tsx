@@ -189,11 +189,6 @@ export function RequisitesListDialog({
                                   Лимит: {(req.currentTotalAmount || 0).toLocaleString()}/{(req.sumLimit || 0).toLocaleString()} ₽
                                 </span>
                               )}
-                              {(req.intervalMinutes || 0) > 0 && (
-                                <span className="hidden sm:inline text-orange-600">
-                                  Интервал: {req.intervalMinutes} мин
-                                </span>
-                              )}
                             </div>
                           </div>
                         </div>
@@ -262,11 +257,6 @@ export function RequisitesListDialog({
                                   {(req.sumLimit || 0) > 0 && (
                                     <span className="hidden sm:inline">
                                       Лимит: {(req.currentTotalAmount || 0).toLocaleString()}/{(req.sumLimit || 0).toLocaleString()} ₽
-                                    </span>
-                                  )}
-                                  {(req.intervalMinutes || 0) > 0 && (
-                                    <span className="hidden sm:inline text-orange-600">
-                                      Интервал: {req.intervalMinutes} мин
                                     </span>
                                   )}
                                 </div>

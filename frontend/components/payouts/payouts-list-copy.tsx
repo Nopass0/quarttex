@@ -169,7 +169,7 @@ export function PayoutsList() {
     const expiresAt = new Date(payout.expire_at).getTime();
 
     if (payout.status === "completed" || payout.confirmed_at) {
-      return "bg-purple-100 text-purple-700";
+      return "bg-green-100 text-green-700";
     } else if (payout.status === "cancelled") {
       return "bg-red-100 text-red-700";
     } else if (payout.status === "checking") {
@@ -177,7 +177,7 @@ export function PayoutsList() {
     } else if (payout.status === "created") {
       return "bg-yellow-100 text-yellow-700";
     } else if (payout.status === "expired" || expiresAt < now) {
-      return "bg-purple-100/40 text-gray-700";
+      return "bg-gray-100 text-gray-700";
     } else {
       return "bg-blue-100 text-blue-700";
     }
@@ -486,13 +486,13 @@ export function PayoutsList() {
     <ContextMenu>
       <ContextMenuTrigger>
         <div
-          className="bg-purple-50/20 dark:bg-purple-900/15 rounded-lg border border-purple-200/60 p-5 hover:bg-purple-50/30 transition-colors cursor-pointer mb-4 h-[100px]"
+          className="bg-white rounded-lg border border-gray-200 p-5 hover:bg-gray-50 transition-colors cursor-pointer mb-4 h-[100px]"
           onClick={() => setSelectedPayout(payout)}
         >
           <div className="grid grid-cols-[60px_140px_1fr_160px_160px_100px_180px] gap-4 items-center h-full">
             {/* Icon */}
             <div className="flex items-center justify-center">
-              <div className="w-12 h-12 bg-purple-50/30 rounded-lg shadow-sm flex items-center justify-center">
+              <div className="w-12 h-12 bg-gray-50 rounded-lg shadow-sm flex items-center justify-center">
                 {payout.isCard ? (
                   <CreditCard className="h-7 w-7 text-gray-700" />
                 ) : (
@@ -518,7 +518,7 @@ export function PayoutsList() {
                   ${payout.id}
                 </div>
                 <button
-                  className="p-0.5 hover:bg-purple-100/40 rounded transition-colors"
+                  className="p-0.5 hover:bg-gray-100 rounded transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
                     copyToClipboard(payout.id.toString(), "ID");
@@ -533,7 +533,7 @@ export function PayoutsList() {
                 })}
               </div>
               {payout.accepted_at && (
-                <div className="text-xs text-[#530FAD] dark:text-[#7c3aed]">
+                <div className="text-xs text-green-600">
                   {format(new Date(payout.accepted_at), "HH:mm", {
                     locale: ru,
                   })}
@@ -543,7 +543,7 @@ export function PayoutsList() {
 
             {/* Requisites */}
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-purple-50/30 rounded-lg shadow-sm flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 bg-gray-50 rounded-lg shadow-sm flex items-center justify-center flex-shrink-0">
                 {bankLogos[payout.bank] ? (
                   <img
                     src={bankLogos[payout.bank]}
@@ -560,7 +560,7 @@ export function PayoutsList() {
                     {payout.wallet}
                   </div>
                   <button
-                    className="p-0.5 hover:bg-purple-100/40 rounded transition-colors flex-shrink-0"
+                    className="p-0.5 hover:bg-gray-100 rounded transition-colors flex-shrink-0"
                     onClick={(e) => {
                       e.stopPropagation();
                       copyToClipboard(payout.wallet, "Реквизиты");
@@ -588,7 +588,7 @@ export function PayoutsList() {
                   {payout.amount.toLocaleString("ru-RU")} ₽
                 </div>
                 <button
-                  className="p-0.5 hover:bg-purple-100/40 rounded transition-colors"
+                  className="p-0.5 hover:bg-gray-100 rounded transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
                     copyToClipboard(payout.amount.toString(), "Сумма");
@@ -627,7 +627,7 @@ export function PayoutsList() {
             {payout.status === "created" ? (
               <Button
                 size="sm"
-                className="h-9 px-4 bg-[#530FAD] hover:bg-purple-700/80 text-white"
+                className="h-9 px-4 bg-[#006039] hover:bg-[#004d2e] text-white"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleAcceptPayout(payout.id);
@@ -650,14 +650,14 @@ export function PayoutsList() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-8 w-8 p-0 hover:bg-purple-50"
+                  className="h-8 w-8 p-0 hover:bg-green-50"
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedPayoutForAction(payout.id);
                     setConfirmDialogOpen(true);
                   }}
                 >
-                  <CheckCircle className="h-5 w-5 text-[#530FAD] dark:text-[#7c3aed]" />
+                  <CheckCircle className="h-5 w-5 text-green-600" />
                 </Button>
                 <Button
                   size="sm"
@@ -724,7 +724,7 @@ export function PayoutsList() {
   );
 
   return (
-    <div className="h-screen flex flex-col bg-purple-50/30">
+    <div className="h-screen flex flex-col bg-gray-50">
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-4 bg-white">
         <h1 className="text-2xl font-semibold">Выплаты</h1>
@@ -749,7 +749,7 @@ export function PayoutsList() {
                 className="flex items-center gap-2 text-sm font-normal hover:bg-black/5 transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-purple-100/40 flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
                     <User className="h-4 w-4 text-[#006039]" />
                   </div>
                   <span className="text-gray-700 font-medium">
@@ -762,7 +762,7 @@ export function PayoutsList() {
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem
                 onClick={handleLogout}
-                className="text-red-600 focus:text-red-600 hover:bg-purple-50/30 cursor-pointer"
+                className="text-red-600 focus:text-red-600 hover:bg-gray-50 cursor-pointer"
               >
                 <LogOut className="mr-2 h-4 w-4 text-[#006039]" />
                 Выйти
@@ -773,10 +773,10 @@ export function PayoutsList() {
       </div>
 
       {/* Filters */}
-      <div className="bg-purple-50/20 dark:bg-purple-900/15 px-6 py-4">
+      <div className="bg-white px-6 py-4">
         <div className="flex items-end gap-3">
           {/* Balance block first */}
-          <div className="bg-purple-100/40 rounded-lg px-5 h-12 flex flex-col justify-center min-w-[180px] mr-auto">
+          <div className="bg-gray-100 rounded-lg px-5 h-12 flex flex-col justify-center min-w-[180px] mr-auto">
             <div className="text-xs text-gray-600">Баланс</div>
             <div className="text-lg font-semibold leading-tight">
               {payoutBalance.available.toLocaleString("ru-RU")} ₽
@@ -798,12 +798,12 @@ export function PayoutsList() {
                     ) : (
                       <div className="flex gap-1">
                         {selectedTrafficType.includes(1) && (
-                          <Badge className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200">
+                          <Badge className="h-5 px-2 bg-green-100 text-green-700 border-green-200">
                             СБП
                           </Badge>
                         )}
                         {selectedTrafficType.includes(2) && (
-                          <Badge className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200">
+                          <Badge className="h-5 px-2 bg-green-100 text-green-700 border-green-200">
                             Карты
                           </Badge>
                         )}
@@ -871,13 +871,13 @@ export function PayoutsList() {
                         {selectedBanks.slice(0, 2).map((index) => (
                           <Badge
                             key={index}
-                            className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200"
+                            className="h-5 px-2 bg-green-100 text-green-700 border-green-200"
                           >
                             {Object.keys(bankLogos)[index]}
                           </Badge>
                         ))}
                         {selectedBanks.length > 2 && (
-                          <Badge className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200">
+                          <Badge className="h-5 px-2 bg-green-100 text-green-700 border-green-200">
                             +{selectedBanks.length - 2}
                           </Badge>
                         )}
@@ -939,14 +939,14 @@ export function PayoutsList() {
                           return (
                             <Badge
                               key={index}
-                              className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200"
+                              className="h-5 px-2 bg-green-100 text-green-700 border-green-200"
                             >
                               {banks[index]}
                             </Badge>
                           );
                         })}
                         {selectedCardBanks.length > 2 && (
-                          <Badge className="h-5 px-2 bg-purple-100 text-purple-700 border-purple-200">
+                          <Badge className="h-5 px-2 bg-green-100 text-green-700 border-green-200">
                             +{selectedCardBanks.length - 2}
                           </Badge>
                         )}
@@ -995,7 +995,7 @@ export function PayoutsList() {
                 placeholder="0.00"
                 value={balanceInput}
                 onChange={(e) => setBalanceInput(e.target.value)}
-                className="h-12 w-32 focus:ring-2 focus:ring-purple-500 focus:border-[#530FAD]"
+                className="h-12 w-32 focus:ring-2 focus:ring-green-500 focus:border-green-500"
               />
               <Button 
                 variant="outline" 
@@ -1012,7 +1012,7 @@ export function PayoutsList() {
       {/* Content with Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
         {/* Tabs Header */}
-        <div className="bg-purple-50/20 dark:bg-purple-900/15 px-6 pb-4">
+        <div className="bg-white px-6 pb-4">
           <TabsList className="h-12 p-1">
             <TabsTrigger value="all" className="h-10 px-6">
               Все
@@ -1040,7 +1040,7 @@ export function PayoutsList() {
         {activeTab === "all" && (
           <>
           {/* Column Headers */}
-          <div className="grid grid-cols-[60px_140px_1fr_160px_160px_100px_180px] gap-4 items-center px-6 py-3 text-sm font-medium text-gray-600 bg-purple-50/20 border-purple-200/60-b">
+          <div className="grid grid-cols-[60px_140px_1fr_160px_160px_100px_180px] gap-4 items-center px-6 py-3 text-sm font-medium text-gray-600 bg-white border-b">
             <div></div>
             <div className="flex items-center gap-2">
               {showIdSearch ? (
@@ -1130,7 +1130,7 @@ export function PayoutsList() {
         {activeTab === "active" && (
           <>
           {/* Column Headers */}
-          <div className="grid grid-cols-[60px_140px_1fr_160px_160px_100px_180px] gap-4 items-center px-6 py-3 text-sm font-medium text-gray-600 bg-purple-50/20 border-purple-200/60-b">
+          <div className="grid grid-cols-[60px_140px_1fr_160px_160px_100px_180px] gap-4 items-center px-6 py-3 text-sm font-medium text-gray-600 bg-white border-b">
             <div></div>
             <div>Заявка</div>
             <div>Реквизиты</div>
@@ -1157,7 +1157,7 @@ export function PayoutsList() {
         {activeTab === "check" && (
           <>
           {/* Column Headers */}
-          <div className="grid grid-cols-[60px_140px_1fr_160px_160px_100px_180px] gap-4 items-center px-6 py-3 text-sm font-medium text-gray-600 bg-purple-50/20 border-purple-200/60-b">
+          <div className="grid grid-cols-[60px_140px_1fr_160px_160px_100px_180px] gap-4 items-center px-6 py-3 text-sm font-medium text-gray-600 bg-white border-b">
             <div></div>
             <div>Заявка</div>
             <div>Реквизиты</div>
@@ -1184,7 +1184,7 @@ export function PayoutsList() {
         {activeTab === "finalization" && (
           <>
           {/* Column Headers */}
-          <div className="grid grid-cols-[60px_140px_1fr_160px_160px_100px_180px] gap-4 items-center px-6 py-3 text-sm font-medium text-gray-600 bg-purple-50/20 border-purple-200/60-b">
+          <div className="grid grid-cols-[60px_140px_1fr_160px_160px_100px_180px] gap-4 items-center px-6 py-3 text-sm font-medium text-gray-600 bg-white border-b">
             <div></div>
             <div>Заявка</div>
             <div>Реквизиты</div>
@@ -1211,7 +1211,7 @@ export function PayoutsList() {
         {activeTab === "history" && (
           <>
           {/* Column Headers */}
-          <div className="grid grid-cols-[60px_140px_1fr_160px_160px_100px_180px] gap-4 items-center px-6 py-3 text-sm font-medium text-gray-600 bg-purple-50/20 border-purple-200/60-b">
+          <div className="grid grid-cols-[60px_140px_1fr_160px_160px_100px_180px] gap-4 items-center px-6 py-3 text-sm font-medium text-gray-600 bg-white border-b">
             <div></div>
             <div>Заявка</div>
             <div>Реквизиты</div>
@@ -1238,7 +1238,7 @@ export function PayoutsList() {
         {activeTab === "cancelled" && (
           <>
           {/* Column Headers */}
-          <div className="grid grid-cols-[60px_140px_1fr_160px_160px_100px_180px] gap-4 items-center px-6 py-3 text-sm font-medium text-gray-600 bg-purple-50/20 border-purple-200/60-b">
+          <div className="grid grid-cols-[60px_140px_1fr_160px_160px_100px_180px] gap-4 items-center px-6 py-3 text-sm font-medium text-gray-600 bg-white border-b">
             <div></div>
             <div>Заявка</div>
             <div>Реквизиты</div>
@@ -1276,7 +1276,7 @@ export function PayoutsList() {
                 <span>Детали выплаты ${selectedPayout?.id}</span>
                 {selectedPayout && (
                   <button
-                    className="p-1 hover:bg-purple-100/40 rounded transition-colors"
+                    className="p-1 hover:bg-gray-100 rounded transition-colors"
                     onClick={() => copyToClipboard(selectedPayout.id.toString(), "ID выплаты")}
                   >
                     <Copy className="h-4 w-4 text-gray-500" />
@@ -1317,7 +1317,7 @@ export function PayoutsList() {
                       <p className="text-sm text-gray-600">{selectedPayout.bank}</p>
                     </div>
                     <button
-                      className="p-1 hover:bg-purple-100/40 rounded transition-colors flex-shrink-0"
+                      className="p-1 hover:bg-gray-100 rounded transition-colors flex-shrink-0"
                       onClick={() => copyToClipboard(`${selectedPayout.wallet} ${selectedPayout.bank}`, "Реквизиты")}
                     >
                       <Copy className="h-4 w-4 text-gray-500" />
@@ -1382,7 +1382,7 @@ export function PayoutsList() {
               <Label htmlFor="cancel-reason">Причина отмены</Label>
               <textarea
                 id="cancel-reason"
-                className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full min-h-[100px] px-3 py-2 text-sm border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="Опишите причину отмены..."
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
@@ -1427,7 +1427,7 @@ export function PayoutsList() {
               if (!payout) return null;
               
               return (
-                <div className="bg-purple-50/30 p-4 rounded-lg space-y-2">
+                <div className="bg-gray-50 p-4 rounded-lg space-y-2">
                   <h4 className="font-medium text-sm text-gray-700">Данные выплаты:</h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
@@ -1474,7 +1474,7 @@ export function PayoutsList() {
                 >
                   {proofFile ? (
                     <>
-                      <CheckCircle className="h-8 w-8 text-[#530FAD] dark:text-[#7c3aed] mb-2" />
+                      <CheckCircle className="h-8 w-8 text-green-600 mb-2" />
                       <p className="text-sm font-medium">{proofFile.name}</p>
                       <p className="text-xs text-gray-500">
                         {(proofFile.size / 1024 / 1024).toFixed(2)} MB
@@ -1508,7 +1508,7 @@ export function PayoutsList() {
               <Button
                 onClick={() => handleConfirmPayout(selectedPayoutForAction!)}
                 disabled={!proofFile}
-                className="bg-[#530FAD] hover:bg-purple-700"
+                className="bg-green-600 hover:bg-green-700"
               >
                 Подтвердить выплату
               </Button>

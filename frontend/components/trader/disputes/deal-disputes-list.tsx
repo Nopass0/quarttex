@@ -98,7 +98,7 @@ const getBankIcon = (bankType: string, size: "sm" | "md" = "md") => {
   if (logoPath) {
     return (
       <div
-        className={`${sizeClasses} rounded-lg bg-purple-50/80 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700/60 flex items-center justify-center p-1`}
+        className={`${sizeClasses} rounded-lg bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center p-1`}
       >
         <img
           src={logoPath}
@@ -187,15 +187,15 @@ const disputeStatusConfig = {
   RESOLVED_FAIL: {
     label: "Спор принят в сторону трейдера",
     description: "Решен в вашу пользу",
-color: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
-    badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
+    color: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
+    badgeColor: "bg-green-50 text-green-700 border-green-200",
     icon: CheckCircle
   },
   CANCELLED: {
     label: "Отменен",
     description: "Спор отменен",
     color: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600",
-    badgeColor: "bg-purple-50/80 text-gray-700 border-purple-200",
+    badgeColor: "bg-gray-50 text-gray-700 border-gray-200",
     icon: Ban
   }
 };
@@ -213,7 +213,8 @@ export function DealDisputesList() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [activeTab, setActiveTab] = useState("active");
+  // По умолчанию не фильтруем по вкладкам: показываем все споры
+  const [activeTab, setActiveTab] = useState("all");
   const expiredToastShownRef = useRef<Set<string>>(new Set());
 
   // Filters
@@ -431,10 +432,10 @@ export function DealDisputesList() {
       });
     }
 
-    // Tab filter
+    // Tab filter: применяем только если выбрана конкретная вкладка
     if (activeTab === "active") {
       filtered = filtered.filter(d => ["OPEN", "IN_PROGRESS"].includes(d.status));
-    } else {
+    } else if (activeTab === "resolved") {
       filtered = filtered.filter(d => ["RESOLVED_SUCCESS", "RESOLVED_FAIL", "CANCELLED"].includes(d.status));
     }
 
@@ -597,7 +598,10 @@ export function DealDisputesList() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="all">
+            Все ({disputes.length})
+          </TabsTrigger>
           <TabsTrigger value="active">
             Активные ({disputes.filter(d => d && ["OPEN", "IN_PROGRESS"].includes(d.status)).length})
           </TabsTrigger>
@@ -634,7 +638,7 @@ export function DealDisputesList() {
                           {/* Status Icon */}
                           <div className={cn(
                             "p-3 rounded-xl",
-                            statusConfig?.color?.split(" ")[0] || "bg-purple-100"
+                            statusConfig?.color?.split(" ")[0] || "bg-gray-100"
                           )}>
                             <StatusIcon className="h-6 w-6" />
                           </div>
@@ -703,7 +707,7 @@ export function DealDisputesList() {
                             <Badge 
                               className={cn(
                                 "px-3 py-1.5",
-                                statusConfig?.badgeColor || "bg-purple-50/80 text-gray-700 border-purple-200"
+                                statusConfig?.badgeColor || "bg-gray-50 text-gray-700 border-gray-200"
                               )}
                             >
                               {dispute.status === 'RESOLVED_SUCCESS' ? 'Отклонен' : 
@@ -837,4 +841,3 @@ export function DealDisputesList() {
     </div>
   );
 }
-

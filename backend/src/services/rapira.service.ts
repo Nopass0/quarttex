@@ -13,7 +13,7 @@ export class RapiraService {
   private static instance: RapiraService;
   private cachedRate: number | null = null;
   private lastUpdateTime: number = 0;
-  private cacheTimeMs: number = 10000; // 10 seconds cache
+  private cacheTimeMs: number = 60000; // 60 seconds cache (1 minute)
 
   constructor() {}
 

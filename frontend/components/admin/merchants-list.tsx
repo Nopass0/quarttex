@@ -110,15 +110,14 @@ export function MerchantsList() {
   const fetchMerchants = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/merchant`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/merchant/list`, {
         headers: {
           'x-admin-key': adminToken || '',
         },
       })
       if (!response.ok) throw new Error('Failed to fetch merchants')
       const data = await response.json()
-      console.log('Fetched merchants data:', data)
-      setMerchants(data.merchants || [])
+      setMerchants(data)
     } catch (error) {
       toast.error('Не удалось загрузить список мерчантов')
     } finally {
@@ -992,19 +991,19 @@ export function MerchantsList() {
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="flex items-center gap-1">
-                    <div className={`w-2 h-2 rounded-full ${auctionStatus.status.configurationSteps.auctionEnabled ? 'bg-purple-500' : 'bg-gray-300'}`} />
+                    <div className={`w-2 h-2 rounded-full ${auctionStatus.status.configurationSteps.auctionEnabled ? 'bg-green-500' : 'bg-gray-300'}`} />
                     Система включена
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className={`w-2 h-2 rounded-full ${auctionStatus.status.configurationSteps.baseUrlSet ? 'bg-purple-500' : 'bg-gray-300'}`} />
+                    <div className={`w-2 h-2 rounded-full ${auctionStatus.status.configurationSteps.baseUrlSet ? 'bg-green-500' : 'bg-gray-300'}`} />
                     URL настроен
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className={`w-2 h-2 rounded-full ${auctionStatus.status.configurationSteps.systemNameSet ? 'bg-purple-500' : 'bg-gray-300'}`} />
+                    <div className={`w-2 h-2 rounded-full ${auctionStatus.status.configurationSteps.systemNameSet ? 'bg-green-500' : 'bg-gray-300'}`} />
                     Имя системы
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className={`w-2 h-2 rounded-full ${auctionStatus.status.configurationSteps.keysGenerated ? 'bg-purple-500' : 'bg-gray-300'}`} />
+                    <div className={`w-2 h-2 rounded-full ${auctionStatus.status.configurationSteps.keysGenerated ? 'bg-green-500' : 'bg-gray-300'}`} />
                     Ключи созданы
                   </div>
                 </div>

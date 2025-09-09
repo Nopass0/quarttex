@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -63,6 +63,7 @@ import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { TraderMerchantsTable } from "@/components/admin/trader-merchants-table";
+import { TraderSettingsTabs } from "@/components/admin/trader-settings-tabs";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { AuthLayout } from "@/components/layouts/auth-layout";
 
@@ -76,6 +77,15 @@ type Team = {
   id: string;
   name: string;
   agentId: string;
+};
+
+type DisplayRate = {
+  id?: string;
+  stakePercent: number;
+  amountFrom: number;
+  amountTo: number;
+  sortOrder?: number;
+  isNew?: boolean; // Флаг для новых ставок, которые еще не сохранены
 };
 
 type Trader = {
@@ -125,8 +135,10 @@ function TraderProfileContent() {
       | "DEPOSIT"
       | "BALANCE"
       | "FROZEN_USDT"
-      | "FROZEN_RUB",
-    operation: "add" as "add" | "subtract",
+      | "FROZEN_RUB"
+      | "PROFIT_DEALS"
+      | "PROFIT_PAYOUTS",
+    operation: "add" as "add" | "subtract" | "set",
   });
   const [traderSettings, setTraderSettings] = useState<any>(null);
   const [agents, setAgents] = useState<any[]>([]);
@@ -146,12 +158,17 @@ function TraderProfileContent() {
     turnover: 0,
   });
   const [isFilterPopoverOpen, setIsFilterPopoverOpen] = useState(false);
+  const [displayRates, setDisplayRates] = useState<DisplayRate[]>([
+    { stakePercent: 0, amountFrom: 0, amountTo: 0 }
+  ]);
 
   useEffect(() => {
     fetchTrader();
     fetchTraderSettings();
     fetchAgents();
   }, [traderId]);
+
+  // Этот useEffect заменен на новый с localStorage выше
 
   const fetchTrader = async () => {
     try {
@@ -222,6 +239,7 @@ function TraderProfileContent() {
     try {
       setIsLoading(true);
       const amount = parseFloat(balanceForm.amount);
+      const isSet = balanceForm.operation === "set";
       const finalAmount =
         balanceForm.operation === "subtract" ? -amount : amount;
 
@@ -234,8 +252,9 @@ function TraderProfileContent() {
             "x-admin-key": adminToken || "",
           },
           body: JSON.stringify({
-            amount: finalAmount,
+            amount: isSet ? amount : finalAmount,
             currency: balanceForm.currency,
+            ...(isSet ? { mode: "SET" } : {}),
           }),
         },
       );
@@ -265,11 +284,140 @@ function TraderProfileContent() {
     }
   };
 
+  const addDisplayRate = () => {
+    // Просто добавляем новую ставку в состояние
+    const newRate: DisplayRate = {
+      stakePercent: 0,
+      amountFrom: 0,
+      amountTo: 0,
+      isNew: true
+    };
+    setDisplayRates([...displayRates, newRate]);
+  };
+
+  const removeDisplayRate = (index: number) => {
+    if (displayRates.length > 1) {
+      setDisplayRates(displayRates.filter((_, i) => i !== index));
+    }
+  };
+
+
+  const updateDisplayRate = (index: number, field: keyof DisplayRate, value: number) => {
+    const updated = [...displayRates];
+    updated[index] = { ...updated[index], [field]: value };
+    setDisplayRates(updated);
+  };
+
+  // Загрузка отображаемых ставок: приоритет серверу, затем localStorage
+  useEffect(() => {
+    if (!traderSettings) return;
+
+    console.log("[Frontend] Loading trader settings:", {
+      displayRates: traderSettings.displayRates,
+      displayStakePercent: traderSettings.displayStakePercent,
+      displayAmountFrom: traderSettings.displayAmountFrom,
+      displayAmountTo: traderSettings.displayAmountTo
+    });
+
+    const localKey = `trader-display-rates-${traderId}`;
+
+    // 1) Если сервер вернул ставки — используем их и синхронизируем localStorage
+    if (Array.isArray(traderSettings.displayRates) && traderSettings.displayRates.length > 0) {
+      console.log("[Frontend] Using server displayRates (priority)", traderSettings.displayRates);
+      setDisplayRates(traderSettings.displayRates);
+      try {
+        localStorage.setItem(localKey, JSON.stringify(traderSettings.displayRates));
+      } catch {}
+      return;
+    }
+
+    // 2) Иначе пробуем localStorage
+    try {
+      const savedData = localStorage.getItem(localKey);
+      if (savedData) {
+        const saved = JSON.parse(savedData);
+        if (Array.isArray(saved) && saved.length > 0) {
+          console.log("[Frontend] Loaded displayRates from localStorage:", saved);
+          setDisplayRates(saved);
+          return;
+        }
+      }
+    } catch {
+      console.warn("[Frontend] Failed to parse localStorage data");
+    }
+
+    // 3) Миграция со старой системы
+    if (
+      traderSettings.displayStakePercent ||
+      traderSettings.displayAmountFrom ||
+      traderSettings.displayAmountTo
+    ) {
+      console.log("[Frontend] Migrating from old single-rate fields");
+      setDisplayRates([
+        {
+          stakePercent: traderSettings.displayStakePercent || 0,
+          amountFrom: traderSettings.displayAmountFrom || 0,
+          amountTo: traderSettings.displayAmountTo || 0,
+        },
+      ]);
+      return;
+    }
+
+    // 4) Значения по умолчанию
+    console.log("[Frontend] No display rates found anywhere, using default");
+    setDisplayRates([{ stakePercent: 0, amountFrom: 0, amountTo: 0 }]);
+  }, [traderSettings, traderId]);
+
+  // Сохранение в localStorage при изменении
+  useEffect(() => {
+    if (displayRates.length > 0) {
+      const localKey = `trader-display-rates-${traderId}`;
+      localStorage.setItem(localKey, JSON.stringify(displayRates));
+      console.log("[Frontend] Saved to localStorage:", displayRates);
+    }
+  }, [displayRates, traderId]);
+
   const handleSaveSettings = async () => {
     if (!traderSettings) return;
 
+    const filteredDisplayRates = displayRates.filter(rate => rate.stakePercent > 0 && rate.amountFrom > 0 && rate.amountTo > 0);
+    console.log("[Frontend] Saving settings with display rates:", {
+      displayRates,
+      filteredDisplayRates,
+      hasValidRates: filteredDisplayRates.length > 0
+    });
+
     try {
       setIsSavingSettings(true);
+      
+      const requestBody = {
+        email: traderSettings.email,
+        name: traderSettings.name || traderSettings.email,
+        minInsuranceDeposit: traderSettings.minInsuranceDeposit || 1000,
+        maxInsuranceDeposit: traderSettings.maxInsuranceDeposit || 100000,
+        minAmountPerRequisite: traderSettings.minAmountPerRequisite || 100,
+        maxAmountPerRequisite:
+          traderSettings.maxAmountPerRequisite || 100000,
+        disputeLimit: traderSettings.disputeLimit || 5,
+        teamId: traderSettings.teamId || null,
+        telegramChatId: traderSettings.telegramChatId || null,
+        telegramDisputeChatId: traderSettings.telegramDisputeChatId || null,
+        telegramBotToken: traderSettings.telegramBotToken || null,
+        maxSimultaneousPayouts: traderSettings.maxSimultaneousPayouts || 10,
+        minPayoutAmount: traderSettings.minPayoutAmount || 100,
+        maxPayoutAmount: traderSettings.maxPayoutAmount || 1000000,
+        payoutRateDelta: traderSettings.payoutRateDelta || 0,
+        payoutFeePercent: traderSettings.payoutFeePercent || 0,
+        payoutAcceptanceTime: traderSettings.payoutAcceptanceTime || 5,
+        rateSourceConfigId: traderSettings.rateSourceConfigId || null,
+        displayStakePercent: traderSettings.displayStakePercent ?? null,
+        displayAmountFrom: traderSettings.displayAmountFrom ?? null,
+        displayAmountTo: traderSettings.displayAmountTo ?? null,
+        displayRates: filteredDisplayRates,
+      };
+      
+      console.log("[Frontend] Sending request body:", requestBody);
+      
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/admin/traders/${traderId}/settings`,
         {
@@ -278,27 +426,7 @@ function TraderProfileContent() {
             "Content-Type": "application/json",
             "x-admin-key": adminToken || "",
           },
-          body: JSON.stringify({
-            email: traderSettings.email,
-            name: traderSettings.name || traderSettings.email,
-            minInsuranceDeposit: traderSettings.minInsuranceDeposit || 1000,
-            maxInsuranceDeposit: traderSettings.maxInsuranceDeposit || 100000,
-            minAmountPerRequisite: traderSettings.minAmountPerRequisite || 100,
-            maxAmountPerRequisite:
-              traderSettings.maxAmountPerRequisite || 100000,
-            disputeLimit: traderSettings.disputeLimit || 5,
-            teamId: traderSettings.teamId || null,
-            telegramChatId: traderSettings.telegramChatId || null,
-            telegramDisputeChatId: traderSettings.telegramDisputeChatId || null,
-            telegramBotToken: traderSettings.telegramBotToken || null,
-            maxSimultaneousPayouts: traderSettings.maxSimultaneousPayouts || 10,
-            minPayoutAmount: traderSettings.minPayoutAmount || 100,
-            maxPayoutAmount: traderSettings.maxPayoutAmount || 1000000,
-            payoutRateDelta: traderSettings.payoutRateDelta || 0,
-            payoutFeePercent: traderSettings.payoutFeePercent || 0,
-            payoutAcceptanceTime: traderSettings.payoutAcceptanceTime || 5,
-            rateSource: traderSettings.rateSource || null,
-          }),
+          body: JSON.stringify(requestBody),
         },
       );
 
@@ -639,7 +767,7 @@ function TraderProfileContent() {
                 <DialogHeader>
                   <DialogTitle>Изменить баланс</DialogTitle>
                   <DialogDescription>
-                    Добавить или вычесть средства с баланса трейдера
+                    Добавить, вычесть или задать точное значение баланса трейдера
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
@@ -696,7 +824,7 @@ function TraderProfileContent() {
                       onValueChange={(value) =>
                         setBalanceForm({
                           ...balanceForm,
-                          operation: value as "add" | "subtract",
+                          operation: value as "add" | "subtract" | "set",
                         })
                       }
                     >
@@ -706,6 +834,7 @@ function TraderProfileContent() {
                       <SelectContent>
                         <SelectItem value="add">Добавить</SelectItem>
                         <SelectItem value="subtract">Вычесть</SelectItem>
+                        <SelectItem value="set">Задать значение</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -978,370 +1107,17 @@ function TraderProfileContent() {
         </Card>
       </div>
 
-      {/* Settings Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Настройки трейдера</CardTitle>
-          <CardDescription>
-            Изменение основных параметров и лимитов трейдера
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isSettingsLoading ? (
-            <div className="flex justify-center py-8">
-              <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
-            </div>
-          ) : traderSettings ? (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={traderSettings.email}
-                    onChange={(e) =>
-                      setTraderSettings({
-                        ...traderSettings,
-                        email: e.target.value,
-                      })
-                    }
-                    className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Источник курса по умолчанию</Label>
-                  <Select
-                    value={(trader?.rateSource as any) || 'rapira'}
-                    onValueChange={async (v) => {
-                      try {
-                        setIsSettingsLoading(true)
-                        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/update-user`, {
-                          method: 'PUT',
-                          headers: { 'Content-Type': 'application/json', 'x-admin-key': adminToken || '' },
-                          body: JSON.stringify({
-                            id: traderId,
-                            email: traderSettings.email,
-                            name: traderSettings.email,
-                            rateSource: v,
-                          })
-                        })
-                        if (!res.ok) throw new Error('Save failed')
-                        toast.success('Источник курса обновлен')
-                        await fetchTrader()
-                      } catch {
-                        toast.error('Не удалось сохранить источник курса')
-                      } finally {
-                        setIsSettingsLoading(false)
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Выберите источник" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="bybit">Bybit</SelectItem>
-                      <SelectItem value="rapira">Rapira</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">Используется для этого трейдера, если в связке трейдер-мерчант метод не задан.</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold">Лимиты на реквизит</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="minAmountPerRequisite">
-                      Минимальная сумма (₽)
-                    </Label>
-                    <Input
-                      id="minAmountPerRequisite"
-                      type="number"
-                      step="0.01"
-                      value={traderSettings.minAmountPerRequisite}
-                      onChange={(e) =>
-                        setTraderSettings({
-                          ...traderSettings,
-                          minAmountPerRequisite:
-                            parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="maxAmountPerRequisite">
-                      Максимальная сумма (₽)
-                    </Label>
-                    <Input
-                      id="maxAmountPerRequisite"
-                      type="number"
-                      step="0.01"
-                      value={traderSettings.maxAmountPerRequisite}
-                      onChange={(e) =>
-                        setTraderSettings({
-                          ...traderSettings,
-                          maxAmountPerRequisite:
-                            parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold">Настройки выплат</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="minPayoutAmount">
-                      Минимальная сумма выплаты (₽)
-                    </Label>
-                    <Input
-                      id="minPayoutAmount"
-                      type="number"
-                      step="0.01"
-                      value={traderSettings.minPayoutAmount || 100}
-                      onChange={(e) =>
-                        setTraderSettings({
-                          ...traderSettings,
-                          minPayoutAmount: parseFloat(e.target.value) || 100,
-                        })
-                      }
-                      className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="maxPayoutAmount">
-                      Максимальная сумма выплаты (₽)
-                    </Label>
-                    <Input
-                      id="maxPayoutAmount"
-                      type="number"
-                      step="0.01"
-                      value={traderSettings.maxPayoutAmount || 1000000}
-                      onChange={(e) =>
-                        setTraderSettings({
-                          ...traderSettings,
-                          maxPayoutAmount:
-                            parseFloat(e.target.value) || 1000000,
-                        })
-                      }
-                      className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="maxSimultaneousPayouts">
-                      Макс. одновременных выплат
-                    </Label>
-                    <Input
-                      id="maxSimultaneousPayouts"
-                      type="number"
-                      min="1"
-                      max="100"
-                      value={traderSettings.maxSimultaneousPayouts || 5}
-                      onChange={(e) =>
-                        setTraderSettings({
-                          ...traderSettings,
-                          maxSimultaneousPayouts: parseInt(e.target.value) || 5,
-                        })
-                      }
-                      className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                    <p className="text-xs text-gray-500">
-                      Количество активных выплат, которые трейдер может
-                      обрабатывать одновременно
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="payoutAcceptanceTime">
-                      Время на принятие выплаты (мин)
-                    </Label>
-                    <Input
-                      id="payoutAcceptanceTime"
-                      type="number"
-                      min="1"
-                      max="60"
-                      value={traderSettings.payoutAcceptanceTime || 5}
-                      onChange={(e) =>
-                        setTraderSettings({
-                          ...traderSettings,
-                          payoutAcceptanceTime: parseInt(e.target.value) || 5,
-                        })
-                      }
-                      className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold">
-                  Настройки ставок для выплат
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="payoutRateDelta">Дельта курса (%)</Label>
-                    <Input
-                      id="payoutRateDelta"
-                      type="number"
-                      step="0.01"
-                      min="-100"
-                      max="100"
-                      value={traderSettings.payoutRateDelta || 0}
-                      onChange={(e) =>
-                        setTraderSettings({
-                          ...traderSettings,
-                          payoutRateDelta: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                    <p className="text-xs text-gray-500">
-                      Процент изменения курса для выплат. Положительное значение
-                      увеличивает курс.
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="payoutFeePercent">
-                      Комиссия за выплаты (%)
-                    </Label>
-                    <Input
-                      id="payoutFeePercent"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="100"
-                      value={traderSettings.payoutFeePercent || 0}
-                      onChange={(e) =>
-                        setTraderSettings({
-                          ...traderSettings,
-                          payoutFeePercent: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                    <p className="text-xs text-gray-500">
-                      Комиссия с трейдера за каждую выплату
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="disputeLimit">Лимит одновременных споров</Label>
-                <Input
-                  id="disputeLimit"
-                  type="number"
-                  min="0"
-                  value={traderSettings.disputeLimit}
-                  onChange={(e) =>
-                    setTraderSettings({
-                      ...traderSettings,
-                      disputeLimit: parseInt(e.target.value) || 0,
-                    })
-                  }
-                  className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
-                />
-                <p className="text-xs text-gray-500">
-                  При достижении этого количества споров, новые сделки не будут
-                  назначаться трейдеру
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold">Telegram настройки</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="telegramChatId">Telegram Chat ID</Label>
-                    <Input
-                      id="telegramChatId"
-                      type="text"
-                      placeholder="Например: -100123456789"
-                      value={traderSettings.telegramChatId || ""}
-                      onChange={(e) =>
-                        setTraderSettings({
-                          ...traderSettings,
-                          telegramChatId: e.target.value,
-                        })
-                      }
-                      className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                    <p className="text-xs text-gray-500">
-                      ID чата для уведомлений о сделках
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="telegramDisputeChatId">
-                      Telegram Dispute Chat ID
-                    </Label>
-                    <Input
-                      id="telegramDisputeChatId"
-                      type="text"
-                      placeholder="Например: -100987654321"
-                      value={traderSettings.telegramDisputeChatId || ""}
-                      onChange={(e) =>
-                        setTraderSettings({
-                          ...traderSettings,
-                          telegramDisputeChatId: e.target.value,
-                        })
-                      }
-                      className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                    <p className="text-xs text-gray-500">
-                      ID чата для уведомлений о спорах
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="telegramBotToken">Telegram Bot Token</Label>
-                  <Input
-                    id="telegramBotToken"
-                    type="text"
-                    placeholder="Например: 123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
-                    value={traderSettings.telegramBotToken || ""}
-                    onChange={(e) =>
-                      setTraderSettings({
-                        ...traderSettings,
-                        telegramBotToken: e.target.value,
-                      })
-                    }
-                    className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
-                  />
-                  <p className="text-xs text-gray-500">
-                    Токен бота для отправки уведомлений
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <Button
-                  onClick={handleSaveSettings}
-                  disabled={isSavingSettings}
-                  className="bg-[#006039] hover:bg-[#006039]/90"
-                >
-                  {isSavingSettings ? (
-                    <>
-                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                      Сохранение...
-                    </>
-                  ) : (
-                    "Сохранить настройки"
-                  )}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-500">Не удалось загрузить настройки</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Settings Section with Tabs */}
+      <TraderSettingsTabs
+        settings={traderSettings}
+        onSettingsChange={setTraderSettings}
+        displayRates={displayRates}
+        onDisplayRatesChange={setDisplayRates}
+        agents={agents}
+        onSave={handleSaveSettings}
+        isSaving={isSavingSettings}
+        isLoading={isSettingsLoading}
+      />
 
       <div className="mt-6">
         <TraderMerchantsTable traderId={traderId} />
@@ -1439,6 +1215,7 @@ function TraderProfileContent() {
     </div>
   );
 }
+
 
 export default function TraderProfilePage() {
   return (

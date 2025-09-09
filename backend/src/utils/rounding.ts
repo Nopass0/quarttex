@@ -30,6 +30,21 @@ export function truncate2(value: number): number {
 }
 
 /**
+ * Rounds a number up to 2 decimal places
+ * Examples:
+ * - 10.991 -> 10.99 (but 10.999 -> 11.00)
+ * - 10.001 -> 10.01
+ * - 10.99 -> 10.99
+ * - 10.9 -> 10.90
+ * 
+ * @param value The number to round up
+ * @returns The number rounded up to 2 decimal places
+ */
+export function roundUp2(value: number): number {
+  return Math.ceil(value * 100) / 100;
+}
+
+/**
  * Rounds a number down to specified decimal places
  * @param value The number to round down
  * @param decimals Number of decimal places (default: 2)

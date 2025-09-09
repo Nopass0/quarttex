@@ -208,7 +208,7 @@ export default function AggregatorDepositsPage() {
         );
       case "CONFIRMED":
         return (
-          <Badge variant="default" className="bg-purple-600">
+          <Badge variant="default" className="bg-green-600">
             <CheckCircle2 className="mr-1 h-3 w-3" />
             Подтверждено
           </Badge>

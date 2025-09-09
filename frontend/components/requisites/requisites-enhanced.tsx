@@ -124,8 +124,8 @@ export function RequisitesEnhanced() {
     recipientName: "",
     minAmount: 1000,
     maxAmount: 20000,
-    operationLimit: 0,
-    sumLimit: 0,
+    dailyLimit: 100000,
+    monthlyLimit: 3000000,
     intervalMinutes: 0,
   })
   
@@ -328,7 +328,7 @@ export function RequisitesEnhanced() {
     if (percentage >= 90) return "bg-red-500"
     if (percentage >= 70) return "bg-orange-500"
     if (percentage >= 50) return "bg-yellow-500"
-    return "bg-purple-500"
+    return "bg-green-500"
   }
   
   if (loading) {
@@ -454,7 +454,7 @@ export function RequisitesEnhanced() {
                         <div className="flex items-center gap-2">
                           <div className={cn(
                             "h-2 w-2 rounded-full",
-                            requisite.device.isOnline ? "bg-purple-500" : "bg-gray-400"
+                            requisite.device.isOnline ? "bg-green-500" : "bg-gray-400"
                           )} />
                           {requisite.device.name}
                         </div>
@@ -566,11 +566,11 @@ export function RequisitesEnhanced() {
                 <div className="flex items-center gap-4">
                   <div className={cn(
                     "h-12 w-12 rounded-full flex items-center justify-center",
-                    device.isOnline ? "bg-purple-100" : "bg-gray-100"
+                    device.isOnline ? "bg-green-100" : "bg-gray-100"
                   )}>
                     <Smartphone className={cn(
                       "h-6 w-6",
-                      device.isOnline ? "text-purple-600" : "text-gray-600"
+                      device.isOnline ? "text-green-600" : "text-gray-600"
                     )} />
                   </div>
                   <div>

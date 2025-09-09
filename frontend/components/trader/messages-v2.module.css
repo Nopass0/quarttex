@@ -27,7 +27,7 @@
 }
 
 .searchWrapper {
-  @apply relative flex items-center bg-purple-50/80 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-700/60 hover:border-purple-300 dark:hover:border-purple-600/60 transition-colors;
+  @apply relative flex items-center bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors;
 }
 
 .searchIcon {
@@ -58,7 +58,7 @@
 
 /* Filters */
 .filtersContainer {
-  @apply bg-purple-50/80 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-700/60 p-4 space-y-4;
+  @apply bg-white rounded-lg border border-gray-200 p-4 space-y-4;
 }
 
 .filtersGrid {
@@ -74,7 +74,7 @@
 }
 
 .filterButton {
-  @apply w-full flex items-center justify-between px-3 py-2 bg-purple-50/60 dark:bg-purple-900/15 border border-purple-200 dark:border-purple-700/60 rounded-lg hover:bg-purple-50/80 dark:hover:bg-purple-900/25 transition-colors text-sm;
+  @apply w-full flex items-center justify-between px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm;
 }
 
 .filterButton svg {
@@ -107,7 +107,7 @@
 }
 
 .sortButton {
-  @apply w-full flex items-center justify-between px-3 py-2 bg-purple-50/60 dark:bg-purple-900/15 border border-purple-200 dark:border-purple-700/60 rounded-lg hover:bg-purple-50/80 dark:hover:bg-purple-900/25 transition-colors;
+  @apply w-full flex items-center justify-between px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors;
 }
 
 .selectedItem {
@@ -127,7 +127,7 @@
 }
 
 .dropdown {
-  @apply absolute top-full left-0 right-0 mt-1 bg-purple-50/90 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700/60 rounded-lg shadow-lg py-1 z-10 hidden;
+  @apply absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10 hidden;
 }
 
 .dropdownOpen {
@@ -135,7 +135,7 @@
 }
 
 .dropdownItem {
-  @apply px-3 py-2 text-sm hover:bg-purple-100/60 dark:hover:bg-purple-800/40 cursor-pointer transition-colors;
+  @apply px-3 py-2 text-sm hover:bg-gray-50 cursor-pointer transition-colors;
 }
 
 .dropdownItem.active {
@@ -144,11 +144,11 @@
 
 /* Messages List */
 .messagesList {
-  @apply bg-purple-50/80 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-700/60 divide-y divide-purple-100 dark:divide-purple-800/40;
+  @apply bg-white rounded-lg border border-gray-200 divide-y divide-gray-100;
 }
 
 .messageItem {
-  @apply block hover:bg-purple-50/60 dark:hover:bg-purple-900/15 transition-colors;
+  @apply block hover:bg-gray-50 transition-colors;
 }
 
 .messageContent {

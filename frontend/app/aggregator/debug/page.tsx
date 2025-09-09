@@ -56,7 +56,7 @@ export default function DebugPage() {
       
       <Card className="p-4">
         <h2 className="font-semibold mb-2">Session Token:</h2>
-        <p className={auth.sessionToken ? "text-purple-600" : "text-red-600"}>
+        <p className={auth.sessionToken ? "text-green-600" : "text-red-600"}>
           {auth.sessionToken || "NOT SET"}
         </p>
       </Card>

@@ -5,6 +5,9 @@ import ErrorSchema from "@/types/error";
 import { traderGuard } from "@/middleware/traderGuard";
 import { sendTransactionCallbacks } from "@/utils/notify";
 import { truncate2 } from "@/utils/rounding";
+
+// Функция округления вверх до 2 знаков
+const roundUp2 = (value: number): number => Math.ceil(value * 100) / 100;
 import { getFlexibleFeePercent } from "@/utils/flexible-fee-calculator";
 import {
   startOfDay,
@@ -30,6 +33,8 @@ export default (app: Elysia) =>
         const page = Number(query.page) || 1;
         const limit = Number(query.limit) || 50;
         const skip = (page - 1) * limit;
+
+        
 
         // Формируем условия фильтрации
         const where: Prisma.TransactionWhereInput = {
@@ -137,36 +142,49 @@ export default (app: Elysia) =>
           `[Trader API] Найдено ${transactions.length} транзакций из ${total} общих для трейдера ${trader.id}`
         );
 
-        // Calculate summary statistics for selected period
+        // Calculate summary statistics for selected period (exactly like dashboard)
         const period = (query.period as string) || "today";
         const now = new Date();
         let start: Date;
         let end: Date | undefined;
         switch (period) {
-          case "yesterday":
-            start = startOfDay(subDays(now, 1));
-            end = startOfDay(now);
+          case "today":
+            start = new Date(now.setHours(0, 0, 0, 0));
             break;
+          case "yesterday": {
+            const d = new Date(now);
+            d.setDate(d.getDate() - 1);
+            start = new Date(d.setHours(0, 0, 0, 0));
+            end = new Date(new Date(start).setDate(start.getDate() + 1));
+            break;
+          }
           case "week":
-            start = startOfWeek(now);
+            // Последние 7 дней
+            start = new Date(now);
+            start.setDate(now.getDate() - 7);
+            start.setHours(0, 0, 0, 0);
             break;
           case "month":
-            start = startOfMonth(now);
+            // Начало текущего месяца
+            start = new Date(now.getFullYear(), now.getMonth(), 1);
             break;
           case "quarter":
-            start = startOfQuarter(now);
+            // Начало текущего квартала
+            const currentMonth = now.getMonth();
+            const quarterStartMonth = Math.floor(currentMonth / 3) * 3;
+            start = new Date(now.getFullYear(), quarterStartMonth, 1);
             break;
           case "halfyear":
-            const month = now.getMonth();
-            const halfStartMonth = month < 6 ? 0 : 6;
-            start = new Date(now.getFullYear(), halfStartMonth, 1);
+            // Начало текущего полугодия
+            const halfYearStartMonth = now.getMonth() < 6 ? 0 : 6;
+            start = new Date(now.getFullYear(), halfYearStartMonth, 1);
             break;
           case "year":
-            start = startOfYear(now);
+            // Начало текущего года
+            start = new Date(now.getFullYear(), 0, 1);
             break;
-          case "today":
           default:
-            start = startOfDay(now);
+            start = new Date(now.setHours(0, 0, 0, 0));
         }
 
         const statsWhere: Prisma.TransactionWhereInput = {
@@ -174,7 +192,7 @@ export default (app: Elysia) =>
           bankDetailId: { not: null },
           requisites: { deviceId: { not: null } },
           status: Status.READY,
-          createdAt: { gte: start, ...(end ? { lt: end } : {}) },
+          acceptedAt: { gte: start, ...(end ? { lt: end } : {}) },
         };
 
         const statsTransactions = await db.transaction.findMany({
@@ -189,18 +207,18 @@ export default (app: Elysia) =>
 
         const stats = statsTransactions.reduce(
           (acc, tx) => {
-            const usdtAmount =
-              tx.frozenUsdtAmount !== null && tx.frozenUsdtAmount !== undefined
-                ? tx.frozenUsdtAmount
-                : tx.rate
-                ? tx.amount / tx.rate
-                : tx.amount / 95;
+            // Берём замороженную сумму, а если её нет, считаем из amount/rate
+            const calculatedFromRate =
+              tx.rate && tx.rate > 0 ? truncate2(tx.amount / tx.rate) : 0;
+            const usdtAmount = (tx.frozenUsdtAmount ?? calculatedFromRate) ?? 0;
             acc.count += 1;
-            acc.totalAmount += usdtAmount;
-            acc.totalProfit += tx.traderProfit || 0;
+            acc.totalAmount += usdtAmount ?? 0;
+            acc.totalProfit += tx.traderProfit ?? 0;
+            // Добавляем рублевую сумму
+            acc.totalAmountRub += tx.amount ?? 0;
             return acc;
           },
-          { count: 0, totalAmount: 0, totalProfit: 0 }
+          { count: 0, totalAmount: 0, totalProfit: 0, totalAmountRub: 0 }
         );
 
         // Преобразуем даты в ISO формат
@@ -353,6 +371,7 @@ export default (app: Elysia) =>
               count: t.Number(),
               totalAmount: t.Number(),
               totalProfit: t.Number(),
+              totalAmountRub: t.Number(),
             }),
           }),
           401: ErrorSchema,
@@ -1004,11 +1023,9 @@ export default (app: Elysia) =>
                 if (wasExpired) {
                   // Для истекших транзакций средства уже были разморожены и возвращены на trustBalance
                   // Теперь нужно списать их оттуда при подтверждении
-                  const amountToDeduct =
-                    txWithFreezing?.frozenUsdtAmount ||
-                    (transaction.rate
-                      ? transaction.amount / transaction.rate
-                      : 0);
+                  // Используем сохраненную сумму frozenUsdtAmount, либо пересчитываем с округлением вверх
+                  const amountToDeduct = txWithFreezing?.frozenUsdtAmount ||
+                    (transaction.rate ? roundUp2(transaction.amount / transaction.rate) : 0);
 
                   console.log(
                     "[Trader Deduct After Expiry] Processing EXPIRED transaction approval:",

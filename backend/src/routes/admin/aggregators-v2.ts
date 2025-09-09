@@ -26,7 +26,11 @@ const serializeAggregator = (aggregator: any) => ({
   createdAt: aggregator.createdAt.toISOString(),
   updatedAt: aggregator.updatedAt.toISOString(),
   lastVolumeReset: aggregator.lastVolumeReset?.toISOString(),
-  lastPriorityChangeAt: aggregator.lastPriorityChangeAt?.toISOString(),
+  lastPriorityChangeAt: aggregator.lastPriorityChangeAt?.toISOString() || null,
+  lastPriorityChangeBy: aggregator.lastPriorityChangeBy || null,
+  maxDailyVolume: aggregator.maxDailyVolume || null,
+  apiBaseUrl: aggregator.apiBaseUrl || null,
+  customApiToken: aggregator.customApiToken || null,
   // Скрываем пароль и 2FA секрет
   password: undefined,
   twoFactorSecret: undefined
@@ -40,27 +44,27 @@ const AggregatorResponseSchema = t.Object({
   name: t.String(),
   apiToken: t.String(),
   callbackToken: t.String(),
-  apiBaseUrl: t.Optional(t.String()),
+  customApiToken: t.Union([t.String(), t.Null()]),
+  apiBaseUrl: t.Union([t.String(), t.Null()]),
   balanceUsdt: t.Number(),
   isActive: t.Boolean(),
   priority: t.Number(),
   maxSlaMs: t.Number(),
   minBalance: t.Number(),
-  maxDailyVolume: t.Optional(t.Number()),
+  maxDailyVolume: t.Union([t.Number(), t.Null()]),
   currentDailyVolume: t.Number(),
   lastVolumeReset: t.String(),
   twoFactorEnabled: t.Boolean(),
   createdAt: t.String(),
   updatedAt: t.String(),
-  lastPriorityChangeBy: t.Optional(t.String()),
-  lastPriorityChangeAt: t.Optional(t.String())
+  lastPriorityChangeBy: t.Union([t.String(), t.Null()]),
+  lastPriorityChangeAt: t.Union([t.String(), t.Null()])
 })
 
 /* ───────────────────── routes ───────────────────── */
 
 export default (app: Elysia) =>
   app
-    .use(adminGuard())
     
     /* ─────────── GET /admin/aggregators-v2 ─────────── */
     .get(
@@ -236,7 +240,8 @@ export default (app: Elysia) =>
             ...(body.isActive !== undefined && { isActive: body.isActive }),
             ...(body.maxSlaMs !== undefined && { maxSlaMs: body.maxSlaMs }),
             ...(body.minBalance !== undefined && { minBalance: body.minBalance }),
-            ...(body.maxDailyVolume !== undefined && { maxDailyVolume: body.maxDailyVolume })
+            ...(body.maxDailyVolume !== undefined && { maxDailyVolume: body.maxDailyVolume }),
+            ...(body.customApiToken !== undefined && { customApiToken: body.customApiToken })
           }
         })
         
@@ -254,7 +259,8 @@ export default (app: Elysia) =>
           isActive: t.Optional(t.Boolean()),
           maxSlaMs: t.Optional(t.Number()),
           minBalance: t.Optional(t.Number()),
-          maxDailyVolume: t.Optional(t.Number())
+          maxDailyVolume: t.Optional(t.Number()),
+          customApiToken: t.Optional(t.Union([t.String(), t.Null()]))
         }),
         response: {
           200: AggregatorResponseSchema,

@@ -184,7 +184,41 @@ export default new Elysia({ prefix: "/traders" })
       try {
         const trader = await db.user.findUnique({
           where: { id: params.id },
-          include: {
+          select: {
+            id: true,
+            numericId: true,
+            email: true,
+            name: true,
+            minInsuranceDeposit: true,
+            maxInsuranceDeposit: true,
+            minAmountPerRequisite: true,
+            maxAmountPerRequisite: true,
+            disputeLimit: true,
+            teamId: true,
+            telegramChatId: true,
+            telegramDisputeChatId: true,
+            telegramBotToken: true,
+            deposit: true,
+            maxSimultaneousPayouts: true,
+            minPayoutAmount: true,
+            maxPayoutAmount: true,
+            payoutRateDelta: true,
+            payoutFeePercent: true,
+            payoutAcceptanceTime: true,
+            displayStakePercent: true,
+            displayAmountFrom: true,
+            displayAmountTo: true,
+            displayRates: {
+              where: { isActive: true },
+              orderBy: { sortOrder: 'asc' },
+              select: {
+                id: true,
+                stakePercent: true,
+                amountFrom: true,
+                amountTo: true,
+                sortOrder: true
+              }
+            },
             team: {
               include: {
                 agent: {
@@ -208,6 +242,12 @@ export default new Elysia({ prefix: "/traders" })
         if (!trader) {
           return error(404, { error: "Трейдер не найден" });
         }
+
+        console.log("[Admin] Returning trader data:", {
+          traderId: params.id,
+          displayRates: trader.displayRates,
+          displayRatesCount: trader.displayRates?.length || 0
+        });
 
         return trader;
       } catch (e) {
@@ -253,7 +293,19 @@ export default new Elysia({ prefix: "/traders" })
           maxPayoutAmount: t.Number(),
           payoutRateDelta: t.Number(),
           payoutFeePercent: t.Number(),
-          payoutAcceptanceTime: t.Number()
+          payoutAcceptanceTime: t.Number(),
+          displayStakePercent: t.Nullable(t.Number()),
+          displayAmountFrom: t.Nullable(t.Number()),
+          displayAmountTo: t.Nullable(t.Number()),
+          displayRates: t.Array(
+            t.Object({
+              id: t.String(),
+              stakePercent: t.Number(),
+              amountFrom: t.Number(),
+              amountTo: t.Number(),
+              sortOrder: t.Number(),
+            })
+          ),
         }),
         404: ErrorSchema,
         401: ErrorSchema,
@@ -275,28 +327,75 @@ export default new Elysia({ prefix: "/traders" })
           return error(404, { error: "Трейдер не найден" });
         }
 
-        const updated = await db.user.update({
-          where: { id: params.id },
-          data: {
-            email: body.email,
-            name: body.name,
-            minInsuranceDeposit: body.minInsuranceDeposit,
-            maxInsuranceDeposit: body.maxInsuranceDeposit,
-            minAmountPerRequisite: body.minAmountPerRequisite,
-            maxAmountPerRequisite: body.maxAmountPerRequisite,
-            disputeLimit: body.disputeLimit,
-            teamId: body.teamId,
-            telegramChatId: body.telegramChatId,
-            telegramDisputeChatId: body.telegramDisputeChatId,
-            telegramBotToken: body.telegramBotToken,
-            maxSimultaneousPayouts: body.maxSimultaneousPayouts,
-            minPayoutAmount: body.minPayoutAmount,
-            maxPayoutAmount: body.maxPayoutAmount,
-            payoutRateDelta: body.payoutRateDelta,
-            payoutFeePercent: body.payoutFeePercent,
-            payoutAcceptanceTime: body.payoutAcceptanceTime,
-            rateSourceConfigId: body.rateSourceConfigId,
+        console.log("[Admin] Updating trader settings:", {
+          traderId: params.id,
+          displayRates: body.displayRates,
+          hasDisplayRates: !!body.displayRates,
+          displayRatesLength: body.displayRates?.length || 0
+        });
+
+        // Используем транзакцию для обновления трейдера и его отображаемых ставок
+        const updated = await db.$transaction(async (prisma) => {
+          // Обновляем основные данные трейдера
+          const updatedTrader = await prisma.user.update({
+            where: { id: params.id },
+            data: {
+              email: body.email,
+              name: body.name,
+              minInsuranceDeposit: body.minInsuranceDeposit,
+              maxInsuranceDeposit: body.maxInsuranceDeposit,
+              minAmountPerRequisite: body.minAmountPerRequisite,
+              maxAmountPerRequisite: body.maxAmountPerRequisite,
+              disputeLimit: body.disputeLimit,
+              teamId: body.teamId,
+              telegramChatId: body.telegramChatId,
+              telegramDisputeChatId: body.telegramDisputeChatId,
+              telegramBotToken: body.telegramBotToken,
+              maxSimultaneousPayouts: body.maxSimultaneousPayouts,
+              minPayoutAmount: body.minPayoutAmount,
+              maxPayoutAmount: body.maxPayoutAmount,
+              payoutRateDelta: body.payoutRateDelta,
+              payoutFeePercent: body.payoutFeePercent,
+              payoutAcceptanceTime: body.payoutAcceptanceTime,
+              rateSourceConfigId: body.rateSourceConfigId || null,
+              displayStakePercent: body.displayStakePercent ?? null,
+              displayAmountFrom: body.displayAmountFrom ?? null,
+              displayAmountTo: body.displayAmountTo ?? null,
+            }
+          });
+
+          // Если есть новые отображаемые ставки, обновляем их
+          if (body.displayRates && Array.isArray(body.displayRates)) {
+            console.log("[Admin] Processing display rates:", body.displayRates);
+            
+            // Удаляем старые ставки
+            const deletedCount = await prisma.traderDisplayRate.deleteMany({
+              where: { traderId: params.id }
+            });
+            console.log("[Admin] Deleted old rates count:", deletedCount.count);
+
+            // Создаем новые ставки
+            if (body.displayRates.length > 0) {
+              const ratesToCreate = body.displayRates.map((rate, index) => ({
+                traderId: params.id,
+                stakePercent: rate.stakePercent,
+                amountFrom: rate.amountFrom,
+                amountTo: rate.amountTo,
+                sortOrder: index,
+                isActive: true
+              }));
+              console.log("[Admin] Creating new rates:", ratesToCreate);
+              
+              const created = await prisma.traderDisplayRate.createMany({
+                data: ratesToCreate
+              });
+              console.log("[Admin] Created rates count:", created.count);
+            }
+          } else {
+            console.log("[Admin] No displayRates provided or not an array");
           }
+
+          return updatedTrader;
         });
 
         return { success: true, trader: updated };
@@ -332,6 +431,14 @@ export default new Elysia({ prefix: "/traders" })
         payoutFeePercent: t.Number(),
         payoutAcceptanceTime: t.Number(),
         rateSourceConfigId: t.Optional(t.Nullable(t.String())),
+        displayStakePercent: t.Optional(t.Nullable(t.Number())),
+        displayAmountFrom: t.Optional(t.Nullable(t.Number())),
+        displayAmountTo: t.Optional(t.Nullable(t.Number())),
+        displayRates: t.Optional(t.Array(t.Object({
+          stakePercent: t.Number(),
+          amountFrom: t.Number(),
+          amountTo: t.Number()
+        }))),
       }),
       response: {
         200: t.Object({ 
@@ -586,4 +693,180 @@ export default new Elysia({ prefix: "/traders" })
         403: ErrorSchema,
       },
     },
+  )
+
+  /* ───────────────── Create display rate ───────────────── */
+  .post(
+    "/:id/display-rates",
+    async ({ params, body, error }) => {
+      try {
+        console.log("[Admin] Creating display rate for trader:", params.id);
+
+        const trader = await db.user.findUnique({
+          where: { id: params.id }
+        });
+
+        if (!trader) {
+          return error(404, { error: "Трейдер не найден" });
+        }
+
+        // Получаем максимальный sortOrder для этого трейдера
+        const maxOrder = await db.traderDisplayRate.findFirst({
+          where: { traderId: params.id },
+          orderBy: { sortOrder: 'desc' },
+          select: { sortOrder: true }
+        });
+
+        const newRate = await db.traderDisplayRate.create({
+          data: {
+            traderId: params.id,
+            stakePercent: body.stakePercent || 0,
+            amountFrom: body.amountFrom || 0,
+            amountTo: body.amountTo || 0,
+            sortOrder: (maxOrder?.sortOrder || 0) + 1,
+            isActive: true
+          }
+        });
+
+        console.log("[Admin] Created display rate:", newRate.id);
+        return { success: true, rate: newRate };
+      } catch (e) {
+        console.error("[Admin] Error creating display rate:", e);
+        throw e;
+      }
+    },
+    {
+      tags: ["admin"],
+      headers: authHeader,
+      params: t.Object({ id: t.String() }),
+      body: t.Object({
+        stakePercent: t.Optional(t.Number()),
+        amountFrom: t.Optional(t.Number()),
+        amountTo: t.Optional(t.Number())
+      }),
+      response: {
+        200: t.Object({ 
+          success: t.Boolean(),
+          rate: t.Object({
+            id: t.String(),
+            stakePercent: t.Number(),
+            amountFrom: t.Number(),
+            amountTo: t.Number(),
+            sortOrder: t.Number()
+          })
+        }),
+        404: ErrorSchema,
+        401: ErrorSchema,
+        403: ErrorSchema,
+      },
+    }
+  )
+
+  /* ───────────────── Update display rate ───────────────── */
+  .patch(
+    "/:id/display-rates/:rateId",
+    async ({ params, body, error }) => {
+      try {
+        console.log("[Admin] Updating display rate:", params.rateId, "for trader:", params.id);
+
+        const rate = await db.traderDisplayRate.findFirst({
+          where: { 
+            id: params.rateId,
+            traderId: params.id 
+          }
+        });
+
+        if (!rate) {
+          return error(404, { error: "Ставка не найдена" });
+        }
+
+        const updatedRate = await db.traderDisplayRate.update({
+          where: { id: params.rateId },
+          data: {
+            stakePercent: body.stakePercent ?? rate.stakePercent,
+            amountFrom: body.amountFrom ?? rate.amountFrom,
+            amountTo: body.amountTo ?? rate.amountTo,
+          }
+        });
+
+        console.log("[Admin] Updated display rate:", updatedRate.id);
+        return { success: true, rate: updatedRate };
+      } catch (e) {
+        console.error("[Admin] Error updating display rate:", e);
+        throw e;
+      }
+    },
+    {
+      tags: ["admin"],
+      headers: authHeader,
+      params: t.Object({ 
+        id: t.String(),
+        rateId: t.String() 
+      }),
+      body: t.Object({
+        stakePercent: t.Optional(t.Number()),
+        amountFrom: t.Optional(t.Number()),
+        amountTo: t.Optional(t.Number())
+      }),
+      response: {
+        200: t.Object({ 
+          success: t.Boolean(),
+          rate: t.Object({
+            id: t.String(),
+            stakePercent: t.Number(),
+            amountFrom: t.Number(),
+            amountTo: t.Number(),
+            sortOrder: t.Number()
+          })
+        }),
+        404: ErrorSchema,
+        401: ErrorSchema,
+        403: ErrorSchema,
+      },
+    }
+  )
+
+  /* ───────────────── Delete display rate ───────────────── */
+  .delete(
+    "/:id/display-rates/:rateId",
+    async ({ params, error }) => {
+      try {
+        console.log("[Admin] Deleting display rate:", params.rateId, "for trader:", params.id);
+
+        const rate = await db.traderDisplayRate.findFirst({
+          where: { 
+            id: params.rateId,
+            traderId: params.id 
+          }
+        });
+
+        if (!rate) {
+          return error(404, { error: "Ставка не найдена" });
+        }
+
+        await db.traderDisplayRate.delete({
+          where: { id: params.rateId }
+        });
+
+        console.log("[Admin] Deleted display rate:", params.rateId);
+        return { success: true };
+      } catch (e) {
+        console.error("[Admin] Error deleting display rate:", e);
+        throw e;
+      }
+    },
+    {
+      tags: ["admin"],
+      headers: authHeader,
+      params: t.Object({ 
+        id: t.String(),
+        rateId: t.String() 
+      }),
+      response: {
+        200: t.Object({ success: t.Boolean() }),
+        404: ErrorSchema,
+        401: ErrorSchema,
+        403: ErrorSchema,
+      },
+    }
   );

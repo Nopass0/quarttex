@@ -3,6 +3,7 @@ import { ServiceRegistry } from "./ServiceRegistry";
 import { db } from "../db";
 import type { PayoutService } from "./payout.service";
 import type { TelegramService } from "./TelegramService";
+import { trafficClassificationService } from "./traffic-classification.service";
 
 export class PayoutMonitorService extends BaseService {
   private static instance: PayoutMonitorService;
@@ -267,34 +268,36 @@ export class PayoutMonitorService extends BaseService {
         return;
       }
 
+      // Классифицируем трафик для этой выплаты
+      const trafficType = await trafficClassificationService.classifyPayoutTraffic(
+        payout.merchantId,
+        payout.clientIdentifier
+      );
 
-      // Get traders connected to this merchant with OUT operations enabled
-      const connectedTraders = await db.traderMerchant.findMany({
-        where: {
-          merchantId: payout.merchantId,
-          isMerchantEnabled: true,
-          isFeeOutEnabled: true // Check that OUT operations are enabled
-        },
-        select: { traderId: true }
-      });
+      console.log(`[PayoutMonitorService] Payout ${payout.numericId} classified as ${trafficType} traffic`);
 
-      const traderIds = connectedTraders.map(ct => ct.traderId);
+      // Получаем трейдеров, которые работают с данным типом трафика
+      const eligibleTraderIds = await trafficClassificationService.getEligibleTradersForPayoutTrafficType(
+        trafficType,
+        payout.merchantId,
+        payout.previousTraderIds || []
+      );
 
-      // Find eligible traders, excluding those who previously worked with this payout
+      if (eligibleTraderIds.length === 0) {
+        console.log(`[PayoutMonitorService] No eligible traders found for ${trafficType} traffic`);
+        return;
+      }
+
+      // Get eligible traders with their settings
       const traders = await db.user.findMany({
         where: {
-          id: { in: traderIds }, // Only traders connected to the merchant
+          id: { in: eligibleTraderIds },
           banned: false,
           trafficEnabled: true,
-          // Exclude traders who previously had this payout
-          AND: {
-            id: {
-              notIn: payout.previousTraderIds || [],
-            },
-          },
         },
         include: {
           payoutFilters: true,
+          trafficSettings: true,
         },
         orderBy: {
           createdAt: "asc",
@@ -305,6 +308,18 @@ export class PayoutMonitorService extends BaseService {
       let notificationsSent = 0;
 
       for (const trader of traders) {
+        // Check if trader can take this payout based on traffic settings
+        const canTakePayout = await trafficClassificationService.canTraderTakePayout(
+          trader.id,
+          payout.merchantId,
+          payout.clientIdentifier
+        );
+
+        if (!canTakePayout) {
+          console.log(`[PayoutMonitorService] Trader ${trader.id} cannot take payout due to counterparty limit`);
+          continue;
+        }
+
         // Check trader has sufficient payout balance
         const pendingAmount = await db.payout.aggregate({
           where: { traderId: trader.id, status: "CREATED" },
@@ -325,15 +340,24 @@ export class PayoutMonitorService extends BaseService {
             continue;
           }
 
-          // Check traffic type filter
+          // Check traffic type filter - only if filters are set AND balance > 0
+          // If balance is set but no filters selected, all traffic types are allowed
+          const hasBalanceSet = filters.maxPayoutAmount > 0;
           if (filters.trafficTypes.length > 0) {
             const payoutTrafficType = payout.isCard ? "card" : "sbp";
             if (!filters.trafficTypes.includes(payoutTrafficType) && !filters.trafficTypes.includes("both")) {
               continue;
             }
+          } else if (hasBalanceSet) {
+            // Balance is set but no traffic types selected - allow all types
+            // Continue processing (don't skip this trader)
+          } else if (!hasBalanceSet && filters.trafficTypes.length === 0) {
+            // No balance and no traffic types - skip this trader (not participating)
+            continue;
           }
 
-          // Check bank type filter
+          // Check bank type filter - only if filters are set AND balance > 0
+          // If balance is set but no bank filters selected, all banks are allowed
           if (filters.bankTypes.length > 0 && payout.bank) {
             const bankTypeMap: { [key: string]: string } = {
               "Сбербанк": "SBERBANK",
@@ -383,7 +407,13 @@ export class PayoutMonitorService extends BaseService {
             if (payoutBankType && !filters.bankTypes.includes(payoutBankType as any)) {
               continue;
             }
+          } else if (hasBalanceSet) {
+            // Balance is set but no bank filters selected - allow all banks
+            // Continue processing (don't skip this trader)
           }
+        } else if (trader.payoutFilters && trader.payoutFilters.maxPayoutAmount === 0) {
+          // No filters set and no balance - skip this trader (not participating)
+          continue;
         }
 
         // Check trader's active payout count

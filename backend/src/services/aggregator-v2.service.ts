@@ -12,6 +12,7 @@ export interface AggregatorDealRequest {
   bankType?: string;              // Тип банка (если применимо)
   partnerDealId?: string;
   callbackUrl: string;
+  clientIdentifier?: string;      // Идентификатор клиента для классификации трафика
   metadata?: any;
 }
 
@@ -231,7 +232,8 @@ export class AggregatorServiceV2 {
       merchantRate: transaction.rate || 100,
       paymentMethod,
       bankType: transaction.method.bankType,
-      callbackUrl: `${process.env.BASE_URL || "https://chspay.pro/api"}/aggregators/callback`,
+      callbackUrl: `${(process.env.BASE_URL ?? "https://chspay.pro/api")}/aggregators/callback`,
+      clientIdentifier: transaction.clientIdentifier,
       metadata: {
         methodType: transaction.method.type,
         bankType: transaction.method.bankType,
@@ -249,7 +251,7 @@ export class AggregatorServiceV2 {
       const response = await axios.post<AggregatorDealResponse>(url, requestData, {
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${aggregator.apiToken}`,
+          "Authorization": `Bearer ${aggregator.customApiToken || aggregator.apiToken}`,
           "Idempotency-Key": idempotencyKey,
         },
         timeout: aggregator.maxSlaMs || 2000,
@@ -284,33 +286,21 @@ export class AggregatorServiceV2 {
           });
         }
 
-        // Сохраняем partnerDealId и реквизиты в транзакции
-        const updateData: any = {};
-        if (response.data.partnerDealId) {
-          updateData.externalId = response.data.partnerDealId;
-        }
-        
-        // Формируем строку с реквизитами для сохранения
+        // Формируем строку с реквизитами для сохранения (без дополнительных полей в транзакции)
+        let assetOrBank: string | undefined;
         if (response.data.requisites) {
           const req = response.data.requisites;
           if (paymentMethod === "SBP" && req.phoneNumber) {
-            updateData.assetOrBank = `${req.bankName || "Bank"}: ${req.phoneNumber}`;
+            assetOrBank = `${req.bankName || "Bank"}: ${req.phoneNumber}`;
           } else if (paymentMethod === "C2C" && req.cardNumber) {
-            updateData.assetOrBank = `${req.bankName || "Bank"}: ${req.cardNumber}`;
+            assetOrBank = `${req.bankName || "Bank"}: ${req.cardNumber}`;
           }
-          
-          // Сохраняем полные реквизиты в metadata
-          updateData.metadata = {
-            ...transaction.metadata,
-            requisites: response.data.requisites,
-            dealDetails: response.data.dealDetails,
-          };
         }
 
-        if (Object.keys(updateData).length > 0) {
+        if (assetOrBank) {
           await db.transaction.update({
             where: { id: transaction.id },
-            data: updateData,
+            data: { assetOrBank },
           });
         }
 
@@ -374,7 +364,7 @@ export class AggregatorServiceV2 {
 
       const response = await axios.get(url, {
         headers: {
-          "Authorization": `Bearer ${aggregator.apiToken}`,
+          "Authorization": `Bearer ${aggregator.customApiToken || aggregator.apiToken}`,
         },
         timeout: aggregator.maxSlaMs || 2000,
       });
@@ -456,7 +446,7 @@ export class AggregatorServiceV2 {
       const response = await axios.post(url, requestData, {
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${aggregator.apiToken}`,
+          "Authorization": `Bearer ${aggregator.customApiToken || aggregator.apiToken}`,
         },
         timeout: aggregator.maxSlaMs || 2000,
       });
@@ -547,7 +537,10 @@ export class AggregatorServiceV2 {
 
         // Обновляем статус если изменился
         if (callback.status && callback.status !== transaction.status) {
-          const newStatus = callback.status as Status;
+          // Маппим CREATED → IN_PROGRESS
+          const incoming = (callback.status || "").toString().toUpperCase();
+          const mapped = incoming === "CREATED" ? "IN_PROGRESS" : incoming;
+          const newStatus = mapped as Status;
           
           const updatedTransaction = await db.transaction.update({
             where: { id: transaction.id },
@@ -678,7 +671,8 @@ export class AggregatorServiceV2 {
       status: "NEW",
       amount: mockData.amount,
       merchantRate: mockData.merchantRate,
-      callbackUrl: `${process.env.BASE_URL || "https://api.chase.com"}/api/aggregators/callback`,
+      paymentMethod: "C2C",
+      callbackUrl: `${(process.env.BASE_URL as string | undefined) || "https://api.chase.com"}/api/aggregators/callback`,
       metadata: mockData.metadata || { test: true },
     };
 
@@ -686,7 +680,7 @@ export class AggregatorServiceV2 {
       const response = await axios.post<AggregatorDealResponse>(url, requestData, {
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${aggregator.apiToken}`,
+          "Authorization": `Bearer ${aggregator.customApiToken || aggregator.apiToken}`,
           "Idempotency-Key": idempotencyKey,
         },
         timeout: aggregator.maxSlaMs || 2000,

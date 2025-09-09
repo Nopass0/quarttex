@@ -39,6 +39,7 @@ interface EditRequisiteDialogProps {
     monthlyLimit: number;
     intervalMinutes: number;
     isArchived: boolean;
+    trafficPreference?: 'ANY' | 'PRIMARY' | 'SECONDARY' | 'VIP';
     device?: {
       id: string;
       name: string;
@@ -109,7 +110,7 @@ export function EditRequisiteDialog({
     maxAmount: "",
     dailyLimit: "",
     monthlyLimit: "",
-
+    trafficPreference: "ANY" as 'ANY' | 'PRIMARY' | 'SECONDARY' | 'VIP',
   });
 
   useEffect(() => {
@@ -124,6 +125,7 @@ export function EditRequisiteDialog({
         maxAmount: requisite.maxAmount ? requisite.maxAmount.toString() : "",
         dailyLimit: requisite.dailyLimit ? requisite.dailyLimit.toString() : "",
         monthlyLimit: requisite.monthlyLimit ? requisite.monthlyLimit.toString() : "",
+        trafficPreference: requisite.trafficPreference || 'ANY',
       };
       console.log('Setting formData from requisite:', newFormData);
       setFormData(newFormData);
@@ -153,6 +155,7 @@ export function EditRequisiteDialog({
         maxAmount: Number(formData.maxAmount),
         dailyLimit: Number(formData.dailyLimit),
         monthlyLimit: Number(formData.monthlyLimit),
+        trafficPreference: formData.trafficPreference,
       };
 
       await traderApi.updateRequisite(requisite.id, updateData);
@@ -230,6 +233,26 @@ export function EditRequisiteDialog({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="trafficPreference">Тип трафика</Label>
+            <Select
+              value={formData.trafficPreference}
+              onValueChange={(value) =>
+                setFormData({ ...formData, trafficPreference: value as any })
+              }
+            >
+              <SelectTrigger id="trafficPreference">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ANY">Любой</SelectItem>
+                <SelectItem value="PRIMARY">Первичный</SelectItem>
+                <SelectItem value="SECONDARY">Вторичный</SelectItem>
+                <SelectItem value="VIP">VIP</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-1 gap-4">
@@ -350,7 +373,7 @@ export function EditRequisiteDialog({
               <p className="text-sm text-gray-600">
                 Устройство: <span className="font-medium">{requisite.device.name}</span>
                 {requisite.device.isOnline && (
-                  <span className="ml-2 text-purple-600">● В сети</span>
+                  <span className="ml-2 text-green-600">● В сети</span>
                 )}
               </p>
             </div>

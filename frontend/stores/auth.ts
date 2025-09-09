@@ -19,6 +19,9 @@ interface AdminAuthState {
   setHasHydrated: (state: boolean) => void
   isAuthenticated: boolean
   verify: () => Promise<boolean>
+  // 2FA fields
+  twoFactorVerified: boolean
+  setTwoFactorVerified: (verified: boolean) => void
 }
 
 export const useTraderAuth = create<TraderAuthState>()(
@@ -47,10 +50,12 @@ export const useAdminAuth = create<AdminAuthState>()(
       role: null,
       hasHydrated: false,
       isAuthenticated: false,
+      twoFactorVerified: false,
       setToken: (token) => set({ token, isAuthenticated: !!token }),
       setRole: (role) => set({ role }),
-      logout: () => set({ token: null, role: null, isAuthenticated: false }),
+      logout: () => set({ token: null, role: null, isAuthenticated: false, twoFactorVerified: false }),
       setHasHydrated: (state) => set({ hasHydrated: state }),
+      setTwoFactorVerified: (verified) => set({ twoFactorVerified: verified }),
       verify: async () => {
         const token = get().token;
         if (!token) return false;

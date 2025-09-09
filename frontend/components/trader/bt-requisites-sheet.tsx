@@ -99,6 +99,7 @@ interface BtRequisite {
   phoneNumber?: string;
   sumLimit?: number;
   operationLimit?: number;
+  intervalMinutes?: number;
   transactionsInProgress?: number;
   transactionsReady?: number;
   merchant?: {
@@ -120,8 +121,8 @@ const btRequisiteStatusConfig = {
   ACTIVE: {
     label: "Активен",
     description: "Реквизит активен",
-    color: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
-    badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
+    color: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
+    badgeColor: "bg-green-50 text-green-700 border-green-200",
     icon: CheckCircle
   },
   INACTIVE: {
@@ -224,6 +225,7 @@ export function BtRequisitesSheet({
         maxAmount: existingRequisite.maxAmount,
         sumLimit: existingRequisite.sumLimit || 0,
         operationLimit: existingRequisite.operationLimit || 0,
+        intervalMinutes: existingRequisite.intervalMinutes || 0,
         isActive: existingRequisite.isActive,
       });
     }
@@ -324,7 +326,8 @@ export function BtRequisitesSheet({
         return;
       }
 
-      if (data.methodType === "sbp" && !data.phoneNumber) {
+      // При редактировании СБП реквизитов номер телефона не требуется (он заблокирован)
+      if (data.methodType === "sbp" && !data.phoneNumber && !editingRequisite) {
         toast.error("Введите номер телефона");
         return;
       }
@@ -337,8 +340,8 @@ export function BtRequisitesSheet({
         maxAmount: Number(data.maxAmount),
         sumLimit: Number(data.sumLimit),
         operationLimit: Number(data.operationLimit),
-        intervalMinutes: Number(data.intervalMinutes),
         cardNumber: data.methodType === "sbp" ? (data.phoneNumber || "") : (data.cardNumber || ""),
+        intervalMinutes: Number(data.intervalMinutes || 0),
       } as any;
 
       if (editingRequisite) {
@@ -793,34 +796,34 @@ export function BtRequisitesSheet({
                   />
                 </div>
 
-                <div>
-                  <FormField
-                    control={form.control}
-                    name="intervalMinutes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Интервал между сделками (мин)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="text"
-                            inputMode="numeric"
-                            placeholder="0"
-                            value={intervalMinutesInput}
-                            onChange={(e) => {
-                              const raw = e.target.value;
-                              const digitsOnly = raw.replace(/\D/g, "");
-                              setIntervalMinutesInput(digitsOnly);
-                              form.setValue("intervalMinutes", digitsOnly === "" ? undefined : Number(digitsOnly), { shouldValidate: false, shouldDirty: true });
-                            }}
-                            disabled={loading}
-                          />
-                        </FormControl>
-                        <FormDescription>0 = без ограничений</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="intervalMinutes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Интервал между сделками (мин)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="0"
+                          value={intervalMinutesInput}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            const digitsOnly = raw.replace(/\D/g, "");
+                            setIntervalMinutesInput(digitsOnly);
+                            form.setValue("intervalMinutes", digitsOnly === "" ? undefined : Number(digitsOnly), { shouldValidate: false, shouldDirty: true });
+                          }}
+                          disabled={loading}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Минимальный интервал между новыми сделками на этом реквизите. 0 = без ограничений
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 {editingRequisite && (
                   <FormField
@@ -858,7 +861,7 @@ export function BtRequisitesSheet({
                   <Button
                     type="submit"
                     disabled={loading || !form.formState.isValid || hasEmptyRequiredNumbers}
-                    className="bg-[#530FAD] hover:bg-[#530FAD]/90"
+                    className="bg-[#006039] hover:bg-[#006039]/90"
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {editingRequisite ? "Сохранить" : "Добавить"}

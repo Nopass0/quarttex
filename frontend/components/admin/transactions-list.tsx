@@ -163,7 +163,7 @@ const statusIcons: Record<Status, any> = {
 const statusColors: Record<Status, string> = {
   CREATED: "bg-gray-100 text-gray-700",
   IN_PROGRESS: "bg-blue-100 text-blue-700",
-  READY: "bg-purple-100 text-purple-700",
+  READY: "bg-green-100 text-green-700",
   CANCELED: "bg-red-100 text-red-700",
   EXPIRED: "bg-orange-100 text-orange-700",
   DISPUTE: "bg-purple-100 text-purple-700",
@@ -281,7 +281,7 @@ export function TransactionsList() {
   const fetchMerchants = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/merchant`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/merchant/list`,
         {
           headers: {
             "x-admin-key": adminToken || "",
@@ -298,7 +298,11 @@ export function TransactionsList() {
         return;
       }
 
-      const merchantsList = data.merchants || [];
+      const merchantsList = Array.isArray(data.data)
+        ? data.data
+        : Array.isArray(data)
+        ? data
+        : [];
       setMerchants(merchantsList);
     } catch (error) {
       console.error("Failed to fetch merchants:", error);
@@ -309,7 +313,7 @@ export function TransactionsList() {
   const fetchTraders = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/traders`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/users?role=trader`,
         {
           headers: {
             "x-admin-key": adminToken || "",
@@ -326,8 +330,15 @@ export function TransactionsList() {
         return;
       }
 
-      const tradersList = data.traders || [];
-      setTraders(tradersList);
+      const tradersList = Array.isArray(data.data)
+        ? data.data
+        : Array.isArray(data)
+        ? data
+        : [];
+      const filteredTraders = tradersList.filter(
+        (user: any) => user && user.trader
+      );
+      setTraders(filteredTraders);
     } catch (error) {
       console.error("Failed to fetch traders:", error);
       setTraders([]);

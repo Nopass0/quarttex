@@ -41,6 +41,7 @@ interface Profile {
   email: string
   name: string
   apiToken: string
+  customApiToken?: string | null
   apiBaseUrl: string | null
   balanceUsdt: number
   twoFactorEnabled: boolean
@@ -76,6 +77,7 @@ export default function AggregatorSettings() {
   // Profile form
   const [name, setName] = useState("")
   const [apiBaseUrl, setApiBaseUrl] = useState("")
+  const [customApiToken, setCustomApiToken] = useState("")
   const [updatingProfile, setUpdatingProfile] = useState(false)
 
   // Password form
@@ -111,6 +113,7 @@ export default function AggregatorSettings() {
       setProfile(data)
       setName(data.name)
       setApiBaseUrl(data.apiBaseUrl || "")
+      setCustomApiToken(data.customApiToken || "")
     } catch (error) {
       console.error("Error fetching profile:", error)
       toast.error("Ошибка загрузки профиля")
@@ -134,6 +137,7 @@ export default function AggregatorSettings() {
       const data = await aggregatorApi.updateProfile({
         name,
         apiBaseUrl: apiBaseUrl || undefined,
+        customApiToken: customApiToken || null,
       })
       setProfile(data.aggregator)
       auth.setAuth(
@@ -338,10 +342,22 @@ export default function AggregatorSettings() {
                   URL, на который будут отправляться запросы от нашей платформы
                 </p>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="customApiToken">Кастомный API Token</Label>
+                <Input
+                  id="customApiToken"
+                  value={customApiToken}
+                  onChange={(e) => setCustomApiToken(e.target.value)}
+                  placeholder="Оставьте пустым для использования автогенерированного"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Если указан, будет использоваться вместо автогенерированного токена
+                </p>
+              </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium">Баланс USDT</p>
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-2xl font-bold text-green-600">
                     {profile?.balanceUsdt.toFixed(2) || "0.00"}
                   </p>
                 </div>
@@ -371,10 +387,10 @@ export default function AggregatorSettings() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Текущий токен</Label>
+                <Label>Текущий используемый токен</Label>
                 <div className="flex items-center gap-2">
                   <Input
-                    value={profile?.apiToken || ""}
+                    value={profile?.customApiToken || profile?.apiToken || ""}
                     type={showToken ? "text" : "password"}
                     readOnly
                     className="font-mono"
@@ -389,11 +405,16 @@ export default function AggregatorSettings() {
                   <Button
                     size="icon"
                     variant="outline"
-                    onClick={() => copyToClipboard(profile?.apiToken || "", "API токен")}
+                    onClick={() => copyToClipboard(profile?.customApiToken || profile?.apiToken || "", "API токен")}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
                 </div>
+                {profile?.customApiToken && (
+                  <p className="text-xs text-muted-foreground">
+                    Используется кастомный токен
+                  </p>
+                )}
               </div>
               <div className="rounded-lg bg-yellow-50 dark:bg-yellow-900/20 p-4">
                 <div className="flex">
@@ -436,9 +457,12 @@ export default function AggregatorSettings() {
               <div className="space-y-4">
                 <div className="rounded-lg bg-muted p-4">
                   <code className="text-sm">
-                    <div>X-Aggregator-Api-Token: {profile?.apiToken || "YOUR_API_TOKEN"}</div>
+                    <div>Authorization: Bearer {profile?.customApiToken || profile?.apiToken || "YOUR_API_TOKEN"}</div>
                     <div>Content-Type: application/json</div>
                   </code>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Также поддерживаются заголовки: X-Aggregator-Token, X-Api-Token
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -516,7 +540,7 @@ export default function AggregatorSettings() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Shield className="h-5 w-5 text-purple-600" />
+                      <Shield className="h-5 w-5 text-green-600" />
                       <span className="font-medium">2FA активирована</span>
                     </div>
                     <Badge variant="success">Включена</Badge>

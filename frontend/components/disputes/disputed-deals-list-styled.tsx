@@ -70,7 +70,7 @@ const disputeStatusConfig = {
   },
   RESOLVED_SUCCESS: {
     label: "Решен в вашу пользу",
-color: "bg-purple-100 text-purple-800 border-purple-200",
+    color: "bg-green-100 text-green-800 border-green-200",
     icon: CheckCircle,
   },
   RESOLVED_FAIL: {
@@ -294,7 +294,7 @@ export function DisputedDealsListStyled() {
         </Card>
         <Card className="p-4">
           <div className="text-sm text-gray-600">Решенных</div>
-          <div className="text-2xl font-bold text-purple-600">
+          <div className="text-2xl font-bold text-green-600">
             {
               disputes.filter((d) => d.disputeStatus.startsWith("RESOLVED"))
                 .length
@@ -411,4 +411,3 @@ export function DisputedDealsListStyled() {
     </div>
   );
 }
-

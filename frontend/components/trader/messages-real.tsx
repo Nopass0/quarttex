@@ -87,7 +87,7 @@ const messageTypeIcons: Record<string, React.ElementType> = {
 
 const messageTypeColors: Record<string, string> = {
   SYSTEM: 'bg-blue-100 text-blue-800 border-blue-200',
-TRANSACTION: 'bg-purple-100 text-purple-800 border-purple-200',
+  TRANSACTION: 'bg-green-100 text-green-800 border-green-200',
   PAYOUT: 'bg-purple-100 text-purple-800 border-purple-200',
   ACCOUNT: 'bg-gray-100 text-gray-800 border-gray-200',
   SECURITY: 'bg-red-100 text-red-800 border-red-200',
@@ -669,4 +669,3 @@ export function TraderMessagesReal() {
     </div>
   )
 }
-

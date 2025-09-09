@@ -3,30 +3,36 @@ import { db } from "@/db";
 import { traderGuard } from "@/middleware/traderGuard";
 import { Status, DealDisputeStatus, WithdrawalDisputeStatus } from "@prisma/client";
 import ErrorSchema from "@/types/error";
+import { truncate2 } from "@/utils/rounding";
 
 export const dashboardRoutes = new Elysia({ prefix: "/dashboard" })
   .use(traderGuard())
-  
-  // Get dashboard data
+
+  // Получить данные дашборда
   .get("/", async ({ trader, query }) => {
     try {
       const period = query.period || "today";
       const now = new Date();
       let startDate: Date;
 
-      // Calculate start date based on period
+      // Определяем дату начала периода
       switch (period) {
         case "today":
           startDate = new Date(now.setHours(0, 0, 0, 0));
           break;
         case "week":
-          startDate = new Date(now.setDate(now.getDate() - 7));
+          // Последние 7 дней
+          startDate = new Date(now);
+          startDate.setDate(now.getDate() - 7);
+          startDate.setHours(0, 0, 0, 0);
           break;
         case "month":
-          startDate = new Date(now.setMonth(now.getMonth() - 1));
+          // Начало текущего месяца
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
           break;
         case "year":
-          startDate = new Date(now.setFullYear(now.getFullYear() - 1));
+          // Начало текущего года
+          startDate = new Date(now.getFullYear(), 0, 1);
           break;
         default:
           startDate = new Date(now.setHours(0, 0, 0, 0));
@@ -34,55 +40,35 @@ export const dashboardRoutes = new Elysia({ prefix: "/dashboard" })
 
       const traderId = trader.id;
 
-      // Get financial stats
-      const [deals, regularProfits, btProfits] = await Promise.all([
-        // Count and sum completed deals
+      // Получаем финансовую статистику
+      const [deals, profitTransactions] = await Promise.all([
+        // Считаем и суммируем завершённые сделки
         db.transaction.aggregate({
           where: {
             traderId,
             status: Status.READY,
-            createdAt: { gte: startDate }
+            acceptedAt: { gte: startDate } // Используем acceptedAt вместо createdAt для более точного расчета
           },
           _count: true,
           _sum: {
-            amount: true
+            amount: true,
+            frozenUsdtAmount: true
           }
         }),
-        // Calculate profits from regular deals (with devices)
-        db.transaction.aggregate({
+        // Получаем все завершённые сделки для точного расчета прибыли (как в профиле)
+        db.transaction.findMany({
           where: {
             traderId,
             status: Status.READY,
-            createdAt: { gte: startDate },
-            // Regular deals have device
-            requisites: {
-              deviceId: { not: null }
-            }
+            acceptedAt: { gte: startDate } // Используем acceptedAt вместо createdAt для более точного расчета
           },
-          _sum: {
-            calculatedCommission: true
-          }
-        }),
-        // Calculate profits from BT-entrance deals (without devices)
-        db.transaction.aggregate({
-          where: {
-            traderId,
-            status: Status.READY,
-            createdAt: { gte: startDate },
-            OR: [
-              // BT deals have no device
-              { requisites: { deviceId: null } },
-              // Or no requisites at all
-              { requisites: null }
-            ]
-          },
-          _sum: {
+          select: {
             traderProfit: true
           }
         })
       ]);
 
-      // Get recent deals (last 10)
+      // Получаем последние сделки (10)
       const recentDeals = await db.transaction.findMany({
         where: {
           traderId
@@ -94,7 +80,7 @@ export const dashboardRoutes = new Elysia({ prefix: "/dashboard" })
         }
       });
 
-      // Get open disputes
+      // Получаем открытые споры
       const [dealDisputes, withdrawalDisputes] = await Promise.all([
         db.dealDispute.findMany({
           where: {
@@ -141,14 +127,14 @@ export const dashboardRoutes = new Elysia({ prefix: "/dashboard" })
         }))
       ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 5);
 
-      // Get recent events (device status changes, failed transactions, etc.)
+      // Получаем последние события (смены статуса устройств, неудачные сделки и т.д.)
       const recentEvents = [];
       
-      // Get recent device status changes
+      // Последние изменения статуса устройств
       const deviceEvents = await db.device.findMany({
         where: { 
           userId: traderId,
-          updatedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } // Last 7 days
+          updatedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } // За 7 дней
         },
         orderBy: { updatedAt: "desc" },
         take: 5
@@ -163,12 +149,12 @@ export const dashboardRoutes = new Elysia({ prefix: "/dashboard" })
         });
       }
 
-      // Get recent failed transactions
+      // Последние неудачные сделки
       const failedTransactions = await db.transaction.findMany({
         where: {
           traderId,
           status: { in: [Status.EXPIRED, Status.CANCELED] },
-          createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Last 24 hours
+          createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // За 24 часа
         },
         orderBy: { createdAt: "desc" },
         take: 3
@@ -183,12 +169,12 @@ export const dashboardRoutes = new Elysia({ prefix: "/dashboard" })
         });
       }
 
-      // Get recent dispute events
+      // Последние события по спорам
       const [recentDealDisputes, recentWithdrawalDisputes] = await Promise.all([
         db.dealDispute.findMany({
           where: {
             deal: { traderId },
-            createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Last 24 hours
+            createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // За 24 часа
           },
           orderBy: { createdAt: "desc" },
           take: 1
@@ -196,7 +182,7 @@ export const dashboardRoutes = new Elysia({ prefix: "/dashboard" })
         db.withdrawalDispute.findMany({
           where: {
             payout: { traderId },
-            createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Last 24 hours
+            createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // За 24 часа
           },
           orderBy: { createdAt: "desc" },
           take: 1
@@ -221,10 +207,10 @@ export const dashboardRoutes = new Elysia({ prefix: "/dashboard" })
         });
       }
 
-      // Sort events by date
+      // Сортируем события по дате
       recentEvents.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-      // Get devices
+      // Получаем устройства
       const devices = await db.device.findMany({
         where: { userId: traderId },
         orderBy: { createdAt: "desc" },
@@ -237,11 +223,14 @@ export const dashboardRoutes = new Elysia({ prefix: "/dashboard" })
         }
       });
 
-      // Calculate total profit from both regular and BT deals
-      const totalProfit = (regularProfits._sum.calculatedCommission || 0) + (btProfits._sum.traderProfit || 0);
-      
-      // Calculate RUB equivalent for profit
-      const profitRub = totalProfit * 100; // Assuming 1 USDT = 100 RUB
+      // Считаем прибыль точно так же, как она записывается в профиль (с округлением каждой транзакции)
+      const totalProfit = profitTransactions.reduce((sum, tx) => {
+        return sum + truncate2(tx.traderProfit || 0);
+      }, 0);
+
+
+      // Переводим прибыль в рубли (условно 1 USDT = 100 RUB)
+      const profitRub = totalProfit * 100;
 
       return {
         success: true,
@@ -249,8 +238,8 @@ export const dashboardRoutes = new Elysia({ prefix: "/dashboard" })
           financialStats: {
             deals: {
               count: deals._count || 0,
-              amount: deals._sum.amount || 0,
-              amountRub: (deals._sum.amount || 0) * 100
+              amount: deals._sum.frozenUsdtAmount || 0,
+              amountRub: (deals._sum.amount || 0)
             },
             profit: {
               amount: totalProfit,

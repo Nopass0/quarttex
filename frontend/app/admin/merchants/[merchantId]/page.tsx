@@ -46,6 +46,7 @@ import {
   subHours,
 } from "date-fns";
 import { MerchantCreateDeal } from "@/components/admin/merchant-create-deal";
+import { MerchantCreatePayout } from "@/components/admin/merchant-create-payout";
 import { AuctionMerchantConfig } from "@/components/admin/auction-merchant-config";
 
 type Merchant = {
@@ -455,6 +456,16 @@ export default function MerchantDetailPage() {
 
           {/* Создание тестовых сделок (реальный merchant endpoint) */}
           <MerchantCreateDeal
+            merchantId={merchantId}
+            merchantToken={merchant.token}
+            merchantMethods={
+              merchant.merchantMethods?.filter((m) => m.isEnabled) || []
+            }
+            countInRubEquivalent={!!merchant.countInRubEquivalent}
+          />
+
+          {/* Создание тестовых выплат (реальный merchant endpoint) */}
+          <MerchantCreatePayout
             merchantId={merchantId}
             merchantToken={merchant.token}
             merchantMethods={

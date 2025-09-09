@@ -80,10 +80,10 @@ export default (app: Elysia) =>
               },
             },
             {
-              id: "create-transaction",
+              id: "create-transaction-in",
               method: "POST",
-              path: "/merchant/transactions/create",
-              description: "Создание новой транзакции (платежа)",
+              path: "/merchant/transactions/in",
+              description: "Создание новой входящей транзакции (платежа)",
               category: "Транзакции",
               parameters: [
                 {
@@ -134,6 +134,13 @@ export default (app: Elysia) =>
                   required: false,
                   description: "ID пользователя (по умолчанию генерируется)",
                   example: "user123",
+                },
+                {
+                  name: "clientIdentifier",
+                  type: "string",
+                  required: false,
+                  description: "Идентификатор клиента для определения типа трафика (первичный/вторичный/VIP)",
+                  example: "client_user_12345",
                 },
                 {
                   name: "type",
@@ -520,6 +527,13 @@ export default (app: Elysia) =>
                   required: false,
                   description: "URL для webhook уведомлений",
                   example: "https://your-domain.com/webhook/payouts",
+                },
+                {
+                  name: "clientIdentifier",
+                  type: "string",
+                  required: false,
+                  description: "Идентификатор клиента для определения типа трафика (первичный/вторичный/VIP)",
+                  example: "client_user_12345",
                 },
                 {
                   name: "metadata",
