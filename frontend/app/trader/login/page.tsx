@@ -69,7 +69,7 @@ export default function TraderLoginPage() {
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0f0f0f] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-6 md:p-8 bg-white dark:bg-[#29382f] shadow-lg border-gray-200 dark:border-[#29382f]">
+      <Card className="w-full max-w-md p-6 md:p-8 shadow-lg">
         <div className="flex flex-col items-center mb-6 md:mb-8">
           <DynamicLogo size="lg" className="scale-75 md:scale-100" />
           <h1 className="mt-4 md:mt-6 text-xl md:text-2xl font-semibold text-gray-900 dark:text-[#eeeeee]">

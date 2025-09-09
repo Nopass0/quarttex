@@ -143,7 +143,7 @@ export default function QuattrexLogo({
       <div className="flex flex-col">
         <span
           className={`bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 dark:from-purple-400 dark:via-purple-500 dark:to-purple-600 bg-clip-text text-transparent font-bold tracking-wide dark:drop-shadow-[0_0_8px_rgba(124,58,237,0.4)] ${
-            size === "sm" ? "text-2xl" : size === "md" ? "text-3xl" : "text-4xl"
+            size === "sm" ? "text-2xl" : size === "md" ? "text-2xl" : "text-3xl"
           }`}
           style={{
             fontFamily:

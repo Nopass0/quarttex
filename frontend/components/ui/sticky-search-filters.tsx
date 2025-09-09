@@ -132,10 +132,10 @@ export function StickySearchFilters({
                 size="default"
                 className="gap-1 md:gap-2 h-10 md:h-12 px-3 md:px-6 text-sm md:text-base flex-1 sm:flex-initial"
               >
-                <SlidersHorizontal className="h-4 w-4 text-[#006039]" />
+                <SlidersHorizontal className="h-4 w-4 text-purple-600" />
                 <span className="hidden sm:inline">{filterTriggerLabel}</span>
                 {activeFiltersCount > 0 && (
-                  <Badge className="ml-1 bg-[#006039] text-white">
+                  <Badge className="ml-1 bg-purple-600 text-white">
                     {activeFiltersCount}
                   </Badge>
                 )}
@@ -184,7 +184,7 @@ export function StickySearchFilters({
                   </Button>
                   <Button
                     size="sm"
-                    className="flex-1 h-12 bg-[#006039] hover:bg-[#006039]/90"
+                    className="flex-1 h-12 bg-purple-600 hover:bg-purple-700"
                     onClick={handleApplyFilters}
                   >
                     Применить фильтры

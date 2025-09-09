@@ -19,8 +19,8 @@ export function ThemeToggle() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="w-full justify-start">
-          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-purple-600" />
+          <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-purple-600" />
           <span className="ml-2">Тема</span>
         </Button>
       </DropdownMenuTrigger>
@@ -57,8 +57,8 @@ export function ThemeSwitcher() {
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
       className="w-full justify-start hover:bg-gray-50 dark:hover:bg-[#29382f] text-gray-800 dark:text-[#eeeeee]"
     >
-      <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-[#006039] dark:text-[#2d6a42]" />
-      <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-[#006039] dark:text-[#2d6a42]" />
+      <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-purple-600" />
+      <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-purple-600" />
       <span className="ml-2">{theme === "light" ? "Темная тема" : "Светлая тема"}</span>
     </Button>
   )

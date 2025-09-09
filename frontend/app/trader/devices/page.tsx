@@ -476,9 +476,9 @@ export default function DevicesPage() {
         badge: {
           text: "В работе",
           className:
-            "bg-green-100 text-green-700 border-green-300 dark:bg-green-800/30 dark:text-green-300 dark:border-green-600",
+            "bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-800/30 dark:text-purple-300 dark:border-purple-600",
         },
-        iconColor: "text-green-600 dark:text-green-400",
+        iconColor: "text-purple-600 dark:text-purple-400",
       };
     }
 
@@ -501,7 +501,7 @@ export default function DevicesPage() {
       <ProtectedRoute variant="trader">
         <AuthLayout variant="trader">
           <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-[#006039]" />
+            <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
           </div>
         </AuthLayout>
       </ProtectedRoute>
@@ -522,8 +522,7 @@ export default function DevicesPage() {
             </h1>
             <Button
               onClick={() => setDeviceDialogOpen(true)}
-              style={{ backgroundColor: "#006039", color: "white" }}
-              className="hover:opacity-90 transition-opacity text-sm md:text-base"
+              className="bg-purple-600 hover:bg-purple-700 text-white text-sm md:text-base"
             >
               <Wifi className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5" />
               <span className="hidden sm:inline">Добавить устройство</span>
@@ -550,7 +549,7 @@ export default function DevicesPage() {
                     variant="outline"
                     className="gap-1 md:gap-2 h-10 md:h-12 px-3 md:px-6 text-sm md:text-base"
                   >
-                    <ArrowUpDown className="h-4 w-4 text-[#006039]" />
+                    <ArrowUpDown className="h-4 w-4 text-purple-600" />
                     <span className="hidden sm:inline">
                       {sortBy === "newest" ? "Сначала новые" : "Сначала старые"}
                     </span>
@@ -573,7 +572,7 @@ export default function DevicesPage() {
           >
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
-                <Wifi className="h-4 w-4 text-[#006039]" />
+                <Wifi className="h-4 w-4 text-purple-600" />
                 <Label>Статус устройств:</Label>
               </div>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -626,7 +625,7 @@ export default function DevicesPage() {
                           "p-2 rounded-lg flex-shrink-0",
                           device.isRegistered
                             ? device.isWorking
-                              ? "bg-green-100 dark:bg-green-800/30"
+                              ? "bg-purple-100 dark:bg-purple-800/30"
                               : "bg-gray-50 dark:bg-gray-900/50"
                             : "bg-red-100 dark:bg-red-900/20"
                         )}
@@ -688,7 +687,7 @@ export default function DevicesPage() {
                             <div
                               className={cn(
                                 "w-2 h-2 rounded-full",
-                                device.isOnline ? "bg-green-500" : "bg-gray-400"
+                                device.isOnline ? "bg-purple-500" : "bg-gray-400"
                               )}
                             />
                             <p className="text-xs text-gray-600">
@@ -737,7 +736,7 @@ export default function DevicesPage() {
                           "p-3 rounded-lg",
                           device.isRegistered
                             ? device.isWorking
-                              ? "bg-green-100 dark:bg-green-800/30"
+                              ? "bg-purple-100 dark:bg-purple-800/30"
                               : "bg-gray-50 dark:bg-gray-900/50"
                             : "bg-red-100 dark:bg-red-900/20"
                         )}
@@ -824,7 +823,7 @@ export default function DevicesPage() {
                         <p
                           className={cn(
                             "text-sm font-medium mt-1",
-                            device.isOnline ? "text-[#006039]" : "text-gray-600"
+                            device.isOnline ? "text-purple-600" : "text-gray-600"
                           )}
                         >
                           {device.isOnline ? "Онлайн" : "Не в сети"}

@@ -43,7 +43,7 @@ export default function AgentLoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0f0f0f] px-4">
-      <Card className="w-full max-w-md bg-white dark:bg-[#29382f] border-gray-200 dark:border-[#29382f]">
+      <Card className="w-full max-w-md">
         <CardHeader className="space-y-4">
           <div className="flex justify-center">
             <DynamicLogo size="lg" />
