@@ -181,7 +181,7 @@ export default function AggregatorLoginPage() {
 
             <Button
               type="submit"
-              className="w-full bg-[#006039] hover:bg-[#004d2e] dark:bg-[#2d6a42] dark:hover:bg-[#236035]"
+              className="w-full bg-purple-600 hover:bg-purple-700"
               disabled={loading}
             >
               {loading ? (
@@ -212,7 +212,7 @@ export default function AggregatorLoginPage() {
             </div>
             <Button
               type="submit"
-              className="w-full bg-[#006039] hover:bg-[#004d2e] dark:bg-[#2d6a42] dark:hover:bg-[#236035]"
+              className="w-full bg-purple-600 hover:bg-purple-700"
               disabled={loading || otp.length < 6}
             >
               {loading ? (

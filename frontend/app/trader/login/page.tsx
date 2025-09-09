@@ -119,7 +119,7 @@ export default function TraderLoginPage() {
           
           <Button
             type="submit"
-            className="w-full bg-[#006039] hover:bg-[#004d2e] dark:bg-[#2d6a42] dark:hover:bg-[#236035] h-10 md:h-11 text-sm md:text-base"
+            className="w-full bg-purple-600 hover:bg-purple-700 h-10 md:h-11 text-sm md:text-base"
             disabled={loading}
           >
             {loading ? (

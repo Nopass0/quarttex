@@ -8,15 +8,15 @@ export default function QuattrexLogo({
   size?: "sm" | "md" | "lg";
 }) {
   const sizeClasses = {
-    sm: "h-10",
-    md: "h-14",
-    lg: "h-20",
+    sm: "h-9",
+    md: "h-12",
+    lg: "h-18",
   };
 
   const iconSizeClasses = {
-    sm: "w-10 h-10",
-    md: "w-14 h-14",
-    lg: "w-20 h-20",
+    sm: "w-9 h-9",
+    md: "w-12 h-12",
+    lg: "w-18 h-18",
   };
 
   return (

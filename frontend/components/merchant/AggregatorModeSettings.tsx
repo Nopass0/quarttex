@@ -285,6 +285,7 @@ export function AggregatorModeSettings({ merchantId, token }: AggregatorModeSett
           <Button
             onClick={handleSave}
             disabled={isSaving || (isAggregatorMode && (!externalApiToken || !externalCallbackToken))}
+            className="bg-purple-600 hover:bg-purple-700"
           >
             {isSaving ? "Сохранение..." : "Сохранить настройки"}
           </Button>

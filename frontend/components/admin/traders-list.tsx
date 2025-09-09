@@ -351,7 +351,7 @@ export function TradersList() {
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#006039] hover:bg-[#005030]">
+            <Button className="bg-purple-600 hover:bg-purple-700">
               <UserPlus className="mr-2 h-4 w-4 text-white" />
               Добавить трейдера
             </Button>
@@ -421,7 +421,7 @@ export function TradersList() {
             <DialogFooter>
               <Button
                 onClick={handleCreateTrader}
-                className="bg-[#006039] hover:bg-[#005030]"
+                className="bg-purple-600 hover:bg-purple-700"
                 disabled={isLoading || !formData.email}
               >
                 Создать
