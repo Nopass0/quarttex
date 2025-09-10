@@ -1,3 +1,53 @@
+#!/bin/bash
+
+# Скрипт для создания правильного fullchain.crt файла
+# Объединяет основной сертификат с промежуточными сертификатами Sectigo
+
+set -e
+
+# Цвета для вывода
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo -e "${GREEN}=== Генератор fullchain.crt для Sectigo SSL ===${NC}"
+echo ""
+
+# Проверяем наличие основного сертификата
+if [ ! -f "certificate.crt" ]; then
+    echo -e "${RED}Ошибка: Файл certificate.crt не найден!${NC}"
+    exit 1
+fi
+
+# Проверяем наличие приватного ключа
+if [ ! -f "certificate.key" ]; then
+    echo -e "${YELLOW}Предупреждение: Файл certificate.key не найден${NC}"
+fi
+
+# Создаем резервную копию существующего fullchain.crt
+if [ -f "fullchain.crt" ]; then
+    backup_name="fullchain.crt.backup.$(date +%Y%m%d_%H%M%S)"
+    echo -e "${YELLOW}Создаю резервную копию: $backup_name${NC}"
+    cp fullchain.crt "$backup_name"
+fi
+
+# Проверяем информацию о сертификате
+echo -e "${GREEN}Информация о сертификате:${NC}"
+openssl x509 -in certificate.crt -noout -subject -dates | sed 's/^/  /'
+echo ""
+
+# Определяем, какие промежуточные сертификаты нужны
+ISSUER=$(openssl x509 -in certificate.crt -noout -issuer | sed 's/issuer=//')
+
+if [[ "$ISSUER" == *"Sectigo"* ]]; then
+    echo -e "${GREEN}Обнаружен сертификат Sectigo${NC}"
+    
+    # Создаем или проверяем файл с промежуточными сертификатами Sectigo
+    if [ ! -f "sectigo_intermediate.crt" ] || [ ! -f "certificate_ca.crt" ]; then
+        echo -e "${YELLOW}Создаю файл с промежуточными сертификатами Sectigo...${NC}"
+        
+        cat > sectigo_intermediate_temp.crt << 'EOF'
 -----BEGIN CERTIFICATE-----
 MIIFhTCCBG2gAwIBAgIRAJqY0fq6xMWnsGG/QtilnT8wDQYJKoZIhvcNAQEMBQAw
 TDELMAkGA1UEBhMCWFgxFTATBgNVBAoMDFNlY3RpZ28gTHRkLjEmMCQGA1UEAwwd
@@ -96,3 +146,73 @@ CiIDEOUMsfnNkjcZ7Tvx5Dq2+UUTJnWvu6rvP3t3O9LEApE9GQDTF1w52z97GA1F
 zZOFli9d31kWTz9RvdVFGD/tSo7oBmF0Ixa1DVBzJ0RHfxBdiSprhTEUxOipakyA
 vGp4z7h/jnZymQyd/teRCBaho1+V
 -----END CERTIFICATE-----
+EOF
+        
+        INTERMEDIATE_FILE="sectigo_intermediate_temp.crt"
+    elif [ -f "certificate_ca.crt" ]; then
+        INTERMEDIATE_FILE="certificate_ca.crt"
+    else
+        INTERMEDIATE_FILE="sectigo_intermediate.crt"
+    fi
+else
+    echo -e "${RED}Неизвестный издатель сертификата: $ISSUER${NC}"
+    echo -e "${YELLOW}Используйте certificate_ca.crt как файл с промежуточными сертификатами${NC}"
+    INTERMEDIATE_FILE="certificate_ca.crt"
+fi
+
+# Создаем новый fullchain.crt
+echo -e "${GREEN}Создаю новый fullchain.crt...${NC}"
+cat certificate.crt > fullchain_new.crt
+echo "" >> fullchain_new.crt  # Добавляем пустую строку между сертификатами
+
+if [ -f "$INTERMEDIATE_FILE" ]; then
+    cat "$INTERMEDIATE_FILE" >> fullchain_new.crt
+    echo -e "${GREEN}Добавлены промежуточные сертификаты из $INTERMEDIATE_FILE${NC}"
+else
+    echo -e "${RED}Файл промежуточных сертификатов не найден!${NC}"
+    exit 1
+fi
+
+# Проверяем цепочку сертификатов
+echo ""
+echo -e "${GREEN}Проверка цепочки сертификатов:${NC}"
+if openssl verify -CAfile "$INTERMEDIATE_FILE" certificate.crt 2>/dev/null; then
+    echo -e "${GREEN}✓ Цепочка сертификатов валидна${NC}"
+else
+    echo -e "${YELLOW}⚠ Предупреждение: Не удалось проверить полную цепочку (это нормально, если нет корневого сертификата)${NC}"
+fi
+
+# Проверяем соответствие ключа и сертификата
+if [ -f "certificate.key" ]; then
+    echo ""
+    echo -e "${GREEN}Проверка соответствия ключа и сертификата:${NC}"
+    CERT_MODULUS=$(openssl x509 -noout -modulus -in certificate.crt | openssl md5)
+    KEY_MODULUS=$(openssl rsa -noout -modulus -in certificate.key 2>/dev/null | openssl md5)
+    
+    if [ "$CERT_MODULUS" == "$KEY_MODULUS" ]; then
+        echo -e "${GREEN}✓ Ключ соответствует сертификату${NC}"
+    else
+        echo -e "${RED}✗ Ключ НЕ соответствует сертификату!${NC}"
+        exit 1
+    fi
+fi
+
+# Заменяем старый fullchain.crt новым
+mv fullchain_new.crt fullchain.crt
+echo ""
+echo -e "${GREEN}✓ Файл fullchain.crt успешно создан!${NC}"
+
+# Удаляем временный файл, если он был создан
+if [ -f "sectigo_intermediate_temp.crt" ]; then
+    rm sectigo_intermediate_temp.crt
+fi
+
+# Информация о дальнейших действиях
+echo ""
+echo -e "${YELLOW}Дальнейшие действия:${NC}"
+echo "1. Проверьте, что файлы находятся в правильной директории (/ssl/)"
+echo "2. Перезапустите веб-сервер для применения изменений:"
+echo "   - Docker: docker-compose restart nginx"
+echo "   - Systemd: sudo systemctl reload nginx"
+echo ""
+echo -e "${GREEN}Готово!${NC}"
