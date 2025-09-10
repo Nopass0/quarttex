@@ -911,6 +911,19 @@ export default (app: Elysia) =>
               maxAmountPerRequisite: body.maxAmountPerRequisite,
               disputeLimit: body.disputeLimit,
               teamId: body.teamId,
+              telegramChatId: body.telegramChatId,
+              telegramDisputeChatId: body.telegramDisputeChatId,
+              telegramBotToken: body.telegramBotToken,
+              maxSimultaneousPayouts: body.maxSimultaneousPayouts,
+              minPayoutAmount: body.minPayoutAmount,
+              maxPayoutAmount: body.maxPayoutAmount,
+              payoutRateDelta: body.payoutRateDelta,
+              payoutFeePercent: body.payoutFeePercent,
+              payoutAcceptanceTime: body.payoutAcceptanceTime,
+              rateSourceConfigId: body.rateSourceConfigId,
+              displayStakePercent: body.displayStakePercent,
+              displayAmountFrom: body.displayAmountFrom,
+              displayAmountTo: body.displayAmountTo,
             },
             include: {
               team: {
@@ -932,6 +945,33 @@ export default (app: Elysia) =>
               where: { traderId: params.id },
               data: { teamId: body.teamId },
             });
+          }
+
+          // Handle displayRates update if provided
+          if (Array.isArray(body.displayRates)) {
+            // Delete existing display rates
+            await db.traderDisplayRate.deleteMany({
+              where: { traderId: params.id },
+            });
+
+            // Create new display rates
+            if (body.displayRates.length > 0) {
+              const validRates = body.displayRates.filter(
+                (rate) => rate.stakePercent > 0 && rate.amountFrom > 0 && rate.amountTo > 0
+              );
+
+              if (validRates.length > 0) {
+                await db.traderDisplayRate.createMany({
+                  data: validRates.map((rate, index) => ({
+                    traderId: params.id,
+                    stakePercent: rate.stakePercent,
+                    amountFrom: rate.amountFrom,
+                    amountTo: rate.amountTo,
+                    sortOrder: index,
+                  })),
+                });
+              }
+            }
           }
 
           return {
@@ -983,6 +1023,24 @@ export default (app: Elysia) =>
           maxAmountPerRequisite: t.Number(),
           disputeLimit: t.Number(),
           teamId: t.Optional(t.Nullable(t.String())),
+          telegramChatId: t.Optional(t.Nullable(t.String())),
+          telegramDisputeChatId: t.Optional(t.Nullable(t.String())),
+          telegramBotToken: t.Optional(t.Nullable(t.String())),
+          maxSimultaneousPayouts: t.Optional(t.Number()),
+          minPayoutAmount: t.Optional(t.Number()),
+          maxPayoutAmount: t.Optional(t.Number()),
+          payoutRateDelta: t.Optional(t.Number()),
+          payoutFeePercent: t.Optional(t.Number()),
+          payoutAcceptanceTime: t.Optional(t.Number()),
+          rateSourceConfigId: t.Optional(t.Nullable(t.String())),
+          displayStakePercent: t.Optional(t.Nullable(t.Number())),
+          displayAmountFrom: t.Optional(t.Nullable(t.Number())),
+          displayAmountTo: t.Optional(t.Nullable(t.Number())),
+          displayRates: t.Optional(t.Array(t.Object({
+            stakePercent: t.Number(),
+            amountFrom: t.Number(),
+            amountTo: t.Number(),
+          }))),
         }),
         response: {
           200: t.Object({
