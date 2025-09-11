@@ -92,12 +92,12 @@ jobs:
             exit 1
           fi
           
-          # Применяем миграции базы данных
-          echo "🗄️  Применяем миграции базы данных..."
-          if sudo docker exec quattrex_backend bunx prisma migrate deploy; then
-            echo "✅ Миграции успешно применены"
+          # Применяем схему базы данных
+          echo "🗄️  Применяем схему базы данных..."
+          if sudo docker exec quattrex_backend bunx prisma db push; then
+            echo "✅ Схема базы данных успешно применена"
           else
-            echo "❌ Ошибка при применении миграций"
+            echo "❌ Ошибка при применении схемы"
             sudo docker logs quattrex_backend --tail=20
           fi
           
