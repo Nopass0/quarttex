@@ -292,90 +292,48 @@ const app = new Elysia({
     };
   })
   .use(ip())
-  // Manual CORS handling for better control
+  // Manual CORS handling for better control - Allow all origins
   .onBeforeHandle(({ request, set }) => {
     const origin = request.headers.get("origin");
     
     if (origin) {
       const originStr = String(origin);
-      let allowOrigin = false;
-
-      // Always allow localhost for development (any port)
-      if (
-        originStr.startsWith("http://localhost") ||
-        originStr.startsWith("https://localhost") ||
-        originStr.startsWith("http://127.0.0.1") ||
-        originStr.startsWith("https://127.0.0.1")
-      ) {
-        console.log(`[CORS] Allowing localhost origin: ${originStr}`);
-        allowOrigin = true;
-      } else {
-        // Allowed production domains - only these domains can access the API
-        const allowedDomains = [
-          "https://chasepay.pro",
-          "https://www.chasepay.pro",
-          "http://chasepay.pro",
-          "http://www.chasepay.pro",
-          "https://domainchsp.ru",
-          "https://www.domainchsp.ru",
-          "http://domainchsp.ru",
-          "http://www.domainchsp.ru"
-        ];
-
-        allowOrigin = allowedDomains.includes(originStr);
-        
-        if (!allowOrigin) {
-          console.log(`[CORS] Blocked request from unauthorized origin: ${originStr}`);
-        }
-      }
-
-      if (allowOrigin) {
-        set.headers["Access-Control-Allow-Origin"] = originStr;
-        set.headers["Access-Control-Allow-Credentials"] = "true";
-        set.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD";
-        set.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, authorization, x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token, x-2fa-verified";
-        set.headers["Access-Control-Expose-Headers"] = "x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token";
-      }
+      console.log(`[CORS] Allowing request from origin: ${originStr}`);
+      
+      // Allow all origins
+      set.headers["Access-Control-Allow-Origin"] = originStr;
+      set.headers["Access-Control-Allow-Credentials"] = "true";
+      set.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD";
+      set.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, authorization, x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token, x-2fa-verified";
+      set.headers["Access-Control-Expose-Headers"] = "x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token";
+    } else {
+      // If no origin header, allow all
+      set.headers["Access-Control-Allow-Origin"] = "*";
+      set.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD";
+      set.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, authorization, x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token, x-2fa-verified";
+      set.headers["Access-Control-Expose-Headers"] = "x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token";
     }
   })
-  // Handle preflight OPTIONS requests
+  // Handle preflight OPTIONS requests - Allow all origins
   .options("/*", ({ set, request }) => {
     const origin = request.headers.get("origin");
     
     if (origin) {
       const originStr = String(origin);
-      let allowOrigin = false;
-
-      // Always allow localhost for development (any port)
-      if (
-        originStr.startsWith("http://localhost") ||
-        originStr.startsWith("https://localhost") ||
-        originStr.startsWith("http://127.0.0.1") ||
-        originStr.startsWith("https://127.0.0.1")
-      ) {
-        allowOrigin = true;
-      } else {
-        // Allowed production domains
-        const allowedDomains = [
-          "https://chasepay.pro",
-          "https://www.chasepay.pro",
-          "http://chasepay.pro",
-          "http://www.chasepay.pro",
-          "https://domainchsp.ru",
-          "https://www.domainchsp.ru",
-          "http://domainchsp.ru",
-          "http://www.domainchsp.ru"
-        ];
-        allowOrigin = allowedDomains.includes(originStr);
-      }
-
-      if (allowOrigin) {
-        set.headers["Access-Control-Allow-Origin"] = originStr;
-        set.headers["Access-Control-Allow-Credentials"] = "true";
-        set.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD";
-        set.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, authorization, x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token, x-2fa-verified";
-        set.headers["Access-Control-Max-Age"] = "86400";
-      }
+      console.log(`[CORS OPTIONS] Allowing preflight request from origin: ${originStr}`);
+      
+      // Allow all origins
+      set.headers["Access-Control-Allow-Origin"] = originStr;
+      set.headers["Access-Control-Allow-Credentials"] = "true";
+      set.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD";
+      set.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, authorization, x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token, x-2fa-verified";
+      set.headers["Access-Control-Max-Age"] = "86400";
+    } else {
+      // If no origin header, allow all
+      set.headers["Access-Control-Allow-Origin"] = "*";
+      set.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD";
+      set.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, authorization, x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token, x-2fa-verified";
+      set.headers["Access-Control-Max-Age"] = "86400";
     }
 
     set.status = 204;
