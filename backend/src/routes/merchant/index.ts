@@ -612,9 +612,22 @@ export default (app: Elysia) =>
           ? new Date(body.expired_at)
           : new Date(Date.now() + 86_400_000);
 
-        // 🚀 ОПТИМИЗАЦИЯ: Сначала получаем method и duplicate check параллельно
+        // 🚀 ОПТИМИЗАЦИЯ: Сначала проверяем существование метода
         console.log(`[Merchant IN] Checking method ${body.methodId} for merchant ${merchant.id}`);
         const queryStartTime = Date.now();
+        
+        // Быстрая проверка существования метода
+        const methodExists = await db.method.findUnique({
+          where: { id: body.methodId },
+          select: { id: true }
+        });
+        
+        if (!methodExists) {
+          console.log(`[Merchant IN] Method ${body.methodId} does not exist in database`);
+          return error(404, {
+            error: "Метод не найден",
+          });
+        }
         
         const [merchantMethod, duplicateCheck] = await Promise.all([
           db.merchantMethod.findUnique({
