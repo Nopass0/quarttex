@@ -49,37 +49,53 @@ jobs:
               echo "✅ SSL certificates found, using HTTPS configuration"
               # Use HTTPS configuration
               if [ -f "nginx/conf.d/app.conf" ]; then
-                cp nginx/conf.d/app.conf nginx/conf.d/default.conf
+                # Remove old configs to avoid conflicts
+                rm -f nginx/conf.d/default.conf
                 rm -f nginx/conf.d/default-http-only.conf
+                # Copy HTTPS config
+                cp nginx/conf.d/app.conf nginx/conf.d/default.conf
               fi
             else
               echo "⚠️ SSL certificates not found, using HTTP-only configuration"
-              # Remove the HTTPS config and use HTTP-only
+              # Remove all configs to avoid conflicts
               rm -f nginx/conf.d/default.conf
-              if [ -f "nginx/conf.d/default-http-only.conf" ]; then
-              cp nginx/conf.d/default-http-only.conf nginx/conf.d/default.conf
               rm -f nginx/conf.d/default-http-only.conf
-              else
-                echo "⚠️ HTTP-only config not found, creating basic config"
-                echo "server {" > nginx/conf.d/default.conf
-                echo "    listen 80;" >> nginx/conf.d/default.conf
-                echo "    server_name _;" >> nginx/conf.d/default.conf
-                echo "    location / {" >> nginx/conf.d/default.conf
-                echo "        proxy_pass http://frontend:3000;" >> nginx/conf.d/default.conf
-                echo "        proxy_set_header Host \$host;" >> nginx/conf.d/default.conf
-                echo "        proxy_set_header X-Real-IP \$remote_addr;" >> nginx/conf.d/default.conf
-                echo "        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;" >> nginx/conf.d/default.conf
-                echo "        proxy_set_header X-Forwarded-Proto \$scheme;" >> nginx/conf.d/default.conf
-                echo "    }" >> nginx/conf.d/default.conf
-                echo "    location /api/ {" >> nginx/conf.d/default.conf
-                echo "        proxy_pass http://backend:3001/api/;" >> nginx/conf.d/default.conf
-                echo "        proxy_set_header Host \$host;" >> nginx/conf.d/default.conf
-                echo "        proxy_set_header X-Real-IP \$remote_addr;" >> nginx/conf.d/default.conf
-                echo "        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;" >> nginx/conf.d/default.conf
-                echo "        proxy_set_header X-Forwarded-Proto \$scheme;" >> nginx/conf.d/default.conf
-                echo "    }" >> nginx/conf.d/default.conf
-                echo "}" >> nginx/conf.d/default.conf
-              fi
+              rm -f nginx/conf.d/app.conf
+              
+              # Create clean HTTP-only config
+              echo "⚠️ Creating clean HTTP-only config"
+              cat > nginx/conf.d/default.conf << 'EOF'
+# Upstream definitions
+upstream frontend {
+    server frontend:3000;
+}
+
+upstream backend {
+    server backend:3001;
+}
+
+# HTTP server
+server {
+    listen 80;
+    server_name _;
+    
+    location / {
+        proxy_pass http://frontend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    location /api/ {
+        proxy_pass http://backend/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+EOF
             fi
             
             # Remove old containers and images
