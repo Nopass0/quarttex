@@ -26,6 +26,7 @@ RUN mkdir -p backups
 
 # Устанавливаем права на выполнение скриптов
 RUN chmod +x scripts/deploy-migrations.sh
+RUN chmod +x scripts/auto-fix-migrations.sh
 
 # Команда по умолчанию
 CMD ["./scripts/deploy-migrations.sh", "production", "deploy"]

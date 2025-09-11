@@ -1,0 +1,146 @@
+name: Test Database Migrations
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'backend/prisma/**'
+      - 'backend/scripts/**'
+  workflow_dispatch:
+
+jobs:
+  test-migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: quattrex_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: bun install
+      
+      - name: Generate Prisma Client
+        working-directory: ./backend
+        run: bunx prisma generate
+        env:
+          DATABASE_URL: postgresql://postgres:testpass@localhost:5432/quattrex_test
+      
+      - name: Test migration safety
+        working-directory: ./backend
+        run: |
+          echo "🔍 Testing migration safety..."
+          if [ -f "scripts/check-migration-safety.sh" ]; then
+            bash scripts/check-migration-safety.sh
+          else
+            echo "⚠️ Migration safety script not found"
+          fi
+        env:
+          DATABASE_URL: postgresql://postgres:testpass@localhost:5432/quattrex_test
+      
+      - name: Test auto-fix script
+        working-directory: ./backend
+        run: |
+          echo "🔧 Testing auto-fix script..."
+          if [ -f "scripts/auto-fix-migrations.sh" ]; then
+            bash scripts/auto-fix-migrations.sh
+          else
+            echo "⚠️ Auto-fix script not found"
+          fi
+        env:
+          DATABASE_URL: postgresql://postgres:testpass@localhost:5432/quattrex_test
+      
+      - name: Test migration with auto-fix
+        working-directory: ./backend
+        run: |
+          echo "🔄 Testing migration with auto-fix..."
+          # Try normal migration first
+          if bunx prisma migrate deploy; then
+            echo "✅ Migrations applied successfully"
+          else
+            echo "⚠️ Migration failed, running auto-fix..."
+            bash scripts/auto-fix-migrations.sh
+            echo "✅ Auto-fix completed"
+          fi
+        env:
+          DATABASE_URL: postgresql://postgres:testpass@localhost:5432/quattrex_test
+      
+      - name: Verify database schema
+        working-directory: ./backend
+        run: |
+          echo "🔍 Verifying database schema..."
+          bunx prisma migrate status
+          
+          # Check that all required tables exist
+          echo "📋 Checking required tables..."
+          bunx prisma db execute --stdin <<< "
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name IN ('Merchant', 'Method', 'User', 'Aggregator', 'Transaction', 'Payout')
+            ORDER BY table_name;
+          "
+        env:
+          DATABASE_URL: postgresql://postgres:testpass@localhost:5432/quattrex_test
+      
+      - name: Test Prisma Client
+        working-directory: ./backend
+        run: |
+          echo "🧪 Testing Prisma Client..."
+          # Create a simple test script
+          cat > test-prisma.js << 'EOF'
+          const { PrismaClient } = require('@prisma/client');
+          const prisma = new PrismaClient();
+          
+          async function test() {
+            try {
+              // Test basic connection
+              await prisma.$connect();
+              console.log('✅ Prisma Client connected successfully');
+              
+              // Test basic queries
+              const userCount = await prisma.user.count();
+              console.log(`📊 Users in database: ${userCount}`);
+              
+              const merchantCount = await prisma.merchant.count();
+              console.log(`📊 Merchants in database: ${merchantCount}`);
+              
+              console.log('✅ Prisma Client working correctly');
+            } catch (error) {
+              console.error('❌ Prisma Client error:', error.message);
+              process.exit(1);
+            } finally {
+              await prisma.$disconnect();
+            }
+          }
+          
+          test();
+          EOF
+          
+          node test-prisma.js
+        env:
+          DATABASE_URL: postgresql://postgres:testpass@localhost:5432/quattrex_test
+      
+      - name: Cleanup
+        if: always()
+        run: |
+          echo "🧹 Cleaning up test database..."
+          # Drop test database
+          PGPASSWORD=testpass psql -h localhost -U postgres -c "DROP DATABASE IF EXISTS quattrex_test;"

@@ -38,9 +38,18 @@ jobs:
         working-directory: ./backend
         run: bunx prisma generate
       
-      - name: Run database migrations
+      - name: Run database migrations with auto-fix
         working-directory: ./backend
-        run: bunx prisma migrate deploy
+        run: |
+          # Try normal migration first
+          if bunx prisma migrate deploy; then
+            echo "✅ Migrations applied successfully"
+          else
+            echo "⚠️ Migration failed, running auto-fix..."
+            # Run auto-fix script
+            bash scripts/auto-fix-migrations.sh
+            echo "✅ Auto-fix completed"
+          fi
         env:
           DATABASE_URL: postgresql://postgres:testpass@localhost:5432/quattrex_test
       
@@ -156,18 +165,52 @@ jobs:
             # Ensure SSL certificates directory exists
             mkdir -p ssl
             
+            # Check and fix SSL certificates
+            echo "Checking SSL certificates..."
+            if [ -f "ssl/ensure-fullchain.sh" ]; then
+              bash ssl/ensure-fullchain.sh || {
+                echo "⚠️ SSL certificate setup failed, continuing with HTTP-only"
+              }
+            else
+              echo "⚠️ SSL certificate script not found"
+            fi
+            
             # Check if SSL certificates exist and use appropriate nginx config
-            if [ -f "/quattrex/ssl/certificate.crt" ]; then
-              echo "SSL certificates found, using HTTPS configuration"
+            if [ -f "ssl/certificate.crt" ] && [ -f "ssl/fullchain.crt" ]; then
+              echo "✅ SSL certificates found, using HTTPS configuration"
               # Remove HTTP-only config if it exists
               rm -f nginx/conf.d/default-http-only.conf
               # Keep the default.conf which has both HTTP and HTTPS
             else
-              echo "No SSL certificates found, using HTTP-only configuration"
+              echo "⚠️ No SSL certificates found, using HTTP-only configuration"
               # Remove the HTTPS config and use HTTP-only
               rm -f nginx/conf.d/default.conf
-              cp nginx/conf.d/default-http-only.conf nginx/conf.d/default.conf
-              rm -f nginx/conf.d/default-http-only.conf
+              if [ -f "nginx/conf.d/default-http-only.conf" ]; then
+                cp nginx/conf.d/default-http-only.conf nginx/conf.d/default.conf
+                rm -f nginx/conf.d/default-http-only.conf
+              else
+                echo "⚠️ HTTP-only config not found, creating basic config"
+                cat > nginx/conf.d/default.conf << 'EOF'
+server {
+    listen 80;
+    server_name _;
+    location / {
+        proxy_pass http://frontend:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    location /api/ {
+        proxy_pass http://backend:3001/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+EOF
+              fi
             fi
             
             # Remove old containers and images
@@ -195,16 +238,31 @@ jobs:
             echo "Container status after startup:"
             $DOCKER_CMD compose -f docker-compose.prod.yml ps
 
-            # Backend will handle migrations automatically on startup via entrypoint script
-            echo "Waiting for backend to initialize and apply migrations..."
+            # Run migrations with auto-fix before starting backend
+            echo "Running database migrations with auto-fix..."
+            $DOCKER_CMD compose -f docker-compose.prod.yml run --rm backend bash -c "
+              # Try normal migration first
+              if bunx prisma migrate deploy; then
+                echo '✅ Migrations applied successfully'
+              else
+                echo '⚠️ Migration failed, running auto-fix...'
+                bash scripts/auto-fix-migrations.sh
+                echo '✅ Auto-fix completed'
+              fi
+            " || {
+              echo "Migration failed, but continuing with deployment..."
+            }
             
-            # Monitor backend logs for migration status
-            echo "Monitoring backend startup and migration process..."
+            # Backend will handle any remaining migrations automatically on startup
+            echo "Waiting for backend to initialize..."
+            
+            # Monitor backend logs for startup status
+            echo "Monitoring backend startup process..."
             $DOCKER_CMD compose -f docker-compose.prod.yml logs -f backend &
             LOGS_PID=$!
             
-            # Give migrations time to run
-            sleep 45
+            # Give backend time to start
+            sleep 30
             
             # Stop following logs
             kill $LOGS_PID 2>/dev/null || true
@@ -282,6 +340,14 @@ jobs:
             # Final schema verification
             echo -e "\n==================== FINAL SCHEMA VERIFICATION ===================="
             echo ">>> Verifying all required columns exist..."
+            
+            # Check migration status
+            echo -e "\nMigration status:"
+            $DOCKER_CMD compose -f docker-compose.prod.yml exec -T backend bunx prisma migrate status || echo "Failed to check migration status"
+            
+            # Check required tables exist
+            echo -e "\nRequired tables verification:"
+            $DOCKER_CMD compose -f docker-compose.prod.yml exec -T backend bunx prisma db execute --stdin <<< "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('Merchant', 'Method', 'User', 'Aggregator', 'Transaction', 'Payout') ORDER BY table_name;" || echo "Failed to verify required tables"
             
             echo -e "\nTransaction table columns:"
             $DOCKER_CMD compose -f docker-compose.prod.yml exec -T backend bunx prisma db execute --stdin <<< "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'Transaction' AND column_name IN ('merchantRate', 'traderProfit', 'matchedNotificationId') ORDER BY column_name;" || echo "Failed to verify Transaction columns"

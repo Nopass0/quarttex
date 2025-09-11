@@ -33,6 +33,14 @@ else
     echo "WARNING: SSL certificate script not found, skipping SSL check"
 fi
 
+# Ensure database migrations are ready
+echo "Preparing database migrations..."
+if [ -f "backend/scripts/auto-fix-migrations.sh" ]; then
+    echo "✅ Automatic migration fix script found"
+else
+    echo "WARNING: Automatic migration fix script not found"
+fi
+
 # Stop existing containers
 echo "Stopping existing containers..."
 docker compose -f docker-compose.prod.yml down || true

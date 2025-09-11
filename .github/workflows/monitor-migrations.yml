@@ -1,0 +1,107 @@
+name: Monitor Migration Status
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  monitor-migrations:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check migration status
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            set -e
+            
+            echo "🔍 Checking migration status..."
+            
+            # Navigate to project directory
+            cd ${{ secrets.PROJECT_PATH }}
+            
+            # Check if Docker is available
+            if ! command -v docker &> /dev/null; then
+              echo "❌ Docker not available"
+              exit 1
+            fi
+            
+            # Check if we need sudo for docker commands
+            if docker ps >/dev/null 2>&1; then
+              DOCKER_CMD="docker"
+            else
+              DOCKER_CMD="sudo docker"
+            fi
+            
+            # Check if backend container is running
+            if ! $DOCKER_CMD ps | grep -q "quattrex_backend"; then
+              echo "❌ Backend container is not running!"
+              exit 1
+            fi
+            
+            # Check migration status
+            echo "📊 Migration status:"
+            $DOCKER_CMD compose -f docker-compose.prod.yml exec -T backend bunx prisma migrate status || {
+              echo "⚠️ Failed to check migration status"
+              exit 1
+            }
+            
+            # Check database connectivity
+            echo "🔗 Testing database connectivity..."
+            $DOCKER_CMD compose -f docker-compose.prod.yml exec -T backend bunx prisma db execute --stdin <<< "SELECT 1 as test;" || {
+              echo "❌ Database connectivity test failed"
+              exit 1
+            }
+            
+            # Check required tables exist
+            echo "📋 Checking required tables..."
+            $DOCKER_CMD compose -f docker-compose.prod.yml exec -T backend bunx prisma db execute --stdin <<< "
+              SELECT table_name 
+              FROM information_schema.tables 
+              WHERE table_schema = 'public' 
+              AND table_name IN ('Merchant', 'Method', 'User', 'Aggregator', 'Transaction', 'Payout')
+              ORDER BY table_name;
+            " || {
+              echo "⚠️ Failed to check required tables"
+            }
+            
+            # Check backend health
+            echo "🏥 Checking backend health..."
+            if $DOCKER_CMD compose -f docker-compose.prod.yml exec -T backend curl -f http://localhost:3001/health >/dev/null 2>&1; then
+              echo "✅ Backend is healthy"
+            else
+              echo "❌ Backend health check failed"
+              exit 1
+            fi
+            
+            # Check nginx health
+            echo "🌐 Checking nginx health..."
+            if $DOCKER_CMD compose -f docker-compose.prod.yml exec -T nginx curl -f http://localhost/health >/dev/null 2>&1; then
+              echo "✅ Nginx is healthy"
+            else
+              echo "⚠️ Nginx health check failed"
+            fi
+            
+            # Show container status
+            echo "📊 Container status:"
+            $DOCKER_CMD compose -f docker-compose.prod.yml ps
+            
+            echo "✅ Migration monitoring completed successfully"
+      
+      - name: Notify on failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: "Migration monitoring failed on production server"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
