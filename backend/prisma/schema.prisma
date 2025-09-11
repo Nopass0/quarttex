@@ -331,6 +331,10 @@ model Transaction {
 
   @@index([bankDetailId, amount])
   @@index([merchantId, clientIdentifier])
+  @@index([bankDetailId, status])
+  @@index([bankDetailId, createdAt])
+  @@index([merchantId, orderId])
+  @@index([status, type])
 }
 
 model CallbackHistory {
@@ -418,6 +422,11 @@ model BankDetail {
   user                 User                @relation(fields: [userId], references: [id])
   folders              RequisiteOnFolder[]
   Transaction          Transaction[]
+  
+  @@index([userId, isActive, isArchived, methodType])
+  @@index([deviceId, isActive])
+  @@index([minAmount, maxAmount])
+  @@index([updatedAt])
 }
 
 model MasterWallet {
