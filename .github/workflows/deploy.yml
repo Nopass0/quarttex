@@ -14,7 +14,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Copy installation script to server
-        uses: appleboy/scp-action@v0.1.5
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
@@ -90,50 +90,67 @@ jobs:
             fi
             
             # Remove old containers and images
-            docker compose -f docker-compose.prod.yml rm -f
-            docker image prune -f
+            echo "🧹 Cleaning up old containers and images..."
+            docker compose -f docker-compose.prod.yml down --remove-orphans || true
+            docker system prune -f || true
             
             # Build and start services
             echo "🚀 Building and starting services..."
-            docker compose -f docker-compose.prod.yml up -d --build
+            docker compose -f docker-compose.prod.yml up -d --build --force-recreate
             
             # Wait for services to be ready
             echo "⏳ Waiting for services to be ready..."
             sleep 30
             
+            # Check if containers are running
+            echo "🔍 Checking container status..."
+            if ! docker ps | grep -q "backend\|frontend\|nginx"; then
+              echo "❌ Some containers failed to start"
+              docker ps -a
+              exit 1
+            fi
+            
             # Fix nginx configuration inside container
             echo "🔧 Исправляем конфигурацию nginx внутри контейнера..."
-            docker exec nginx bash -c "rm -f /etc/nginx/conf.d/*.conf" || echo "⚠️ Не удалось удалить старые конфиги"
-            docker exec nginx bash -c "echo '# Upstream definitions' > /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo 'upstream frontend {' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '    server frontend:3000;' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '}' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo 'upstream backend {' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '    server backend:3001;' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '}' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '# HTTP server' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo 'server {' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '    listen 80;' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '    server_name _;' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '    ' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '    location / {' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '        proxy_pass http://frontend;' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '        proxy_set_header Host \$host;' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '        proxy_set_header X-Real-IP \$remote_addr;' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '        proxy_set_header X-Forwarded-Proto \$scheme;' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '    }' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '    ' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '    location /api/ {' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '        proxy_pass http://backend/api/;' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '        proxy_set_header Host \$host;' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '        proxy_set_header X-Real-IP \$remote_addr;' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '        proxy_set_header X-Forwarded-Proto \$scheme;' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '    }' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
-            docker exec nginx bash -c "echo '}' >> /etc/nginx/conf.d/default.conf" || echo "⚠️ Не удалось создать конфиг nginx"
+            
+            # Create nginx config directly
+            docker exec nginx bash -c "rm -f /etc/nginx/conf.d/*.conf"
+            
+            # Create upstream definitions
+            docker exec nginx bash -c "echo '# Upstream definitions' > /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo 'upstream frontend {' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '    server frontend:3000;' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '}' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo 'upstream backend {' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '    server backend:3001;' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '}' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '' >> /etc/nginx/conf.d/default.conf"
+            
+            # Create server block
+            docker exec nginx bash -c "echo '# HTTP server' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo 'server {' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '    listen 80;' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '    server_name _;' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '    ' >> /etc/nginx/conf.d/default.conf"
+            
+            # Create location blocks
+            docker exec nginx bash -c "echo '    location / {' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '        proxy_pass http://frontend;' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '        proxy_set_header Host \$host;' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '        proxy_set_header X-Real-IP \$remote_addr;' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '        proxy_set_header X-Forwarded-Proto \$scheme;' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '    }' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '    ' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '    location /api/ {' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '        proxy_pass http://backend/api/;' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '        proxy_set_header Host \$host;' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '        proxy_set_header X-Real-IP \$remote_addr;' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '        proxy_set_header X-Forwarded-Proto \$scheme;' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '    }' >> /etc/nginx/conf.d/default.conf"
+            docker exec nginx bash -c "echo '}' >> /etc/nginx/conf.d/default.conf"
             
             # Restart nginx container
             echo "🔄 Перезапускаем nginx контейнер..."
@@ -143,19 +160,29 @@ jobs:
             # Run auto-fix migrations inside backend container
             echo "🔧 Running auto-fix migrations..."
             if [ -f "backend/scripts/auto-fix-migrations.sh" ]; then
-              docker exec backend bash scripts/auto-fix-migrations.sh || echo "⚠️ Auto-fix completed with warnings"
+              docker exec backend bash scripts/auto-fix-migrations.sh || \
+                echo "⚠️ Auto-fix completed with warnings"
             fi
             
             # Final verification
             echo "🔍 Final verification..."
-            docker exec backend bunx prisma migrate status || echo "⚠️ Migration status check completed with warnings"
+            docker exec backend bunx prisma migrate status || \
+              echo "⚠️ Migration status check completed with warnings"
             
             # Check if critical tables exist
             echo "📋 Checking critical tables..."
-            docker exec backend bunx prisma db execute --stdin <<< "SELECT COUNT(*) FROM \"Merchant\";" || echo "⚠️ Merchant table check completed with warnings"
-            docker exec backend bunx prisma db execute --stdin <<< "SELECT COUNT(*) FROM \"Method\";" || echo "⚠️ Method table check completed with warnings"
-            docker exec backend bunx prisma db execute --stdin <<< "SELECT COUNT(*) FROM \"User\";" || echo "⚠️ User table check completed with warnings"
-            docker exec backend bunx prisma db execute --stdin <<< "SELECT COUNT(*) FROM \"Aggregator\";" || echo "⚠️ Aggregator table check completed with warnings"
+            docker exec backend bunx prisma db execute --stdin <<< \
+              "SELECT COUNT(*) FROM \"Merchant\";" || \
+              echo "⚠️ Merchant table check completed with warnings"
+            docker exec backend bunx prisma db execute --stdin <<< \
+              "SELECT COUNT(*) FROM \"Method\";" || \
+              echo "⚠️ Method table check completed with warnings"
+            docker exec backend bunx prisma db execute --stdin <<< \
+              "SELECT COUNT(*) FROM \"User\";" || \
+              echo "⚠️ User table check completed with warnings"
+            docker exec backend bunx prisma db execute --stdin <<< \
+              "SELECT COUNT(*) FROM \"Aggregator\";" || \
+              echo "⚠️ Aggregator table check completed with warnings"
             
             echo "✅ Deployment completed successfully!"
             
@@ -165,8 +192,10 @@ jobs:
             
             # Show service health
             echo "🏥 Service health:"
-            docker exec backend curl -f http://localhost:3001/api/health || echo "⚠️ Backend health check failed"
-            docker exec frontend curl -f http://localhost:3000 || echo "⚠️ Frontend health check failed"
+            docker exec backend curl -f http://localhost:3001/api/health || \
+              echo "⚠️ Backend health check failed"
+            docker exec frontend curl -f http://localhost:3000 || \
+              echo "⚠️ Frontend health check failed"
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
