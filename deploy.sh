@@ -10,15 +10,31 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-# Check if .env file exists
-if [ ! -f .env ]; then
-    echo "ERROR: .env file not found!"
-    echo "Please create .env file with required variables:"
-    echo "  DATABASE_URL=postgresql://user:pass@localhost:5432/quattrex_db"
-    echo "  JWT_SECRET=your-secret-key"
-    echo "  SUPER_ADMIN_KEY=your-admin-key"
-    echo "  ADMIN_IPS=127.0.0.1,your.ip.here"
+# Check Docker access
+if ! docker ps &> /dev/null; then
+    echo "ERROR: Cannot access Docker daemon!"
+    echo "Please ensure Docker is running and you have permissions."
+    echo "Try: sudo usermod -aG docker $USER && newgrp docker"
+    echo "Or run this script with sudo: sudo bash deploy.sh"
     exit 1
+fi
+
+# Check if .env file exists, create from example if not
+if [ ! -f .env ]; then
+    echo "WARNING: .env file not found!"
+    if [ -f .env.example ]; then
+        echo "Creating .env from .env.example..."
+        cp .env.example .env
+        echo "Please update .env file with your actual values"
+    else
+        echo "ERROR: Neither .env nor .env.example found!"
+        echo "Please create .env file with required variables:"
+        echo "  DATABASE_URL=postgresql://user:pass@localhost:5432/quattrex_db"
+        echo "  JWT_SECRET=your-secret-key"
+        echo "  SUPER_ADMIN_KEY=your-admin-key"
+        echo "  ADMIN_IPS=127.0.0.1,your.ip.here"
+        exit 1
+    fi
 fi
 
 # Ensure SSL certificates are ready
@@ -47,7 +63,7 @@ docker compose -f docker-compose.prod.yml down || true
 
 # Build and start containers
 echo "Building containers..."
-docker compose -f docker-compose.prod.yml build --no-cache
+docker compose -f docker-compose.prod.yml build
 
 echo "Starting containers..."
 docker compose -f docker-compose.prod.yml up -d
