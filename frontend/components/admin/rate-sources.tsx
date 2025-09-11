@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { RefreshCw, Users, Building2, TrendingUp, TrendingDown, AlertCircle, Building } from 'lucide-react'
+import { sanitizeToken } from '@/lib/token-utils'
 import {
   Table,
   TableBody,
@@ -124,9 +125,11 @@ export function RateSources() {
 
   const fetchRateSources = async () => {
     try {
+      // Sanitize token to remove non-ASCII characters
+      const sanitizedToken = sanitizeToken(adminToken);
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/rate-sources`, {
         headers: {
-          'x-admin-key': adminToken || '',
+          'x-admin-key': sanitizedToken,
         },
       })
       
@@ -141,9 +144,11 @@ export function RateSources() {
 
   const fetchMerchants = async () => {
     try {
+      // Sanitize token to remove non-ASCII characters
+      const sanitizedToken = sanitizeToken(adminToken);
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/merchant`, {
         headers: {
-          'x-admin-key': adminToken || '',
+          'x-admin-key': sanitizedToken,
         },
       })
       
@@ -158,9 +163,11 @@ export function RateSources() {
 
   const fetchTraders = async () => {
     try {
+      // Sanitize token to remove non-ASCII characters
+      const sanitizedToken = sanitizeToken(adminToken);
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/traders`, {
         headers: {
-          'x-admin-key': adminToken || '',
+          'x-admin-key': sanitizedToken,
         },
       })
       

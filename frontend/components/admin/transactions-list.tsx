@@ -73,6 +73,7 @@ import {
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
+import { sanitizeToken } from "@/lib/token-utils";
 import { cn } from "@/lib/utils";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { CustomCalendarPopover } from "@/components/ui/custom-calendar-popover";
@@ -280,11 +281,13 @@ export function TransactionsList() {
 
   const fetchMerchants = async () => {
     try {
+      // Sanitize token to remove non-ASCII characters
+      const sanitizedToken = sanitizeToken(adminToken);
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/admin/merchant/list`,
         {
           headers: {
-            "x-admin-key": adminToken || "",
+            "x-admin-key": sanitizedToken,
           },
         }
       );
@@ -312,11 +315,13 @@ export function TransactionsList() {
 
   const fetchTraders = async () => {
     try {
+      // Sanitize token to remove non-ASCII characters
+      const sanitizedToken = sanitizeToken(adminToken);
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/admin/users?role=trader`,
         {
           headers: {
-            "x-admin-key": adminToken || "",
+            "x-admin-key": sanitizedToken,
           },
         }
       );

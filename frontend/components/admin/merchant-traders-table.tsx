@@ -41,6 +41,7 @@ import { Plus, Trash2, RefreshCw, Settings } from "lucide-react";
 import { useAdminAuth } from "@/stores/auth";
 import { formatAmount } from "@/lib/utils";
 import { toast } from "sonner";
+import { sanitizeToken } from "@/lib/token-utils";
 import { FeeRangesDialog } from "./fee-ranges-dialog";
 
 type MerchantTrader = {
@@ -118,9 +119,11 @@ export function MerchantTradersTable({ merchantId }: MerchantTradersTableProps) 
       const url = `${process.env.NEXT_PUBLIC_API_URL}/admin/merchants/${merchantId}/traders`;
       console.log("Fetching traders from:", url);
 
+      // Sanitize token to remove non-ASCII characters
+      const sanitizedToken = sanitizeToken(adminToken);
       const response = await fetch(url, {
         headers: {
-          "x-admin-key": adminToken || "",
+          "x-admin-key": sanitizedToken,
         },
       });
 
@@ -147,9 +150,11 @@ export function MerchantTradersTable({ merchantId }: MerchantTradersTableProps) 
       const url = `${process.env.NEXT_PUBLIC_API_URL}/admin/merchants/${merchantId}/available-traders`;
       console.log("Fetching available traders from:", url);
 
+      // Sanitize token to remove non-ASCII characters
+      const sanitizedToken = sanitizeToken(adminToken);
       const response = await fetch(url, {
         headers: {
-          "x-admin-key": adminToken || "",
+          "x-admin-key": sanitizedToken,
         },
       });
 
