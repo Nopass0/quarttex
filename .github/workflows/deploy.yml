@@ -117,9 +117,36 @@ jobs:
           echo "🔍 Проверяем статус контейнеров..."
           sudo docker ps
           
-          # Проверяем логи nginx если есть проблемы
-          echo "📋 Последние логи nginx..."
+          # Проверяем состояние сети
+          echo "🌐 Проверяем Docker сети..."
+          sudo docker network ls
+          sudo docker network inspect quattrex_quattrex_network || echo "Сеть не найдена"
+          
+          # Проверяем логи контейнеров
+          echo "📋 Логи backend..."
+          sudo docker logs quattrex_backend --tail=30 || echo "Не удалось получить логи backend"
+          
+          echo "📋 Логи nginx..."
           sudo docker logs quattrex_nginx --tail=20 || echo "Не удалось получить логи nginx"
+          
+          echo "📋 Логи frontend..."
+          sudo docker logs quattrex_frontend --tail=10 || echo "Не удалось получить логи frontend"
+          
+          # Проверяем порты backend
+          echo "🔌 Проверяем порты backend..."
+          sudo docker exec quattrex_backend netstat -tlnp 2>/dev/null || sudo docker exec quattrex_backend ss -tlnp || echo "Не удалось получить информацию о портах"
+          
+          # Тестируем внутреннюю связность
+          echo "🔗 Тестируем внутреннее подключение backend..."
+          if ! sudo docker exec quattrex_nginx wget -q --spider http://backend:3001/health; then
+            echo "❌ Backend недоступен изнутри nginx, пытаемся перезапустить..."
+            sudo docker restart quattrex_backend
+            sleep 15
+            sudo docker restart quattrex_nginx
+            sleep 5
+          else
+            echo "✅ Backend доступен изнутри nginx"
+          fi
           
           # Проверяем API
           echo "🔍 Тестируем API..."
