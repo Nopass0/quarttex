@@ -613,6 +613,9 @@ export default (app: Elysia) =>
           : new Date(Date.now() + 86_400_000);
 
         // 🚀 ОПТИМИЗАЦИЯ: Сначала получаем method и duplicate check параллельно
+        console.log(`[Merchant IN] Checking method ${body.methodId} for merchant ${merchant.id}`);
+        const queryStartTime = Date.now();
+        
         const [merchantMethod, duplicateCheck] = await Promise.all([
           db.merchantMethod.findUnique({
             where: {
@@ -632,6 +635,8 @@ export default (app: Elysia) =>
             },
           }),
         ]);
+        
+        console.log(`[Merchant IN] Method and duplicate check completed in ${Date.now() - queryStartTime}ms`);
 
         if (!merchantMethod || !merchantMethod.isEnabled || !merchantMethod.method) {
           return error(404, {
@@ -668,6 +673,7 @@ export default (app: Elysia) =>
                   select: {
                     id: true,
                     name: true,
+                    trustBalance: true,
                   },
                 },
                 bankDetails: {
@@ -732,6 +738,7 @@ export default (app: Elysia) =>
 
         // Фильтруем трейдеров по доступности и типу трафика
         const validTraders = eligibleTraders.filter(tm => 
+          tm.trader && 
           !tm.trader.banned && 
           tm.trader.deposit >= 1000 && 
           tm.trader.trafficEnabled &&
@@ -745,10 +752,10 @@ export default (app: Elysia) =>
 
         // 🚀 ОПТИМИЗАЦИЯ: Плоский массив всех реквизитов с пре-фильтрацией
         const allBankDetails = validTraders.flatMap(tm => 
-          tm.trader.bankDetails.filter(bd => 
+          tm.trader.bankDetails.filter((bd: any) => 
             body.amount >= tm.trader.minAmountPerRequisite &&
             body.amount <= tm.trader.maxAmountPerRequisite
-          ).map(bd => ({ ...bd, traderId: tm.traderId, trader: tm.trader }))
+          ).map((bd: any) => ({ ...bd, traderId: tm.traderId, trader: tm.trader, user: tm.trader.user }))
         );
 
         // 🚀 ОПТИМИЗАЦИЯ: Получаем все данные для проверок одним запросом
@@ -1313,7 +1320,7 @@ export default (app: Elysia) =>
 
         // Проверяем достаточность баланса трейдера
         if (freezingParams && chosen.user) {
-          const availableBalance = chosen.user.trustBalance;
+          const availableBalance = chosen.user.trustBalance || 0;
           if (availableBalance < freezingParams.totalRequired) {
             console.log(
               `[Merchant IN] Недостаточно баланса. Нужно: ${freezingParams.totalRequired}, доступно: ${availableBalance}`
