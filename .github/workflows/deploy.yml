@@ -83,12 +83,12 @@ jobs:
             fi
             
             # Remove old containers and images
-            $DOCKER_CMD compose -f docker-compose.prod.yml rm -f
-            $DOCKER_CMD image prune -f
+            docker compose -f docker-compose.prod.yml rm -f
+            docker image prune -f
             
             # Build and start services
             echo "🚀 Building and starting services..."
-            $DOCKER_CMD compose -f docker-compose.prod.yml up -d --build
+            docker compose -f docker-compose.prod.yml up -d --build
             
             # Wait for services to be ready
             echo "⏳ Waiting for services to be ready..."
@@ -97,32 +97,31 @@ jobs:
             # Run auto-fix migrations inside backend container
             echo "🔧 Running auto-fix migrations..."
             if [ -f "backend/scripts/auto-fix-migrations.sh" ]; then
-              $DOCKER_CMD exec backend bash scripts/auto-fix-migrations.sh || echo "⚠️ Auto-fix completed with warnings"
+              docker exec backend bash scripts/auto-fix-migrations.sh || echo "⚠️ Auto-fix completed with warnings"
             fi
             
             # Final verification
             echo "🔍 Final verification..."
-            $DOCKER_CMD exec backend bunx prisma migrate status || echo "⚠️ Migration status check completed with warnings"
+            docker exec backend bunx prisma migrate status || echo "⚠️ Migration status check completed with warnings"
             
             # Check if critical tables exist
             echo "📋 Checking critical tables..."
-            $DOCKER_CMD exec backend bunx prisma db execute --stdin <<< "SELECT COUNT(*) FROM \"Merchant\";" || echo "⚠️ Merchant table check completed with warnings"
-            $DOCKER_CMD exec backend bunx prisma db execute --stdin <<< "SELECT COUNT(*) FROM \"Method\";" || echo "⚠️ Method table check completed with warnings"
-            $DOCKER_CMD exec backend bunx prisma db execute --stdin <<< "SELECT COUNT(*) FROM \"User\";" || echo "⚠️ User table check completed with warnings"
-            $DOCKER_CMD exec backend bunx prisma db execute --stdin <<< "SELECT COUNT(*) FROM \"Aggregator\";" || echo "⚠️ Aggregator table check completed with warnings"
+            docker exec backend bunx prisma db execute --stdin <<< "SELECT COUNT(*) FROM \"Merchant\";" || echo "⚠️ Merchant table check completed with warnings"
+            docker exec backend bunx prisma db execute --stdin <<< "SELECT COUNT(*) FROM \"Method\";" || echo "⚠️ Method table check completed with warnings"
+            docker exec backend bunx prisma db execute --stdin <<< "SELECT COUNT(*) FROM \"User\";" || echo "⚠️ User table check completed with warnings"
+            docker exec backend bunx prisma db execute --stdin <<< "SELECT COUNT(*) FROM \"Aggregator\";" || echo "⚠️ Aggregator table check completed with warnings"
             
             echo "✅ Deployment completed successfully!"
             
             # Show running containers
             echo "📦 Running containers:"
-            $DOCKER_CMD ps
+            docker ps
             
             # Show service health
             echo "🏥 Service health:"
-            $DOCKER_CMD exec backend curl -f http://localhost:3001/api/health || echo "⚠️ Backend health check failed"
-            $DOCKER_CMD exec frontend curl -f http://localhost:3000 || echo "⚠️ Frontend health check failed"
+            docker exec backend curl -f http://localhost:3001/api/health || echo "⚠️ Backend health check failed"
+            docker exec frontend curl -f http://localhost:3000 || echo "⚠️ Frontend health check failed"
         env:
-          DOCKER_CMD: docker
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           NODE_ENV: production
