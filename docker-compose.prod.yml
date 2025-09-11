@@ -11,7 +11,7 @@ services:
       PORT: 3001
       SUPER_ADMIN_KEY: ${SUPER_ADMIN_KEY:-}
       ADMIN_IPS: ${ADMIN_IPS:-}
-      NODE_OPTIONS: "--max-old-space-size=768"
+      NODE_OPTIONS: "--max-old-space-size=4096"
     expose:
       - "3001"
     networks:
@@ -19,9 +19,9 @@ services:
     restart: unless-stopped
     volumes:
       - ./backend/uploads:/app/uploads
-    mem_limit: 1g
-    mem_reservation: 512m
-    cpus: '0.5'
+    mem_limit: 8g
+    mem_reservation: 2g
+    cpus: '4.0'
 
   frontend:
     build:
@@ -32,7 +32,7 @@ services:
     container_name: quattrex_frontend
     environment:
       NODE_ENV: production
-      NODE_OPTIONS: "--max-old-space-size=512"
+      NODE_OPTIONS: "--max-old-space-size=2048"
     expose:
       - "3000"
     depends_on:
@@ -40,9 +40,9 @@ services:
     networks:
       - quattrex_network
     restart: unless-stopped
-    mem_limit: 768m
-    mem_reservation: 384m
-    cpus: '0.5'
+    mem_limit: 4g
+    mem_reservation: 1g
+    cpus: '2.0'
 
   nginx:
     build:
@@ -63,8 +63,9 @@ services:
     networks:
       - quattrex_network
     restart: unless-stopped
-    mem_limit: 256m
-    mem_reservation: 128m
+    mem_limit: 1g
+    mem_reservation: 512m
+    cpus: '1.0'
 
 networks:
   quattrex_network:
