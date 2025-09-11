@@ -2,6 +2,11 @@ import { Elysia, t } from 'elysia'
 import { db } from '@/db'
 import { RateSource, KkkOperationType } from '@prisma/client'
 
+// Схема для валидации заголовков
+const AuthHeaderSchema = t.Object({
+  'x-admin-key': t.String()
+})
+
 export default (app: Elysia) =>
   app
     // Получить все источники курсов
@@ -95,6 +100,58 @@ export default (app: Elysia) =>
       return {
         success: true,
         data: sourcesWithRates
+      }
+    }, {
+      headers: AuthHeaderSchema,
+      detail: { 
+        summary: 'Получить все источники курсов',
+        description: 'Возвращает список всех источников курсов с текущими курсами и настройками'
+      },
+      response: {
+        200: t.Object({
+          success: t.Boolean(),
+          data: t.Array(t.Object({
+            id: t.String(),
+            source: t.String(),
+            displayName: t.Union([t.String(), t.Null()]),
+            baseRate: t.Union([t.Number(), t.Null()]),
+            kkkPercent: t.Number(),
+            kkkOperation: t.String(),
+            isActive: t.Boolean(),
+            createdAt: t.Date(),
+            updatedAt: t.Date(),
+            lastRateUpdate: t.Union([t.Date(), t.Null()]),
+            currentRate: t.Union([t.Number(), t.Null()]),
+            adjustedRate: t.Union([t.Number(), t.Null()]),
+            traders: t.Array(t.Object({
+              id: t.String(),
+              name: t.String(),
+              email: t.String()
+            })),
+            merchants: t.Array(t.Object({
+              id: t.String(),
+              merchant: t.Object({
+                id: t.String(),
+                name: t.String()
+              })
+            })),
+            traderSettings: t.Array(t.Object({
+              id: t.String(),
+              trader: t.Object({
+                id: t.String(),
+                name: t.String(),
+                email: t.String()
+              })
+            })),
+            _count: t.Object({
+              traders: t.Number(),
+              merchants: t.Number()
+            })
+          }))
+        }),
+        401: t.Object({
+          error: t.String()
+        })
       }
     })
 
