@@ -25,7 +25,7 @@ jobs:
           
           # Останавливаем старые контейнеры
           echo "�� Останавливаем старые контейнеры..."
-          docker compose -f docker-compose.prod.yml down --remove-orphans || true
+          sudo docker compose -f docker-compose.prod.yml down --remove-orphans || true
           
           # Обновляем код
           echo "📥 Обновляем код..."
@@ -48,10 +48,12 @@ jobs:
           echo "POSTGRES_PORT=$POSTGRES_PORT" >> .env
           echo "NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL" >> .env
           echo "SLACK_WEBHOOK_URL=$SLACK_WEBHOOK_URL" >> .env
+          echo "SUPER_ADMIN_KEY=$SUPER_ADMIN_KEY" >> .env
+          echo "ADMIN_IPS=$ADMIN_IPS" >> .env
           
           # Собираем и запускаем новые контейнеры
           echo "🚀 Собираем и запускаем новые контейнеры..."
-          docker compose -f docker-compose.prod.yml up -d --build --force-recreate
+          sudo docker compose -f docker-compose.prod.yml up -d --build --force-recreate
           
           # Ждем запуска
           echo "⏳ Ждем запуска сервисов..."
@@ -59,12 +61,12 @@ jobs:
           
           # Проверяем статус
           echo "🔍 Проверяем статус контейнеров..."
-          docker ps
+          sudo docker ps
           
           # Проверяем API
           echo "�� Тестируем API..."
           sleep 10
-          curl -k -H "x-admin-key: test-key" https://quattrex.pro/api/admin/rate-sources || echo "API test failed"
+          curl -k -H "x-admin-key: $SUPER_ADMIN_KEY" https://quattrex.pro/api/admin/rate-sources || echo "API test failed"
           
           echo "✅ Деплой завершен!"
         env:
@@ -77,3 +79,5 @@ jobs:
           POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SUPER_ADMIN_KEY: ${{ secrets.SUPER_ADMIN_KEY }}
+          ADMIN_IPS: ${{ secrets.ADMIN_IPS }}
