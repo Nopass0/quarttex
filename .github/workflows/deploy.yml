@@ -190,26 +190,24 @@ jobs:
                 rm -f nginx/conf.d/default-http-only.conf
               else
                 echo "⚠️ HTTP-only config not found, creating basic config"
-                cat > nginx/conf.d/default.conf << 'EOF'
-server {
-    listen 80;
-    server_name _;
-    location / {
-        proxy_pass http://frontend:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-    location /api/ {
-        proxy_pass http://backend:3001/api/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-EOF
+                echo "server {" > nginx/conf.d/default.conf
+                echo "    listen 80;" >> nginx/conf.d/default.conf
+                echo "    server_name _;" >> nginx/conf.d/default.conf
+                echo "    location / {" >> nginx/conf.d/default.conf
+                echo "        proxy_pass http://frontend:3000;" >> nginx/conf.d/default.conf
+                echo "        proxy_set_header Host \$host;" >> nginx/conf.d/default.conf
+                echo "        proxy_set_header X-Real-IP \$remote_addr;" >> nginx/conf.d/default.conf
+                echo "        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;" >> nginx/conf.d/default.conf
+                echo "        proxy_set_header X-Forwarded-Proto \$scheme;" >> nginx/conf.d/default.conf
+                echo "    }" >> nginx/conf.d/default.conf
+                echo "    location /api/ {" >> nginx/conf.d/default.conf
+                echo "        proxy_pass http://backend:3001/api/;" >> nginx/conf.d/default.conf
+                echo "        proxy_set_header Host \$host;" >> nginx/conf.d/default.conf
+                echo "        proxy_set_header X-Real-IP \$remote_addr;" >> nginx/conf.d/default.conf
+                echo "        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;" >> nginx/conf.d/default.conf
+                echo "        proxy_set_header X-Forwarded-Proto \$scheme;" >> nginx/conf.d/default.conf
+                echo "    }" >> nginx/conf.d/default.conf
+                echo "}" >> nginx/conf.d/default.conf
               fi
             fi
             
