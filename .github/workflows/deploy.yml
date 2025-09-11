@@ -24,7 +24,7 @@ jobs:
           cd /home/quattrex
           
           # Останавливаем старые контейнеры
-          echo "�� Останавливаем старые контейнеры..."
+          echo "🔄 Останавливаем старые контейнеры..."
           sudo docker compose -f docker-compose.prod.yml down --remove-orphans || true
           
           # Обновляем код
@@ -37,7 +37,7 @@ jobs:
           git log --oneline -3
           
           # Создаем .env файл
-          echo "�� Создаем .env файл..."
+          echo "⚙️ Создаем .env файл..."
           echo "DATABASE_URL=$DATABASE_URL" > .env
           echo "JWT_SECRET=$JWT_SECRET" >> .env
           echo "NODE_ENV=production" >> .env
@@ -69,7 +69,7 @@ jobs:
           curl -k -H "x-admin-key: $SUPER_ADMIN_KEY" https://quattrex.pro/api/admin/rate-sources || echo "API test failed"
           
           echo "✅ Деплой завершен!"
-        env:
+      env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
