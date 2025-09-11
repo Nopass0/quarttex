@@ -37,6 +37,7 @@ import { callbackProxyRoutes } from "@/routes/callback-proxy";
 import auctionRoutes from "@/routes/auction";
 import externalAggregatorRoutes from "@/routes/external/aggregator";
 import pspwareCallbackRoutes from "@/routes/pspware/callback";
+import mockAggregatorRoutes from "@/routes/mock-aggregator";
 
 import { Glob } from "bun";
 import { pathToFileURL } from "node:url";
@@ -487,6 +488,7 @@ const app = new Elysia({
   .group("/aggregator", (app) => app.use(aggregatorRoutes))
   .group("/external/aggregator", (app) => app.use(externalAggregatorRoutes))
   .group("/pspware", (app) => app.use(pspwareCallbackRoutes))
+  .use(mockAggregatorRoutes)
   .group("/device", (app) => app.use(deviceRoutes))
   .group("/trader", (app) => app.use(traderRoutes))
   .group("/wellbit", (app) => app.use(wellbitRoutes))

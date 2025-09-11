@@ -482,7 +482,11 @@ export function AuctionMerchantConfig({
             <Button
               onClick={handleToggleAuction}
               disabled={isToggling}
-              className="bg-purple-600 hover:bg-purple-700"
+              className={
+                formData.isAuctionEnabled
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-gray-600 hover:bg-gray-700"
+              }
             >
               {isToggling ? (
                 <>

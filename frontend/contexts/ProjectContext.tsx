@@ -117,10 +117,11 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     // Check localStorage on initial load
     if (typeof window !== "undefined") {
       const savedProject = localStorage.getItem("selectedProject") as ProjectType;
-      // Always return saved project if it exists, otherwise quattrex
-      return (savedProject && projectConfigs[savedProject]) ? savedProject : "quattrex";
+      if (savedProject && projectConfigs[savedProject]) {
+        return savedProject;
+      }
     }
-    return "quattrex"; // Default to quattrex for SSR
+    return "quattrex"; // Default to quattrex
   });
   const config = projectConfigs[project];
 
@@ -140,26 +141,13 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         root.style.setProperty("--primary-rgb", "139 92 246");
         root.style.setProperty("--accent-color", "#7c3aed");
         
-        // Light mode defaults for Quattrex
-        if (!root.classList.contains("dark")) {
-          root.style.setProperty("--card", "0 0% 100%"); // white
-          root.style.setProperty("--card-foreground", "0 0% 3.9%");
-          root.style.setProperty("--popover", "0 0% 100%");
-          root.style.setProperty("--popover-foreground", "0 0% 3.9%");
-          root.style.setProperty("--muted", "0 0% 96.1%"); // gray-100
-          root.style.setProperty("--muted-foreground", "0 0% 45.1%");
-          root.style.setProperty("--border", "0 0% 89.8%"); // gray-200
-          root.style.setProperty("--input", "0 0% 89.8%");
-        } else {
-          // Dark mode adjustments for Quattrex
+        // Dark mode adjustments for Quattrex
+        if (root.classList.contains("dark")) {
           root.style.setProperty("--primary", "263 70% 50%"); // violet in dark
           root.style.setProperty("--accent", "263 70% 45%");
           root.style.setProperty("--card", "260 20% 12%"); // purple-tinted dark
-          root.style.setProperty("--card-foreground", "0 0% 95%");
           root.style.setProperty("--popover", "260 20% 12%");
-          root.style.setProperty("--popover-foreground", "0 0% 95%");
           root.style.setProperty("--muted", "260 20% 18%");
-          root.style.setProperty("--muted-foreground", "240 5% 64.9%");
           root.style.setProperty("--border", "260 20% 25%");
           root.style.setProperty("--input", "260 20% 25%");
           root.style.setProperty("--sidebar-background", "260 20% 8%");
@@ -170,7 +158,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         }
       } else {
         // Green theme for Chase (default)
-        root.style.setProperty("--primary", "160 100% 18.8%"); // #006039
+        root.style.setProperty("--primary", "156, 85.90%, 27.80%"); //hsl(156, 76.90%, 39.00%)
         root.style.setProperty("--primary-foreground", "0 0% 100%");
         root.style.setProperty("--accent", "160 50% 95%");
         root.style.setProperty("--accent-foreground", "160 100% 18.8%");
@@ -179,26 +167,13 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         root.style.setProperty("--primary-rgb", "16 185 129");
         root.style.setProperty("--accent-color", "#059669");
         
-        // Light mode defaults for Chase
-        if (!root.classList.contains("dark")) {
-          root.style.setProperty("--card", "0 0% 100%"); // white
-          root.style.setProperty("--card-foreground", "0 0% 3.9%");
-          root.style.setProperty("--popover", "0 0% 100%");
-          root.style.setProperty("--popover-foreground", "0 0% 3.9%");
-          root.style.setProperty("--muted", "0 0% 96.1%"); // gray-100
-          root.style.setProperty("--muted-foreground", "0 0% 45.1%");
-          root.style.setProperty("--border", "0 0% 89.8%"); // gray-200
-          root.style.setProperty("--input", "0 0% 89.8%");
-        } else {
-          // Dark mode adjustments for Chase
+        // Dark mode adjustments for Chase
+        if (root.classList.contains("dark")) {
           root.style.setProperty("--primary", "146 40% 30%"); // #2d6a42
           root.style.setProperty("--accent", "146 40% 35%");
           root.style.setProperty("--card", "138 12.5% 19.8%"); // #29382f
-          root.style.setProperty("--card-foreground", "0 0% 95%");
           root.style.setProperty("--popover", "138 12.5% 19.8%");
-          root.style.setProperty("--popover-foreground", "0 0% 95%");
           root.style.setProperty("--muted", "138 12.5% 19.8%");
-          root.style.setProperty("--muted-foreground", "240 5% 64.9%");
           root.style.setProperty("--border", "138 12.5% 25%");
           root.style.setProperty("--input", "138 12.5% 25%");
           root.style.setProperty("--sidebar-background", "0 0% 5.88%");

@@ -31,6 +31,7 @@ const BankDetailDTO = t.Object({
   intervalMinutes: t.Number(),
   operationLimit: t.Number(), // Лимит по количеству операций без срока давности
   sumLimit: t.Number(), // Лимит на общую сумму сделок в рублях
+  counterpartyLimit: t.Number(), // Лимит на количество уникальных контрагентов
   trafficPreference: t.String(),
   successfulDeals: t.Number(),
   totalDeals: t.Number(),
@@ -106,6 +107,7 @@ const toDTO = (
     totalAmountLimit: bankDetail.totalAmountLimit || 0,
     operationLimit: bankDetail.operationLimit || 0,
     sumLimit: bankDetail.sumLimit || 0,
+    counterpartyLimit: bankDetail.counterpartyLimit || 0,
   };
 };
 
@@ -249,6 +251,7 @@ export default (app: Elysia) =>
           totalAmountLimit: body.totalAmountLimit,
           operationLimit: body.operationLimit,
           sumLimit: body.sumLimit,
+          counterpartyLimit: body.counterpartyLimit,
         });
 
         // Формируем данные для создания с trafficPreference, но делаем фолбэк без него, если колонка ещё не мигрирована
@@ -264,6 +267,7 @@ export default (app: Elysia) =>
           intervalMinutes: body.intervalMinutes,
           operationLimit: body.operationLimit ?? 0,
           sumLimit: body.sumLimit ?? 0,
+          counterpartyLimit: body.counterpartyLimit ?? 0,
           userId: trader.id,
           deviceId: body.deviceId,
         };
@@ -304,6 +308,7 @@ export default (app: Elysia) =>
           totalAmountLimit: t.Optional(t.Number()),
           operationLimit: t.Optional(t.Number()),
           sumLimit: t.Optional(t.Number()),
+          counterpartyLimit: t.Optional(t.Number()),
           intervalMinutes: t.Number(),
           trafficPreference: t.Optional(t.Union([
             t.Literal('ANY'),
@@ -401,6 +406,7 @@ export default (app: Elysia) =>
           totalAmountLimit: updateData.totalAmountLimit,
           operationLimit: updateData.operationLimit,
           sumLimit: updateData.sumLimit,
+          counterpartyLimit: updateData.counterpartyLimit,
           fullBody: updateData,
         });
 
@@ -453,6 +459,7 @@ export default (app: Elysia) =>
             totalAmountLimit: t.Number(),
             operationLimit: t.Number(),
             sumLimit: t.Number(),
+            counterpartyLimit: t.Number(),
             intervalMinutes: t.Number(),
             trafficPreference: t.Union([
               t.Literal('ANY'),

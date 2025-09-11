@@ -540,6 +540,10 @@ export default (app: Elysia) =>
                 select: { id: true, name: true, email: true, numericId: true },
               },
 
+              aggregator: {
+                select: { id: true, name: true, apiSchema: true },
+              },
+
               requisites: {
                 select: {
                   id: true,

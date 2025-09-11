@@ -2,6 +2,10 @@ import { db } from "@/db";
 import { Aggregator, Status, Transaction, IntegrationDirection } from "@prisma/client";
 import axios, { AxiosError } from "axios";
 import { randomBytes } from "crypto";
+import { 
+  freezeAggregatorBalance,
+  unfreezeAggregatorBalance
+} from "@/utils/transaction-freezing";
 
 export interface AggregatorDealRequest {
   ourDealId: string;
@@ -611,6 +615,11 @@ export class AggregatorServiceV2 {
         const rate = transaction.rate || 100;
         const merchantCredit = transaction.amount / rate;
 
+        // Размораживаем баланс агрегатора (если был заморожен)
+        if (transaction.aggregatorId && transaction.frozenUsdtAmount) {
+          await unfreezeAggregatorBalance(prisma, aggregator.id, transaction.frozenUsdtAmount);
+        }
+
         // Начисляем мерчанту
         await prisma.merchant.update({
           where: { id: transaction.merchantId },
@@ -619,7 +628,7 @@ export class AggregatorServiceV2 {
           },
         });
 
-        // Списываем с агрегатора
+        // Списываем с агрегатора (из основного баланса)
         await prisma.aggregator.update({
           where: { id: aggregator.id },
           data: {
@@ -661,29 +670,61 @@ export class AggregatorServiceV2 {
       };
     }
 
-    const url = `${aggregator.apiBaseUrl}/deals`;
+    // Определяем правильный эндпоинт в зависимости от типа агрегатора
+    const url = aggregator.isChaseCompatible 
+      ? `${aggregator.apiBaseUrl}/merchant/transactions/in`
+      : `${aggregator.apiBaseUrl}/deals`;
     const mockDealId = `mock-${Date.now()}-${Math.random().toString(36).substring(7)}`;
     const idempotencyKey = `mock-${mockDealId}`;
     const startTime = Date.now();
 
-    const requestData: AggregatorDealRequest = {
-      ourDealId: mockDealId,
-      status: "NEW",
-      amount: mockData.amount,
-      merchantRate: mockData.merchantRate,
-      paymentMethod: "C2C",
-      callbackUrl: `${(process.env.BASE_URL as string | undefined) || "https://api.chase.com"}/api/aggregators/callback`,
-      metadata: mockData.metadata || { test: true },
+    // Формируем правильный запрос в зависимости от типа агрегатора
+    let requestData: any;
+    if (aggregator.isChaseCompatible) {
+      requestData = {
+        amount: mockData.amount,
+        orderId: mockDealId,
+        methodId: mockData.metadata?.methodId || 'method_1a2b3c4d5e6f',
+        rate: mockData.merchantRate,
+        expired_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+        userIp: mockData.metadata?.userIp || '127.0.0.1',
+        clientIdentifier: mockData.metadata?.clientIdentifier || 'client_user_12345',
+        callbackUri: `${(process.env.BASE_URL as string | undefined) || "http://localhost:3000"}/api/aggregator/chase-callback/${aggregator.id}`,
+        // Убираем isMock - его нет в API
+      };
+    } else {
+      requestData = {
+        ourDealId: mockDealId,
+        status: "NEW",
+        amount: mockData.amount,
+        merchantRate: mockData.merchantRate,
+        paymentMethod: "C2C",
+        callbackUrl: `${(process.env.BASE_URL as string | undefined) || "https://api.chase.com"}/api/aggregators/callback`,
+        metadata: mockData.metadata || { test: true },
+      };
+    }
+
+    // Подготавливаем заголовки
+    const requestHeaders = {
+      "Content-Type": "application/json",
+      ...(aggregator.isChaseCompatible ? {
+        'x-merchant-api-key': aggregator.customApiToken || aggregator.apiToken
+      } : {
+        "Authorization": `Bearer ${aggregator.customApiToken || aggregator.apiToken}`,
+        "x-aggregator-token": aggregator.customApiToken || aggregator.apiToken,
+        "x-api-token": aggregator.customApiToken || aggregator.apiToken,
+        "Idempotency-Key": idempotencyKey
+      }),
     };
+
+    console.log(`[AggregatorV2] Headers for ${aggregator.isChaseCompatible ? 'Chase-compatible' : 'standard'} aggregator:`, requestHeaders);
 
     try {
       const response = await axios.post<AggregatorDealResponse>(url, requestData, {
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${aggregator.customApiToken || aggregator.apiToken}`,
-          "Idempotency-Key": idempotencyKey,
-        },
+        headers: requestHeaders,
         timeout: aggregator.maxSlaMs || 2000,
+        // Игнорируем SSL ошибки для тестирования
+        httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false })
       });
 
       const responseTimeMs = Date.now() - startTime;
@@ -695,7 +736,7 @@ export class AggregatorServiceV2 {
         eventType: "mock_test",
         method: "POST",
         url,
-        headers: response.config.headers,
+        headers: requestHeaders,
         requestBody: requestData,
         responseBody: response.data,
         statusCode: response.status,
@@ -707,8 +748,13 @@ export class AggregatorServiceV2 {
       });
 
       return {
-        success: response.data.accepted,
-        request: requestData,
+        success: response.data.accepted || (aggregator.isChaseCompatible && response.data.id),
+        request: {
+          url,
+          method: 'POST',
+          headers: requestHeaders,
+          data: requestData
+        },
         response: response.data,
         statusCode: response.status,
         responseTimeMs,
@@ -719,13 +765,21 @@ export class AggregatorServiceV2 {
       const axiosError = error as AxiosError;
       const slaViolation = responseTimeMs > (aggregator.maxSlaMs || 2000);
 
+      console.log(`[AggregatorV2] Error details:`, {
+        message: axiosError.message,
+        status: axiosError.response?.status,
+        statusText: axiosError.response?.statusText,
+        data: axiosError.response?.data,
+        code: axiosError.code
+      });
+
       await this.logIntegration({
         aggregatorId: aggregator.id,
         direction: IntegrationDirection.OUT,
         eventType: "mock_test",
         method: "POST",
         url,
-        headers: { Authorization: "Bearer [MASKED]", "Idempotency-Key": idempotencyKey },
+        headers: requestHeaders,
         requestBody: requestData,
         responseBody: axiosError.response?.data,
         statusCode: axiosError.response?.status,
@@ -736,14 +790,24 @@ export class AggregatorServiceV2 {
         metadata: { isMockTest: true },
       });
 
+      // Извлекаем реальный код ошибки из тела ответа, если он есть
+      const responseData = axiosError.response?.data;
+      const actualStatusCode = responseData?.code || axiosError.response?.status || 0;
+      const actualError = responseData?.error || axiosError.message;
+
       return {
         success: false,
-        request: requestData,
-        response: axiosError.response?.data || { error: axiosError.message },
-        statusCode: axiosError.response?.status || 0,
+        request: {
+          url,
+          method: 'POST',
+          headers: requestHeaders,
+          data: requestData
+        },
+        response: responseData || { error: axiosError.message },
+        statusCode: actualStatusCode,
         responseTimeMs,
         slaViolation,
-        error: axiosError.message,
+        error: actualError,
       };
     }
   }

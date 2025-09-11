@@ -299,27 +299,38 @@ export class TrafficClassificationService {
    * @param traderId - ID трейдера
    * @param merchantId - ID мерчанта
    * @param clientIdentifier - Идентификатор клиента
+   * @param counterpartyLimit - Лимит контрагентов из реквизита (опционально)
    * @returns true, если трейдер может взять транзакцию
    */
   async canTraderTakeTransaction(
     traderId: string,
     merchantId: string,
-    clientIdentifier?: string
+    clientIdentifier?: string,
+    counterpartyLimit?: number
   ): Promise<boolean> {
-    // Получаем настройки трафика трейдера
-    const trafficSettings = await db.trafficSettings.findUnique({
-      where: { userId: traderId }
-    });
+    // Если есть counterpartyLimit из реквизита, используем его
+    if (counterpartyLimit !== undefined && counterpartyLimit > 0) {
+      // Если нет clientIdentifier и есть лимит, то нельзя взять сделку
+      if (!clientIdentifier) {
+        console.log(`[TrafficClassification] Trader ${traderId} cannot take transaction without clientIdentifier (counterpartyLimit=${counterpartyLimit})`);
+        return false;
+      }
+    } else {
+      // Если counterpartyLimit = 0 или не задан, проверяем настройки трафика трейдера
+      const trafficSettings = await db.trafficSettings.findUnique({
+        where: { userId: traderId }
+      });
 
-    // Если настройки отключены, трейдер может взять любую транзакцию
-    if (!trafficSettings || !trafficSettings.isEnabled) {
-      return true;
-    }
+      // Если настройки отключены и нет counterpartyLimit, трейдер может взять любую транзакцию
+      if (!trafficSettings || !trafficSettings.isEnabled) {
+        return true;
+      }
 
-    // ВАЖНО: Если фильтрация включена, трейдер получает ТОЛЬКО сделки с clientIdentifier
-    if (!clientIdentifier) {
-      console.log(`[TrafficClassification] Trader ${traderId} cannot take transaction without clientIdentifier (filtering enabled)`);
-      return false;
+      // ВАЖНО: Если фильтрация включена в настройках трейдера, трейдер получает ТОЛЬКО сделки с clientIdentifier
+      if (!clientIdentifier) {
+        console.log(`[TrafficClassification] Trader ${traderId} cannot take transaction without clientIdentifier (filtering enabled in settings)`);
+        return false;
+      }
     }
 
     // Подсчитываем уникальных клиентов, с которыми работал трейдер от этого мерчанта по транзакциям
@@ -353,8 +364,21 @@ export class TrafficClassificationService {
       return true;
     }
 
+    // Определяем какой лимит использовать
+    let maxLimit: number;
+    if (counterpartyLimit !== undefined && counterpartyLimit > 0) {
+      // Используем лимит из реквизита
+      maxLimit = counterpartyLimit;
+    } else {
+      // Используем лимит из настроек трейдера (если есть)
+      const trafficSettings = await db.trafficSettings.findUnique({
+        where: { userId: traderId }
+      });
+      maxLimit = trafficSettings?.maxCounterparties || Number.MAX_SAFE_INTEGER;
+    }
+
     // Если не работал и не достиг лимита, может взять
-    return currentUniqueClients < trafficSettings.maxCounterparties;
+    return currentUniqueClients < maxLimit;
   }
 }
 

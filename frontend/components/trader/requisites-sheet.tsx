@@ -82,9 +82,9 @@ const formSchema = z.object({
   maxAmount: numberField(1000).optional(),
   sumLimit: numberField(0).optional(),
   operationLimit: numberField(0).optional(),
+  counterpartyLimit: numberField(0).optional(),
   intervalMinutes: numberField(0).optional(),
   isActive: z.boolean().default(true),
-  trafficPreference: z.enum(["ANY", "PRIMARY", "SECONDARY", "VIP"]).optional(),
 });
 
 type FormData = z.input<typeof formSchema>;
@@ -105,6 +105,7 @@ interface Requisite {
   phoneNumber?: string;
   sumLimit?: number;
   operationLimit?: number;
+  counterpartyLimit?: number;
   intervalMinutes?: number;
   transactionsInProgress?: number;
   transactionsReady?: number;
@@ -114,7 +115,6 @@ interface Requisite {
     name: string;
     isOnline: boolean;
   };
-  trafficPreference?: 'ANY' | 'PRIMARY' | 'SECONDARY' | 'VIP';
 }
 
 interface RequisitesSheetProps {
@@ -183,9 +183,9 @@ export function RequisitesSheet({
       maxAmount: 100000,
       sumLimit: 0,
       operationLimit: 0,
+      counterpartyLimit: 0,
       intervalMinutes: 0,
       isActive: true,
-      trafficPreference: "ANY",
     },
   });
 
@@ -194,6 +194,7 @@ export function RequisitesSheet({
   const [maxAmountInput, setMaxAmountInput] = useState<string>("");
   const [sumLimitInput, setSumLimitInput] = useState<string>("");
   const [operationLimitInput, setOperationLimitInput] = useState<string>("");
+  const [counterpartyLimitInput, setCounterpartyLimitInput] = useState<string>("");
   const [intervalMinutesInput, setIntervalMinutesInput] = useState<string>("");
 
   useEffect(() => {
@@ -203,14 +204,16 @@ export function RequisitesSheet({
     setMaxAmountInput(values.maxAmount && values.maxAmount !== 0 ? String(values.maxAmount) : "");
     setSumLimitInput(values.sumLimit && values.sumLimit !== 0 ? String(values.sumLimit) : "");
     setOperationLimitInput(values.operationLimit && values.operationLimit !== 0 ? String(values.operationLimit) : "");
+    setCounterpartyLimitInput(values.counterpartyLimit && values.counterpartyLimit !== 0 ? String(values.counterpartyLimit) : "");
     setIntervalMinutesInput(values.intervalMinutes && values.intervalMinutes !== 0 ? String(values.intervalMinutes) : "");
   }, [showForm, existingRequisite, open]);
 
-  const [minAmount, maxAmount, sumLimit, operationLimit, intervalMinutes] = form.watch([
+  const [minAmount, maxAmount, sumLimit, operationLimit, counterpartyLimit, intervalMinutes] = form.watch([
     "minAmount",
     "maxAmount",
     "sumLimit",
     "operationLimit",
+    "counterpartyLimit",
     "intervalMinutes",
   ]);
   const hasEmptyRequiredNumbers =
@@ -218,6 +221,7 @@ export function RequisitesSheet({
     maxAmount === undefined ||
     sumLimit === undefined ||
     operationLimit === undefined ||
+    counterpartyLimit === undefined ||
     intervalMinutes === undefined;
 
   useEffect(() => {
@@ -240,6 +244,7 @@ export function RequisitesSheet({
         maxAmount: existingRequisite.maxAmount,
         sumLimit: existingRequisite.sumLimit || 0,
         operationLimit: existingRequisite.operationLimit || 0,
+        counterpartyLimit: existingRequisite.counterpartyLimit || 0,
         intervalMinutes: existingRequisite.intervalMinutes || 0,
         isActive: existingRequisite.isActive,
         trafficPreference: existingRequisite.trafficPreference || 'ANY',
@@ -249,6 +254,7 @@ export function RequisitesSheet({
       setMaxAmountInput(existingRequisite.maxAmount && existingRequisite.maxAmount !== 0 ? String(existingRequisite.maxAmount) : "");
       setSumLimitInput(existingRequisite.sumLimit && existingRequisite.sumLimit !== 0 ? String(existingRequisite.sumLimit) : "");
       setOperationLimitInput(existingRequisite.operationLimit && existingRequisite.operationLimit !== 0 ? String(existingRequisite.operationLimit) : "");
+      setCounterpartyLimitInput(existingRequisite.counterpartyLimit && existingRequisite.counterpartyLimit !== 0 ? String(existingRequisite.counterpartyLimit) : "");
       setIntervalMinutesInput(existingRequisite.intervalMinutes && existingRequisite.intervalMinutes !== 0 ? String(existingRequisite.intervalMinutes) : "");
     } else if (!existingRequisite && open) {
       // Reset to list view when opening without a requisite
@@ -278,6 +284,7 @@ export function RequisitesSheet({
     setMaxAmountInput("");
     setSumLimitInput("");
     setOperationLimitInput("");
+    setCounterpartyLimitInput("");
     setIntervalMinutesInput("");
     setShowForm(true);
   };
@@ -294,6 +301,7 @@ export function RequisitesSheet({
       maxAmount: requisite.maxAmount,
       sumLimit: requisite.sumLimit || 0,
       operationLimit: requisite.operationLimit || 0,
+      counterpartyLimit: requisite.counterpartyLimit || 0,
       intervalMinutes: requisite.intervalMinutes || 0,
       isActive: !requisite.isArchived,
       trafficPreference: requisite.trafficPreference || 'ANY',
@@ -303,6 +311,7 @@ export function RequisitesSheet({
     setMaxAmountInput(requisite.maxAmount && requisite.maxAmount !== 0 ? String(requisite.maxAmount) : "");
     setSumLimitInput(requisite.sumLimit && requisite.sumLimit !== 0 ? String(requisite.sumLimit) : "");
     setOperationLimitInput(requisite.operationLimit && requisite.operationLimit !== 0 ? String(requisite.operationLimit) : "");
+    setCounterpartyLimitInput(requisite.counterpartyLimit && requisite.counterpartyLimit !== 0 ? String(requisite.counterpartyLimit) : "");
     setIntervalMinutesInput(requisite.intervalMinutes && requisite.intervalMinutes !== 0 ? String(requisite.intervalMinutes) : "");
     setShowForm(true);
   };
@@ -367,6 +376,7 @@ export function RequisitesSheet({
         data.maxAmount === undefined ||
         data.sumLimit === undefined ||
         data.operationLimit === undefined ||
+        data.counterpartyLimit === undefined ||
         data.intervalMinutes === undefined
       ) {
         toast.error("Заполните все числовые поля");
@@ -392,6 +402,7 @@ export function RequisitesSheet({
         maxAmount: Number(data.maxAmount),
         sumLimit: Number(data.sumLimit),
         operationLimit: Number(data.operationLimit),
+        counterpartyLimit: Number(data.counterpartyLimit),
         intervalMinutes: Number(data.intervalMinutes || 0),
         isActive: data.isActive,
         deviceId: null,
@@ -776,29 +787,6 @@ export function RequisitesSheet({
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="trafficPreference"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Тип трафика</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Выберите тип" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="ANY">Любой</SelectItem>
-                            <SelectItem value="PRIMARY">Первичный</SelectItem>
-                            <SelectItem value="SECONDARY">Вторичный</SelectItem>
-                            <SelectItem value="VIP">VIP</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
                     name="minAmount"
                     render={({ field }) => (
                       <FormItem>
@@ -921,6 +909,39 @@ export function RequisitesSheet({
                     )}
                   />
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="counterpartyLimit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Кол-во контрагентов</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          placeholder="0"
+                          value={counterpartyLimitInput}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            const digitsOnly = raw.replace(/\D/g, "");
+                            setCounterpartyLimitInput(digitsOnly);
+                            form.setValue("counterpartyLimit", digitsOnly === "" ? undefined : Number(digitsOnly), { 
+                              shouldValidate: false, 
+                              shouldDirty: true 
+                            });
+                          }}
+                          disabled={loading}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Максимальное количество уникальных клиентов. 0 = без ограничений
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}

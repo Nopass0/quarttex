@@ -138,6 +138,8 @@ export function TraderSettingsDialog({ traderId, isOpen, onClose, onUpdate }: Tr
           displayStakePercent: formData.displayStakePercent ?? null,
           displayAmountFrom: formData.displayAmountFrom ?? null,
           displayAmountTo: formData.displayAmountTo ?? null,
+          minCheckAmount: formData.minCheckAmount,
+          maxCheckAmount: formData.maxCheckAmount,
           displayRates: displayRates.filter(rate => rate.stakePercent > 0 && rate.amountFrom > 0 && rate.amountTo > 0),
         }),
       })

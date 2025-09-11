@@ -102,7 +102,7 @@ export class AggregatorService {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${aggregator.customApiToken || aggregator.apiToken}`
         },
-        timeout: 30000 // 30 секунд
+        timeout: aggregator.maxSlaMs || 2000 // Используем настройки агрегатора или 2 секунды по умолчанию
       });
 
       const duration = Date.now() - startTime;
@@ -186,7 +186,7 @@ export class AggregatorService {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${aggregator.customApiToken || aggregator.apiToken}`
         },
-        timeout: 30000 // 30 секунд
+        timeout: aggregator.maxSlaMs || 2000 // Используем настройки агрегатора или 2 секунды по умолчанию
       });
 
       const duration = Date.now() - startTime;
@@ -255,7 +255,7 @@ export class AggregatorService {
         headers: {
           'Authorization': `Bearer ${aggregator.customApiToken || aggregator.apiToken}`
         },
-        timeout: 30000 // 30 секунд
+        timeout: aggregator.maxSlaMs || 2000 // Используем настройки агрегатора или 2 секунды по умолчанию
       });
 
       const duration = Date.now() - startTime;

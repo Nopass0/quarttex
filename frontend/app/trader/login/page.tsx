@@ -69,7 +69,7 @@ export default function TraderLoginPage() {
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0f0f0f] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-6 md:p-8 shadow-lg">
+      <Card className="w-full max-w-md p-6 md:p-8 bg-white dark:bg-[#29382f] shadow-lg border-gray-200 dark:border-[#29382f]">
         <div className="flex flex-col items-center mb-6 md:mb-8">
           <DynamicLogo size="lg" className="scale-75 md:scale-100" />
           <h1 className="mt-4 md:mt-6 text-xl md:text-2xl font-semibold text-gray-900 dark:text-[#eeeeee]">
@@ -119,7 +119,7 @@ export default function TraderLoginPage() {
           
           <Button
             type="submit"
-            className="w-full bg-purple-600 hover:bg-purple-700 h-10 md:h-11 text-sm md:text-base"
+            className="w-full bg-[#006039] hover:bg-[#004d2e] dark:bg-[#2d6a42] dark:hover:bg-[#236035] h-10 md:h-11 text-sm md:text-base"
             disabled={loading}
           >
             {loading ? (

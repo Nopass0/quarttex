@@ -225,6 +225,23 @@ export class PayoutService {
         select: { traderId: true },
       });
 
+      // Если есть метод, проверяем, что есть агрегаторы для этого мерчанта и метода
+      if (payout.methodId) {
+        const aggregatorMerchants = await db.aggregatorMerchant.findMany({
+          where: {
+            merchantId: payout.merchantId,
+            methodId: payout.methodId,
+            isTrafficEnabled: true
+          },
+          select: { aggregatorId: true }
+        });
+
+        if (aggregatorMerchants.length === 0) {
+          console.log(`[PayoutService] No aggregators found for merchant ${payout.merchantId} and method ${payout.methodId}`);
+          return;
+        }
+      }
+
       const traderIds = connectedTraders.map((ct) => ct.traderId);
 
       // Fallback: Find eligible traders, excluding those who previously had this payout

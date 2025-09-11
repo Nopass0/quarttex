@@ -42,6 +42,8 @@ export type TraderSettings = {
   displayStakePercent?: number | null
   displayAmountFrom?: number | null
   displayAmountTo?: number | null
+  minCheckAmount: number
+  maxCheckAmount: number
   displayRates?: DisplayRate[]
   team: {
     id: string
@@ -288,6 +290,42 @@ export function TraderSettingsTabs({
                       onChange={(e) => updateSettings({ maxAmountPerRequisite: parseFloat(e.target.value) || 0 })}
                       className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
                     />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold">Лимиты суммы чека</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="minCheckAmount">Минимальная сумма чека (₽)</Label>
+                    <Input
+                      id="minCheckAmount"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={settings.minCheckAmount}
+                      onChange={(e) => updateSettings({ minCheckAmount: parseFloat(e.target.value) || 0 })}
+                      className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Минимальная сумма для создания реквизита
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="maxCheckAmount">Максимальная сумма чека (₽)</Label>
+                    <Input
+                      id="maxCheckAmount"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={settings.maxCheckAmount}
+                      onChange={(e) => updateSettings({ maxCheckAmount: parseFloat(e.target.value) || 0 })}
+                      className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Максимальная сумма для создания реквизита
+                    </p>
                   </div>
                 </div>
               </div>

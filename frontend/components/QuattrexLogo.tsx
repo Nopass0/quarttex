@@ -8,15 +8,15 @@ export default function QuattrexLogo({
   size?: "sm" | "md" | "lg";
 }) {
   const sizeClasses = {
-    sm: "h-9",
-    md: "h-12",
-    lg: "h-18",
+    sm: "h-10",
+    md: "h-14",
+    lg: "h-20",
   };
 
   const iconSizeClasses = {
-    sm: "w-9 h-9",
-    md: "w-12 h-12",
-    lg: "w-18 h-18",
+    sm: "w-10 h-10",
+    md: "w-14 h-14",
+    lg: "w-20 h-20",
   };
 
   return (
@@ -143,7 +143,7 @@ export default function QuattrexLogo({
       <div className="flex flex-col">
         <span
           className={`bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 dark:from-purple-400 dark:via-purple-500 dark:to-purple-600 bg-clip-text text-transparent font-bold tracking-wide dark:drop-shadow-[0_0_8px_rgba(124,58,237,0.4)] ${
-            size === "sm" ? "text-2xl" : size === "md" ? "text-2xl" : "text-3xl"
+            size === "sm" ? "text-2xl" : size === "md" ? "text-3xl" : "text-4xl"
           }`}
           style={{
             fontFamily:

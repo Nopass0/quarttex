@@ -86,7 +86,7 @@ export default new Elysia()
         merch_profit_currency: t.String(),
         currency_rate: t.Number(),
         order_type: t.String(),
-        merchant_id: t.String(),
+        merchant_id: t.Optional(t.Union([t.String(), t.Null()])),
         created_at: t.String(),
         updated_at: t.String()
       }),

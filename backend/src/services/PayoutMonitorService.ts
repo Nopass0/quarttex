@@ -268,6 +268,23 @@ export class PayoutMonitorService extends BaseService {
         return;
       }
 
+      // Если есть метод, проверяем, что есть агрегаторы для этого мерчанта и метода
+      if (payout.methodId) {
+        const aggregatorMerchants = await db.aggregatorMerchant.findMany({
+          where: {
+            merchantId: payout.merchantId,
+            methodId: payout.methodId,
+            isTrafficEnabled: true
+          },
+          select: { aggregatorId: true }
+        });
+
+        if (aggregatorMerchants.length === 0) {
+          console.log(`[PayoutMonitorService] No aggregators found for merchant ${payout.merchantId} and method ${payout.methodId}`);
+          return;
+        }
+      }
+
       // Классифицируем трафик для этой выплаты
       const trafficType = await trafficClassificationService.classifyPayoutTraffic(
         payout.merchantId,

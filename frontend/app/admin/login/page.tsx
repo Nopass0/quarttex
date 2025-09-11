@@ -66,7 +66,7 @@ export default function AdminLoginPage() {
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0f0f0f] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 shadow-lg">
+      <Card className="w-full max-w-md p-8 bg-white dark:bg-[#29382f] shadow-lg border-gray-200 dark:border-[#29382f]">
         <div className="flex flex-col items-center mb-8">
           <DynamicLogo size="lg" />
           <h1 className="mt-6 text-2xl font-semibold text-gray-900 dark:text-[#eeeeee]">

@@ -43,7 +43,7 @@ export default function AgentLoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0f0f0f] px-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md bg-white dark:bg-[#29382f] border-gray-200 dark:border-[#29382f]">
         <CardHeader className="space-y-4">
           <div className="flex justify-center">
             <DynamicLogo size="lg" />
@@ -91,7 +91,7 @@ export default function AgentLoginPage() {
 
             <Button
               type="submit"
-              className="w-full bg-purple-600 hover:bg-purple-700"
+              className="w-full bg-[#006039] hover:bg-[#004d2e] dark:bg-[#2d6a42] dark:hover:bg-[#236035]"
               disabled={isLoading}
             >
               {isLoading ? 'Вход...' : 'Войти'}

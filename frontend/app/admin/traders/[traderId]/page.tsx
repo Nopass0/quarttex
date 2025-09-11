@@ -413,6 +413,8 @@ function TraderProfileContent() {
         displayStakePercent: traderSettings.displayStakePercent ?? null,
         displayAmountFrom: traderSettings.displayAmountFrom ?? null,
         displayAmountTo: traderSettings.displayAmountTo ?? null,
+        minCheckAmount: traderSettings.minCheckAmount || 100,
+        maxCheckAmount: traderSettings.maxCheckAmount || 1000000,
         displayRates: filteredDisplayRates,
       };
       

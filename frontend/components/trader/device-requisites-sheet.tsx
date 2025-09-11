@@ -179,6 +179,7 @@ export function DeviceRequisitesSheet({
   const [maxAmountInput, setMaxAmountInput] = useState<string>("");
   const [operationLimitInput, setOperationLimitInput] = useState<string>("");
   const [sumLimitInput, setSumLimitInput] = useState<string>("");
+  const [counterpartyLimitInput, setCounterpartyLimitInput] = useState<string>("");
   const [intervalMinutesInput, setIntervalMinutesInput] = useState<string>("");
 
   useEffect(() => {
@@ -188,6 +189,7 @@ export function DeviceRequisitesSheet({
     setMaxAmountInput(values.maxAmount !== undefined ? String(values.maxAmount) : "");
     setOperationLimitInput(values.operationLimit !== undefined ? String(values.operationLimit) : "");
     setSumLimitInput(values.sumLimit !== undefined ? String(values.sumLimit) : "");
+    setCounterpartyLimitInput(values.counterpartyLimit !== undefined ? String(values.counterpartyLimit) : "");
     setIntervalMinutesInput(values.intervalMinutes !== undefined ? String(values.intervalMinutes) : "");
   }, [showForm]);
 
@@ -197,6 +199,7 @@ export function DeviceRequisitesSheet({
     maxAmountInput === "" ||
     operationLimitInput === "" ||
     sumLimitInput === "" ||
+    counterpartyLimitInput === "" ||
     intervalMinutesInput === "";
 
   useEffect(() => {
@@ -235,6 +238,7 @@ export function DeviceRequisitesSheet({
         maxAmount: existingRequisite.maxAmount,
         operationLimit: existingRequisite.operationLimit || 0,
         sumLimit: existingRequisite.sumLimit || 0,
+        counterpartyLimit: existingRequisite.counterpartyLimit || 0,
         intervalMinutes: existingRequisite.intervalMinutes || 0,
         isActive: existingRequisite.isActive ?? true,
       });
@@ -242,6 +246,7 @@ export function DeviceRequisitesSheet({
       setMaxAmountInput(String(existingRequisite.maxAmount ?? ""));
       setOperationLimitInput(String(existingRequisite.operationLimit ?? ""));
       setSumLimitInput(String(existingRequisite.sumLimit ?? ""));
+      setCounterpartyLimitInput(String(existingRequisite.counterpartyLimit ?? ""));
       setIntervalMinutesInput(String(existingRequisite.intervalMinutes ?? ""));
     }
   }, [existingRequisite, methods, form]);
@@ -282,6 +287,7 @@ export function DeviceRequisitesSheet({
       maxAmount: 100000,
       operationLimit: 0,
       sumLimit: 0,
+      counterpartyLimit: 0,
       intervalMinutes: 0,
       isActive: true,
     });
@@ -289,6 +295,7 @@ export function DeviceRequisitesSheet({
     setMaxAmountInput("100000");
     setOperationLimitInput("0");
     setSumLimitInput("0");
+    setCounterpartyLimitInput("0");
     setIntervalMinutesInput("0");
     setShowForm(true);
   };
@@ -317,6 +324,7 @@ export function DeviceRequisitesSheet({
       maxAmount: requisite.maxAmount,
       operationLimit: requisite.operationLimit || 0,
       sumLimit: requisite.sumLimit || 0,
+      counterpartyLimit: requisite.counterpartyLimit || 0,
       intervalMinutes: requisite.intervalMinutes || 0,
       isActive: requisite.isActive ?? true,
     });
@@ -324,6 +332,7 @@ export function DeviceRequisitesSheet({
     setMaxAmountInput(String(requisite.maxAmount ?? ""));
     setOperationLimitInput(String(requisite.operationLimit ?? ""));
     setSumLimitInput(String(requisite.sumLimit ?? ""));
+    setCounterpartyLimitInput(String(requisite.counterpartyLimit ?? ""));
     setIntervalMinutesInput(String(requisite.intervalMinutes ?? ""));
     setShowForm(true);
   };
@@ -863,6 +872,39 @@ export function DeviceRequisitesSheet({
                     )}
                   />
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="counterpartyLimit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Кол-во контрагентов</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          placeholder="0"
+                          value={counterpartyLimitInput}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            const digitsOnly = raw.replace(/\D/g, "");
+                            setCounterpartyLimitInput(digitsOnly);
+                            form.setValue("counterpartyLimit", digitsOnly === "" ? undefined : Number(digitsOnly), { 
+                              shouldValidate: false, 
+                              shouldDirty: true 
+                            });
+                          }}
+                          disabled={loading}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Максимальное количество уникальных клиентов. 0 = без ограничений
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}

@@ -3,29 +3,10 @@ import { db } from "@/db";
 import { AggregatorDepositStatus } from "@prisma/client";
 import ErrorSchema from "@/types/error";
 import { MASTER_KEY } from "@/utils/constants";
+import { adminGuard } from "@/middleware/adminGuard";
 
 export default new Elysia({ prefix: "/aggregator-deposits" })
-  // Derive adminId and clientIp from request context
-  .derive(async ({ request, ip }) => {
-    const adminToken = request.headers.get("x-admin-key");
-    let adminId = "system";
-
-    // If it's not the master key, find the admin
-    if (adminToken && adminToken !== MASTER_KEY) {
-      const admin = await db.admin.findUnique({
-        where: { token: adminToken },
-        select: { id: true },
-      });
-      if (admin) {
-        adminId = admin.id;
-      }
-    }
-
-    return {
-      adminId,
-      clientIp: ip,
-    };
-  })
+  .use(adminGuard())
 
   // Get all aggregator deposit requests
   .get(
@@ -126,7 +107,8 @@ export default new Elysia({ prefix: "/aggregator-deposits" })
   // Confirm aggregator deposit
   .post(
     "/:depositId/confirm",
-    async ({ params, body, adminId, clientIp, set }) => {
+    async ({ params, body, adminId, ip, set }) => {
+      const clientIp = ip;
       try {
         const { depositId } = params;
         const { txHash } = body;
@@ -220,7 +202,8 @@ export default new Elysia({ prefix: "/aggregator-deposits" })
   // Reject aggregator deposit
   .post(
     "/:depositId/reject",
-    async ({ params, body, adminId, clientIp, set }) => {
+    async ({ params, body, adminId, ip, set }) => {
+      const clientIp = ip;
       try {
         const { depositId } = params;
         const { reason } = body;

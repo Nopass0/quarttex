@@ -118,6 +118,14 @@ interface Transaction {
     name?: string;
     banned?: boolean;
   };
+  aggregator?: {
+    id: string;
+    name: string;
+    apiSchema?: string;
+  };
+  aggregatorOrderId?: string;
+  aggregatorResponse?: any;
+  aggregatorRequisites?: any;
   method?: {
     id: string;
     name: string;
@@ -625,6 +633,31 @@ export default function AdminDealsPage() {
                     </Button>
                   </div>
                 </div>
+                {selectedTransaction.aggregatorOrderId && (
+                  <div className="space-y-1">
+                    <Label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Агрегаторское Order ID
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 text-sm bg-blue-50 dark:bg-blue-900 px-3 py-2 rounded-lg font-mono text-blue-700 dark:text-blue-300 break-all">
+                        {selectedTransaction.aggregatorOrderId}
+                      </code>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-blue-100 dark:hover:bg-blue-700"
+                        onClick={() =>
+                          copyToClipboard(
+                            selectedTransaction.aggregatorOrderId!,
+                            "Агрегаторское Order ID скопирован"
+                          )
+                        }
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -658,6 +691,8 @@ export default function AdminDealsPage() {
                           selectedTransaction.trader.name ||
                           selectedTransaction.trader.email
                         }`
+                      : selectedTransaction.aggregator
+                      ? `${selectedTransaction.aggregator.name} (Агрегатор)`
                       : "Не назначен"}
                   </p>
                   {selectedTransaction.trader && (
@@ -844,6 +879,70 @@ export default function AdminDealsPage() {
                     )}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Информация от агрегатора */}
+            {selectedTransaction.aggregator && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center gap-2 mb-3">
+                  <Globe className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <Label className="text-blue-800 dark:text-blue-200 font-medium">
+                    Информация от агрегатора: {selectedTransaction.aggregator.name}
+                  </Label>
+                </div>
+                
+                {selectedTransaction.aggregatorOrderId && (
+                  <div className="mb-3">
+                    <Label className="text-xs text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                      Агрегаторское Order ID
+                    </Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <code className="flex-1 text-sm bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded font-mono text-blue-800 dark:text-blue-200 break-all">
+                        {selectedTransaction.aggregatorOrderId}
+                      </code>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-blue-200 dark:hover:bg-blue-700"
+                        onClick={() =>
+                          copyToClipboard(
+                            selectedTransaction.aggregatorOrderId!,
+                            "Агрегаторское Order ID скопирован"
+                          )
+                        }
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {selectedTransaction.aggregatorRequisites && (
+                  <div className="mb-3">
+                    <Label className="text-xs text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                      Реквизиты от агрегатора
+                    </Label>
+                    <div className="mt-2 bg-blue-100 dark:bg-blue-800 p-3 rounded">
+                      <pre className="text-xs text-blue-800 dark:text-blue-200 whitespace-pre-wrap">
+                        {JSON.stringify(selectedTransaction.aggregatorRequisites, null, 2)}
+                      </pre>
+                    </div>
+                  </div>
+                )}
+
+                {selectedTransaction.aggregatorResponse && (
+                  <div>
+                    <Label className="text-xs text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                      Полный ответ агрегатора
+                    </Label>
+                    <div className="mt-2 bg-blue-100 dark:bg-blue-800 p-3 rounded max-h-64 overflow-y-auto">
+                      <pre className="text-xs text-blue-800 dark:text-blue-200 whitespace-pre-wrap">
+                        {JSON.stringify(selectedTransaction.aggregatorResponse, null, 2)}
+                      </pre>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1333,6 +1432,15 @@ export default function AdminDealsPage() {
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
                       #{transaction.trader.numericId}
+                    </div>
+                  </div>
+                ) : transaction.aggregator ? (
+                  <div className="space-y-1">
+                    <div className="font-medium text-blue-600 dark:text-blue-400">
+                      {transaction.aggregator.name}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Агрегатор
                     </div>
                   </div>
                 ) : (

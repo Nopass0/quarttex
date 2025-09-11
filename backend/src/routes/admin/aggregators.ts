@@ -35,8 +35,16 @@ const serializeAggregator = (aggregator: any) => ({
   ...aggregator,
   createdAt: aggregator.createdAt.toISOString(),
   updatedAt: aggregator.updatedAt.toISOString(),
+  lastVolumeReset: aggregator.lastVolumeReset?.toISOString(),
   customApiToken: aggregator.customApiToken || null,
   apiSchema: aggregator.apiSchema || 'DEFAULT',
+  isChaseCompatible: aggregator.isChaseCompatible ?? false,
+  requiresInsuranceDeposit: aggregator.requiresInsuranceDeposit ?? false,
+  depositUsdt: aggregator.depositUsdt ?? 0,
+  minBalance: aggregator.minBalance ?? 0,
+  maxSlaMs: aggregator.maxSlaMs ?? 2000,
+  sbpMethodId: aggregator.sbpMethodId ?? null,
+  c2cMethodId: aggregator.c2cMethodId ?? null,
   // Сериализуем транзакции если они есть
   transactions: aggregator.transactions?.map((tx: any) => ({
     ...tx,
@@ -61,7 +69,41 @@ const AggregatorResponseSchema = t.Object({
   isActive: t.Boolean(),
   twoFactorEnabled: t.Boolean(),
   createdAt: t.String(),
-  updatedAt: t.String()
+  updatedAt: t.String(),
+  isChaseCompatible: t.Boolean(),
+  requiresInsuranceDeposit: t.Boolean(),
+  depositUsdt: t.Number(),
+  minBalance: t.Number(),
+  maxSlaMs: t.Number(),
+  sbpMethodId: t.Union([t.String(), t.Null()]),
+  c2cMethodId: t.Union([t.String(), t.Null()])
+})
+
+const AggregatorListItemSchema = t.Object({
+  id: t.String(),
+  email: t.String(),
+  name: t.String(),
+  apiToken: t.String(),
+  customApiToken: t.Union([t.String(), t.Null()]),
+  apiBaseUrl: t.Union([t.String(), t.Null()]),
+  apiSchema: t.String(),
+  balanceUsdt: t.Number(),
+  isActive: t.Boolean(),
+  twoFactorEnabled: t.Boolean(),
+  isChaseCompatible: t.Boolean(),
+  requiresInsuranceDeposit: t.Boolean(),
+  depositUsdt: t.Number(),
+  minBalance: t.Number(),
+  maxSlaMs: t.Number(),
+  sbpMethodId: t.Union([t.String(), t.Null()]),
+  c2cMethodId: t.Union([t.String(), t.Null()]),
+  createdAt: t.String(),
+  updatedAt: t.String(),
+  _count: t.Optional(t.Object({
+    transactions: t.Number(),
+    disputes: t.Number(),
+    sessions: t.Number()
+  }))
 })
 
 const AggregatorDetailResponseSchema = t.Object({
@@ -73,8 +115,25 @@ const AggregatorDetailResponseSchema = t.Object({
   apiBaseUrl: t.Union([t.String(), t.Null()]),
   apiSchema: t.String(),
   balanceUsdt: t.Number(),
+  depositUsdt: t.Number(),
+  frozenBalance: t.Number(),
+  balanceNoRequisite: t.Number(),
+  balanceSuccess: t.Number(),
+  balanceExpired: t.Number(),
+  totalPlatformProfit: t.Number(),
   isActive: t.Boolean(),
+  priority: t.Number(),
+  maxSlaMs: t.Number(),
+  minBalance: t.Number(),
+  maxDailyVolume: t.Union([t.Number(), t.Null()]),
+  currentDailyVolume: t.Number(),
+  lastVolumeReset: t.String(),
   twoFactorEnabled: t.Boolean(),
+  requiresInsuranceDeposit: t.Boolean(),
+  isChaseProject: t.Boolean(),
+  isChaseCompatible: t.Boolean(),
+  sbpMethodId: t.Union([t.String(), t.Null()]),
+  c2cMethodId: t.Union([t.String(), t.Null()]),
   createdAt: t.String(),
   updatedAt: t.String(),
   _count: t.Object({
@@ -169,16 +228,7 @@ export default (app: Elysia) =>
         }),
         response: {
           200: t.Object({
-            data: t.Array(t.Intersect([
-              AggregatorResponseSchema,
-              t.Object({
-                _count: t.Object({
-                  transactions: t.Number(),
-                  disputes: t.Number(),
-                  sessions: t.Number()
-                })
-              })
-            ])),
+            data: t.Array(AggregatorListItemSchema),
             meta: t.Object({
               total: t.Number(),
               page: t.Number(),
@@ -325,25 +375,147 @@ export default (app: Elysia) =>
       }
     )
 
+    /* ─────────── GET /admin/aggregators/:id/transactions ─────────── */
+    .get(
+      '/:id/transactions',
+      async ({ params, query, error }) => {
+        const aggregator = await db.aggregator.findUnique({
+          where: { id: params.id }
+        })
+        
+        if (!aggregator) {
+          return error(404, { error: 'Агрегатор не найден' })
+        }
+        
+        const limit = Math.min(query.limit || 100, 1000)
+        const offset = query.offset || 0
+        
+        const transactions = await db.transaction.findMany({
+          where: {
+            aggregatorId: params.id
+          },
+          include: {
+            merchant: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: limit,
+          skip: offset
+        })
+        
+        const total = await db.transaction.count({
+          where: {
+            aggregatorId: params.id
+          }
+        })
+        
+        return {
+          transactions: transactions.map(tx => ({
+            id: tx.id,
+            numericId: tx.numericId,
+            amount: tx.amount,
+            status: tx.status,
+            createdAt: tx.createdAt.toISOString(),
+            merchant: tx.merchant
+          })),
+          total,
+          limit,
+          offset
+        }
+      },
+      {
+        tags: ['admin'],
+        detail: { summary: 'Получение транзакций агрегатора' },
+        headers: AuthHeaderSchema,
+        params: t.Object({
+          id: t.String()
+        }),
+        query: t.Object({
+          limit: t.Optional(t.Number({ minimum: 1, maximum: 1000 })),
+          offset: t.Optional(t.Number({ minimum: 0 }))
+        }),
+        response: {
+          200: t.Object({
+            transactions: t.Array(t.Object({
+              id: t.String(),
+              numericId: t.Number(),
+              amount: t.Number(),
+              status: t.String(),
+              createdAt: t.String(),
+              merchant: t.Object({
+                id: t.String(),
+                name: t.String()
+              })
+            })),
+            total: t.Number(),
+            limit: t.Number(),
+            offset: t.Number()
+          }),
+          404: ErrorSchema
+        }
+      }
+    )
+
     /* ─────────── PATCH /admin/aggregators/:id ─────────── */
     .patch(
       '/:id',
       async ({ params, body, error }) => {
         try {
+          console.log('[PATCH /aggregators/:id] Request body:', JSON.stringify(body, null, 2));
+          console.log('[PATCH /aggregators/:id] Aggregator ID:', params.id);
+          console.log('[PATCH /aggregators/:id] isChaseCompatible:', body.isChaseCompatible);
+          console.log('[PATCH /aggregators/:id] requiresInsuranceDeposit:', body.requiresInsuranceDeposit);
+          console.log('[PATCH /aggregators/:id] sbpMethodId:', body.sbpMethodId);
+          console.log('[PATCH /aggregators/:id] c2cMethodId:', body.c2cMethodId);
+          
+          // Сначала получаем текущего агрегатора
+          const existing = await db.aggregator.findUnique({
+            where: { id: params.id }
+          })
+          
+          console.log('[PATCH /aggregators/:id] Existing aggregator email:', existing?.email);
+          
+          if (!existing) {
+            return error(404, { error: 'Агрегатор не найден' })
+          }
+
           const updateData: Prisma.AggregatorUpdateInput = {}
 
+          // НЕ обновляем email вообще - у агрегатора он не должен меняться
+          // Если нужно изменить email, создайте нового агрегатора
+          
           if (body.name) updateData.name = body.name
-          if (body.email) updateData.email = body.email
           if (body.apiBaseUrl !== undefined) updateData.apiBaseUrl = body.apiBaseUrl
           if (body.isActive !== undefined) updateData.isActive = body.isActive
           if (body.balanceUsdt !== undefined) updateData.balanceUsdt = body.balanceUsdt
-          if (body.customApiToken !== undefined) updateData.customApiToken = body.customApiToken
+          // НЕ обновляем customApiToken через PATCH - используйте PUT /custom-token
           // PSPWare поля
           if (body.isPSPWare !== undefined) updateData.apiSchema = body.isPSPWare ? AggregatorApiSchema.PSPWARE : AggregatorApiSchema.DEFAULT
           if (body.pspwareApiKey !== undefined) updateData.pspwareApiKey = body.pspwareApiKey
           if (body.enableRandomization !== undefined) updateData.enableRandomization = body.enableRandomization
           if (body.randomizationType !== undefined) updateData.randomizationType = body.randomizationType
           if (body.isChaseProject !== undefined) updateData.isChaseProject = body.isChaseProject
+          if (body.isChaseCompatible !== undefined) updateData.isChaseCompatible = body.isChaseCompatible
+          if (body.requiresInsuranceDeposit !== undefined) updateData.requiresInsuranceDeposit = body.requiresInsuranceDeposit
+          if (body.depositUsdt !== undefined) updateData.depositUsdt = body.depositUsdt
+          if (body.minBalance !== undefined) updateData.minBalance = body.minBalance
+          if (body.maxSlaMs !== undefined) updateData.maxSlaMs = body.maxSlaMs
+          if (body.sbpMethodId !== undefined) updateData.sbpMethodId = body.sbpMethodId
+          if (body.c2cMethodId !== undefined) updateData.c2cMethodId = body.c2cMethodId
+
+          console.log('[PATCH /aggregators/:id] Update data:', JSON.stringify(updateData, null, 2));
+
+          // Обновляем только если есть что обновлять
+          if (Object.keys(updateData).length === 0) {
+            console.log('[PATCH /aggregators/:id] No data to update');
+            return serializeAggregator(existing)
+          }
 
           const aggregator = await db.aggregator.update({
             where: { id: params.id },
@@ -357,7 +529,18 @@ export default (app: Elysia) =>
               return error(404, { error: 'Агрегатор не найден' })
             }
             if (e.code === 'P2002') {
-              return error(409, { error: 'Email уже используется' })
+              // P2002 - уникальный индекс нарушен
+              const target = (e.meta as any)?.target
+              console.error('[PATCH /aggregators/:id] Unique constraint violation:', target)
+              
+              if (target?.includes('email')) {
+                return error(409, { error: 'Email уже используется' })
+              }
+              if (target?.includes('customApiToken')) {
+                return error(409, { error: 'Этот токен уже используется другим агрегатором' })
+              }
+              
+              return error(409, { error: `Конфликт уникальности: ${target}` })
             }
           }
           console.error('Error updating aggregator:', e)
@@ -370,12 +553,10 @@ export default (app: Elysia) =>
         headers: AuthHeaderSchema,
         params: t.Object({ id: t.String() }),
         body: t.Partial(t.Object({
-          email: t.String({ format: 'email' }),
           name: t.String(),
           apiBaseUrl: t.Union([t.String(), t.Null()]),
           isActive: t.Boolean(),
           balanceUsdt: t.Number(),
-          customApiToken: t.Union([t.String(), t.Null()]),
           // PSPWare поля
           isPSPWare: t.Boolean({ description: 'Использует PSPWare API схему' }),
           pspwareApiKey: t.String({ description: 'API ключ PSPWare' }),
@@ -386,7 +567,15 @@ export default (app: Elysia) =>
             t.Literal('NONE')
           ], { description: 'Тип рандомизации' }),
           // Chase project поле
-          isChaseProject: t.Boolean({ description: 'Это другой экземпляр Chase' })
+          isChaseProject: t.Boolean({ description: 'Это другой экземпляр Chase' }),
+          // Chase compatible поля
+          isChaseCompatible: t.Boolean({ description: 'Совместим с Chase API' }),
+          requiresInsuranceDeposit: t.Boolean({ description: 'Требует страховой депозит' }),
+          depositUsdt: t.Number({ description: 'Размер депозита в USDT' }),
+          minBalance: t.Number({ description: 'Минимальный баланс' }),
+          maxSlaMs: t.Number({ description: 'Максимальное время ответа в мс' }),
+          sbpMethodId: t.Union([t.String(), t.Null()], { description: 'Method ID для SBP платежей' }),
+          c2cMethodId: t.Union([t.String(), t.Null()], { description: 'Method ID для C2C платежей' })
         })),
         response: {
           200: AggregatorResponseSchema,
@@ -397,6 +586,79 @@ export default (app: Elysia) =>
       }
     )
 
+    /* ─────────── PUT /admin/aggregators/:id/custom-token ─────────── */
+    .put(
+      '/:id/custom-token',
+      async ({ params, body, error }) => {
+        try {
+          console.log('[PUT /custom-token] Request:', {
+            id: params.id,
+            body: body
+          })
+          
+          const aggregator = await db.aggregator.findUnique({
+            where: { id: params.id }
+          })
+          
+          if (!aggregator) {
+            return error(404, { error: 'Агрегатор не найден' })
+          }
+
+          // Проверяем, не используется ли этот токен другим агрегатором
+          if (body.customApiToken) {
+            const existing = await db.aggregator.findFirst({
+              where: {
+                customApiToken: body.customApiToken,
+                id: { not: params.id }
+              }
+            })
+            
+            if (existing) {
+              console.error('[PUT /custom-token] Token already in use by:', existing.id)
+              return error(409, { error: 'Этот токен уже используется другим агрегатором' })
+            }
+          }
+
+          const updated = await db.aggregator.update({
+            where: { id: params.id },
+            data: {
+              customApiToken: body.customApiToken || null
+            }
+          })
+
+          console.log('[PUT /custom-token] Successfully updated token')
+          return serializeAggregator(updated)
+        } catch (e) {
+          console.error('[PUT /custom-token] Error:', e)
+          
+          if (e instanceof Prisma.PrismaClientKnownRequestError) {
+            if (e.code === 'P2002') {
+              const target = (e.meta as any)?.target
+              console.error('[PUT /custom-token] Unique constraint violation:', target)
+              return error(409, { error: 'Этот токен уже используется' })
+            }
+          }
+          
+          return error(500, { error: 'Ошибка обновления токена' })
+        }
+      },
+      {
+        tags: ['admin'],
+        detail: { summary: 'Обновление кастомного токена агрегатора' },
+        headers: AuthHeaderSchema,
+        params: t.Object({ id: t.String() }),
+        body: t.Object({
+          customApiToken: t.Optional(t.Union([t.String(), t.Null()]))
+        }),
+        response: {
+          200: AggregatorResponseSchema,
+          404: ErrorSchema,
+          409: ErrorSchema,
+          500: ErrorSchema
+        }
+      }
+    )
+    
     /* ─────────── POST /admin/aggregators/:id/regenerate-token ─────────── */
     .post(
       '/:id/regenerate-token',
@@ -958,16 +1220,15 @@ export default (app: Elysia) =>
       '/:id/rate-sources',
       async ({ params, body, error }) => {
         try {
-          // Проверяем, что источник еще не добавлен
+          // Проверяем, что у агрегатора еще нет источника курса
           const existing = await db.aggregatorRateSource.findFirst({
             where: {
-              aggregatorId: params.id,
-              rateSourceId: body.rateSourceId
+              aggregatorId: params.id
             }
           });
 
           if (existing) {
-            return error(409, { error: 'Этот источник курса уже добавлен' });
+            return error(409, { error: 'У этого агрегатора уже есть источник курса. Сначала удалите существующий источник.' });
           }
 
           const kkkOperation = body.kkkAdjustment < 0 ? 'MINUS' : 'PLUS';
@@ -1070,8 +1331,8 @@ export default (app: Elysia) =>
               kkkAdjustment: rateSource.kkkPercent * (rateSource.kkkOperation === 'MINUS' ? -1 : 1),
               rateSource: {
                 id: rateSource.rateSource.id,
-                name: rateSource.rateSource.name,
-                type: rateSource.rateSource.type,
+                name: rateSource.rateSource.displayName || rateSource.rateSource.source,
+                type: rateSource.rateSource.source,
                 isActive: rateSource.rateSource.isActive
               }
             }

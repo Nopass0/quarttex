@@ -182,11 +182,11 @@ const adminNavItems: NavItem[] = [
         href: "/admin/agents",
         icon: Users,
       },
-      // {
-      //   title: "Агрегаторы",
-      //   href: "/admin/aggregators",
-      //   icon: Globe,
-      // },
+      {
+        title: "Агрегаторы",
+        href: "/admin/aggregators",
+        icon: Globe,
+      },
       {
         title: "Мерчанты",
         href: "/admin/merchants",

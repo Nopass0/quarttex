@@ -327,6 +327,23 @@ export default class PayoutRedistributionService extends BaseService {
         blacklistedTraders: payout.blacklistEntries.map((entry: any) => entry.traderId)
       });
     }
+
+    // Если есть метод, проверяем, что есть агрегаторы для этого мерчанта и метода
+    if (payout.methodId) {
+      const aggregatorMerchants = await db.aggregatorMerchant.findMany({
+        where: {
+          merchantId: payout.merchantId,
+          methodId: payout.methodId,
+          isTrafficEnabled: true
+        },
+        select: { aggregatorId: true }
+      });
+
+      if (aggregatorMerchants.length === 0) {
+        await this.logDebug(`[PayoutRedistributionService] No aggregators found for merchant ${payout.merchantId} and method ${payout.methodId}`);
+        return [];
+      }
+    }
     
     const eligibleTraders: TraderCandidate[] = [];
 
@@ -378,6 +395,12 @@ export default class PayoutRedistributionService extends BaseService {
       // Skip if no matching relation or payouts disabled
       if (!merchantRelation) {
         continue;
+      }
+
+      // Check if this is our platform merchant (externalSystemName is null or empty)
+      // Only distribute payouts to traders for our platform merchants
+      if (payout.merchant.externalSystemName) {
+        continue; // Skip external system merchants
       }
 
       // Check trader filters if they exist

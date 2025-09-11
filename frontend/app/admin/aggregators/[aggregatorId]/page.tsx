@@ -40,6 +40,8 @@ import { useAdminAuth } from "@/stores/auth";
 import { formatAmount, formatDateTime } from "@/lib/utils";
 import AggregatorMetrics from "@/components/admin/aggregator-metrics";
 import AggregatorMethodFees from "@/components/admin/aggregator-method-fees";
+import AggregatorMerchants from "@/components/admin/aggregator-merchants";
+import AggregatorSettlements from "@/components/admin/aggregator-settlements";
 import {
   ArrowLeft,
   Globe,
@@ -76,6 +78,10 @@ interface Aggregator {
   balanceUsdt: number;
   isActive: boolean;
   twoFactorEnabled: boolean;
+  isChaseProject: boolean;
+  isChaseCompatible: boolean;
+  sbpMethodId?: string | null;
+  c2cMethodId?: string | null;
   createdAt: string;
   updatedAt: string;
   _count?: {
@@ -144,6 +150,10 @@ export default function AggregatorDetailPage() {
   const [isUpdatingToken, setIsUpdatingToken] = useState(false);
   const [apiBaseUrlInput, setApiBaseUrlInput] = useState("");
   const [isUpdatingUrl, setIsUpdatingUrl] = useState(false);
+  const [sbpMethodIdInput, setSbpMethodIdInput] = useState("");
+  const [isUpdatingSbpMethodId, setIsUpdatingSbpMethodId] = useState(false);
+  const [c2cMethodIdInput, setC2cMethodIdInput] = useState("");
+  const [isUpdatingC2cMethodId, setIsUpdatingC2cMethodId] = useState(false);
   const [selectedLog, setSelectedLog] = useState<ApiLog | null>(null);
   const [logDetailModalOpen, setLogDetailModalOpen] = useState(false);
 
@@ -174,6 +184,8 @@ export default function AggregatorDetailPage() {
       setAggregator(aggregatorData);
       setCustomTokenInput(aggregatorData.customApiToken || "");
       setApiBaseUrlInput(aggregatorData.apiBaseUrl || "");
+      setSbpMethodIdInput(aggregatorData.sbpMethodId || "");
+      setC2cMethodIdInput(aggregatorData.c2cMethodId || "");
       
       // Транзакции уже включены в ответ агрегатора
       setTransactions(aggregatorData.transactions || []);
@@ -272,17 +284,22 @@ export default function AggregatorDetailPage() {
 
     setIsUpdatingToken(true);
     try {
+      const requestBody = {
+        customApiToken: customTokenInput || null,
+      };
+      
+      console.log('Sending PATCH request with body:', requestBody);
+      console.log('Current aggregator state:', aggregator);
+      
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/aggregators/${aggregator.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/aggregators/${aggregator.id}/custom-token`,
         {
-          method: "PATCH",
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
             "x-admin-key": adminToken,
           },
-          body: JSON.stringify({
-            customApiToken: customTokenInput || null,
-          }),
+          body: JSON.stringify(requestBody),
         }
       );
 
@@ -339,6 +356,72 @@ export default function AggregatorDetailPage() {
 
   const clearApiUrl = () => {
     setApiBaseUrlInput("");
+  };
+
+  const updateSbpMethodId = async () => {
+    if (!adminToken || !aggregator) return;
+
+    setIsUpdatingSbpMethodId(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/aggregators/${aggregator.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "x-admin-key": adminToken,
+          },
+          body: JSON.stringify({
+            sbpMethodId: sbpMethodIdInput || null,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update SBP Method ID");
+      }
+
+      toast.success(sbpMethodIdInput ? "SBP Method ID обновлен" : "SBP Method ID удален");
+      fetchAggregatorDetails(); // Refresh data
+    } catch (error) {
+      console.error("Error updating SBP Method ID:", error);
+      toast.error("Ошибка при обновлении SBP Method ID");
+    } finally {
+      setIsUpdatingSbpMethodId(false);
+    }
+  };
+
+  const updateC2cMethodId = async () => {
+    if (!adminToken || !aggregator) return;
+
+    setIsUpdatingC2cMethodId(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/admin/aggregators/${aggregator.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "x-admin-key": adminToken,
+          },
+          body: JSON.stringify({
+            c2cMethodId: c2cMethodIdInput || null,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update C2C Method ID");
+      }
+
+      toast.success(c2cMethodIdInput ? "C2C Method ID обновлен" : "C2C Method ID удален");
+      fetchAggregatorDetails(); // Refresh data
+    } catch (error) {
+      console.error("Error updating C2C Method ID:", error);
+      toast.error("Ошибка при обновлении C2C Method ID");
+    } finally {
+      setIsUpdatingC2cMethodId(false);
+    }
   };
 
   const addDeposit = async () => {
@@ -573,7 +656,8 @@ export default function AggregatorDetailPage() {
             <TabsList>
               <TabsTrigger value="overview">Обзор</TabsTrigger>
               <TabsTrigger value="metrics">Метрики</TabsTrigger>
-              <TabsTrigger value="fees">Комиссии</TabsTrigger>
+              <TabsTrigger value="merchants">Мерчанты</TabsTrigger>
+              <TabsTrigger value="settlements">Сеттлы</TabsTrigger>
               <TabsTrigger value="transactions">Сделки</TabsTrigger>
               <TabsTrigger value="disputes">Споры</TabsTrigger>
               <TabsTrigger value="api-logs">API Логи</TabsTrigger>
@@ -700,11 +784,16 @@ export default function AggregatorDetailPage() {
               <AggregatorMetrics 
                 aggregatorId={aggregatorId} 
                 aggregatorName={aggregator.name}
+                aggregator={aggregator}
               />
             </TabsContent>
 
-            <TabsContent value="fees">
-              <AggregatorMethodFees aggregatorId={aggregatorId} />
+            <TabsContent value="merchants">
+              <AggregatorMerchants aggregatorId={aggregatorId} />
+            </TabsContent>
+
+            <TabsContent value="settlements">
+              <AggregatorSettlements aggregatorId={aggregatorId} />
             </TabsContent>
 
             <TabsContent value="transactions">
@@ -889,6 +978,180 @@ export default function AggregatorDetailPage() {
                       onCheckedChange={toggleAggregatorStatus}
                     />
                   </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Работа без страхового депозита</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Разрешить работу без обязательного страхового депозита
+                      </p>
+                    </div>
+                    <Switch
+                      checked={!aggregator.requiresInsuranceDeposit}
+                      onCheckedChange={async (checked) => {
+                        try {
+                          const response = await fetch(
+                            `${process.env.NEXT_PUBLIC_API_URL}/admin/aggregators-v2/${aggregatorId}`,
+                            {
+                              method: "PUT",
+                              headers: {
+                                "x-admin-key": adminToken!,
+                                "Content-Type": "application/json",
+                              },
+                              body: JSON.stringify({
+                                requiresInsuranceDeposit: !checked,
+                              }),
+                            }
+                          );
+
+                          if (!response.ok) {
+                            throw new Error("Failed to update aggregator");
+                          }
+
+                          setAggregator((prev) => 
+                            prev ? { ...prev, requiresInsuranceDeposit: !checked } : null
+                          );
+                          toast.success("Настройка депозита обновлена");
+                        } catch (error) {
+                          toast.error("Ошибка обновления настройки");
+                        }
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Это наша платформа</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Отметить, если это другой экземпляр Chase
+                      </p>
+                    </div>
+                    <Switch
+                      checked={aggregator.isChaseProject}
+                      onCheckedChange={async (checked) => {
+                        try {
+                          const response = await fetch(
+                            `${process.env.NEXT_PUBLIC_API_URL}/admin/aggregators-v2/${aggregatorId}`,
+                            {
+                              method: "PUT",
+                              headers: {
+                                "x-admin-key": adminToken!,
+                                "Content-Type": "application/json",
+                              },
+                              body: JSON.stringify({
+                                isChaseProject: checked,
+                              }),
+                            }
+                          );
+
+                          if (!response.ok) {
+                            throw new Error("Failed to update aggregator");
+                          }
+
+                          setAggregator((prev) => 
+                            prev ? { ...prev, isChaseProject: checked } : null
+                          );
+                          toast.success("Настройка платформы обновлена");
+                        } catch (error) {
+                          toast.error("Ошибка обновления настройки");
+                        }
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Совместимость с Chase API</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Поддерживает ли платформа Chase API
+                      </p>
+                    </div>
+                    <Switch
+                      checked={aggregator.isChaseCompatible}
+                      onCheckedChange={async (checked) => {
+                        try {
+                          const response = await fetch(
+                            `${process.env.NEXT_PUBLIC_API_URL}/admin/aggregators-v2/${aggregatorId}`,
+                            {
+                              method: "PUT",
+                              headers: {
+                                "x-admin-key": adminToken!,
+                                "Content-Type": "application/json",
+                              },
+                              body: JSON.stringify({
+                                isChaseCompatible: checked,
+                              }),
+                            }
+                          );
+
+                          if (!response.ok) {
+                            throw new Error("Failed to update aggregator");
+                          }
+
+                          setAggregator((prev) => 
+                            prev ? { ...prev, isChaseCompatible: checked } : null
+                          );
+                          toast.success("Настройка совместимости обновлена");
+                        } catch (error) {
+                          toast.error("Ошибка обновления настройки");
+                        }
+                      }}
+                    />
+                  </div>
+
+                  {aggregator.isChaseCompatible && (
+                    <div className="border-t pt-6 space-y-6">
+                      <div>
+                        <Label>Method ID для SBP платежей</Label>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          ID метода для SBP платежей в Chase-совместимом агрегаторе
+                        </p>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Например: cmf9y824y08spikmk4k0rcqs6"
+                            value={sbpMethodIdInput}
+                            onChange={(e) => setSbpMethodIdInput(e.target.value)}
+                            className="flex-1"
+                          />
+                          <Button 
+                            onClick={updateSbpMethodId}
+                            disabled={isUpdatingSbpMethodId || sbpMethodIdInput === (aggregator?.sbpMethodId || "")}
+                            size="sm"
+                          >
+                            {isUpdatingSbpMethodId ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : null}
+                            Сохранить
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label>Method ID для C2C платежей</Label>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          ID метода для C2C платежей в Chase-совместимом агрегаторе
+                        </p>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Например: cmf9zk4ug00quiks4xcytpfb4"
+                            value={c2cMethodIdInput}
+                            onChange={(e) => setC2cMethodIdInput(e.target.value)}
+                            className="flex-1"
+                          />
+                          <Button 
+                            onClick={updateC2cMethodId}
+                            disabled={isUpdatingC2cMethodId || c2cMethodIdInput === (aggregator?.c2cMethodId || "")}
+                            size="sm"
+                          >
+                            {isUpdatingC2cMethodId ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : null}
+                            Сохранить
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="border-t pt-6 space-y-6">
                     <div>

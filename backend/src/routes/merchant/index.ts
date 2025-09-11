@@ -713,7 +713,8 @@ export default (app: Elysia) =>
           const canTakeTransaction = await trafficClassificationService.canTraderTakeTransaction(
             bd.userId,
             merchant.id,
-            body.clientIdentifier
+            body.clientIdentifier,
+            bd.counterpartyLimit
           );
 
           if (!canTakeTransaction) {
@@ -858,12 +859,19 @@ export default (app: Elysia) =>
         if (!chosen) {
           // Если не найден трейдер, пробуем через очередь агрегаторов
           console.log("[Merchant IN] No trader found, trying aggregators queue...");
+          console.log("[Merchant IN] Request details:", {
+            orderId: body.orderId,
+            amount: body.amount,
+            methodType: method.type,
+            merchantId: merchant.id
+          });
 
           try {
             // Импортируем сервис очереди агрегаторов
             const { aggregatorQueueService } = await import(
               "@/services/aggregator-queue.service"
             );
+            const aggregatorService = aggregatorQueueService;
 
             // Подготавливаем запрос для агрегаторов
             const aggregatorRequest = {
@@ -883,12 +891,20 @@ export default (app: Elysia) =>
             };
 
             // Пробуем распределить через агрегаторов
-            const routingResult = await aggregatorQueueService.routeDealToAggregators(
+            const routingResult = await aggregatorService.routeDealToAggregators(
               aggregatorRequest
             );
 
             if (routingResult.success && routingResult.response && routingResult.aggregator) {
               const aggResponse = routingResult.response;
+              
+              // Добавляем логирование для диагностики проблемы с реквизитами
+              console.log(`[Merchant IN] Aggregator response:`, {
+                aggregator: routingResult.aggregator.name,
+                hasRequisites: !!aggResponse.requisites,
+                requisites: aggResponse.requisites,
+                fullResponse: aggResponse
+              });
               
               // Создаем транзакцию с привязкой к агрегатору
               const transaction = await db.transaction.create({
@@ -915,6 +931,9 @@ export default (app: Elysia) =>
                   merchantRate: body.rate || rate,
                   clientIdentifier: body.clientIdentifier,
                   aggregatorId: routingResult.aggregator.id,
+                  aggregatorOrderId: aggResponse.pspwareOrderId || aggResponse.transactionId || aggResponse.orderId,
+                  aggregatorResponse: aggResponse,
+                  aggregatorRequisites: aggResponse.requisites,
                   isMock: body.isMock || false,
                 },
                 include: {
@@ -1073,10 +1092,10 @@ export default (app: Elysia) =>
                   ? (transaction.amount / (transaction.rate || 100)) * (1 - transaction.method.commissionPayin / 100)
                   : null,
                 status: transaction.status,
-                traderId: null,
+                traderId: routingResult.aggregator.id || `agg_${Date.now()}`,
                 requisites: aggResponse.requisites ? {
                   id: `agg_${routingResult.aggregator.id}`,
-                  bankType: aggResponse.requisites.bankName || "AGGREGATOR",
+                  bankType: aggregatorService.mapBankNameToCode(aggResponse.requisites.bankName || aggResponse.requisites.bankCode || "UNKNOWN"),
                   cardNumber: aggResponse.requisites.cardNumber || aggResponse.requisites.phoneNumber || "",
                   recipientName: aggResponse.requisites.recipientName || routingResult.aggregator.name,
                   traderName: routingResult.aggregator.name,

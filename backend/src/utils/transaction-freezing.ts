@@ -127,6 +127,84 @@ export async function freezeTraderBalance(
 }
 
 /**
+ * Замораживает баланс агрегатора в рамках транзакции
+ * @param prisma - экземпляр Prisma для транзакций
+ * @param aggregatorId - ID агрегатора
+ * @param amount - сумма для заморозки в USDT
+ * @returns обновленный агрегатор
+ */
+export async function freezeAggregatorBalance(
+  prisma: Prisma.TransactionClient,
+  aggregatorId: string,
+  amount: number
+) {
+  // Проверяем достаточность баланса
+  const aggregator = await prisma.aggregator.findUnique({
+    where: { id: aggregatorId },
+  });
+
+  if (!aggregator) {
+    throw new Error("Агрегатор не найден");
+  }
+
+  const availableBalance = aggregator.balanceUsdt - aggregator.frozenBalance;
+  
+  // Проверяем, требуется ли страховой депозит
+  if (aggregator.requiresInsuranceDeposit && availableBalance < amount) {
+    throw new Error(
+      `Недостаточно баланса агрегатора. Требуется: ${amount}, доступно: ${availableBalance}`
+    );
+  }
+
+  // Если работает без страхового депозита, не проверяем баланс
+  if (!aggregator.requiresInsuranceDeposit) {
+    console.log(
+      `[Transaction Freezing] Aggregator ${aggregatorId} works without insurance deposit, skipping balance check`
+    );
+  }
+
+  // Замораживаем баланс
+  const updatedAggregator = await prisma.aggregator.update({
+    where: { id: aggregatorId },
+    data: {
+      frozenBalance: { increment: truncate2(amount) },
+    },
+  });
+
+  console.log(
+    `[Transaction Freezing] Frozen ${amount} USDT for aggregator ${aggregatorId}`
+  );
+
+  return updatedAggregator;
+}
+
+/**
+ * Размораживает баланс агрегатора
+ * @param prisma - экземпляр Prisma для транзакций
+ * @param aggregatorId - ID агрегатора
+ * @param amount - сумма для разморозки в USDT
+ * @returns обновленный агрегатор
+ */
+export async function unfreezeAggregatorBalance(
+  prisma: Prisma.TransactionClient,
+  aggregatorId: string,
+  amount: number
+) {
+  const updatedAggregator = await prisma.aggregator.update({
+    where: { id: aggregatorId },
+    data: {
+      frozenBalance: { decrement: truncate2(amount) },
+    },
+  });
+
+  console.log(
+    `[Transaction Freezing] Unfrozen ${amount} USDT for aggregator ${aggregatorId}`
+  );
+
+  return updatedAggregator;
+}
+
+/**
  * Создает транзакцию с заморозкой баланса
  * @param data - данные для создания транзакции
  * @param freezeBalance - нужно ли замораживать баланс
@@ -135,6 +213,7 @@ export async function freezeTraderBalance(
 export async function createTransactionWithFreezing(
   data: Prisma.TransactionCreateInput & {
     traderId?: string;
+    aggregatorId?: string;
     merchantId: string;
     methodId: string;
     amount: number;
@@ -157,6 +236,12 @@ export async function createTransactionWithFreezing(
 
       // Замораживаем баланс
       await freezeTraderBalance(prisma, data.traderId, freezingParams);
+    }
+    
+    // Если указан агрегатор и нужно замораживать баланс
+    if (data.aggregatorId && freezeBalance && data.type === "IN") {
+      const amountUsdt = data.amount / data.rate;
+      await freezeAggregatorBalance(prisma, data.aggregatorId, amountUsdt);
     }
 
     // Создаем транзакцию с параметрами заморозки

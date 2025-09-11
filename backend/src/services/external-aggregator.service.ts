@@ -236,6 +236,34 @@ export class ExternalAggregatorService {
         if (routingResult.success && routingResult.response && routingResult.aggregator) {
           const aggResponse = routingResult.response;
           
+          // Рассчитываем прибыль для сделки с агрегатором
+          const usdtRubRate = rate; // Используем текущий курс
+          const amountUsdt = request.amount / usdtRubRate;
+          
+          // Получаем ставку мерчанта
+          const merchantMethod = await db.merchantMethod.findUnique({
+            where: { merchantId_methodId: { merchantId: merchant.id, methodId: method.id } },
+            include: { method: true }
+          });
+          const merchantFeeInPercent = merchantMethod?.method.commissionPayin || 0;
+          
+          // Получаем ставку агрегатора для этого мерчанта
+          const aggregatorMerchant = await db.aggregatorMerchant.findUnique({
+            where: {
+              aggregatorId_merchantId_methodId: {
+                aggregatorId: routingResult.aggregator.id,
+                merchantId: merchant.id,
+                methodId: method.id
+              }
+            }
+          });
+          const aggregatorFeeInPercent = aggregatorMerchant?.feeIn || 0;
+          
+          // Рассчитываем прибыль в USDT
+          const merchantProfit = amountUsdt * (merchantFeeInPercent / 100);
+          const aggregatorProfit = amountUsdt * (aggregatorFeeInPercent / 100);
+          const platformProfit = merchantProfit - aggregatorProfit;
+          
           // Создаем транзакцию с привязкой к агрегатору
           const transaction = await db.transaction.create({
             data: {
@@ -262,7 +290,17 @@ export class ExternalAggregatorService {
               merchantRate: request.rate || rate,
               clientIdentifier: request.clientIdentifier,
               aggregatorId: routingResult.aggregator.id,
+              aggregatorOrderId: aggResponse.pspwareOrderId || aggResponse.transactionId || aggResponse.orderId,
+              aggregatorResponse: aggResponse,
+              aggregatorRequisites: aggResponse.requisites,
               isMock: false,
+              // Новые поля для прибыли
+              merchantProfit,
+              aggregatorProfit,
+              platformProfit,
+              merchantFeeInPercent,
+              aggregatorFeeInPercent,
+              usdtRubRate,
             },
           });
           

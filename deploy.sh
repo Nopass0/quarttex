@@ -21,6 +21,18 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
+# Ensure SSL certificates are ready
+echo "Checking SSL certificates..."
+if [ -f "ssl/ensure-fullchain.sh" ]; then
+    bash ssl/ensure-fullchain.sh
+    if [ $? -ne 0 ]; then
+        echo "ERROR: SSL certificate setup failed!"
+        exit 1
+    fi
+else
+    echo "WARNING: SSL certificate script not found, skipping SSL check"
+fi
+
 # Stop existing containers
 echo "Stopping existing containers..."
 docker compose -f docker-compose.prod.yml down || true

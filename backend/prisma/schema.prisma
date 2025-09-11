@@ -110,6 +110,10 @@ model User {
   displayAmountFrom      Float?
   /// Отображаемый диапазон суммы (до) для трейдера (для UI) - DEPRECATED, использовать displayRates
   displayAmountTo        Float?
+  /// Минимальная сумма чека для трейдера
+  minCheckAmount         Float                   @default(100)
+  /// Максимальная сумма чека для трейдера
+  maxCheckAmount         Float                   @default(1000000)
 }
 
 model Session {
@@ -194,6 +198,8 @@ model Merchant {
   totpSecret           String?
   /// Связи с источниками курсов
   rateSources          MerchantRateSource[]
+  /// Связи с агрегаторами
+  aggregatorMerchants  AggregatorMerchant[]
 
   @@index([isAuctionEnabled])
   @@index([externalSystemName])
@@ -240,6 +246,7 @@ model Method {
   Transaction         Transaction[]
   transactionAttempts TransactionAttempt[]
   aggregatorMethodFees AggregatorMethodFee[]
+  aggregatorMerchants  AggregatorMerchant[]
 }
 
 model MerchantMethod {
@@ -275,6 +282,9 @@ model Transaction {
   rate                  Float?
   traderId              String?
   aggregatorId          String?
+  aggregatorOrderId     String?             // Агрегаторское orderId для колбэков
+  aggregatorResponse    Json?               // Полный ответ от агрегатора
+  aggregatorRequisites  Json?               // Реквизиты от агрегатора
   isMock                Boolean             @default(false)
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
@@ -294,6 +304,18 @@ model Transaction {
   traderProfit          Float?
   /// Идентификатор клиента от мерчанта
   clientIdentifier      String?
+  /// Прибыль от мерчанта (ценник мерчанта) в USDT
+  merchantProfit        Float?
+  /// Прибыль от агрегатора (ценник агрегатора) в USDT  
+  aggregatorProfit      Float?
+  /// Общая прибыль платформы (merchantProfit - aggregatorProfit) в USDT
+  platformProfit        Float?
+  /// Ставка на вход от мерчанта в момент создания сделки (%)
+  merchantFeeInPercent  Float?
+  /// Ставка на вход от агрегатора в момент создания сделки (%)
+  aggregatorFeeInPercent Float?
+  /// Курс USDT/RUB на момент создания сделки
+  usdtRubRate          Float?
   dealDispute           DealDispute?
   receipts              Receipt[]
   callbackHistory       CallbackHistory[]
@@ -386,6 +408,7 @@ model BankDetail {
   sumLimit             Float               @default(0) // Лимит на общую сумму сделок в рублях (0 - без лимита)
   /// Предпочтительный тип трафика для этого реквизита
   trafficPreference    RequisiteTrafficPreference @default(ANY)
+  counterpartyLimit    Int                 @default(0) // Лимит на количество уникальных контрагентов (0 - без лимита)
   isArchived           Boolean             @default(false)
   isActive             Boolean             @default(true)
   createdAt            DateTime            @default(now())
@@ -1272,19 +1295,27 @@ model Aggregator {
   apiBaseUrl      String?              // Базовый URL для API агрегатора
   balanceUsdt     Float                @default(0)           // Основной баланс для списания
   depositUsdt     Float                @default(0)           // Страховой депозит (минимум 1000 USDT)
+  frozenBalance   Float                @default(0)           // Замороженный баланс для активных сделок
   balanceNoRequisite Float             @default(0)           // Баланс NO_REQUISITE сделок
   balanceSuccess  Float                @default(0)           // Баланс успешных сделок
   balanceExpired  Float                @default(0)           // Баланс истекших сделок
   totalPlatformProfit Float            @default(0)           // Общая прибыль платформы с этого агрегатора
+  /// Вход в USDT на сумму, которую мы отдали трафик (эту сумму нам должен засетлить провайдер), уже с учетом % от агрегатора
+  totalUsdtIn     Float                @default(0)
+  /// Выход в USDT на сумму, которую провайдер провел выплаты, и то что мы ему должны засетлить, уже с учетом % от агрегатора
+  totalUsdtOut    Float                @default(0)
+  /// Разница между входом и выходом USDT
+  usdtDifference  Float                @default(0)
   isActive        Boolean              @default(true)
   priority        Int                  @default(0)          // Приоритет для fallback маршрутизации (меньше = выше приоритет)
-  maxSlaMs        Int                  @default(2000)       // Максимальное время ответа в мс (SLA)
+  maxSlaMs        Int                  @default(2000)       // Максимальное время ответа в мс (SLA) - 2 секунды
   minBalance      Float                @default(0)          // Минимальный баланс для работы
   maxDailyVolume  Float?               // Максимальный дневной объем транзакций
   currentDailyVolume Float             @default(0)          // Текущий дневной объем
   lastVolumeReset DateTime             @default(now())      // Последний сброс дневного объема
   twoFactorSecret String?              // Секрет для 2FA
   twoFactorEnabled Boolean             @default(false)
+  requiresInsuranceDeposit Boolean     @default(true)        // Требуется ли страховой депозит для сделок
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
   lastPriorityChangeBy String?         // ID админа, изменившего приоритет
@@ -1298,6 +1329,11 @@ model Aggregator {
   
   // Chase project integration
   isChaseProject   Boolean             @default(false)       // Флаг, что это другой экземпляр Chase
+  isChaseCompatible Boolean            @default(false)       // Флаг совместимости с Chase API (для платформ-клонов)
+  
+  // Method IDs for our platform aggregators
+  sbpMethodId      String?             // Method ID для SBP платежей
+  c2cMethodId      String?             // Method ID для C2C платежей
   
   // Связи
   sessions        AggregatorSession[]
@@ -1309,6 +1345,8 @@ model Aggregator {
   integrationLogs AggregatorIntegrationLog[]
   methodFees      AggregatorMethodFee[]
   rateSources     AggregatorRateSource[]
+  merchants       AggregatorMerchant[] // Мерчанты агрегатора
+  settlements     AggregatorSettlement[] // Сеттлы агрегатора
   
   @@index([email])
   @@index([apiToken])
@@ -1498,6 +1536,72 @@ model AggregatorRateSource {
   @@unique([aggregatorId])
   @@index([aggregatorId])
   @@index([rateSourceId])
+}
+
+model AggregatorMerchant {
+  id                String         @id @default(cuid())
+  aggregatorId      String
+  merchantId        String
+  methodId          String
+  feeIn             Float          @default(0)       // Процентная ставка на вход
+  feeOut            Float          @default(0)       // Процентная ставка на выход  
+  isFeeInEnabled    Boolean        @default(true)    // Включен ли вход
+  isFeeOutEnabled   Boolean        @default(true)    // Включен ли выход
+  isTrafficEnabled  Boolean        @default(true)    // Включен ли трафик на этого мерчанта
+  rateSource        RateSource?                      // Источник курса для этой связки
+  useFlexibleRates  Boolean        @default(false)   // Использовать ли гибкие ставки
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  
+  aggregator        Aggregator     @relation(fields: [aggregatorId], references: [id], onDelete: Cascade)
+  merchant          Merchant       @relation(fields: [merchantId], references: [id])
+  method            Method         @relation(fields: [methodId], references: [id])
+  feeRanges         AggregatorMerchantFeeRange[] // Гибкие ставки по диапазонам
+  
+  @@unique([aggregatorId, merchantId, methodId])
+  @@index([aggregatorId])
+  @@index([merchantId])
+  @@index([methodId])
+}
+
+model AggregatorMerchantFeeRange {
+  id                     String              @id @default(cuid())
+  aggregatorMerchantId   String
+  minAmount              Float               // Минимальная сумма диапазона (₽)
+  maxAmount              Float               // Максимальная сумма диапазона (₽)
+  feeInPercent           Float               @default(0) // Процент на вход
+  feeOutPercent          Float               @default(0) // Процент на выход
+  isActive               Boolean             @default(true)
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  
+  aggregatorMerchant     AggregatorMerchant  @relation(fields: [aggregatorMerchantId], references: [id], onDelete: Cascade)
+  
+  @@index([aggregatorMerchantId])
+  @@index([minAmount, maxAmount])
+}
+
+model AggregatorSettlement {
+  id              String         @id @default(cuid())
+  aggregatorId    String
+  amount          Float          // Сумма сеттла в USDT
+  direction       SettlementDirection // IN (нам засеттлили) или OUT (мы засеттлили)
+  description     String?        // Описание/комментарий
+  date            DateTime       // Дата сеттла
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  createdBy       String?        // ID админа, создавшего запись
+  
+  aggregator      Aggregator     @relation(fields: [aggregatorId], references: [id], onDelete: Cascade)
+  
+  @@index([aggregatorId])
+  @@index([date])
+  @@index([direction])
+}
+
+enum SettlementDirection {
+  IN   // Агрегатор засеттлил нам
+  OUT  // Мы засеттлили агрегатору
 }
 
 enum WithdrawalDisputeStatus {

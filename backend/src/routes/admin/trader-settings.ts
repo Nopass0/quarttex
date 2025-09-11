@@ -75,6 +75,8 @@ export default new Elysia({ prefix: "/traders" })
                 displayName: true,
               }
             },
+            minCheckAmount: true,
+            maxCheckAmount: true,
             _count: {
               select: {
                 tradedTransactions: {
@@ -115,6 +117,8 @@ export default new Elysia({ prefix: "/traders" })
         teamName: trader.team?.name || null,
         agentName: trader.team?.agent?.name || null,
         rateSourceConfig: trader.rateSourceConfig,
+        minCheckAmount: trader.minCheckAmount,
+        maxCheckAmount: trader.maxCheckAmount,
         createdAt: trader.createdAt,
       }));
       
@@ -162,6 +166,8 @@ export default new Elysia({ prefix: "/traders" })
             onlineDevices: t.Number(),
             teamName: t.Nullable(t.String()),
             agentName: t.Nullable(t.String()),
+            minCheckAmount: t.Number(),
+            maxCheckAmount: t.Number(),
             createdAt: t.Date(),
           })),
           pagination: t.Object({
@@ -208,6 +214,8 @@ export default new Elysia({ prefix: "/traders" })
             displayStakePercent: true,
             displayAmountFrom: true,
             displayAmountTo: true,
+            minCheckAmount: true,
+            maxCheckAmount: true,
             displayRates: {
               where: { isActive: true },
               orderBy: { sortOrder: 'asc' },
@@ -297,6 +305,8 @@ export default new Elysia({ prefix: "/traders" })
           displayStakePercent: t.Nullable(t.Number()),
           displayAmountFrom: t.Nullable(t.Number()),
           displayAmountTo: t.Nullable(t.Number()),
+          minCheckAmount: t.Number(),
+          maxCheckAmount: t.Number(),
           displayRates: t.Array(
             t.Object({
               id: t.String(),
@@ -334,6 +344,11 @@ export default new Elysia({ prefix: "/traders" })
           displayRatesLength: body.displayRates?.length || 0
         });
 
+        // Валидация диапазона сумм чека
+        if (body.minCheckAmount >= body.maxCheckAmount) {
+          return error(400, { error: "Минимальная сумма чека должна быть меньше максимальной" });
+        }
+
         // Используем транзакцию для обновления трейдера и его отображаемых ставок
         const updated = await db.$transaction(async (prisma) => {
           // Обновляем основные данные трейдера
@@ -361,6 +376,8 @@ export default new Elysia({ prefix: "/traders" })
               displayStakePercent: body.displayStakePercent ?? null,
               displayAmountFrom: body.displayAmountFrom ?? null,
               displayAmountTo: body.displayAmountTo ?? null,
+              minCheckAmount: body.minCheckAmount,
+              maxCheckAmount: body.maxCheckAmount,
             }
           });
 
@@ -434,6 +451,8 @@ export default new Elysia({ prefix: "/traders" })
         displayStakePercent: t.Optional(t.Nullable(t.Number())),
         displayAmountFrom: t.Optional(t.Nullable(t.Number())),
         displayAmountTo: t.Optional(t.Nullable(t.Number())),
+        minCheckAmount: t.Number({ minimum: 0, maximum: 999999999 }),
+        maxCheckAmount: t.Number({ minimum: 0, maximum: 999999999 }),
         displayRates: t.Optional(t.Array(t.Object({
           stakePercent: t.Number(),
           amountFrom: t.Number(),
@@ -449,6 +468,7 @@ export default new Elysia({ prefix: "/traders" })
             name: t.String(),
           })
         }),
+        400: ErrorSchema,
         404: ErrorSchema,
         401: ErrorSchema,
         403: ErrorSchema,

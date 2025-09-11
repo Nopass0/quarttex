@@ -1,7 +1,7 @@
 FROM nginx:alpine
 
-# Install openssl for certificate verification (alpine already has it)
-RUN apk add --no-cache openssl
+# Install openssl and wget for certificate verification and downloading
+RUN apk add --no-cache openssl wget
 
 # Copy configuration files
 COPY nginx.conf /etc/nginx/nginx.conf

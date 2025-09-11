@@ -1,0 +1,32 @@
+# Dockerfile для выполнения миграций
+FROM node:18-alpine
+
+# Устанавливаем рабочую директорию
+WORKDIR /app
+
+# Копируем package.json и package-lock.json
+COPY package*.json ./
+COPY bun.lockb ./
+
+# Устанавливаем зависимости
+RUN npm install -g bun
+RUN bun install --frozen-lockfile
+
+# Копируем Prisma схему
+COPY prisma ./prisma/
+
+# Копируем скрипты миграций
+COPY scripts ./scripts/
+
+# Генерируем Prisma клиент
+RUN npx prisma generate
+
+# Создаем директорию для бэкапов
+RUN mkdir -p backups
+
+# Устанавливаем права на выполнение скриптов
+RUN chmod +x scripts/deploy-migrations.sh
+
+# Команда по умолчанию
+CMD ["./scripts/deploy-migrations.sh", "production", "deploy"]
+

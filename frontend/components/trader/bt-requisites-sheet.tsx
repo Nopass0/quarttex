@@ -77,6 +77,7 @@ const formSchema = z.object({
   maxAmount: numberField(1000).optional(),
   sumLimit: numberField(0).optional(),
   operationLimit: numberField(0).optional(),
+  counterpartyLimit: numberField(0).optional(),
   intervalMinutes: numberField(0).optional(),
   isActive: z.boolean().default(true),
 });
@@ -98,6 +99,7 @@ interface BtRequisite {
   methodType: string;
   phoneNumber?: string;
   sumLimit?: number;
+  counterpartyLimit?: number;
   operationLimit?: number;
   intervalMinutes?: number;
   transactionsInProgress?: number;
@@ -168,6 +170,7 @@ export function BtRequisitesSheet({
       maxAmount: 100000,
       sumLimit: 0,
       operationLimit: 0,
+      counterpartyLimit: 0,
       intervalMinutes: 0,
       isActive: true,
     },
@@ -179,6 +182,7 @@ export function BtRequisitesSheet({
   const [maxAmountInput, setMaxAmountInput] = useState<string>("");
   const [sumLimitInput, setSumLimitInput] = useState<string>("");
   const [operationLimitInput, setOperationLimitInput] = useState<string>("");
+  const [counterpartyLimitInput, setCounterpartyLimitInput] = useState<string>("");
   const [intervalMinutesInput, setIntervalMinutesInput] = useState<string>("");
 
   useEffect(() => {
@@ -187,14 +191,16 @@ export function BtRequisitesSheet({
     setMaxAmountInput(values.maxAmount !== undefined ? String(values.maxAmount) : "");
     setSumLimitInput(values.sumLimit !== undefined ? String(values.sumLimit) : "");
     setOperationLimitInput(values.operationLimit !== undefined ? String(values.operationLimit) : "");
+    setCounterpartyLimitInput(values.counterpartyLimit !== undefined ? String(values.counterpartyLimit) : "");
     setIntervalMinutesInput(values.intervalMinutes !== undefined ? String(values.intervalMinutes) : "");
   }, [showForm]);
 
-  const [minAmount, maxAmount, sumLimit, operationLimit, intervalMinutes] = form.watch([
+  const [minAmount, maxAmount, sumLimit, operationLimit, counterpartyLimit, intervalMinutes] = form.watch([
     "minAmount",
     "maxAmount",
     "sumLimit",
     "operationLimit",
+    "counterpartyLimit",
     "intervalMinutes",
   ]);
 
@@ -203,6 +209,7 @@ export function BtRequisitesSheet({
     maxAmount === undefined ||
     sumLimit === undefined ||
     operationLimit === undefined ||
+    counterpartyLimit === undefined ||
     intervalMinutes === undefined;
 
   useEffect(() => {
@@ -225,6 +232,7 @@ export function BtRequisitesSheet({
         maxAmount: existingRequisite.maxAmount,
         sumLimit: existingRequisite.sumLimit || 0,
         operationLimit: existingRequisite.operationLimit || 0,
+        counterpartyLimit: existingRequisite.counterpartyLimit || 0,
         intervalMinutes: existingRequisite.intervalMinutes || 0,
         isActive: existingRequisite.isActive,
       });
@@ -251,6 +259,7 @@ export function BtRequisitesSheet({
     setMaxAmountInput("100000");
     setSumLimitInput("0");
     setOperationLimitInput("0");
+    setCounterpartyLimitInput("0");
     setIntervalMinutesInput("0");
     setShowForm(true);
   };
@@ -267,6 +276,7 @@ export function BtRequisitesSheet({
       maxAmount: requisite.maxAmount,
       sumLimit: requisite.sumLimit || 0,
       operationLimit: requisite.operationLimit || 0,
+      counterpartyLimit: requisite.counterpartyLimit || 0,
       intervalMinutes: requisite.intervalMinutes || 0,
       isActive: requisite.isActive,
     });
@@ -274,6 +284,7 @@ export function BtRequisitesSheet({
     setMaxAmountInput(String(requisite.maxAmount ?? ""));
     setSumLimitInput(String(requisite.sumLimit ?? ""));
     setOperationLimitInput(String(requisite.operationLimit ?? ""));
+    setCounterpartyLimitInput(String(requisite.counterpartyLimit ?? ""));
     setIntervalMinutesInput(String(requisite.intervalMinutes ?? ""));
     setShowForm(true);
   };
@@ -314,6 +325,7 @@ export function BtRequisitesSheet({
         data.maxAmount === undefined ||
         data.sumLimit === undefined ||
         data.operationLimit === undefined ||
+        data.counterpartyLimit === undefined ||
         data.intervalMinutes === undefined
       ) {
         toast.error("Заполните все числовые поля");
@@ -340,6 +352,7 @@ export function BtRequisitesSheet({
         maxAmount: Number(data.maxAmount),
         sumLimit: Number(data.sumLimit),
         operationLimit: Number(data.operationLimit),
+        counterpartyLimit: Number(data.counterpartyLimit),
         cardNumber: data.methodType === "sbp" ? (data.phoneNumber || "") : (data.cardNumber || ""),
         intervalMinutes: Number(data.intervalMinutes || 0),
       } as any;
@@ -795,6 +808,39 @@ export function BtRequisitesSheet({
                     )}
                   />
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="counterpartyLimit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Кол-во контрагентов</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          placeholder="0"
+                          value={counterpartyLimitInput}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            const digitsOnly = raw.replace(/\D/g, "");
+                            setCounterpartyLimitInput(digitsOnly);
+                            form.setValue("counterpartyLimit", digitsOnly === "" ? undefined : Number(digitsOnly), { 
+                              shouldValidate: false, 
+                              shouldDirty: true 
+                            });
+                          }}
+                          disabled={loading}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Максимальное количество уникальных клиентов. 0 = без ограничений
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}

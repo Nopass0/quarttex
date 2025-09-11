@@ -182,73 +182,155 @@ export class PSPWareAdapterService {
       };
 
       // Send request to PSPWare v2 API
+      console.log(`[PSPWare] Sending request to ${ordersUrl}:`, {
+        headers: requestHeaders,
+        body: pspwareRequest
+      });
+
       const response = await axios.post<PSPWareOrderResponse>(
         ordersUrl,
         pspwareRequest,
         {
-          timeout: 10000,
-          headers: requestHeaders
+          timeout: 2000,
+          headers: requestHeaders,
+          validateStatus: () => true // Принимаем любой статус для логирования
         }
       );
 
-      if (response.data && response.data.id) {
-        console.log(`[PSPWare] Order created: ${response.data.id}`);
-        
-        // Extract requisites based on pay_type
-        const requisites: any = {};
-        if (response.data.card) {
-          if (response.data.pay_type === 'sbp') {
-            requisites.phoneNumber = response.data.card;
-            requisites.recipientName = response.data.recipient;
-          } else if (response.data.pay_type === 'c2c') {
-            requisites.cardNumber = response.data.card;
-            requisites.recipientName = response.data.recipient;
-          } else if (response.data.pay_type === 'account') {
-            requisites.accountNumber = response.data.card;
-            requisites.bik = response.data.bik;
-            requisites.recipientName = response.data.recipient;
+      console.log(`[PSPWare] Response status: ${response.status}`);
+      console.log(`[PSPWare] Response data:`, response.data);
+      console.log(`[PSPWare] Response headers:`, response.headers);
+
+      // Check if response is successful
+      if (response.status >= 200 && response.status < 300) {
+        if (response.data && response.data.id) {
+          console.log(`[PSPWare] Order created: ${response.data.id}`);
+          
+          // Extract requisites based on pay_type
+          const requisites: any = {};
+          if (response.data.card) {
+            if (response.data.pay_type === 'sbp') {
+              requisites.phoneNumber = response.data.card;
+              requisites.recipientName = response.data.recipient;
+            } else if (response.data.pay_type === 'c2c') {
+              requisites.cardNumber = response.data.card;
+              requisites.recipientName = response.data.recipient;
+            } else if (response.data.pay_type === 'account') {
+              requisites.accountNumber = response.data.card;
+              requisites.bik = response.data.bik;
+              requisites.recipientName = response.data.recipient;
+            }
           }
-        }
 
-        if (response.data.bank) {
-          requisites.bankCode = response.data.bank;
-          requisites.bankName = response.data.bank_name;
-        }
+          if (response.data.bank) {
+            requisites.bankCode = response.data.bank;
+            requisites.bankName = response.data.bank_name;
+          }
 
+          return {
+            success: true,
+            pspwareOrderId: response.data.id,
+            requisites: requisites,
+            paymentLink: response.data.payment_url,
+            message: 'Order created successfully',
+            actualRequestBody: pspwareRequest,
+            actualResponseBody: response.data,
+            actualHeaders: requestHeaders
+          };
+        } else {
+          console.log('[PSPWare] Invalid response structure:', response.data);
+          return {
+            success: false,
+            error: 'Invalid response from PSPWare',
+            message: 'No order data received',
+            actualRequestBody: pspwareRequest,
+            actualResponseBody: response.data,
+            actualHeaders: requestHeaders
+          };
+        }
+      } else {
+        // Handle error responses
+        console.log(`[PSPWare] Error response (${response.status}):`, response.data);
+        
+        let errorMessage = 'PSPWare API error';
+        if (response.data?.detail) {
+          errorMessage = response.data.detail;
+        } else if (response.data?.message) {
+          errorMessage = response.data.message;
+        } else if (response.data?.error) {
+          errorMessage = response.data.error;
+        }
+        
+        // Check for specific error messages
+        if (errorMessage.includes('Не удалось найти подходящие реквизиты') || 
+            errorMessage.includes('No suitable requisites found')) {
+          errorMessage = 'NO_REQUISITE';
+        }
+        
         return {
-          success: true,
-          pspwareOrderId: response.data.id,
-          requisites: requisites,
-          paymentLink: response.data.payment_url,
-          message: 'Order created successfully',
+          success: false,
+          error: errorMessage,
+          message: errorMessage,
           actualRequestBody: pspwareRequest,
           actualResponseBody: response.data,
           actualHeaders: requestHeaders
         };
       }
 
-      return {
-        success: false,
-        error: 'Invalid response from PSPWare',
-        message: 'No order data received',
-        actualRequestBody: pspwareRequest,
-        actualResponseBody: response.data,
-        actualHeaders: requestHeaders
-      };
-
     } catch (error) {
       console.error('[PSPWare] Error sending deal:', error);
       
       // Extract actual response data from axios error
       let actualResponseBody = null;
-      if (axios.isAxiosError(error) && error.response) {
-        actualResponseBody = error.response.data;
+      let errorMessage = 'Failed to send deal to PSPWare';
+      let actualHeaders = requestHeaders;
+      
+      if (axios.isAxiosError(error)) {
+        console.log(`[PSPWare] Axios error details:`, {
+          message: error.message,
+          code: error.code,
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          responseData: error.response?.data,
+          requestUrl: error.config?.url,
+          requestMethod: error.config?.method,
+          requestHeaders: error.config?.headers,
+          requestData: error.config?.data
+        });
+        
+        if (error.response) {
+          actualResponseBody = error.response.data;
+          actualHeaders = error.config?.headers || requestHeaders;
+          
+          // Check for specific PSPWare error messages
+          if ((error.response.status === 400 || error.response.status === 404) && actualResponseBody?.detail) {
+            const detail = actualResponseBody.detail;
+            if (detail.includes('Не удалось найти подходящие реквизиты') || 
+                detail.includes('No suitable requisites found')) {
+              errorMessage = 'NO_REQUISITE';
+            } else {
+              errorMessage = detail;
+            }
+          } else if (error.response.status === 401) {
+            errorMessage = 'Invalid API key';
+          } else if (error.response.status === 403) {
+            errorMessage = 'Access forbidden';
+          } else if (error.response.status >= 500) {
+            errorMessage = 'PSPWare server error';
+          }
+        } else if (error.code === 'ECONNREFUSED') {
+          errorMessage = 'Connection refused - PSPWare server unavailable';
+        } else if (error.code === 'ETIMEDOUT') {
+          errorMessage = 'Request timeout';
+        } else if (error.code === 'ENOTFOUND') {
+          errorMessage = 'PSPWare server not found';
+        }
       }
       
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        message: 'Failed to send deal to PSPWare',
+        error: errorMessage,
+        message: errorMessage,
         actualRequestBody: pspwareRequest,
         actualResponseBody: actualResponseBody,
         actualHeaders: {
@@ -326,11 +408,13 @@ export class PSPWareAdapterService {
         where: {
           OR: [
             { id: callbackData.id },
-            { orderId: callbackData.id }
+            { orderId: callbackData.id },
+            { aggregatorOrderId: callbackData.id }
           ]
         },
         include: {
-          merchant: true
+          merchant: true,
+          aggregator: true
         }
       });
 
@@ -533,7 +617,7 @@ export class PSPWareAdapterService {
         `${baseUrl}/merchant/v2/withdrawal`,
         withdrawalRequest,
         {
-          timeout: 10000,
+          timeout: 2000,
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',

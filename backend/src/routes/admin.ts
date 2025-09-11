@@ -900,6 +900,40 @@ export default (app: Elysia) =>
             }
           }
 
+          // Handle displayRates if provided
+          if (body.displayRates && Array.isArray(body.displayRates)) {
+            console.log('[Backend] Processing displayRates update:', {
+              traderId: params.id,
+              displayRates: body.displayRates,
+              count: body.displayRates.length
+            });
+            
+            // Delete all existing display rates for this trader
+            await db.traderDisplayRate.deleteMany({
+              where: { traderId: params.id }
+            });
+            
+            // Create new display rates
+            const validRates = body.displayRates.filter((rate: any) => 
+              rate.stakePercent > 0 && rate.amountFrom > 0 && rate.amountTo > 0
+            );
+            
+            if (validRates.length > 0) {
+              await db.traderDisplayRate.createMany({
+                data: validRates.map((rate: any, index: number) => ({
+                  traderId: params.id,
+                  stakePercent: rate.stakePercent,
+                  amountFrom: rate.amountFrom,
+                  amountTo: rate.amountTo,
+                  sortOrder: index,
+                  isActive: true
+                }))
+              });
+              
+              console.log('[Backend] Created displayRates:', validRates.length);
+            }
+          }
+
           const updated = await db.user.update({
             where: { id: params.id },
             data: {
@@ -936,6 +970,16 @@ export default (app: Elysia) =>
                   agent: true,
                 },
               },
+              displayRates: {
+                orderBy: { sortOrder: 'asc' },
+                select: {
+                  id: true,
+                  stakePercent: true,
+                  amountFrom: true,
+                  amountTo: true,
+                  sortOrder: true
+                }
+              },
             },
           });
 
@@ -947,32 +991,10 @@ export default (app: Elysia) =>
             });
           }
 
-          // Handle displayRates update if provided
-          if (Array.isArray(body.displayRates)) {
-            // Delete existing display rates
-            await db.traderDisplayRate.deleteMany({
-              where: { traderId: params.id },
-            });
-
-            // Create new display rates
-            if (body.displayRates.length > 0) {
-              const validRates = body.displayRates.filter(
-                (rate) => rate.stakePercent > 0 && rate.amountFrom > 0 && rate.amountTo > 0
-              );
-
-              if (validRates.length > 0) {
-                await db.traderDisplayRate.createMany({
-                  data: validRates.map((rate, index) => ({
-                    traderId: params.id,
-                    stakePercent: rate.stakePercent,
-                    amountFrom: rate.amountFrom,
-                    amountTo: rate.amountTo,
-                    sortOrder: index,
-                  })),
-                });
-              }
-            }
-          }
+          console.log('[Backend] Returning updated trader data with displayRates:', {
+            displayRatesCount: updated.displayRates?.length || 0,
+            displayRates: updated.displayRates
+          });
 
           return {
             id: updated.id,
@@ -984,6 +1006,20 @@ export default (app: Elysia) =>
             maxAmountPerRequisite: updated.maxAmountPerRequisite,
             disputeLimit: updated.disputeLimit,
             teamId: updated.teamId,
+            telegramChatId: updated.telegramChatId,
+            telegramDisputeChatId: updated.telegramDisputeChatId,
+            telegramBotToken: updated.telegramBotToken,
+            maxSimultaneousPayouts: updated.maxSimultaneousPayouts,
+            minPayoutAmount: updated.minPayoutAmount,
+            maxPayoutAmount: updated.maxPayoutAmount,
+            payoutRateDelta: updated.payoutRateDelta,
+            payoutFeePercent: updated.payoutFeePercent,
+            payoutAcceptanceTime: updated.payoutAcceptanceTime,
+            rateSourceConfigId: updated.rateSourceConfigId,
+            displayStakePercent: updated.displayStakePercent,
+            displayAmountFrom: updated.displayAmountFrom,
+            displayAmountTo: updated.displayAmountTo,
+            displayRates: updated.displayRates || [],
             team: updated.team
               ? {
                   id: updated.team.id,
@@ -1037,9 +1073,12 @@ export default (app: Elysia) =>
           displayAmountFrom: t.Optional(t.Nullable(t.Number())),
           displayAmountTo: t.Optional(t.Nullable(t.Number())),
           displayRates: t.Optional(t.Array(t.Object({
+            id: t.Optional(t.String()),
             stakePercent: t.Number(),
             amountFrom: t.Number(),
             amountTo: t.Number(),
+            sortOrder: t.Optional(t.Number()),
+            isNew: t.Optional(t.Boolean())
           }))),
         }),
         response: {
@@ -1053,6 +1092,26 @@ export default (app: Elysia) =>
             maxAmountPerRequisite: t.Number(),
             disputeLimit: t.Number(),
             teamId: t.Nullable(t.String()),
+            telegramChatId: t.Nullable(t.String()),
+            telegramDisputeChatId: t.Nullable(t.String()),
+            telegramBotToken: t.Nullable(t.String()),
+            maxSimultaneousPayouts: t.Number(),
+            minPayoutAmount: t.Number(),
+            maxPayoutAmount: t.Number(),
+            payoutRateDelta: t.Number(),
+            payoutFeePercent: t.Number(),
+            payoutAcceptanceTime: t.Number(),
+            rateSourceConfigId: t.Nullable(t.String()),
+            displayStakePercent: t.Nullable(t.Number()),
+            displayAmountFrom: t.Nullable(t.Number()),
+            displayAmountTo: t.Nullable(t.Number()),
+            displayRates: t.Array(t.Object({
+              id: t.String(),
+              stakePercent: t.Number(),
+              amountFrom: t.Number(),
+              amountTo: t.Number(),
+              sortOrder: t.Number()
+            })),
             team: t.Nullable(
               t.Object({
                 id: t.String(),
