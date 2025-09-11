@@ -21,7 +21,15 @@ jobs:
         password: ${{ secrets.SERVER_PASSWORD }}
         port: ${{ secrets.SERVER_PORT }}
         script: |
+          # Переходим в каталог проекта
           cd $PROJECT_PATH
+          
+          # Клонируем/обновляем репозиторий если нужно
+          if [ ! -d ".git" ]; then
+            echo "📦 Клонируем репозиторий..."
+            rm -rf * .* 2>/dev/null || true
+            git clone https://github.com/Nopass0/quarttex.git .
+          fi
           
           # Останавливаем старые контейнеры
           echo "🔄 Останавливаем старые контейнеры..."
@@ -43,6 +51,17 @@ jobs:
           echo "NODE_ENV=production" >> .env
           echo "SUPER_ADMIN_KEY=$SUPER_ADMIN_KEY" >> .env
           echo "ADMIN_IPS=127.0.0.1" >> .env
+          
+          # Очищаем старые nginx конфиги (если есть)
+          echo "🧹 Очищаем старые nginx конфигурации..."
+          if [ -f "nginx/conf.d/default-http-only.conf" ]; then
+            rm -f nginx/conf.d/default-http-only.conf
+            echo "Удален старый default-http-only.conf"
+          fi
+          if [ -f "nginx/conf.d/app.conf" ] && [ -f "nginx/conf.d/quattrex.conf" ]; then
+            rm -f nginx/conf.d/app.conf
+            echo "Удален старый app.conf"
+          fi
           
           # Собираем и запускаем новые контейнеры
           echo "🚀 Собираем и запускаем новые контейнеры..."
