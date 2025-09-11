@@ -749,17 +749,87 @@ export default (app: Elysia) =>
           ).map(bd => ({ ...bd, traderId: tm.traderId, trader: tm.trader }))
         );
 
+        // 🚀 ОПТИМИЗАЦИЯ: Получаем все данные для проверок одним запросом
+        const bankDetailIds = allBankDetails.map(bd => bd.id);
+        const userIds = [...new Set(allBankDetails.map(bd => bd.userId))];
+        
+        // Параллельно получаем все необходимые данные для проверок
+        const [counterpartyChecks, existingTransactions, operationCounts, sumAggregates, recentTransactions] = await Promise.all([
+          // Проверка контрагентов для всех трейдеров
+          Promise.all(userIds.map(userId => 
+            trafficClassificationService.canTraderTakeTransaction(
+              userId,
+              merchant.id,
+              body.clientIdentifier || '',
+              allBankDetails.find(bd => bd.userId === userId)?.counterpartyLimit || 10
+            ).then(result => ({ userId, canTake: result }))
+          )),
+          
+          // Существующие транзакции с той же суммой
+          db.transaction.findMany({
+            where: {
+              bankDetailId: { in: bankDetailIds },
+              amount: body.amount,
+              status: { in: [Status.CREATED, Status.IN_PROGRESS] },
+              type: TransactionType.IN,
+            },
+            select: { bankDetailId: true }
+          }),
+          
+          // Счетчики операций для всех реквизитов
+          db.transaction.groupBy({
+            by: ['bankDetailId'],
+            where: {
+              bankDetailId: { in: bankDetailIds },
+              status: { in: [Status.IN_PROGRESS, Status.READY] },
+            },
+            _count: { id: true },
+          }),
+          
+          // Суммы транзакций для всех реквизитов
+          db.transaction.groupBy({
+            by: ['bankDetailId'],
+            where: {
+              bankDetailId: { in: bankDetailIds },
+              status: { in: [Status.IN_PROGRESS, Status.READY] },
+            },
+            _sum: { amount: true },
+          }),
+          
+          // Последние транзакции для проверки интервалов
+          db.transaction.findMany({
+            where: {
+              bankDetailId: { in: bankDetailIds },
+              createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }, // Последние 24 часа
+              status: { notIn: [Status.CANCELED, Status.EXPIRED] },
+            },
+            select: {
+              bankDetailId: true,
+              createdAt: true,
+            },
+            orderBy: { createdAt: 'desc' },
+          }),
+        ]);
+        
+        // Создаем быстрые lookup мапы
+        const counterpartyMap = new Map(counterpartyChecks.map(c => [c.userId, c.canTake]));
+        const existingTransMap = new Set(existingTransactions.map(t => t.bankDetailId).filter(id => id !== null) as string[]);
+        const operationCountMap = new Map(operationCounts.map(o => [o.bankDetailId, o._count.id]).filter(([id]) => id !== null) as [string, number][]);
+        const sumMap = new Map(sumAggregates.map(s => [s.bankDetailId, s._sum.amount || 0]).filter(([id]) => id !== null) as [string, number][]);
+        const recentTransMap = new Map<string, Date>();
+        recentTransactions.forEach(t => {
+          if (t.bankDetailId) {
+            const existing = recentTransMap.get(t.bankDetailId);
+            if (!existing || t.createdAt > existing) {
+              recentTransMap.set(t.bankDetailId, t.createdAt);
+            }
+          }
+        });
+        
         let chosen = null;
         for (const bd of allBankDetails) {
-          // Проверяем, может ли трейдер взять эту транзакцию с учетом лимита контрагентов
-          const canTakeTransaction = await trafficClassificationService.canTraderTakeTransaction(
-            bd.userId,
-            merchant.id,
-            body.clientIdentifier,
-            bd.counterpartyLimit
-          );
-
-          if (!canTakeTransaction) {
+          // Быстрая проверка контрагентов из кэша
+          if (!counterpartyMap.get(bd.userId)) {
             console.log(`[Merchant IN] Trader ${bd.userId} cannot take transaction due to counterparty limit`);
             continue;
           }
@@ -772,123 +842,58 @@ export default (app: Elysia) =>
           )
             continue;
 
-          // Проверяем наличие активной транзакции с той же суммой на этом реквизите
-          const existingTransaction = await db.transaction.findFirst({
-            where: {
-              bankDetailId: bd.id,
-              amount: body.amount,
-              status: {
-                in: [Status.CREATED, Status.IN_PROGRESS],
-              },
-              type: TransactionType.IN,
-            },
-          });
-
-          if (existingTransaction) {
+          // Быстрая проверка существующих транзакций из кэша
+          if (existingTransMap.has(bd.id)) {
             console.log(
-              `[Merchant] Реквизит ${bd.id} отклонен: уже есть транзакция на сумму ${body.amount} в статусе ${existingTransaction.status}`
+              `[Merchant] Реквизит ${bd.id} отклонен: уже есть транзакция на сумму ${body.amount}`
             );
             continue;
           }
 
-          // Атомарная проверка лимита по количеству операций
+          // Быстрая проверка лимита операций из кэша
           if (bd.operationLimit > 0) {
-            try {
-              const isValidChoice = await db.$transaction(async (tx) => {
-                const totalOperations = await tx.transaction.count({
-                  where: {
-                    bankDetailId: bd.id,
-                    status: {
-                      in: [Status.IN_PROGRESS, Status.READY],
-                    },
-                  },
-                });
-                console.log(
-                  `[Merchant] - Общее количество операций (IN_PROGRESS + READY): ${totalOperations}/${bd.operationLimit}`
-                );
-
-                if (totalOperations >= bd.operationLimit) {
-                  console.log(
-                    `[Merchant] Реквизит ${bd.id} отклонен: достигнут лимит количества операций. Текущее количество: ${totalOperations}, лимит: ${bd.operationLimit}`
-                  );
-                  return false;
-                }
-
-                return true;
-              });
-
-              if (!isValidChoice) {
-                continue;
-              }
-            } catch (error) {
-              console.error(
-                `[Merchant] Ошибка при проверке лимита операций для реквизита ${bd.id}:`,
-                error
+            const totalOperations = operationCountMap.get(bd.id) || 0;
+            console.log(
+              `[Merchant] - Общее количество операций (IN_PROGRESS + READY): ${totalOperations}/${bd.operationLimit}`
+            );
+            if (totalOperations >= bd.operationLimit) {
+              console.log(
+                `[Merchant] Реквизит ${bd.id} отклонен: достигнут лимит количества операций. Текущее количество: ${totalOperations}, лимит: ${bd.operationLimit}`
               );
               continue;
             }
           }
 
-          // Проверка лимита на общую сумму сделок
+          // Быстрая проверка лимита суммы из кэша
           if (bd.sumLimit > 0) {
-            const totalSumResult = await db.transaction.aggregate({
-              where: {
-                bankDetailId: bd.id,
-                status: {
-                  in: [Status.IN_PROGRESS, Status.READY],
-                },
-              },
-              _sum: { amount: true },
-            });
-            const totalSum = (totalSumResult._sum.amount ?? 0) + body.amount;
+            const currentSum = sumMap.get(bd.id) || 0;
+            const totalSum = currentSum + body.amount;
             console.log(
-              `[Merchant] - Общая сумма операций (IN_PROGRESS + READY): ${
-                totalSumResult._sum.amount ?? 0
-              } + ${body.amount} = ${totalSum}/${bd.sumLimit}`
+              `[Merchant] - Общая сумма операций (IN_PROGRESS + READY): ${currentSum} + ${body.amount} = ${totalSum}/${bd.sumLimit}`
             );
             if (totalSum > bd.sumLimit) {
               console.log(
-                `[Merchant] Реквизит ${
-                  bd.id
-                } отклонен: превышение лимита общей суммы. Текущая сумма: ${
-                  totalSumResult._sum.amount ?? 0
-                }, новая сумма: ${totalSum}, лимит: ${bd.sumLimit}`
+                `[Merchant] Реквизит ${bd.id} отклонен: превышение лимита общей суммы. Текущая сумма: ${currentSum}, новая сумма: ${totalSum}, лимит: ${bd.sumLimit}`
               );
               continue;
             }
           }
 
-          // Проверка интервала между сделками
+          // Быстрая проверка интервала из кэша
           if (bd.intervalMinutes > 0) {
-            const intervalStart = new Date();
-            intervalStart.setMinutes(intervalStart.getMinutes() - bd.intervalMinutes);
-            
-            const recentTransaction = await db.transaction.findFirst({
-              where: {
-                bankDetailId: bd.id,
-                createdAt: {
-                  gte: intervalStart,
-                },
-                status: {
-                  notIn: [Status.CANCELED, Status.EXPIRED],
-                },
-              },
-              orderBy: {
-                createdAt: 'desc',
-              },
-            });
-
-            if (recentTransaction) {
+            const lastTransaction = recentTransMap.get(bd.id);
+            if (lastTransaction) {
               const timeSinceLastTransaction = Math.floor(
-                (Date.now() - recentTransaction.createdAt.getTime()) / (1000 * 60)
+                (Date.now() - lastTransaction.getTime()) / (1000 * 60)
               );
-              console.log(
-                `[Merchant] Реквизит ${bd.id} отклонен: интервал между сделками не соблюден. ` +
-                `Последняя сделка: ${timeSinceLastTransaction} мин назад, требуется интервал: ${bd.intervalMinutes} мин`
-              );
-              continue;
+              if (timeSinceLastTransaction < bd.intervalMinutes) {
+                console.log(
+                  `[Merchant] Реквизит ${bd.id} отклонен: интервал между сделками не соблюден. ` +
+                  `Последняя сделка: ${timeSinceLastTransaction} мин назад, требуется интервал: ${bd.intervalMinutes} мин`
+                );
+                continue;
+              }
             }
-
             console.log(
               `[Merchant] - Проверка интервала пройдена для реквизита ${bd.id}: ${bd.intervalMinutes} мин`
             );
