@@ -561,6 +561,8 @@ export default (app: Elysia) =>
     .post(
       "/transactions/in",
       async ({ body, merchant, set, error, isAuctionMerchant, auctionConfig }) => {
+        const startTime = Date.now();
+        console.log(`[Merchant IN] Starting transaction processing for order: ${body.orderId}`);
         
         // Проверяем, не отключен ли мерчант
         if (merchant.disabled) {
@@ -753,6 +755,9 @@ export default (app: Elysia) =>
         const bankDetailIds = allBankDetails.map(bd => bd.id);
         const userIds = [...new Set(allBankDetails.map(bd => bd.userId))];
         
+        console.log(`[Merchant IN] Checking ${allBankDetails.length} bank details for ${userIds.length} traders`);
+        const batchStartTime = Date.now();
+        
         // Параллельно получаем все необходимые данные для проверок
         const [counterpartyChecks, existingTransactions, operationCounts, sumAggregates, recentTransactions] = await Promise.all([
           // Проверка контрагентов для всех трейдеров
@@ -810,6 +815,8 @@ export default (app: Elysia) =>
             orderBy: { createdAt: 'desc' },
           }),
         ]);
+        
+        console.log(`[Merchant IN] Batch queries completed in ${Date.now() - batchStartTime}ms`);
         
         // Создаем быстрые lookup мапы
         const counterpartyMap = new Map(counterpartyChecks.map(c => [c.userId, c.canTake]));
@@ -1499,7 +1506,7 @@ export default (app: Elysia) =>
         }
 
         // Для остальных мерчантов возвращаем стандартный формат
-        return {
+        const response = {
           id: tx.id,
           numericId: tx.numericId,
           amount: tx.amount,
@@ -1518,6 +1525,9 @@ export default (app: Elysia) =>
           expired_at: tx.expired_at.toISOString(),
           method: tx.method,
         };
+        
+        console.log(`[Merchant IN] Transaction processing completed in ${Date.now() - startTime}ms for order: ${body.orderId}`);
+        return response;
       },
       {
         headers: t.Object({ "x-merchant-api-key": t.String() }),
