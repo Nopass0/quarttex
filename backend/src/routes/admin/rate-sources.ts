@@ -2,8 +2,6 @@ import { Elysia, t } from 'elysia'
 import { db } from '@/db'
 import { RateSource, KkkOperationType } from '@prisma/client'
 
-const authHeader = t.Object({ "x-admin-key": t.Optional(t.String()) })
-
 export default (app: Elysia) =>
   app
     // Получить все источники курсов
@@ -98,8 +96,6 @@ export default (app: Elysia) =>
         success: true,
         data: sourcesWithRates
       }
-    }, {
-      headers: authHeader
     })
 
     // Получить конкретный источник курса
@@ -142,7 +138,6 @@ export default (app: Elysia) =>
         data: rateSource
       }
     }, {
-      headers: authHeader,
       params: t.Object({
         id: t.String()
       })
@@ -179,7 +174,6 @@ export default (app: Elysia) =>
         }
       }
     }, {
-      headers: authHeader,
       params: t.Object({
         id: t.String()
       }),
@@ -212,7 +206,6 @@ export default (app: Elysia) =>
         }
       }
     }, {
-      headers: authHeader,
       params: t.Object({
         id: t.String(),
         traderId: t.String()
@@ -240,7 +233,6 @@ export default (app: Elysia) =>
         }
       }
     }, {
-      headers: authHeader,
       params: t.Object({
         id: t.String(),
         traderId: t.String()
@@ -279,7 +271,6 @@ export default (app: Elysia) =>
         }
       }
     }, {
-      headers: authHeader,
       params: t.Object({
         id: t.String(),
         merchantId: t.String()
@@ -319,7 +310,6 @@ export default (app: Elysia) =>
         }
       }
     }, {
-      headers: authHeader,
       params: t.Object({
         relationId: t.String()
       }),
@@ -347,7 +337,6 @@ export default (app: Elysia) =>
         }
       }
     }, {
-      headers: authHeader,
       params: t.Object({
         relationId: t.String()
       })
@@ -370,7 +359,6 @@ export default (app: Elysia) =>
         data: relations
       }
     }, {
-      headers: authHeader,
       params: t.Object({
         merchantId: t.String()
       })
@@ -415,8 +403,6 @@ export default (app: Elysia) =>
         success: true,
         data: updates
       }
-    }, {
-      headers: authHeader
     })
 
     // Получить индивидуальные настройки трейдера для источника курса
@@ -458,7 +444,6 @@ export default (app: Elysia) =>
         }
       }
     }, {
-      headers: authHeader,
       params: t.Object({
         id: t.String(),
         traderId: t.String()
@@ -520,7 +505,6 @@ export default (app: Elysia) =>
         }
       }
     }, {
-      headers: authHeader,
       params: t.Object({
         id: t.String(),
         traderId: t.String()
@@ -554,7 +538,6 @@ export default (app: Elysia) =>
         }
       }
     }, {
-      headers: authHeader,
       params: t.Object({
         id: t.String(),
         traderId: t.String()
@@ -586,7 +569,6 @@ export default (app: Elysia) =>
         return []
       }
     }, {
-      headers: authHeader,
       params: t.Object({
         id: t.String()
       })
