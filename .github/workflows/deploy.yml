@@ -33,7 +33,7 @@ jobs:
           
           # Останавливаем старые контейнеры
           echo "🔄 Останавливаем старые контейнеры..."
-          sudo docker compose -f docker-compose.prod.yml down --remove-orphans || true
+          sudo docker compose -f docker-compose.prod.yml --env-file .env down --remove-orphans || true
           
           # Принудительно удаляем старые контейнеры если они остались
           echo "🧹 Принудительно очищаем старые контейнеры..."
@@ -84,11 +84,11 @@ jobs:
           
           # Собираем и запускаем новые контейнеры
           echo "🚀 Собираем и запускаем новые контейнеры..."
-          if sudo docker compose -f docker-compose.prod.yml up -d --build --force-recreate; then
+          if sudo docker compose -f docker-compose.prod.yml --env-file .env up -d --build --force-recreate; then
             echo "✅ Контейнеры успешно запущены"
           else
             echo "❌ Ошибка при запуске контейнеров"
-            sudo docker compose -f docker-compose.prod.yml logs --tail=50
+            sudo docker compose -f docker-compose.prod.yml --env-file .env logs --tail=50
             exit 1
           fi
           

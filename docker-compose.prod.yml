@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: quattrex_backend
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: ${DATABASE_URL:-postgres://neondb_owner:npg_QUjnlT5zcFg3@ep-broad-shadow-a21mjc86-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require}
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this}
       NODE_ENV: production
       PORT: 3001

@@ -9,8 +9,21 @@ create_fullchain() {
     
     SSL_DIR="/etc/nginx/ssl"
     FULLCHAIN_FILE="$SSL_DIR/fullchain.crt"
+    WORKING_CERT="$SSL_DIR/fullchain_working.crt"
     CERT_FILE="$SSL_DIR/certificate.crt"
-    INTERMEDIATE_FILE="$SSL_DIR/sectigo_intermediate.crt"
+    
+    # Сначала пробуем использовать рабочий сертификат
+    if [ -f "$WORKING_CERT" ]; then
+        echo "🔧 Найден fullchain_working.crt, копируем его..."
+        if openssl x509 -in "$WORKING_CERT" -noout >/dev/null 2>&1; then
+            cp "$WORKING_CERT" "$FULLCHAIN_FILE"
+            echo "✅ Используем рабочий сертификат fullchain_working.crt"
+            chmod 644 "$FULLCHAIN_FILE"
+            return 0
+        else
+            echo "⚠️  fullchain_working.crt поврежден"
+        fi
+    fi
     
     # Проверяем наличие основного сертификата
     if [ ! -f "$CERT_FILE" ]; then
@@ -18,17 +31,7 @@ create_fullchain() {
         return 1
     fi
     
-    # Скачиваем промежуточный сертификат, если его нет
-    if [ ! -f "$INTERMEDIATE_FILE" ]; then
-        echo "📥 Скачиваем промежуточный сертификат Sectigo..."
-        wget -q "http://crt.sectigo.com/SectigoPublicServerAuthenticationCADVR36.crt" -O "$INTERMEDIATE_FILE" || {
-            echo "⚠️  Не удалось скачать промежуточный сертификат, используем только основной"
-            cp "$CERT_FILE" "$FULLCHAIN_FILE"
-            return 0
-        }
-    fi
-    
-    # Создаем fullchain.crt (используем только основной сертификат)
+    # Создаем fullchain.crt из основного сертификата
     cp "$CERT_FILE" "$FULLCHAIN_FILE"
     
     # Проверяем, что fullchain.crt создан и валиден
