@@ -141,9 +141,27 @@ jobs:
           if ! sudo docker exec quattrex_nginx wget -q --spider http://backend:3001/health; then
             echo "❌ Backend недоступен изнутри nginx, пытаемся перезапустить..."
             sudo docker restart quattrex_backend
-            sleep 15
+            
+            # Ждем полного запуска backend
+            echo "⏳ Ждем полного запуска backend..."
+            for i in {1..30}; do
+              if sudo docker exec quattrex_backend curl -f http://localhost:3001/health >/dev/null 2>&1; then
+                echo "✅ Backend готов после $i попыток"
+                break
+              fi
+              echo "Backend еще не готов, попытка $i/30..."
+              sleep 2
+            done
+            
             sudo docker restart quattrex_nginx
-            sleep 5
+            sleep 10
+            
+            # Финальная проверка
+            if sudo docker exec quattrex_nginx wget -q --spider http://backend:3001/health; then
+              echo "✅ Backend теперь доступен изнутри nginx"
+            else
+              echo "❌ Backend все еще недоступен"
+            fi
           else
             echo "✅ Backend доступен изнутри nginx"
           fi
