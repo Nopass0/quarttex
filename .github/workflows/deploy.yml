@@ -16,12 +16,12 @@ jobs:
     - name: Deploy to server
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        password: ${{ secrets.PASSWORD }}
-        port: ${{ secrets.PORT }}
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        port: ${{ secrets.SERVER_PORT }}
         script: |
-          cd /home/quattrex
+          cd $PROJECT_PATH
           
           # Останавливаем старые контейнеры
           echo "🔄 Останавливаем старые контейнеры..."
@@ -41,15 +41,8 @@ jobs:
           echo "DATABASE_URL=$DATABASE_URL" > .env
           echo "JWT_SECRET=$JWT_SECRET" >> .env
           echo "NODE_ENV=production" >> .env
-          echo "POSTGRES_USER=$POSTGRES_USER" >> .env
-          echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" >> .env
-          echo "POSTGRES_DB=$POSTGRES_DB" >> .env
-          echo "POSTGRES_HOST=$POSTGRES_HOST" >> .env
-          echo "POSTGRES_PORT=$POSTGRES_PORT" >> .env
-          echo "NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL" >> .env
-          echo "SLACK_WEBHOOK_URL=$SLACK_WEBHOOK_URL" >> .env
           echo "SUPER_ADMIN_KEY=$SUPER_ADMIN_KEY" >> .env
-          echo "ADMIN_IPS=$ADMIN_IPS" >> .env
+          echo "ADMIN_IPS=127.0.0.1" >> .env
           
           # Собираем и запускаем новые контейнеры
           echo "🚀 Собираем и запускаем новые контейнеры..."
@@ -72,12 +65,5 @@ jobs:
       env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
-          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SUPER_ADMIN_KEY: ${{ secrets.SUPER_ADMIN_KEY }}
-          ADMIN_IPS: ${{ secrets.ADMIN_IPS }}
+          PROJECT_PATH: ${{ secrets.PROJECT_PATH }}
