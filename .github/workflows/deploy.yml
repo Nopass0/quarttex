@@ -92,6 +92,23 @@ jobs:
             exit 1
           fi
           
+          # Применяем миграции базы данных
+          echo "🗄️  Применяем миграции базы данных..."
+          if sudo docker exec quattrex_backend bunx prisma migrate deploy; then
+            echo "✅ Миграции успешно применены"
+          else
+            echo "❌ Ошибка при применении миграций"
+            sudo docker logs quattrex_backend --tail=20
+          fi
+          
+          # Инициализируем источники курсов
+          echo "💰 Инициализируем источники курсов..."
+          if sudo docker exec quattrex_backend bun run src/scripts/init-rate-sources.ts; then
+            echo "✅ Источники курсов инициализированы"
+          else
+            echo "⚠️  Источники курсов уже существуют или произошла ошибка"
+          fi
+          
           # Ждем запуска
           echo "⏳ Ждем запуска сервисов..."
           sleep 30

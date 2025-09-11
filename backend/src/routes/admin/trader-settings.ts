@@ -42,7 +42,20 @@ export default new Elysia({ prefix: "/traders" })
       const [traders, total] = await Promise.all([
         db.user.findMany({
           where,
-          include: {
+          select: {
+            id: true,
+            numericId: true,
+            name: true,
+            email: true,
+            role: true,
+            balance: true,
+            frozenBalance: true,
+            rubBalance: true,
+            frozenRubBalance: true,
+            banned: true,
+            createdAt: true,
+            minCheckAmount: true,
+            maxCheckAmount: true,
             bankDetails: {
               select: {
                 id: true,
@@ -75,8 +88,6 @@ export default new Elysia({ prefix: "/traders" })
                 displayName: true,
               }
             },
-            minCheckAmount: true,
-            maxCheckAmount: true,
             _count: {
               select: {
                 tradedTransactions: {
