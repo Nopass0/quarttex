@@ -60,7 +60,7 @@ const testApi = async () => {
     });
 
     req.on('error', (error) => {
-      console.log('❌ Ошибка запроса:', error.message);
+      console.log('❌ Ошибка запроса:', error);
       reject(error);
     });
 
@@ -102,7 +102,7 @@ const testCorsPreflight = async () => {
     });
 
     req.on('error', (error) => {
-      console.log('❌ Ошибка preflight:', error.message);
+      console.log('❌ Ошибка preflight:', error);
       reject(error);
     });
 
