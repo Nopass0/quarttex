@@ -35,6 +35,14 @@ jobs:
           echo "🔄 Останавливаем старые контейнеры..."
           sudo docker compose -f docker-compose.prod.yml down --remove-orphans || true
           
+          # Принудительно удаляем старые контейнеры если они остались
+          echo "🧹 Принудительно очищаем старые контейнеры..."
+          sudo docker rm -f quattrex_backend quattrex_frontend quattrex_nginx 2>/dev/null || true
+          
+          # Очищаем неиспользуемые образы
+          echo "🧹 Очищаем неиспользуемые образы..."
+          sudo docker image prune -f || true
+          
           # Обновляем код
           echo "📥 Обновляем код..."
           git fetch origin
@@ -54,18 +62,35 @@ jobs:
           
           # Очищаем старые nginx конфиги (если есть)
           echo "🧹 Очищаем старые nginx конфигурации..."
-          if [ -f "nginx/conf.d/default-http-only.conf" ]; then
-            rm -f nginx/conf.d/default-http-only.conf
-            echo "Удален старый default-http-only.conf"
+          rm -f nginx/conf.d/default-http-only.conf 2>/dev/null || true
+          rm -f nginx/conf.d/app.conf 2>/dev/null || true
+          rm -f nginx/conf.d/default.conf 2>/dev/null || true
+          echo "Старые nginx конфигурации очищены"
+          
+          # Проверяем SSL сертификаты
+          echo "🔐 Проверяем SSL сертификаты..."
+          if [ -f "/quattrex/ssl/certificate.crt" ]; then
+            echo "✅ Найден certificate.crt"
+            openssl x509 -in /quattrex/ssl/certificate.crt -noout -dates || echo "⚠️  Проблема с certificate.crt"
+          else
+            echo "❌ certificate.crt не найден"
           fi
-          if [ -f "nginx/conf.d/app.conf" ] && [ -f "nginx/conf.d/quattrex.conf" ]; then
-            rm -f nginx/conf.d/app.conf
-            echo "Удален старый app.conf"
+          
+          if [ -f "/quattrex/ssl/certificate.key" ]; then
+            echo "✅ Найден certificate.key"
+          else
+            echo "❌ certificate.key не найден"
           fi
           
           # Собираем и запускаем новые контейнеры
           echo "🚀 Собираем и запускаем новые контейнеры..."
-          sudo docker compose -f docker-compose.prod.yml up -d --build --force-recreate
+          if sudo docker compose -f docker-compose.prod.yml up -d --build --force-recreate; then
+            echo "✅ Контейнеры успешно запущены"
+          else
+            echo "❌ Ошибка при запуске контейнеров"
+            sudo docker compose -f docker-compose.prod.yml logs --tail=50
+            exit 1
+          fi
           
           # Ждем запуска
           echo "⏳ Ждем запуска сервисов..."
@@ -75,10 +100,30 @@ jobs:
           echo "🔍 Проверяем статус контейнеров..."
           sudo docker ps
           
+          # Проверяем логи nginx если есть проблемы
+          echo "📋 Последние логи nginx..."
+          sudo docker logs quattrex_nginx --tail=20 || echo "Не удалось получить логи nginx"
+          
           # Проверяем API
           echo "🔍 Тестируем API..."
           sleep 10
-          curl -k -H "x-admin-key: $SUPER_ADMIN_KEY" https://quattrex.pro/api/admin/rate-sources || echo "API test failed"
+          
+          # Сначала проверяем HTTP
+          if curl -f -H "x-admin-key: $SUPER_ADMIN_KEY" http://quattrex.pro/health; then
+            echo "✅ HTTP health check passed"
+          else
+            echo "❌ HTTP health check failed"
+          fi
+          
+          # Затем HTTPS
+          if curl -k -f -H "x-admin-key: $SUPER_ADMIN_KEY" https://quattrex.pro/api/admin/rate-sources; then
+            echo "✅ HTTPS API test passed"
+          else
+            echo "❌ HTTPS API test failed"
+            # Показываем дополнительные логи при ошибке
+            sudo docker logs quattrex_backend --tail=20
+            sudo docker logs quattrex_nginx --tail=20
+          fi
           
           echo "✅ Деплой завершен!"
       env:
