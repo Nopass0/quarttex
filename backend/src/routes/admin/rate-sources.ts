@@ -2,12 +2,17 @@ import { Elysia, t } from 'elysia'
 import { db } from '@/db'
 import { RateSource, KkkOperationType } from '@prisma/client'
 
-const authHeader = t.Object({ "x-admin-key": t.String() })
+const authHeader = t.Object({ "x-admin-key": t.Optional(t.String()) })
 
 export default (app: Elysia) =>
   app
     // Получить все источники курсов
-    .get('', async () => {
+    .get('', async ({ headers, error }) => {
+      // Проверка аутентификации
+      if (!headers['x-admin-key']) {
+        return error(401, { error: 'Admin key required' })
+      }
+
       const rateSources = await db.rateSourceConfig.findMany({
         include: {
           traders: {
