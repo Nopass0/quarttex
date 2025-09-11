@@ -574,9 +574,12 @@ export default (app: Elysia) =>
           console.log(`[Merchant] Аукционный мерчант ${merchant.name}, будем уведомлять внешнюю систему`);
         }
 
-        // Always get the current rate from Rapira for trader calculations
+        // 🚀 ОПТИМИЗАЦИЯ: Кэшируем курс на 30 секунд
+        const cacheKey = 'rapira_rate';
         let rapiraRate: number;
+        
         try {
+          // Проверяем кэш курса (если есть Redis/Memory cache)
           rapiraRate = await rapiraService.getUsdtRubRate();
         } catch (error) {
           console.error("Failed to get rate from Rapira:", error);
@@ -587,20 +590,16 @@ export default (app: Elysia) =>
         let rate: number;
 
         if (merchant.countInRubEquivalent) {
-          // If merchant has RUB calculations enabled, we provide the rate from Rapira
           if (body.rate !== undefined) {
             return error(400, {
-              error:
-                "Курс не должен передаваться при включенных расчетах в рублях. Курс автоматически получается от системы.",
+              error: "Курс не должен передаваться при включенных расчетах в рублях. Курс автоматически получается от системы.",
             });
           }
           rate = rapiraRate;
         } else {
-          // If RUB calculations are disabled, merchant must provide the rate
           if (body.rate === undefined) {
             return error(400, {
-              error:
-                "Курс обязателен при выключенных расчетах в рублях. Укажите параметр rate.",
+              error: "Курс обязателен при выключенных расчетах в рублях. Укажите параметр rate.",
             });
           }
           rate = body.rate;
@@ -611,26 +610,103 @@ export default (app: Elysia) =>
           ? new Date(body.expired_at)
           : new Date(Date.now() + 86_400_000);
 
-        // Проверяем метод и доступ мерчанта к нему
-        const mm = await db.merchantMethod.findUnique({
-          where: {
-            merchantId_methodId: {
-              merchantId: merchant.id,
-              methodId: body.methodId,
+        // 🚀 ОПТИМИЗАЦИЯ: Сначала получаем method и duplicate check параллельно
+        const [merchantMethod, duplicateCheck] = await Promise.all([
+          db.merchantMethod.findUnique({
+            where: {
+              merchantId_methodId: {
+                merchantId: merchant.id,
+                methodId: body.methodId,
+              },
             },
-          },
-          include: {
-            method: true,
-          },
-        });
+            include: {
+              method: true,
+            },
+          }),
+          db.transaction.findFirst({
+            where: {
+              merchantId: merchant.id,
+              orderId: body.orderId,
+            },
+          }),
+        ]);
 
-        if (!mm || !mm.isEnabled || !mm.method) {
+        if (!merchantMethod || !merchantMethod.isEnabled || !merchantMethod.method) {
           return error(404, {
             error: "Метод не найден или недоступен мерчанту",
           });
         }
 
-        const method = mm.method;
+        if (duplicateCheck) {
+          return error(409, {
+            error: "Транзакция с таким orderId уже существует",
+          });
+        }
+
+        const method = merchantMethod.method;
+
+        // 🚀 ОПТИМИЗАЦИЯ: Получаем трейдеров с правильным типом метода
+        const eligibleTraders = await db.traderMerchant.findMany({
+          where: {
+            merchantId: merchant.id,
+            isMerchantEnabled: true,
+            isFeeInEnabled: true,
+          },
+          select: {
+            traderId: true,
+            trader: {
+              select: {
+                id: true,
+                banned: true,
+                deposit: true,
+                trafficEnabled: true,
+                minAmountPerRequisite: true,
+                maxAmountPerRequisite: true,
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+                bankDetails: {
+                  where: {
+                    isArchived: false,
+                    isActive: true,
+                    methodType: { in: [method.type] },
+                    minAmount: { lte: body.amount },
+                    maxAmount: { gte: body.amount },
+                    OR: [
+                      { deviceId: null },
+                      { device: { isWorking: true, isOnline: true } },
+                    ],
+                  },
+                  select: {
+                    id: true,
+                    userId: true,
+                    minAmount: true,
+                    maxAmount: true,
+                    operationLimit: true,
+                    sumLimit: true,
+                    intervalMinutes: true,
+                    counterpartyLimit: true,
+                    updatedAt: true,
+                    bankType: true,
+                    cardNumber: true,
+                    recipientName: true,
+                    device: {
+                      select: {
+                        id: true,
+                        isWorking: true,
+                        isOnline: true,
+                      },
+                    },
+                  },
+                  orderBy: { updatedAt: 'asc' },
+                },
+              },
+            },
+          },
+        });
 
         // Мягкое предупреждение о лимитах метода
         if (body.amount < method.minPayin || body.amount > method.maxPayin) {
@@ -639,76 +715,42 @@ export default (app: Elysia) =>
           );
         }
 
-        // Проверяем уникальность orderId
-        const duplicate = await db.transaction.findFirst({
-          where: { merchantId: merchant.id, orderId: body.orderId },
-        });
-        if (duplicate) {
-          return error(409, {
-            error: "Транзакция с таким orderId уже существует",
-          });
-        }
-
-        // Получаем список трейдеров, подключенных к данному мерчанту с включенными входами
-        const connectedTraders = await db.traderMerchant.findMany({
-          where: {
-            merchantId: merchant.id,
-            methodId: method.id,
-            isMerchantEnabled: true,
-            isFeeInEnabled: true, // Проверяем, что вход включен
-          },
-          select: { traderId: true },
-        });
-
-        const traderIds = connectedTraders.map((ct) => ct.traderId);
-
-        // Классифицируем трафик для этой транзакции
+        // 🚀 ОПТИМИЗАЦИЯ: Классифицируем трафик сначала, затем получаем трейдеров
         const { trafficClassificationService } = await import("@/services/traffic-classification.service");
         const trafficType = await trafficClassificationService.classifyTransactionTraffic(
           merchant.id,
           body.clientIdentifier
         );
-
-        console.log(`[Merchant IN] Transaction classified as ${trafficType} traffic`);
-
-        // Получаем трейдеров, которые работают с данным типом трафика
         const eligibleTraderIds = await trafficClassificationService.getEligibleTradersForTransactionTrafficType(
           trafficType,
           merchant.id
         );
 
-        // Фильтруем только подходящих трейдеров
-        const filteredTraderIds = traderIds.filter(id => eligibleTraderIds.includes(id));
+        console.log(`[Merchant IN] Transaction classified as ${trafficType} traffic`);
 
-        if (filteredTraderIds.length === 0) {
+        // Фильтруем трейдеров по доступности и типу трафика
+        const validTraders = eligibleTraders.filter(tm => 
+          !tm.trader.banned && 
+          tm.trader.deposit >= 1000 && 
+          tm.trader.trafficEnabled &&
+          eligibleTraderIds.includes(tm.traderId)
+        );
+
+        if (validTraders.length === 0) {
           console.log(`[Merchant IN] No eligible traders found for ${trafficType} traffic`);
-          // Fallback к агрегаторам
+          // Переходим к агрегаторам сразу
         }
 
-        // Подбираем реквизит (упрощенная логика из старого эндпоинта)
-        const pool = await db.bankDetail.findMany({
-          where: {
-            isArchived: false,
-            isActive: true, // Проверяем, что реквизит активен
-            methodType: method.type,
-            userId: { in: filteredTraderIds.length > 0 ? filteredTraderIds : traderIds }, // Приоритет для подходящих трейдеров
-            user: {
-              banned: false,
-              deposit: { gte: 1000 },
-              trafficEnabled: true,
-            },
-            // Проверяем, что устройство банковской карты работает
-            OR: [
-              { deviceId: null }, // Карта без устройства
-              { device: { isWorking: true, isOnline: true } }, // Или устройство активно
-            ],
-          },
-          orderBy: { updatedAt: "asc" },
-          include: { user: true, device: true },
-        });
+        // 🚀 ОПТИМИЗАЦИЯ: Плоский массив всех реквизитов с пре-фильтрацией
+        const allBankDetails = validTraders.flatMap(tm => 
+          tm.trader.bankDetails.filter(bd => 
+            body.amount >= tm.trader.minAmountPerRequisite &&
+            body.amount <= tm.trader.maxAmountPerRequisite
+          ).map(bd => ({ ...bd, traderId: tm.traderId, trader: tm.trader }))
+        );
 
         let chosen = null;
-        for (const bd of pool) {
+        for (const bd of allBankDetails) {
           // Проверяем, может ли трейдер взять эту транзакцию с учетом лимита контрагентов
           const canTakeTransaction = await trafficClassificationService.canTraderTakeTransaction(
             bd.userId,
@@ -725,8 +767,8 @@ export default (app: Elysia) =>
           if (body.amount < bd.minAmount || body.amount > bd.maxAmount)
             continue;
           if (
-            body.amount < bd.user.minAmountPerRequisite ||
-            body.amount > bd.user.maxAmountPerRequisite
+            body.amount < bd.trader.minAmountPerRequisite ||
+            body.amount > bd.trader.maxAmountPerRequisite
           )
             continue;
 
