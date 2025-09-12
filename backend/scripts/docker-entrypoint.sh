@@ -23,7 +23,7 @@ check_db_connection() {
     fi
     
     # Try to connect and capture the error
-    if output=$(bunx prisma db execute --schema=./prisma/schema.prisma --stdin <<< "SELECT 1;" 2>&1); then
+    if output=$(DATABASE_URL="$DATABASE_URL" bunx prisma db execute --schema=./prisma/schema.prisma --stdin <<< "SELECT 1;" 2>&1); then
         echo "✓ Database connection successful"
         return 0
     else
@@ -60,7 +60,7 @@ bunx prisma migrate status || true
 echo -e "\nPre-fixing known migration issues..."
 
 # 1) Ensure AdminLog table exists (for 20250711000001_add_admin_log)
-cat <<'SQL' | bunx prisma db execute --schema=./prisma/schema.prisma --stdin || true
+cat <<'SQL' | DATABASE_URL="$DATABASE_URL" bunx prisma db execute --schema=./prisma/schema.prisma --stdin || true
 DO $$
 BEGIN
   IF to_regclass('"AdminLog"') IS NULL THEN
@@ -80,7 +80,7 @@ END $$;
 SQL
 
 # 2) Idempotently backfill Aggregator.callbackToken to avoid required column errors during db push
-cat <<'SQL' | bunx prisma db execute --schema=./prisma/schema.prisma --stdin || true
+cat <<'SQL' | DATABASE_URL="$DATABASE_URL" bunx prisma db execute --schema=./prisma/schema.prisma --stdin || true
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 DO $$
 BEGIN
@@ -108,7 +108,7 @@ END $$;
 SQL
 
 # 3) Explicitly mark the known failed migration as finished to unblock migrate deploy
-cat <<'SQL' | bunx prisma db execute --schema=./prisma/schema.prisma --stdin || true
+cat <<'SQL' | DATABASE_URL="$DATABASE_URL" bunx prisma db execute --schema=./prisma/schema.prisma --stdin || true
 UPDATE "_prisma_migrations"
 SET finished_at = NOW(), applied_steps_count = COALESCE(applied_steps_count, 1)
 WHERE migration_name = '20250711000001_add_admin_log' AND finished_at IS NULL;
@@ -143,13 +143,13 @@ echo -e "\n==================== VERIFYING SCHEMA ===================="
 echo "Checking required columns..."
 
 echo -e "\nTransaction table:"
-bunx prisma db execute --schema=./prisma/schema.prisma --stdin <<< "SELECT column_name FROM information_schema.columns WHERE table_name = 'Transaction' AND column_name IN ('merchantRate', 'traderProfit', 'matchedNotificationId');" || true
+DATABASE_URL="$DATABASE_URL" bunx prisma db execute --schema=./prisma/schema.prisma --stdin <<< "SELECT column_name FROM information_schema.columns WHERE table_name = 'Transaction' AND column_name IN ('merchantRate', 'traderProfit', 'matchedNotificationId');" || true
 
 echo -e "\nPayout table:"
-bunx prisma db execute --schema=./prisma/schema.prisma --stdin <<< "SELECT column_name FROM information_schema.columns WHERE table_name = 'Payout' AND column_name IN ('methodId', 'profitAmount');" || true
+DATABASE_URL="$DATABASE_URL" bunx prisma db execute --schema=./prisma/schema.prisma --stdin <<< "SELECT column_name FROM information_schema.columns WHERE table_name = 'Payout' AND column_name IN ('methodId', 'profitAmount');" || true
 
 echo -e "\nNotification table:"
-bunx prisma db execute --schema=./prisma/schema.prisma --stdin <<< "SELECT column_name FROM information_schema.columns WHERE table_name = 'Notification' AND column_name = 'packageName';" || true
+DATABASE_URL="$DATABASE_URL" bunx prisma db execute --schema=./prisma/schema.prisma --stdin <<< "SELECT column_name FROM information_schema.columns WHERE table_name = 'Notification' AND column_name = 'packageName';" || true
 
 echo "==================== STARTING APPLICATION ===================="
 # Start the application
