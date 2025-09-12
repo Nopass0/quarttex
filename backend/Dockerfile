@@ -28,12 +28,13 @@ RUN NODE_OPTIONS="--max-old-space-size=384" bunx prisma generate || \
 # Copy source code
 COPY . .
 
-# Make entrypoint script executable
-RUN chmod +x /app/scripts/docker-entrypoint.sh
+# Make entrypoint scripts executable
+RUN chmod +x /app/scripts/docker-entrypoint.sh || true
+RUN chmod +x /app/scripts/docker-entrypoint-neon.sh || true
 
 # Expose port
 EXPOSE 3001
 
-# Use entrypoint script to handle migrations before starting app
-ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
+# Use Neon-optimized entrypoint script to handle migrations before starting app
+ENTRYPOINT ["/app/scripts/docker-entrypoint-neon.sh"]
 CMD ["bun", "run", "src/index.ts"]
