@@ -119,8 +119,11 @@ jobs:
             # Navigate to project directory
             cd ${{ secrets.PROJECT_PATH }}
             
-            # Stop existing containers first
-            docker compose -f docker-compose.prod.yml down || true
+            # Stop and remove existing containers first
+            docker compose -f docker-compose.prod.yml down --remove-orphans || true
+            
+            # Force remove any remaining containers with our project name
+            docker ps -a --filter "name=quattrex_" --format "table {{.Names}}" | grep -v "NAMES" | xargs -r docker rm -f || true
             
             # Create .env file for production
             cat > .env << 'EOF'
@@ -156,7 +159,11 @@ jobs:
             fi
             
             # Remove old containers and images
-            docker compose -f docker-compose.prod.yml rm -f
+            docker compose -f docker-compose.prod.yml rm -f || true
+            
+            # Force remove any containers that might still exist
+            docker ps -a --filter "name=quattrex_" --format "table {{.Names}}" | grep -v "NAMES" | xargs -r docker rm -f || true
+            
             # Clean up disk space and memory before building
             docker system prune -af --volumes || true
             # Free up memory by clearing build cache
