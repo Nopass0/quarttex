@@ -304,13 +304,13 @@ const app = new Elysia({
       set.headers["Access-Control-Allow-Origin"] = originStr;
       set.headers["Access-Control-Allow-Credentials"] = "true";
       set.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD";
-      set.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, authorization, x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token, x-2fa-verified";
+      set.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, authorization, x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token, x-2fa-verified, Accept, Cache-Control, Pragma, Origin, X-Requested-With";
       set.headers["Access-Control-Expose-Headers"] = "x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token";
     } else {
       // If no origin header, allow all
       set.headers["Access-Control-Allow-Origin"] = "*";
       set.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD";
-      set.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, authorization, x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token, x-2fa-verified";
+      set.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, authorization, x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token, x-2fa-verified, Accept, Cache-Control, Pragma, Origin, X-Requested-With";
       set.headers["Access-Control-Expose-Headers"] = "x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token";
     }
   })
@@ -326,13 +326,13 @@ const app = new Elysia({
       set.headers["Access-Control-Allow-Origin"] = originStr;
       set.headers["Access-Control-Allow-Credentials"] = "true";
       set.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD";
-      set.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, authorization, x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token, x-2fa-verified";
+      set.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, authorization, x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token, x-2fa-verified, Accept, Cache-Control, Pragma, Origin, X-Requested-With";
       set.headers["Access-Control-Max-Age"] = "86400";
     } else {
       // If no origin header, allow all
       set.headers["Access-Control-Allow-Origin"] = "*";
       set.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD";
-      set.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, authorization, x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token, x-2fa-verified";
+      set.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, authorization, x-trader-token, x-admin-key, x-device-token, x-agent-token, x-merchant-api-key, x-api-key, x-api-token, x-aggregator-session-token, x-aggregator-token, x-2fa-verified, Accept, Cache-Control, Pragma, Origin, X-Requested-With";
       set.headers["Access-Control-Max-Age"] = "86400";
     }
 

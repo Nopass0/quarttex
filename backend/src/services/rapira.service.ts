@@ -50,7 +50,8 @@ export class RapiraService {
         headers: {
           'Accept': 'application/json',
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
+        },
+        timeout: 10000 // 10 second timeout
       });
 
       if (!response.ok) {
@@ -98,7 +99,19 @@ export class RapiraService {
         return this.cachedRate;
       }
       
+      // Try to get rate from Bybit as fallback
+      try {
+        console.log('[RapiraService] Trying Bybit as fallback...');
+        const { bybitService } = await import('./bybit.service');
+        const bybitRate = await bybitService.getUsdtRubRate();
+        console.log('[RapiraService] Got rate from Bybit fallback:', bybitRate);
+        return bybitRate;
+      } catch (bybitError) {
+        console.error('[RapiraService] Bybit fallback also failed:', bybitError);
+      }
+      
       // Default fallback rate
+      console.log('[RapiraService] Using default fallback rate: 78.89');
       return 78.89;
     }
   }
