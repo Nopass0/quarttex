@@ -2077,4 +2077,3 @@ export default (app: Elysia) =>
         },
       }
     );
-);
