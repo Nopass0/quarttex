@@ -14,10 +14,11 @@ CREATE TYPE "Currency" AS ENUM ('rub', 'usdt');
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'RateSource') THEN
-        CREATE TYPE "RateSource" AS ENUM ('bybit');
+        CREATE TYPE "RateSource" AS ENUM ('bybit', 'rapira');
     ELSE
-        -- Ensure required value exists
+        -- Ensure required values exist
         ALTER TYPE "RateSource" ADD VALUE IF NOT EXISTS 'bybit';
+        ALTER TYPE "RateSource" ADD VALUE IF NOT EXISTS 'rapira';
     END IF;
 END $$;
 
