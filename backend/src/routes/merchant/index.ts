@@ -561,8 +561,6 @@ export default (app: Elysia) =>
     .post(
       "/transactions/in",
       async ({ body, merchant, set, error, isAuctionMerchant, auctionConfig }) => {
-        const startTime = Date.now();
-        console.log(`[Merchant IN] Starting transaction processing for order: ${body.orderId}`);
         
         // Проверяем, не отключен ли мерчант
         if (merchant.disabled) {
@@ -576,12 +574,9 @@ export default (app: Elysia) =>
           console.log(`[Merchant] Аукционный мерчант ${merchant.name}, будем уведомлять внешнюю систему`);
         }
 
-        // 🚀 ОПТИМИЗАЦИЯ: Кэшируем курс на 30 секунд
-        const cacheKey = 'rapira_rate';
+        // Always get the current rate from Rapira for trader calculations
         let rapiraRate: number;
-        
         try {
-          // Проверяем кэш курса (если есть Redis/Memory cache)
           rapiraRate = await rapiraService.getUsdtRubRate();
         } catch (error) {
           console.error("Failed to get rate from Rapira:", error);
@@ -592,16 +587,20 @@ export default (app: Elysia) =>
         let rate: number;
 
         if (merchant.countInRubEquivalent) {
+          // If merchant has RUB calculations enabled, we provide the rate from Rapira
           if (body.rate !== undefined) {
             return error(400, {
-              error: "Курс не должен передаваться при включенных расчетах в рублях. Курс автоматически получается от системы.",
+              error:
+                "Курс не должен передаваться при включенных расчетах в рублях. Курс автоматически получается от системы.",
             });
           }
           rate = rapiraRate;
         } else {
+          // If RUB calculations are disabled, merchant must provide the rate
           if (body.rate === undefined) {
             return error(400, {
-              error: "Курс обязателен при выключенных расчетах в рублях. Укажите параметр rate.",
+              error:
+                "Курс обязателен при выключенных расчетах в рублях. Укажите параметр rate.",
             });
           }
           rate = body.rate;
@@ -612,122 +611,26 @@ export default (app: Elysia) =>
           ? new Date(body.expired_at)
           : new Date(Date.now() + 86_400_000);
 
-        // 🚀 ОПТИМИЗАЦИЯ: Сначала проверяем существование метода
-        console.log(`[Merchant IN] Checking method ${body.methodId} for merchant ${merchant.id}`);
-        const queryStartTime = Date.now();
-        
-        // Быстрая проверка существования метода
-        const methodExists = await db.method.findUnique({
-          where: { id: body.methodId },
-          select: { id: true }
-        });
-        
-        if (!methodExists) {
-          console.log(`[Merchant IN] Method ${body.methodId} does not exist in database`);
-          return error(404, {
-            error: "Метод не найден",
-          });
-        }
-        
-        const [merchantMethod, duplicateCheck] = await Promise.all([
-          db.merchantMethod.findUnique({
-            where: {
-              merchantId_methodId: {
-                merchantId: merchant.id,
-                methodId: body.methodId,
-              },
-            },
-            include: {
-              method: true,
-            },
-          }),
-          db.transaction.findFirst({
-            where: {
+        // Проверяем метод и доступ мерчанта к нему
+        const mm = await db.merchantMethod.findUnique({
+          where: {
+            merchantId_methodId: {
               merchantId: merchant.id,
-              orderId: body.orderId,
+              methodId: body.methodId,
             },
-          }),
-        ]);
-        
-        console.log(`[Merchant IN] Method and duplicate check completed in ${Date.now() - queryStartTime}ms`);
+          },
+          include: {
+            method: true,
+          },
+        });
 
-        if (!merchantMethod || !merchantMethod.isEnabled || !merchantMethod.method) {
+        if (!mm || !mm.isEnabled || !mm.method) {
           return error(404, {
             error: "Метод не найден или недоступен мерчанту",
           });
         }
 
-        if (duplicateCheck) {
-          return error(409, {
-            error: "Транзакция с таким orderId уже существует",
-          });
-        }
-
-        const method = merchantMethod.method;
-
-        // 🚀 ОПТИМИЗАЦИЯ: Получаем трейдеров с правильным типом метода
-        const eligibleTraders = await db.traderMerchant.findMany({
-          where: {
-            merchantId: merchant.id,
-            isMerchantEnabled: true,
-            isFeeInEnabled: true,
-          },
-          select: {
-            traderId: true,
-            trader: {
-              select: {
-                id: true,
-                banned: true,
-                deposit: true,
-                trafficEnabled: true,
-                minAmountPerRequisite: true,
-                maxAmountPerRequisite: true,
-                user: {
-                  select: {
-                    id: true,
-                    name: true,
-                    trustBalance: true,
-                  },
-                },
-                bankDetails: {
-                  where: {
-                    isArchived: false,
-                    isActive: true,
-                    methodType: { in: [method.type] },
-                    minAmount: { lte: body.amount },
-                    maxAmount: { gte: body.amount },
-                    OR: [
-                      { deviceId: null },
-                      { device: { isWorking: true, isOnline: true } },
-                    ],
-                  },
-                  select: {
-                    id: true,
-                    userId: true,
-                    minAmount: true,
-                    maxAmount: true,
-                    operationLimit: true,
-                    sumLimit: true,
-                    intervalMinutes: true,
-                    counterpartyLimit: true,
-                    updatedAt: true,
-                    bankType: true,
-                    cardNumber: true,
-                    recipientName: true,
-                    device: {
-                      select: {
-                        id: true,
-                        isWorking: true,
-                        isOnline: true,
-                      },
-                    },
-                  },
-                  orderBy: { updatedAt: 'asc' },
-                },
-              },
-            },
-          },
-        });
+        const method = mm.method;
 
         // Мягкое предупреждение о лимитах метода
         if (body.amount < method.minPayin || body.amount > method.maxPayin) {
@@ -736,127 +639,85 @@ export default (app: Elysia) =>
           );
         }
 
-        // 🚀 ОПТИМИЗАЦИЯ: Классифицируем трафик сначала, затем получаем трейдеров
+        // Проверяем уникальность orderId
+        const duplicate = await db.transaction.findFirst({
+          where: { merchantId: merchant.id, orderId: body.orderId },
+        });
+        if (duplicate) {
+          return error(409, {
+            error: "Транзакция с таким orderId уже существует",
+          });
+        }
+
+        // Получаем список трейдеров, подключенных к данному мерчанту с включенными входами
+        const connectedTraders = await db.traderMerchant.findMany({
+          where: {
+            merchantId: merchant.id,
+            methodId: method.id,
+            isMerchantEnabled: true,
+            isFeeInEnabled: true, // Проверяем, что вход включен
+          },
+          select: { traderId: true },
+        });
+
+        const traderIds = connectedTraders.map((ct) => ct.traderId);
+
+        // Классифицируем трафик для этой транзакции
         const { trafficClassificationService } = await import("@/services/traffic-classification.service");
         const trafficType = await trafficClassificationService.classifyTransactionTraffic(
           merchant.id,
           body.clientIdentifier
         );
+
+        console.log(`[Merchant IN] Transaction classified as ${trafficType} traffic`);
+
+        // Получаем трейдеров, которые работают с данным типом трафика
         const eligibleTraderIds = await trafficClassificationService.getEligibleTradersForTransactionTrafficType(
           trafficType,
           merchant.id
         );
 
-        console.log(`[Merchant IN] Transaction classified as ${trafficType} traffic`);
+        // Фильтруем только подходящих трейдеров
+        const filteredTraderIds = traderIds.filter(id => eligibleTraderIds.includes(id));
 
-        // Фильтруем трейдеров по доступности и типу трафика
-        const validTraders = eligibleTraders.filter(tm => 
-          tm.trader && 
-          !tm.trader.banned && 
-          tm.trader.deposit >= 1000 && 
-          tm.trader.trafficEnabled &&
-          eligibleTraderIds.includes(tm.traderId)
-        );
-
-        if (validTraders.length === 0) {
+        if (filteredTraderIds.length === 0) {
           console.log(`[Merchant IN] No eligible traders found for ${trafficType} traffic`);
-          // Переходим к агрегаторам сразу
+          // Fallback к агрегаторам
         }
 
-        // 🚀 ОПТИМИЗАЦИЯ: Плоский массив всех реквизитов с пре-фильтрацией
-        const allBankDetails = validTraders.flatMap(tm => 
-          tm.trader.bankDetails.filter((bd: any) => 
-            body.amount >= tm.trader.minAmountPerRequisite &&
-            body.amount <= tm.trader.maxAmountPerRequisite
-          ).map((bd: any) => ({ ...bd, traderId: tm.traderId, trader: tm.trader, user: tm.trader.user }))
-        );
-
-        // 🚀 ОПТИМИЗАЦИЯ: Получаем все данные для проверок одним запросом
-        const bankDetailIds = allBankDetails.map(bd => bd.id);
-        const userIds = [...new Set(allBankDetails.map(bd => bd.userId))];
-        
-        console.log(`[Merchant IN] Checking ${allBankDetails.length} bank details for ${userIds.length} traders`);
-        const batchStartTime = Date.now();
-        
-        // Параллельно получаем все необходимые данные для проверок
-        const [counterpartyChecks, existingTransactions, operationCounts, sumAggregates, recentTransactions] = await Promise.all([
-          // Проверка контрагентов для всех трейдеров
-          Promise.all(userIds.map(userId => 
-            trafficClassificationService.canTraderTakeTransaction(
-              userId,
-              merchant.id,
-              body.clientIdentifier || '',
-              allBankDetails.find(bd => bd.userId === userId)?.counterpartyLimit || 10
-            ).then(result => ({ userId, canTake: result }))
-          )),
-          
-          // Существующие транзакции с той же суммой
-          db.transaction.findMany({
-            where: {
-              bankDetailId: { in: bankDetailIds },
-              amount: body.amount,
-              status: { in: [Status.CREATED, Status.IN_PROGRESS] },
-              type: TransactionType.IN,
+        // Подбираем реквизит (упрощенная логика из старого эндпоинта)
+        const pool = await db.bankDetail.findMany({
+          where: {
+            isArchived: false,
+            isActive: true, // Проверяем, что реквизит активен
+            methodType: method.type,
+            userId: { in: filteredTraderIds.length > 0 ? filteredTraderIds : traderIds }, // Приоритет для подходящих трейдеров
+            user: {
+              banned: false,
+              deposit: { gte: 1000 },
+              trafficEnabled: true,
             },
-            select: { bankDetailId: true }
-          }),
-          
-          // Счетчики операций для всех реквизитов
-          db.transaction.groupBy({
-            by: ['bankDetailId'],
-            where: {
-              bankDetailId: { in: bankDetailIds },
-              status: { in: [Status.IN_PROGRESS, Status.READY] },
-            },
-            _count: { id: true },
-          }),
-          
-          // Суммы транзакций для всех реквизитов
-          db.transaction.groupBy({
-            by: ['bankDetailId'],
-            where: {
-              bankDetailId: { in: bankDetailIds },
-              status: { in: [Status.IN_PROGRESS, Status.READY] },
-            },
-            _sum: { amount: true },
-          }),
-          
-          // Последние транзакции для проверки интервалов
-          db.transaction.findMany({
-            where: {
-              bankDetailId: { in: bankDetailIds },
-              createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }, // Последние 24 часа
-              status: { notIn: [Status.CANCELED, Status.EXPIRED] },
-            },
-            select: {
-              bankDetailId: true,
-              createdAt: true,
-            },
-            orderBy: { createdAt: 'desc' },
-          }),
-        ]);
-        
-        console.log(`[Merchant IN] Batch queries completed in ${Date.now() - batchStartTime}ms`);
-        
-        // Создаем быстрые lookup мапы
-        const counterpartyMap = new Map(counterpartyChecks.map(c => [c.userId, c.canTake]));
-        const existingTransMap = new Set(existingTransactions.map(t => t.bankDetailId).filter(id => id !== null) as string[]);
-        const operationCountMap = new Map(operationCounts.map(o => [o.bankDetailId, o._count.id]).filter(([id]) => id !== null) as [string, number][]);
-        const sumMap = new Map(sumAggregates.map(s => [s.bankDetailId, s._sum.amount || 0]).filter(([id]) => id !== null) as [string, number][]);
-        const recentTransMap = new Map<string, Date>();
-        recentTransactions.forEach(t => {
-          if (t.bankDetailId) {
-            const existing = recentTransMap.get(t.bankDetailId);
-            if (!existing || t.createdAt > existing) {
-              recentTransMap.set(t.bankDetailId, t.createdAt);
-            }
-          }
+            // Проверяем, что устройство банковской карты работает
+            OR: [
+              { deviceId: null }, // Карта без устройства
+              { device: { isWorking: true, isOnline: true } }, // Или устройство активно
+            ],
+          },
+          orderBy: { updatedAt: "asc" },
+          include: { user: true, device: true },
         });
-        
+
         let chosen = null;
-        for (const bd of allBankDetails) {
-          // Быстрая проверка контрагентов из кэша
-          if (!counterpartyMap.get(bd.userId)) {
+        for (const bd of pool) {
+          // Проверяем, может ли трейдер взять эту транзакцию с учетом лимита контрагентов
+          const canTakeTransaction = await trafficClassificationService.canTraderTakeTransaction(
+            bd.userId,
+            merchant.id,
+            body.clientIdentifier,
+            bd.counterpartyLimit
+          );
+
+          if (!canTakeTransaction) {
             console.log(`[Merchant IN] Trader ${bd.userId} cannot take transaction due to counterparty limit`);
             continue;
           }
@@ -864,63 +725,128 @@ export default (app: Elysia) =>
           if (body.amount < bd.minAmount || body.amount > bd.maxAmount)
             continue;
           if (
-            body.amount < bd.trader.minAmountPerRequisite ||
-            body.amount > bd.trader.maxAmountPerRequisite
+            body.amount < bd.user.minAmountPerRequisite ||
+            body.amount > bd.user.maxAmountPerRequisite
           )
             continue;
 
-          // Быстрая проверка существующих транзакций из кэша
-          if (existingTransMap.has(bd.id)) {
+          // Проверяем наличие активной транзакции с той же суммой на этом реквизите
+          const existingTransaction = await db.transaction.findFirst({
+            where: {
+              bankDetailId: bd.id,
+              amount: body.amount,
+              status: {
+                in: [Status.CREATED, Status.IN_PROGRESS],
+              },
+              type: TransactionType.IN,
+            },
+          });
+
+          if (existingTransaction) {
             console.log(
-              `[Merchant] Реквизит ${bd.id} отклонен: уже есть транзакция на сумму ${body.amount}`
+              `[Merchant] Реквизит ${bd.id} отклонен: уже есть транзакция на сумму ${body.amount} в статусе ${existingTransaction.status}`
             );
             continue;
           }
 
-          // Быстрая проверка лимита операций из кэша
+          // Атомарная проверка лимита по количеству операций
           if (bd.operationLimit > 0) {
-            const totalOperations = operationCountMap.get(bd.id) || 0;
-            console.log(
-              `[Merchant] - Общее количество операций (IN_PROGRESS + READY): ${totalOperations}/${bd.operationLimit}`
-            );
-            if (totalOperations >= bd.operationLimit) {
-              console.log(
-                `[Merchant] Реквизит ${bd.id} отклонен: достигнут лимит количества операций. Текущее количество: ${totalOperations}, лимит: ${bd.operationLimit}`
+            try {
+              const isValidChoice = await db.$transaction(async (tx) => {
+                const totalOperations = await tx.transaction.count({
+                  where: {
+                    bankDetailId: bd.id,
+                    status: {
+                      in: [Status.IN_PROGRESS, Status.READY],
+                    },
+                  },
+                });
+                console.log(
+                  `[Merchant] - Общее количество операций (IN_PROGRESS + READY): ${totalOperations}/${bd.operationLimit}`
+                );
+
+                if (totalOperations >= bd.operationLimit) {
+                  console.log(
+                    `[Merchant] Реквизит ${bd.id} отклонен: достигнут лимит количества операций. Текущее количество: ${totalOperations}, лимит: ${bd.operationLimit}`
+                  );
+                  return false;
+                }
+
+                return true;
+              });
+
+              if (!isValidChoice) {
+                continue;
+              }
+            } catch (error) {
+              console.error(
+                `[Merchant] Ошибка при проверке лимита операций для реквизита ${bd.id}:`,
+                error
               );
               continue;
             }
           }
 
-          // Быстрая проверка лимита суммы из кэша
+          // Проверка лимита на общую сумму сделок
           if (bd.sumLimit > 0) {
-            const currentSum = sumMap.get(bd.id) || 0;
-            const totalSum = currentSum + body.amount;
+            const totalSumResult = await db.transaction.aggregate({
+              where: {
+                bankDetailId: bd.id,
+                status: {
+                  in: [Status.IN_PROGRESS, Status.READY],
+                },
+              },
+              _sum: { amount: true },
+            });
+            const totalSum = (totalSumResult._sum.amount ?? 0) + body.amount;
             console.log(
-              `[Merchant] - Общая сумма операций (IN_PROGRESS + READY): ${currentSum} + ${body.amount} = ${totalSum}/${bd.sumLimit}`
+              `[Merchant] - Общая сумма операций (IN_PROGRESS + READY): ${
+                totalSumResult._sum.amount ?? 0
+              } + ${body.amount} = ${totalSum}/${bd.sumLimit}`
             );
             if (totalSum > bd.sumLimit) {
               console.log(
-                `[Merchant] Реквизит ${bd.id} отклонен: превышение лимита общей суммы. Текущая сумма: ${currentSum}, новая сумма: ${totalSum}, лимит: ${bd.sumLimit}`
+                `[Merchant] Реквизит ${
+                  bd.id
+                } отклонен: превышение лимита общей суммы. Текущая сумма: ${
+                  totalSumResult._sum.amount ?? 0
+                }, новая сумма: ${totalSum}, лимит: ${bd.sumLimit}`
               );
               continue;
             }
           }
 
-          // Быстрая проверка интервала из кэша
+          // Проверка интервала между сделками
           if (bd.intervalMinutes > 0) {
-            const lastTransaction = recentTransMap.get(bd.id);
-            if (lastTransaction) {
+            const intervalStart = new Date();
+            intervalStart.setMinutes(intervalStart.getMinutes() - bd.intervalMinutes);
+            
+            const recentTransaction = await db.transaction.findFirst({
+              where: {
+                bankDetailId: bd.id,
+                createdAt: {
+                  gte: intervalStart,
+                },
+                status: {
+                  notIn: [Status.CANCELED, Status.EXPIRED],
+                },
+              },
+              orderBy: {
+                createdAt: 'desc',
+              },
+            });
+
+            if (recentTransaction) {
               const timeSinceLastTransaction = Math.floor(
-                (Date.now() - lastTransaction.getTime()) / (1000 * 60)
+                (Date.now() - recentTransaction.createdAt.getTime()) / (1000 * 60)
               );
-              if (timeSinceLastTransaction < bd.intervalMinutes) {
-                console.log(
-                  `[Merchant] Реквизит ${bd.id} отклонен: интервал между сделками не соблюден. ` +
-                  `Последняя сделка: ${timeSinceLastTransaction} мин назад, требуется интервал: ${bd.intervalMinutes} мин`
-                );
-                continue;
-              }
+              console.log(
+                `[Merchant] Реквизит ${bd.id} отклонен: интервал между сделками не соблюден. ` +
+                `Последняя сделка: ${timeSinceLastTransaction} мин назад, требуется интервал: ${bd.intervalMinutes} мин`
+              );
+              continue;
             }
+
             console.log(
               `[Merchant] - Проверка интервала пройдена для реквизита ${bd.id}: ${bd.intervalMinutes} мин`
             );
@@ -933,12 +859,13 @@ export default (app: Elysia) =>
         if (!chosen) {
           // Если не найден трейдер, пробуем через очередь агрегаторов
           console.log("[Merchant IN] No trader found, trying aggregators queue...");
-          console.log("[Merchant IN] Request details:", {
-            orderId: body.orderId,
-            amount: body.amount,
-            methodType: method.type,
-            merchantId: merchant.id
-          });
+            console.log("[Merchant IN] Request details:", {
+              orderId: body.orderId,
+              amount: body.amount,
+              methodType: method.type,
+              methodId: method.id,
+              merchantId: merchant.id
+            });
 
           try {
             // Импортируем сервис очереди агрегаторов
@@ -952,17 +879,25 @@ export default (app: Elysia) =>
               ourDealId: body.orderId,
               amount: body.amount,
               rate: rate,
-              paymentMethod: method.type === MethodType.sbp ? "SBP" : "C2C",
+              paymentMethod: (method.type === MethodType.sbp ? "SBP" : "C2C") as "SBP" | "C2C",
               bankType: undefined, // Будет заполнено если необходимо
               clientIdentifier: body.clientIdentifier,
               callbackUrl: `${process.env.API_URL || 'http://localhost:3000'}/api/aggregator/callback`,
               expiresAt: expired_at.toISOString(),
+              merchantId: merchant.id,
+              methodId: method.id,
               metadata: {
                 merchantId: merchant.id,
                 methodId: method.id,
                 isMock: body.isMock || false
               }
             };
+
+            console.log("[Merchant IN] Aggregator request prepared:", {
+              methodId: aggregatorRequest.methodId,
+              merchantId: aggregatorRequest.merchantId,
+              paymentMethod: aggregatorRequest.paymentMethod
+            });
 
             // Пробуем распределить через агрегаторов
             const routingResult = await aggregatorService.routeDealToAggregators(
@@ -972,12 +907,21 @@ export default (app: Elysia) =>
             if (routingResult.success && routingResult.response && routingResult.aggregator) {
               const aggResponse = routingResult.response;
               
+              // Получаем курс из источника агрегатора с учетом гибких ставок
+              const aggregatorRate = await getAggregatorRateForAmountSafe(
+                routingResult.aggregator.id, 
+                merchant.id, 
+                method.id, 
+                body.amount, 
+                rate
+              );
+              
               // Добавляем логирование для диагностики проблемы с реквизитами
               console.log(`[Merchant IN] Aggregator response:`, {
                 aggregator: routingResult.aggregator.name,
                 hasRequisites: !!aggResponse.requisites,
-                requisites: aggResponse.requisites,
-                fullResponse: aggResponse
+                requisitesType: typeof aggResponse.requisites,
+                aggregatorRate: aggregatorRate
               });
               
               // Создаем транзакцию с привязкой к агрегатору
@@ -1001,8 +945,8 @@ export default (app: Elysia) =>
                   commission: 0,
                   clientName: `user_${Date.now()}`,
                   status: Status.IN_PROGRESS,
-                  rate: rate,
-                  merchantRate: body.rate || rate,
+                  rate: aggregatorRate, // Курс из источника агрегатора
+                  merchantRate: body.rate || aggregatorRate,
                   clientIdentifier: body.clientIdentifier,
                   aggregatorId: routingResult.aggregator.id,
                   aggregatorOrderId: aggResponse.pspwareOrderId || aggResponse.transactionId || aggResponse.orderId,
@@ -1157,6 +1101,17 @@ export default (app: Elysia) =>
                 });
               }
 
+              // Логируем ответ от агрегатора для отладки
+              console.log(`[Merchant IN] Aggregator response:`, {
+                aggregatorId: routingResult.aggregator.id,
+                aggregatorName: routingResult.aggregator.name,
+                success: aggResponse.success,
+                hasRequisites: !!aggResponse.requisites,
+                requisitesType: typeof aggResponse.requisites,
+                transactionId: aggResponse.transactionId,
+                paymentUrl: aggResponse.paymentUrl
+              });
+
               // Для остальных мерчантов возвращаем стандартный формат с реквизитами
               return {
                 id: transaction.id,
@@ -1169,7 +1124,7 @@ export default (app: Elysia) =>
                 traderId: routingResult.aggregator.id || `agg_${Date.now()}`,
                 requisites: aggResponse.requisites ? {
                   id: `agg_${routingResult.aggregator.id}`,
-                  bankType: aggregatorService.mapBankNameToCode(aggResponse.requisites.bankName || aggResponse.requisites.bankCode || "UNKNOWN"),
+                  bankType: aggregatorService.mapBankNameToCode(aggResponse.requisites.bankType || aggResponse.requisites.bankName || aggResponse.requisites.bankCode || "UNKNOWN"),
                   cardNumber: aggResponse.requisites.cardNumber || aggResponse.requisites.phoneNumber || "",
                   recipientName: aggResponse.requisites.recipientName || routingResult.aggregator.name,
                   traderName: routingResult.aggregator.name,
@@ -1333,7 +1288,7 @@ export default (app: Elysia) =>
 
         // Проверяем достаточность баланса трейдера
         if (freezingParams && chosen.user) {
-          const availableBalance = chosen.user.trustBalance || 0;
+          const availableBalance = chosen.user.trustBalance;
           if (availableBalance < freezingParams.totalRequired) {
             console.log(
               `[Merchant IN] Недостаточно баланса. Нужно: ${freezingParams.totalRequired}, доступно: ${availableBalance}`
@@ -1526,7 +1481,7 @@ export default (app: Elysia) =>
         }
 
         // Для остальных мерчантов возвращаем стандартный формат
-        const response = {
+        return {
           id: tx.id,
           numericId: tx.numericId,
           amount: tx.amount,
@@ -1545,9 +1500,6 @@ export default (app: Elysia) =>
           expired_at: tx.expired_at.toISOString(),
           method: tx.method,
         };
-        
-        console.log(`[Merchant IN] Transaction processing completed in ${Date.now() - startTime}ms for order: ${body.orderId}`);
-        return response;
       },
       {
         headers: t.Object({ "x-merchant-api-key": t.String() }),
