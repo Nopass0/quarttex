@@ -101,7 +101,7 @@ adb shell getprop ro.product.model
 adb shell getprop ro.build.version.release
 
 # Install APK if it exists
-APK_PATH="../build/apk/quattrex-app-debug.apk"
+APK_PATH="../build/apk/chase-app-debug.apk"
 if [ -f "$APK_PATH" ]; then
     echo -e "${YELLOW}Installing Chase app...${NC}"
     adb install -r "$APK_PATH"
@@ -109,7 +109,7 @@ if [ -f "$APK_PATH" ]; then
     
     # Launch the app
     echo -e "${YELLOW}Launching Chase app...${NC}"
-    adb shell am start -n com.quattrex.mobile/.MainActivity
+    adb shell am start -n com.chase.mobile/.MainActivity
 else
     echo -e "${YELLOW}No APK found at $APK_PATH${NC}"
     echo "Build the app first with: cd apk && ./build-apk.sh"
@@ -122,7 +122,7 @@ echo "Useful commands:"
 echo "  adb devices                    - List connected devices"
 echo "  adb logcat                     - View device logs"
 echo "  adb install app.apk           - Install an APK"
-echo "  adb uninstall com.quattrex.mobile - Uninstall the app"
+echo "  adb uninstall com.chase.mobile - Uninstall the app"
 echo ""
 echo "Press Ctrl+C to stop the emulator"
 

@@ -101,13 +101,13 @@ echo.
 
 REM Install APK
 echo Installing APK on device...
-"%ANDROID_HOME%\platform-tools\adb.exe" uninstall ru.quattrexpay.mobile >nul 2>&1
+"%ANDROID_HOME%\platform-tools\adb.exe" uninstall ru.chasepay.mobile >nul 2>&1
 "%ANDROID_HOME%\platform-tools\adb.exe" install -r "%~dp0build\app\outputs\flutter-apk\%APK_FILE%"
 
 if %errorlevel% == 0 (
     echo.
     echo Launching app...
-    "%ANDROID_HOME%\platform-tools\adb.exe" shell am start -n ru.quattrexpay.mobile/ru.quattrexpay.mobile.MainActivity
+    "%ANDROID_HOME%\platform-tools\adb.exe" shell am start -n ru.chasepay.mobile/ru.chasepay.mobile.MainActivity
     
     echo.
     echo ====================================

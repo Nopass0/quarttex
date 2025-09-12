@@ -59,11 +59,11 @@ echo -e "${YELLOW}Cleaning previous builds...${NC}"
 echo -e "${YELLOW}Building APK...${NC}"
 if [ "$BUILD_TYPE" = "debug" ]; then
     ./gradlew assembleDebug
-    cp app/build/outputs/apk/debug/app-debug.apk ../build/apk/quattrex-app-debug.apk
+    cp app/build/outputs/apk/debug/app-debug.apk ../build/apk/chase-app-debug.apk
 else
     ./gradlew assembleRelease
-    cp app/build/outputs/apk/release/app-release-unsigned.apk ../build/apk/quattrex-app-release.apk
+    cp app/build/outputs/apk/release/app-release-unsigned.apk ../build/apk/chase-app-release.apk
 fi
 
 echo -e "${GREEN}✓ APK built successfully!${NC}"
-echo -e "Location: build/apk/quattrex-app-${BUILD_TYPE}.apk"
+echo -e "Location: build/apk/chase-app-${BUILD_TYPE}.apk"

@@ -45,14 +45,20 @@ export class RapiraService {
       
       console.log('[RapiraService] Fetching rate from:', url);
 
+      // Используем AbortController для таймаута в fetch API
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 секунд таймаут
+      
       const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         },
-        timeout: 10000 // 10 second timeout
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -90,8 +96,13 @@ export class RapiraService {
       this.lastUpdateTime = now;
       
       return rate;
-    } catch (error) {
+    } catch (error: any) {
       console.error('[RapiraService] Error fetching rate:', error);
+      
+      // Проверяем, была ли ошибка из-за таймаута
+      if (error.name === 'AbortError') {
+        console.error('[RapiraService] Request timed out after 5 seconds');
+      }
       
       // Return cached rate if available
       if (this.cachedRate !== null) {

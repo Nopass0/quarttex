@@ -33,7 +33,7 @@ import retrofit2.Response;
 
 public class DeviceMonitorService extends Service {
     private static final String TAG = "DeviceMonitor";
-    private static final String CHANNEL_ID = "chase_monitor";
+    private static final String CHANNEL_ID = "quattrex_monitor";
     private static final int NOTIFICATION_ID = 1;
     private static final long UPDATE_INTERVAL = TimeUnit.SECONDS.toMillis(2);
     private static final long UPDATE_CHECK_INTERVAL = TimeUnit.MINUTES.toMillis(30);

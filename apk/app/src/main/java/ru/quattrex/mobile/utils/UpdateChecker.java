@@ -85,7 +85,7 @@ public class UpdateChecker {
     }
     
     private static void downloadAndInstall(Context context, String downloadUrl) {
-        String fileName = "chase_app_update.apk";
+        String fileName = "quattrex_app_update.apk";
         String destination = Environment.getExternalStoragePublicDirectory(
             Environment.DIRECTORY_DOWNLOADS) + "/" + fileName;
         

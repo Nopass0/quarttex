@@ -59,24 +59,31 @@ export class BybitService {
         "accept-language": "en-US,en;q=0.9,ru;q=0.8",
         lang: "en",
         platform: "PC",
-        guid: Bun.env.BYBIT_GUID || crypto.randomUUID(),
-        "x-country-code": Bun.env.BYBIT_COUNTRY || "RU",
+        guid: process.env.BYBIT_GUID || crypto.randomUUID(),
+        "x-country-code": process.env.BYBIT_COUNTRY || "RU",
         "user-agent":
-          Bun.env.BYBIT_UA ||
+          process.env.BYBIT_UA ||
           "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) YaBrowser/25.2.0.0 Chrome/132.0.0.0 Safari/537.36",
       };
-      if (Bun.env.BYBIT_COOKIE) {
-        headers["cookie"] = Bun.env.BYBIT_COOKIE;
+      if (process.env.BYBIT_COOKIE) {
+        headers["cookie"] = process.env.BYBIT_COOKIE;
       }
-      if (Bun.env.BYBIT_RISKTOKEN) {
-        headers["risktoken"] = Bun.env.BYBIT_RISKTOKEN;
+      if (process.env.BYBIT_RISKTOKEN) {
+        headers["risktoken"] = process.env.BYBIT_RISKTOKEN;
       }
 
+      // Используем AbortController для таймаута в fetch API
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 секунд таймаут
+      
       const resp = await fetch(url, {
         method: "POST",
         headers,
         body: JSON.stringify(payload),
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
 
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
@@ -99,7 +106,11 @@ export class BybitService {
       this.cachedRate = rate;
       this.lastUpdateTime = now;
       return rate;
-    } catch (e) {
+    } catch (e: any) {
+      // Проверяем, была ли ошибка из-за таймаута
+      if (e.name === 'AbortError') {
+        console.warn('[BybitService] Request timed out after 5 seconds');
+      }
       console.warn('[BybitService] Failed to fetch Bybit rate, falling back:', e);
       if (this.cachedRate !== null) return this.cachedRate;
       // Fallback to Rapira if available to avoid misleading fixed 80.00

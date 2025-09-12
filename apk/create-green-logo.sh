@@ -1,16 +1,16 @@
 #!/bin/bash
 
-# Create Quattrex logo PNG files with purple color
-echo "Creating purple Quattrex logo..."
+# Create Chase logo PNG files with green color
+echo "Creating green Chase logo..."
 
-# Base64 encoded PNG with Quattrex logo (purple circle with white text)
+# Base64 encoded PNG with CHA$E logo (green circle with white text)
 LOGO_DATA="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"
 
 # Convert base64 to PNG files
-echo "$LOGO_DATA" | base64 -d > /home/user/projects/quattrex/apk/app/src/main/res/mipmap-hdpi/ic_launcher.png
-echo "$LOGO_DATA" | base64 -d > /home/user/projects/quattrex/apk/app/src/main/res/mipmap-mdpi/ic_launcher.png
-echo "$LOGO_DATA" | base64 -d > /home/user/projects/quattrex/apk/app/src/main/res/mipmap-xhdpi/ic_launcher.png
-echo "$LOGO_DATA" | base64 -d > /home/user/projects/quattrex/apk/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
-echo "$LOGO_DATA" | base64 -d > /home/user/projects/quattrex/apk/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+echo "$LOGO_DATA" | base64 -d > /home/user/projects/chase/apk/app/src/main/res/mipmap-hdpi/ic_launcher.png
+echo "$LOGO_DATA" | base64 -d > /home/user/projects/chase/apk/app/src/main/res/mipmap-mdpi/ic_launcher.png
+echo "$LOGO_DATA" | base64 -d > /home/user/projects/chase/apk/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+echo "$LOGO_DATA" | base64 -d > /home/user/projects/chase/apk/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+echo "$LOGO_DATA" | base64 -d > /home/user/projects/chase/apk/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
-echo "✅ Purple logo created successfully!"
+echo "✅ Green logo created successfully!"

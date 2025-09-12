@@ -5,27 +5,44 @@
     android:viewportWidth="200"
     android:viewportHeight="80">
     
-    <!-- CHA text -->
+    <!-- Q text -->
     <path
-        android:fillColor="#F8FAFC"
-        android:pathData="M20,50 L20,30 Q20,25 25,25 L30,25 Q35,25 35,30 L35,35 L25,35 M25,45 L35,45 L35,50 Q35,55 30,55 L25,55 Q20,55 20,50 Z"/>
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,30 Q20,25 30,25 L40,25 Q50,25 50,35 L50,45 Q50,55 40,55 L30,55 Q20,55 20,45 L20,35 Q20,25 30,25 Z M30,30 L40,30 L40,50 L30,50 Z M45,45 L50,50 L45,55 L40,50 Z"/>
     
+    <!-- U text -->
     <path
-        android:fillColor="#F8FAFC"
-        android:pathData="M45,25 L60,25 L60,35 L45,35 L45,45 L60,45 L60,55 L45,55 Z"/>
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,25 L65,25 L65,45 Q65,50 70,50 L75,50 Q80,50 80,45 L80,25 L85,25 L85,45 Q85,55 75,55 L70,55 Q60,55 60,45 Z"/>
     
+    <!-- A text -->
     <path
-        android:fillColor="#F8FAFC"
-        android:pathData="M70,25 L75,25 L85,55 L80,55 L77.5,45 L72.5,45 L70,55 L65,55 L75,25 Z"/>
+        android:fillColor="#FFFFFF"
+        android:pathData="M95,55 L90,55 L85,25 L90,25 L92,40 L98,40 L100,25 L105,25 L95,55 Z M93,45 L97,45 L95,35 Z"/>
     
-    <!-- $ symbol -->
+    <!-- T text -->
     <path
-        android:fillColor="#006039"
-        android:pathData="M100,20 L100,25 Q90,25 90,35 Q90,40 100,40 Q110,40 110,50 Q110,60 100,60 L100,65 L95,65 L95,60 Q85,60 85,50 L90,50 Q90,55 95,55 L95,45 Q85,45 85,35 Q85,25 95,25 L95,20 L100,20 Z"/>
+        android:fillColor="#FFFFFF"
+        android:pathData="M110,25 L140,25 L140,30 L130,30 L130,55 L125,55 L125,30 L115,30 L115,25 Z"/>
+    
+    <!-- T text -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M145,25 L175,25 L175,30 L165,30 L165,55 L160,55 L160,30 L150,30 L150,25 Z"/>
+    
+    <!-- R text -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M180,25 L200,25 L200,30 L185,30 L185,40 L195,40 L200,45 L200,50 L195,50 L190,45 L185,45 L185,55 L180,55 Z"/>
     
     <!-- E text -->
     <path
-        android:fillColor="#F8FAFC"
-        android:pathData="M120,25 L140,25 L140,35 L125,35 L125,40 L135,40 L135,45 L125,45 L125,45 L140,45 L140,55 L120,55 Z"/>
+        android:fillColor="#FFFFFF"
+        android:pathData="M205,25 L225,25 L225,30 L210,30 L210,40 L220,40 L220,45 L210,45 L210,50 L225,50 L225,55 L205,55 Z"/>
+    
+    <!-- X text -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M230,25 L235,25 L240,35 L245,25 L250,25 L242,40 L250,55 L245,55 L240,45 L235,55 L230,55 L238,40 Z"/>
     
 </vector>

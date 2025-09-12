@@ -11,7 +11,7 @@ import ru.quattrex.mobile.services.DeviceMonitorService;
 
 public class QuattrexApplication extends Application {
     private static final String TAG = "QuattrexApplication";
-    public static final String CHANNEL_ID = "chase_service_channel";
+    public static final String CHANNEL_ID = "quattrex_service_channel";
     
     @Override
     public void onCreate() {

@@ -189,7 +189,7 @@ try {
         
         # Uninstall previous version (optional)
         Write-Info "Uninstalling previous version..."
-        & $adbPath uninstall "ru.quattrexpay.mobile" 2>$null
+        & $adbPath uninstall "ru.chasepay.mobile" 2>$null
         
         # Install new APK
         $installResult = & $adbPath install -r $apkFile.FullName 2>&1
@@ -202,7 +202,7 @@ try {
         
         # Launch the app
         Write-Info "Launching app..."
-        & $adbPath shell am start -n "ru.quattrexpay.mobile/ru.quattrexpay.mobile.MainActivity"
+        & $adbPath shell am start -n "ru.chasepay.mobile/ru.chasepay.mobile.MainActivity"
         
         Write-Success "App launched successfully"
         

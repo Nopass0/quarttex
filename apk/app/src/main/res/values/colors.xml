@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#006039</color>
-    <color name="secondary">#006039</color>
+    <color name="primary">#7C3AED</color>
+    <color name="secondary">#7C3AED</color>
     <color name="background">#FFFFFF</color>
     <color name="surface">#F5F5F5</color>
     <color name="text_primary">#000000</color>
     <color name="text_secondary">#666666</color>
     <color name="white">#FFFFFF</color>
-    <color name="purple_dark">#3d0b80</color>
-    <color name="purple">#530FAD</color>
+    <color name="purple_dark">#5B21B6</color>
+    <color name="purple">#7C3AED</color>
 </resources>

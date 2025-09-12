@@ -6,6 +6,6 @@ export DEBUG_BASE_URL="http://10.0.2.2:3000"
 
 # Create dev directory and copy APK
 mkdir -p apk/dev
-cp app/build/outputs/apk/debug/app-debug.apk apk/dev/quattrex-dev.apk
+cp app/build/outputs/apk/debug/app-debug.apk apk/dev/chase-dev.apk
 
-echo "Development APK built and saved to apk/dev/quattrex-dev.apk"
+echo "Development APK built and saved to apk/dev/chase-dev.apk"

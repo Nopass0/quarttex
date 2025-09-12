@@ -47,20 +47,20 @@ echo -e "${YELLOW}Building APK...${NC}"
 # Install the APK
 echo ""
 echo -e "${YELLOW}Installing APK...${NC}"
-adb install -r ../build/apk/quattrex-app-debug.apk
+adb install -r ../build/apk/chase-app-debug.apk
 
 # Grant permissions
 echo ""
 echo -e "${YELLOW}Granting permissions...${NC}"
-adb shell pm grant com.quattrex.mobile android.permission.CAMERA || true
-adb shell pm grant com.quattrex.mobile android.permission.POST_NOTIFICATIONS || true
-adb shell pm grant com.quattrex.mobile android.permission.ACCESS_NETWORK_STATE || true
-adb shell pm grant com.quattrex.mobile android.permission.ACCESS_WIFI_STATE || true
+adb shell pm grant com.chase.mobile android.permission.CAMERA || true
+adb shell pm grant com.chase.mobile android.permission.POST_NOTIFICATIONS || true
+adb shell pm grant com.chase.mobile android.permission.ACCESS_NETWORK_STATE || true
+adb shell pm grant com.chase.mobile android.permission.ACCESS_WIFI_STATE || true
 
 # Launch the app
 echo ""
 echo -e "${YELLOW}Launching app...${NC}"
-adb shell am start -n com.quattrex.mobile/.MainActivity
+adb shell am start -n com.chase.mobile/.MainActivity
 
 echo ""
 echo -e "${GREEN}✓ App launched successfully!${NC}"
@@ -68,7 +68,7 @@ echo ""
 echo "Next steps:"
 echo "1. Grant notification access when prompted"
 echo "2. Scan QR code from trader device page"
-echo "3. Monitor logs with: adb logcat | grep -i quattrex"
+echo "3. Monitor logs with: adb logcat | grep -i chase"
 echo ""
 echo "Backend is expected at: $BASE_URL"
 echo "Make sure the backend is running: npm run dev"

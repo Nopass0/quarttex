@@ -1,11 +1,11 @@
-# Quattrex Mobile App (Android)
+# Chase Mobile App (Android)
 
-This is the Android mobile application for Quattrex - automated transaction monitoring through notification access.
+This is the Android mobile application for Chase - automated transaction monitoring through notification access.
 
 ## Production Build
 
 APK автоматически собирается при каждом push в main ветку через GitHub Actions.
-Production URL: `https://quattrex.pro/api`
+Production URL: `https://chasepay.pro/api`
 
 ## Features
 
@@ -37,7 +37,7 @@ Production URL: `https://quattrex.pro/api`
 ./build-apk.sh --base-url https://your-backend.com
 ```
 
-The APK will be saved to `../build/apk/quattrex-app-{debug|release}.apk`
+The APK will be saved to `../build/apk/chase-app-{debug|release}.apk`
 
 ### Local Development
 
@@ -86,7 +86,7 @@ The app requires the following permissions:
 
 ## Backend Integration
 
-The app connects to the Quattrex backend API:
+The app connects to the Chase backend API:
 - Local development: `http://10.0.2.2:3000` (emulator) or device IP
 - Production: Configured during build
 
@@ -97,10 +97,10 @@ The app connects to the Quattrex backend API:
 adb logcat
 
 # View app logs only
-adb logcat | grep -i quattrex
+adb logcat | grep -i chase
 
 # Clear app data
-adb shell pm clear com.quattrex.mobile
+adb shell pm clear com.chase.mobile
 ```
 
 ## Build Configuration
