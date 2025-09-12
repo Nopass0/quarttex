@@ -215,81 +215,233 @@ ALTER TABLE "AggregatorDispute" ALTER COLUMN "updatedAt" DROP DEFAULT;
 -- AlterTable
 ALTER TABLE "AggregatorDisputeMessage" ALTER COLUMN "fileUrls" DROP DEFAULT;
 
--- AlterTable
-ALTER TABLE "Merchant" ADD COLUMN     "auctionBaseUrl" TEXT,
-ADD COLUMN     "externalSystemName" TEXT,
-ADD COLUMN     "isAuctionEnabled" BOOLEAN NOT NULL DEFAULT false,
-ADD COLUMN     "keysGeneratedAt" TIMESTAMP(3),
-ADD COLUMN     "rsaPrivateKeyPem" TEXT,
-ADD COLUMN     "rsaPublicKeyPem" TEXT,
-ADD COLUMN     "totpEnabled" BOOLEAN NOT NULL DEFAULT false,
-ADD COLUMN     "totpSecret" TEXT;
+-- AlterTable (conditionally add columns to Merchant if they don't exist)
+DO $$
+BEGIN
+    -- Add auctionBaseUrl if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'Merchant' AND column_name = 'auctionBaseUrl'
+    ) THEN
+        ALTER TABLE "Merchant" ADD COLUMN "auctionBaseUrl" TEXT;
+    END IF;
+    
+    -- Add externalSystemName if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'Merchant' AND column_name = 'externalSystemName'
+    ) THEN
+        ALTER TABLE "Merchant" ADD COLUMN "externalSystemName" TEXT;
+    END IF;
+    
+    -- Add isAuctionEnabled if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'Merchant' AND column_name = 'isAuctionEnabled'
+    ) THEN
+        ALTER TABLE "Merchant" ADD COLUMN "isAuctionEnabled" BOOLEAN NOT NULL DEFAULT false;
+    END IF;
+    
+    -- Add keysGeneratedAt if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'Merchant' AND column_name = 'keysGeneratedAt'
+    ) THEN
+        ALTER TABLE "Merchant" ADD COLUMN "keysGeneratedAt" TIMESTAMP(3);
+    END IF;
+    
+    -- Add rsaPrivateKeyPem if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'Merchant' AND column_name = 'rsaPrivateKeyPem'
+    ) THEN
+        ALTER TABLE "Merchant" ADD COLUMN "rsaPrivateKeyPem" TEXT;
+    END IF;
+    
+    -- Add rsaPublicKeyPem if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'Merchant' AND column_name = 'rsaPublicKeyPem'
+    ) THEN
+        ALTER TABLE "Merchant" ADD COLUMN "rsaPublicKeyPem" TEXT;
+    END IF;
+    
+    -- Add totpEnabled if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'Merchant' AND column_name = 'totpEnabled'
+    ) THEN
+        ALTER TABLE "Merchant" ADD COLUMN "totpEnabled" BOOLEAN NOT NULL DEFAULT false;
+    END IF;
+    
+    -- Add totpSecret if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'Merchant' AND column_name = 'totpSecret'
+    ) THEN
+        ALTER TABLE "Merchant" ADD COLUMN "totpSecret" TEXT;
+    END IF;
+END $$;
 
--- AlterTable
-ALTER TABLE "Payout" ADD COLUMN     "clientIdentifier" TEXT;
+-- AlterTable (conditionally add clientIdentifier to Payout if it doesn't exist)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'Payout' AND column_name = 'clientIdentifier'
+    ) THEN
+        ALTER TABLE "Payout" ADD COLUMN "clientIdentifier" TEXT;
+    END IF;
+END $$;
 
--- AlterTable
-ALTER TABLE "RateSetting" ADD COLUMN     "bybitKkk" DOUBLE PRECISION NOT NULL DEFAULT 0;
+-- AlterTable (conditionally add bybitKkk to RateSetting if it doesn't exist)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'RateSetting' AND column_name = 'bybitKkk'
+    ) THEN
+        ALTER TABLE "RateSetting" ADD COLUMN "bybitKkk" DOUBLE PRECISION NOT NULL DEFAULT 0;
+    END IF;
+END $$;
 
--- AlterTable
-ALTER TABLE "TraderMerchant" ADD COLUMN     "rateSource" "RateSource";
+-- AlterTable (conditionally add rateSource to TraderMerchant if it doesn't exist)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'TraderMerchant' AND column_name = 'rateSource'
+    ) THEN
+        ALTER TABLE "TraderMerchant" ADD COLUMN "rateSource" "RateSource";
+    END IF;
+END $$;
 
--- AlterTable
-ALTER TABLE "Transaction" ADD COLUMN     "aggregatorId" TEXT;
+-- AlterTable (conditionally add aggregatorId to Transaction if it doesn't exist)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'Transaction' AND column_name = 'aggregatorId'
+    ) THEN
+        ALTER TABLE "Transaction" ADD COLUMN "aggregatorId" TEXT;
+    END IF;
+END $$;
 
--- AlterTable
-ALTER TABLE "User" ADD COLUMN     "kkkPercent" DOUBLE PRECISION DEFAULT 0,
-ADD COLUMN     "rateSource" "RateSource",
-ADD COLUMN     "rateSourceConfigId" TEXT;
+-- AlterTable (conditionally add columns to User if they don't exist)
+DO $$
+BEGIN
+    -- Add kkkPercent if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'User' AND column_name = 'kkkPercent'
+    ) THEN
+        ALTER TABLE "User" ADD COLUMN "kkkPercent" DOUBLE PRECISION DEFAULT 0;
+    END IF;
+    
+    -- Add rateSource if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'User' AND column_name = 'rateSource'
+    ) THEN
+        ALTER TABLE "User" ADD COLUMN "rateSource" "RateSource";
+    END IF;
+    
+    -- Add rateSourceConfigId if it doesn't exist (this might already exist from add_rate_sources)
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'User' AND column_name = 'rateSourceConfigId'
+    ) THEN
+        ALTER TABLE "User" ADD COLUMN "rateSourceConfigId" TEXT;
+    END IF;
+END $$;
 
--- CreateTable
-CREATE TABLE "TrafficSettings" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "isEnabled" BOOLEAN NOT NULL DEFAULT false,
-    "maxCounterparties" INTEGER NOT NULL DEFAULT 5,
-    "trafficType" "TrafficType" NOT NULL DEFAULT 'PRIMARY',
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+-- CreateTable (conditionally create TrafficSettings if it doesn't exist)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'TrafficSettings') THEN
+        CREATE TABLE "TrafficSettings" (
+            "id" TEXT NOT NULL,
+            "userId" TEXT NOT NULL,
+            "isEnabled" BOOLEAN NOT NULL DEFAULT false,
+            "maxCounterparties" INTEGER NOT NULL DEFAULT 5,
+            "trafficType" "TrafficType" NOT NULL DEFAULT 'PRIMARY',
+            "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "TrafficSettings_pkey" PRIMARY KEY ("id")
-);
+            CONSTRAINT "TrafficSettings_pkey" PRIMARY KEY ("id")
+        );
+    END IF;
+END $$;
 
--- CreateIndex
-CREATE UNIQUE INDEX "TrafficSettings_userId_key" ON "TrafficSettings"("userId");
+-- CreateIndex (conditionally create indexes if they don't exist)
+DO $$
+BEGIN
+    -- TrafficSettings_userId_key
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'TrafficSettings_userId_key') THEN
+        CREATE UNIQUE INDEX "TrafficSettings_userId_key" ON "TrafficSettings"("userId");
+    END IF;
+    
+    -- Aggregator_email_idx
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'Aggregator_email_idx') THEN
+        CREATE INDEX "Aggregator_email_idx" ON "Aggregator"("email");
+    END IF;
+    
+    -- Aggregator_apiToken_idx
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'Aggregator_apiToken_idx') THEN
+        CREATE INDEX "Aggregator_apiToken_idx" ON "Aggregator"("apiToken");
+    END IF;
+    
+    -- Merchant_isAuctionEnabled_idx
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'Merchant_isAuctionEnabled_idx') THEN
+        CREATE INDEX "Merchant_isAuctionEnabled_idx" ON "Merchant"("isAuctionEnabled");
+    END IF;
+    
+    -- Merchant_externalSystemName_idx
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'Merchant_externalSystemName_idx') THEN
+        CREATE INDEX "Merchant_externalSystemName_idx" ON "Merchant"("externalSystemName");
+    END IF;
+    
+    -- Payout_merchantId_clientIdentifier_idx
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'Payout_merchantId_clientIdentifier_idx') THEN
+        CREATE INDEX "Payout_merchantId_clientIdentifier_idx" ON "Payout"("merchantId", "clientIdentifier");
+    END IF;
+END $$;
 
--- CreateIndex
-CREATE INDEX "Aggregator_email_idx" ON "Aggregator"("email");
-
--- CreateIndex
-CREATE INDEX "Aggregator_apiToken_idx" ON "Aggregator"("apiToken");
-
--- CreateIndex
-CREATE INDEX "Merchant_isAuctionEnabled_idx" ON "Merchant"("isAuctionEnabled");
-
--- CreateIndex
-CREATE INDEX "Merchant_externalSystemName_idx" ON "Merchant"("externalSystemName");
-
--- CreateIndex
-CREATE INDEX "Payout_merchantId_clientIdentifier_idx" ON "Payout"("merchantId", "clientIdentifier");
-
--- AddForeignKey
-ALTER TABLE "User" ADD CONSTRAINT "User_rateSourceConfigId_fkey" FOREIGN KEY ("rateSourceConfigId") REFERENCES "RateSourceConfig"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_aggregatorId_fkey" FOREIGN KEY ("aggregatorId") REFERENCES "Aggregator"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "MerchantRateSource" ADD CONSTRAINT "MerchantRateSource_merchantId_fkey" FOREIGN KEY ("merchantId") REFERENCES "Merchant"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "TrafficSettings" ADD CONSTRAINT "TrafficSettings_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "AggregatorDispute" ADD CONSTRAINT "AggregatorDispute_transactionId_fkey" FOREIGN KEY ("transactionId") REFERENCES "Transaction"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "AggregatorDispute" ADD CONSTRAINT "AggregatorDispute_merchantId_fkey" FOREIGN KEY ("merchantId") REFERENCES "Merchant"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "AggregatorCallbackLog" ADD CONSTRAINT "AggregatorCallbackLog_transactionId_fkey" FOREIGN KEY ("transactionId") REFERENCES "Transaction"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- AddForeignKey (conditionally add foreign keys if they don't exist)
+DO $$
+BEGIN
+    -- User_rateSourceConfigId_fkey (might already exist from add_rate_sources)
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'User_rateSourceConfigId_fkey') THEN
+        ALTER TABLE "User" ADD CONSTRAINT "User_rateSourceConfigId_fkey" FOREIGN KEY ("rateSourceConfigId") REFERENCES "RateSourceConfig"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+    END IF;
+    
+    -- Transaction_aggregatorId_fkey
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Transaction_aggregatorId_fkey') THEN
+        ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_aggregatorId_fkey" FOREIGN KEY ("aggregatorId") REFERENCES "Aggregator"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+    END IF;
+    
+    -- MerchantRateSource_merchantId_fkey (might already exist from add_rate_sources)
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'MerchantRateSource_merchantId_fkey') THEN
+        ALTER TABLE "MerchantRateSource" ADD CONSTRAINT "MerchantRateSource_merchantId_fkey" FOREIGN KEY ("merchantId") REFERENCES "Merchant"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+    END IF;
+    
+    -- TrafficSettings_userId_fkey
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'TrafficSettings_userId_fkey') THEN
+        ALTER TABLE "TrafficSettings" ADD CONSTRAINT "TrafficSettings_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+    END IF;
+    
+    -- AggregatorDispute_transactionId_fkey
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'AggregatorDispute_transactionId_fkey') THEN
+        ALTER TABLE "AggregatorDispute" ADD CONSTRAINT "AggregatorDispute_transactionId_fkey" FOREIGN KEY ("transactionId") REFERENCES "Transaction"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+    END IF;
+    
+    -- AggregatorDispute_merchantId_fkey
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'AggregatorDispute_merchantId_fkey') THEN
+        ALTER TABLE "AggregatorDispute" ADD CONSTRAINT "AggregatorDispute_merchantId_fkey" FOREIGN KEY ("merchantId") REFERENCES "Merchant"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+    END IF;
+    
+    -- AggregatorCallbackLog_transactionId_fkey
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'AggregatorCallbackLog_transactionId_fkey') THEN
+        ALTER TABLE "AggregatorCallbackLog" ADD CONSTRAINT "AggregatorCallbackLog_transactionId_fkey" FOREIGN KEY ("transactionId") REFERENCES "Transaction"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
