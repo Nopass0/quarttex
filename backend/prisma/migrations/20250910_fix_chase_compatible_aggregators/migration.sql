@@ -8,7 +8,19 @@ ALTER TABLE "Aggregator" ALTER COLUMN "maxSlaMs" SET DEFAULT 2000;
 COMMENT ON COLUMN "Aggregator"."maxSlaMs" IS 'Maximum response time in milliseconds (SLA) - 2 seconds default';
 
 -- Ensure isChaseCompatible and isChaseProject columns exist with proper defaults
--- (These should already exist based on the schema, but ensuring they have correct defaults)
+-- Add isChaseProject column if it doesn't exist (isChaseCompatible should already exist)
+DO $$
+BEGIN
+    -- Add isChaseProject column if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'Aggregator' AND column_name = 'isChaseProject'
+    ) THEN
+        ALTER TABLE "Aggregator" ADD COLUMN "isChaseProject" BOOLEAN NOT NULL DEFAULT false;
+    END IF;
+END $$;
+
+-- Set proper defaults for both columns
 ALTER TABLE "Aggregator" ALTER COLUMN "isChaseCompatible" SET DEFAULT false;
 ALTER TABLE "Aggregator" ALTER COLUMN "isChaseProject" SET DEFAULT false;
 
